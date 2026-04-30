@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [role, setRole] = React.useState<AppRole | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [roleLoading, setRoleLoading] = React.useState(false);
+  const retryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadProfileAndRole = React.useCallback(async (userId: string) => {
     setRoleLoading(true);
@@ -47,6 +48,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setProfile((prof as NexusProfile) ?? null);
     if (roleResult.error) {
       console.warn("Failed to load user role", roleResult.error);
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = setTimeout(() => {
+        void loadProfileAndRole(userId);
+      }, 2500);
+    } else if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
     }
     setRole(pickTopRole(roleResult.roles as { role: AppRole }[]));
     setRoleLoading(false);
@@ -77,6 +85,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => sub.subscription.unsubscribe();
   }, [loadProfileAndRole]);
+
+  React.useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, []);
 
   const value: AuthContextValue = React.useMemo(
     () => ({
