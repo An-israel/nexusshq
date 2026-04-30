@@ -80,7 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextValue = React.useMemo(
     () => ({
-      loading,
       loading: loading || roleLoading,
       session,
       user: session?.user ?? null,
