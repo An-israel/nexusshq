@@ -12,7 +12,11 @@ export const Route = createFileRoute("/_app")({
       data: { user },
       error,
     } = await supabase.auth.getUser();
-    if (error || !user) throw redirect({ to: "/login" });
+
+    const isTransientAuthError =
+      !!error && /unexpected failure|database error querying schema|please check server logs/i.test(error.message);
+
+    if (!user && !isTransientAuthError) throw redirect({ to: "/login" });
   },
   component: AppLayout,
 });
