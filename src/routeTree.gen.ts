@@ -21,6 +21,7 @@ import { Route as AppKpisRouteImport } from './routes/_app.kpis'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
 import { Route as AppTeamUserIdRouteImport } from './routes/_app.team.$userId'
+import { Route as AppTasksTaskIdRouteImport } from './routes/_app.tasks.$taskId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -81,6 +82,11 @@ const AppTeamUserIdRoute = AppTeamUserIdRouteImport.update({
   path: '/$userId',
   getParentRoute: () => AppTeamRoute,
 } as any)
+const AppTasksTaskIdRoute = AppTasksTaskIdRouteImport.update({
+  id: '/$taskId',
+  path: '/$taskId',
+  getParentRoute: () => AppTasksRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -91,8 +97,9 @@ export interface FileRoutesByFullPath {
   '/kpis': typeof AppKpisRoute
   '/notifications': typeof AppNotificationsRoute
   '/settings': typeof AppSettingsRoute
-  '/tasks': typeof AppTasksRoute
+  '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
+  '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
 }
 export interface FileRoutesByTo {
@@ -104,8 +111,9 @@ export interface FileRoutesByTo {
   '/kpis': typeof AppKpisRoute
   '/notifications': typeof AppNotificationsRoute
   '/settings': typeof AppSettingsRoute
-  '/tasks': typeof AppTasksRoute
+  '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
+  '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
 }
 export interface FileRoutesById {
@@ -119,8 +127,9 @@ export interface FileRoutesById {
   '/_app/kpis': typeof AppKpisRoute
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/settings': typeof AppSettingsRoute
-  '/_app/tasks': typeof AppTasksRoute
+  '/_app/tasks': typeof AppTasksRouteWithChildren
   '/_app/team': typeof AppTeamRouteWithChildren
+  '/_app/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/_app/team/$userId': typeof AppTeamUserIdRoute
 }
 export interface FileRouteTypes {
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/team'
+    | '/tasks/$taskId'
     | '/team/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/team'
+    | '/tasks/$taskId'
     | '/team/$userId'
   id:
     | '__root__'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/tasks'
     | '/_app/team'
+    | '/_app/tasks/$taskId'
     | '/_app/team/$userId'
   fileRoutesById: FileRoutesById
 }
@@ -259,8 +271,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTeamUserIdRouteImport
       parentRoute: typeof AppTeamRoute
     }
+    '/_app/tasks/$taskId': {
+      id: '/_app/tasks/$taskId'
+      path: '/$taskId'
+      fullPath: '/tasks/$taskId'
+      preLoaderRoute: typeof AppTasksTaskIdRouteImport
+      parentRoute: typeof AppTasksRoute
+    }
   }
 }
+
+interface AppTasksRouteChildren {
+  AppTasksTaskIdRoute: typeof AppTasksTaskIdRoute
+}
+
+const AppTasksRouteChildren: AppTasksRouteChildren = {
+  AppTasksTaskIdRoute: AppTasksTaskIdRoute,
+}
+
+const AppTasksRouteWithChildren = AppTasksRoute._addFileChildren(
+  AppTasksRouteChildren,
+)
 
 interface AppTeamRouteChildren {
   AppTeamUserIdRoute: typeof AppTeamUserIdRoute
@@ -279,7 +310,7 @@ interface AppRouteChildren {
   AppKpisRoute: typeof AppKpisRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppSettingsRoute: typeof AppSettingsRoute
-  AppTasksRoute: typeof AppTasksRoute
+  AppTasksRoute: typeof AppTasksRouteWithChildren
   AppTeamRoute: typeof AppTeamRouteWithChildren
 }
 
@@ -289,7 +320,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppKpisRoute: AppKpisRoute,
   AppNotificationsRoute: AppNotificationsRoute,
   AppSettingsRoute: AppSettingsRoute,
-  AppTasksRoute: AppTasksRoute,
+  AppTasksRoute: AppTasksRouteWithChildren,
   AppTeamRoute: AppTeamRouteWithChildren,
 }
 
