@@ -1,0 +1,68 @@
+import { redirect } from "@tanstack/react-router";
+import { supabase } from "@/integrations/supabase/client";
+
+export type AppRole = "admin" | "manager" | "employee";
+
+type RoleRow = { role: AppRole };
+
+function isRetryableRoleError(error: { code?: string; message?: string; status?: number } | null) {
+  if (!error) return false;
+  return error.code === "PGRST002" || error.status === 503 || /schema cache/i.test(error.message ?? "");
+}
+
+async function wait(ms: number) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function fetchUserRolesWithRetry(userId: string, attempts = 5) {
+  let lastError: { code?: string; message?: string; status?: number } | null = null;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+
+    if (!error) {
+      return { roles: ((data ?? []) as RoleRow[]), error: null };
+    }
+
+    lastError = error;
+
+    if (!isRetryableRoleError(error) || attempt === attempts - 1) {
+      break;
+    }
+
+    await wait(400 * (attempt + 1));
+  }
+
+  return { roles: [] as RoleRow[], error: lastError };
+}
+
+export function pickTopRole(rows: RoleRow[]) {
+  const roles = rows.map((row) => row.role);
+
+  if (roles.includes("admin")) return "admin" satisfies AppRole;
+  if (roles.includes("manager")) return "manager" satisfies AppRole;
+  if (roles.includes("employee")) return "employee" satisfies AppRole;
+  return null;
+}
+
+export async function requireAnyRole(allowedRoles: AppRole[]) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error || !user) {
+    throw redirect({ to: "/login" });
+  }
+
+  const { roles, error: roleError } = await fetchUserRolesWithRetry(user.id);
+
+  if (roleError) {
+    console.warn("Role lookup failed during route access check", roleError);
+    return;
+  }
+
+  if (!roles.some((row) => allowedRoles.includes(row.role))) {
+    throw redirect({ to: "/dashboard" });
+  }
+}
