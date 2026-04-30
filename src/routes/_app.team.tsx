@@ -4,26 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { deptLabel, initialsOf, todayISO } from "@/lib/nexus";
+import { requireAnyRole } from "@/lib/role-access";
 import { Users, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
-async function requireRole() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) throw redirect({ to: "/login" });
-  const { data: roles } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", session.user.id);
-  const allowed = (roles ?? []).some((r) => r.role === "admin" || r.role === "manager");
-  if (!allowed) throw redirect({ to: "/dashboard" });
-}
-
 export const Route = createFileRoute("/_app/team")({
-  beforeLoad: () => requireRole(),
+  beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: TeamPage,
 });
 

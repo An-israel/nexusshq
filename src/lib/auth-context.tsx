@@ -1,6 +1,7 @@
 import * as React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import { fetchUserRolesWithRetry, pickTopRole } from "@/lib/role-access";
 
 export type AppRole = "admin" | "manager" | "employee";
 
@@ -35,22 +36,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = React.useState<NexusProfile | null>(null);
   const [role, setRole] = React.useState<AppRole | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [roleLoading, setRoleLoading] = React.useState(false);
+  const retryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadProfileAndRole = React.useCallback(async (userId: string) => {
-    const [{ data: prof }, { data: roles }] = await Promise.all([
+    setRoleLoading(true);
+    const [{ data: prof }, roleResult] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-      supabase.from("user_roles").select("role").eq("user_id", userId),
+      fetchUserRolesWithRetry(userId),
     ]);
     setProfile((prof as NexusProfile) ?? null);
-    const list = ((roles as { role: AppRole }[]) ?? []).map((r) => r.role);
-    const top: AppRole | null = list.includes("admin")
-      ? "admin"
-      : list.includes("manager")
-        ? "manager"
-        : list.includes("employee")
-          ? "employee"
-          : null;
-    setRole(top);
+    if (roleResult.error) {
+      console.warn("Failed to load user role", roleResult.error);
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = setTimeout(() => {
+        void loadProfileAndRole(userId);
+      }, 2500);
+    } else if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
+    setRole(pickTopRole(roleResult.roles as { role: AppRole }[]));
+    setRoleLoading(false);
   }, []);
 
   React.useEffect(() => {
@@ -79,9 +86,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, [loadProfileAndRole]);
 
+  React.useEffect(() => {
+    return () => {
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    };
+  }, []);
+
   const value: AuthContextValue = React.useMemo(
     () => ({
-      loading,
+      loading: loading || roleLoading,
       session,
       user: session?.user ?? null,
       profile,
@@ -100,7 +113,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (session?.user) await loadProfileAndRole(session.user.id);
       },
     }),
-    [loading, session, profile, role, loadProfileAndRole],
+    [loading, roleLoading, session, profile, role, loadProfileAndRole],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

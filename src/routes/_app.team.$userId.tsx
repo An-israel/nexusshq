@@ -1,9 +1,10 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { requireAnyRole } from "@/lib/role-access";
 import { ArrowLeft } from "lucide-react";
 import {
   PRIORITY_BADGE,
@@ -21,21 +22,8 @@ type Update = Database["public"]["Tables"]["task_updates"]["Row"];
 type Kpi = Database["public"]["Tables"]["kpis"]["Row"];
 type Att = Database["public"]["Tables"]["attendance"]["Row"];
 
-async function requireRole() {
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  if (!session) throw redirect({ to: "/login" });
-  const { data: roles } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", session.user.id);
-  const allowed = (roles ?? []).some((r) => r.role === "admin" || r.role === "manager");
-  if (!allowed) throw redirect({ to: "/dashboard" });
-}
-
 export const Route = createFileRoute("/_app/team/$userId")({
-  beforeLoad: () => requireRole(),
+  beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: EmployeeDetailPage,
 });
 

@@ -1,7 +1,8 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { requireAnyRole } from "@/lib/role-access";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,16 +44,7 @@ type Department = Database["public"]["Enums"]["department_type"];
 type Period = Database["public"]["Enums"]["kpi_period"];
 
 export const Route = createFileRoute("/_app/kpis")({
-  beforeLoad: async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw redirect({ to: "/login" });
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id);
-    const isAdmin = (roles ?? []).some((r) => r.role === "admin");
-    if (!isAdmin) throw redirect({ to: "/dashboard" });
-  },
+  beforeLoad: () => requireAnyRole(["admin"]),
   component: KpisPage,
 });
 
