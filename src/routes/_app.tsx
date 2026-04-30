@@ -8,8 +8,11 @@ import { NotificationBell } from "@/components/layout/NotificationBell";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login" });
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+    if (error || !user) throw redirect({ to: "/login" });
   },
   component: AppLayout,
 });
