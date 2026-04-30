@@ -11,6 +11,9 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  Star,
+  Wallet,
+  FolderUp,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -25,12 +28,15 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
-  { to: "/tasks", label: "My Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
+  { to: "/tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
   { to: "/attendance", label: "Attendance", icon: Clock, roles: ["admin", "manager", "employee"] },
+  { to: "/deliverables", label: "Deliverables", icon: FolderUp, roles: ["admin", "manager", "employee"] },
+  { to: "/reviews", label: "Reviews", icon: Star, roles: ["admin", "manager", "employee"] },
+  { to: "/payslips", label: "Payslips", icon: Wallet, roles: ["admin", "manager", "employee"] },
   { to: "/team", label: "Team", icon: Users, roles: ["admin", "manager"] },
   { to: "/kpis", label: "KPIs", icon: Target, roles: ["admin"] },
   { to: "/notifications", label: "Notifications", icon: Bell, roles: ["admin", "manager", "employee"] },
-  { to: "/settings", label: "Settings", icon: Settings, roles: ["admin"] },
+  { to: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
 ];
 
 export function AppSidebar({
