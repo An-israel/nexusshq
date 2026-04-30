@@ -37,7 +37,7 @@ interface TaskRow {
   description: string | null;
   assigned_to: string;
   assigned_by: string | null;
-  task_type: "daily" | "one_time" | "recurring";
+  task_type: "daily" | "one_time" | "weekly";
   priority: "low" | "medium" | "high" | "urgent";
   status: "todo" | "in_progress" | "completed" | "overdue";
   progress_percent: number;
