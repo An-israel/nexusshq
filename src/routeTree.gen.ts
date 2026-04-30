@@ -20,6 +20,7 @@ import { Route as AppNotificationsRouteImport } from './routes/_app.notification
 import { Route as AppKpisRouteImport } from './routes/_app.kpis'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
+import { Route as AppTeamUserIdRouteImport } from './routes/_app.team.$userId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -75,6 +76,11 @@ const AppAttendanceRoute = AppAttendanceRouteImport.update({
   path: '/attendance',
   getParentRoute: () => AppRoute,
 } as any)
+const AppTeamUserIdRoute = AppTeamUserIdRouteImport.update({
+  id: '/$userId',
+  path: '/$userId',
+  getParentRoute: () => AppTeamRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -86,7 +92,8 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AppNotificationsRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
-  '/team': typeof AppTeamRoute
+  '/team': typeof AppTeamRouteWithChildren
+  '/team/$userId': typeof AppTeamUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -98,7 +105,8 @@ export interface FileRoutesByTo {
   '/notifications': typeof AppNotificationsRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRoute
-  '/team': typeof AppTeamRoute
+  '/team': typeof AppTeamRouteWithChildren
+  '/team/$userId': typeof AppTeamUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -112,7 +120,8 @@ export interface FileRoutesById {
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tasks': typeof AppTasksRoute
-  '/_app/team': typeof AppTeamRoute
+  '/_app/team': typeof AppTeamRouteWithChildren
+  '/_app/team/$userId': typeof AppTeamUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -127,6 +136,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/team'
+    | '/team/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -139,6 +149,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/team'
+    | '/team/$userId'
   id:
     | '__root__'
     | '/'
@@ -152,6 +163,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/tasks'
     | '/_app/team'
+    | '/_app/team/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -240,8 +252,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAttendanceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/team/$userId': {
+      id: '/_app/team/$userId'
+      path: '/$userId'
+      fullPath: '/team/$userId'
+      preLoaderRoute: typeof AppTeamUserIdRouteImport
+      parentRoute: typeof AppTeamRoute
+    }
   }
 }
+
+interface AppTeamRouteChildren {
+  AppTeamUserIdRoute: typeof AppTeamUserIdRoute
+}
+
+const AppTeamRouteChildren: AppTeamRouteChildren = {
+  AppTeamUserIdRoute: AppTeamUserIdRoute,
+}
+
+const AppTeamRouteWithChildren =
+  AppTeamRoute._addFileChildren(AppTeamRouteChildren)
 
 interface AppRouteChildren {
   AppAttendanceRoute: typeof AppAttendanceRoute
@@ -250,7 +280,7 @@ interface AppRouteChildren {
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTasksRoute: typeof AppTasksRoute
-  AppTeamRoute: typeof AppTeamRoute
+  AppTeamRoute: typeof AppTeamRouteWithChildren
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -260,7 +290,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppNotificationsRoute: AppNotificationsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTasksRoute: AppTasksRoute,
-  AppTeamRoute: AppTeamRoute,
+  AppTeamRoute: AppTeamRouteWithChildren,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ClockWidget } from "@/components/layout/ClockWidget";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
@@ -40,7 +41,10 @@ function AppLayout() {
           <div className="text-xs uppercase tracking-wider text-muted-foreground">
             {role ? role.charAt(0).toUpperCase() + role.slice(1) : ""} workspace
           </div>
-          <ClockWidget />
+          <div className="flex items-center gap-2">
+            <NotificationBell />
+            <ClockWidget />
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-6">
