@@ -7,7 +7,15 @@ type RoleRow = { role: AppRole };
 
 function isRetryableRoleError(error: { code?: string; message?: string; status?: number } | null) {
   if (!error) return false;
-  return error.code === "PGRST002" || error.status === 503 || /schema cache/i.test(error.message ?? "");
+  return (
+    error.code === "PGRST000" ||
+    error.code === "PGRST001" ||
+    error.code === "PGRST002" ||
+    error.status === 503 ||
+    /schema cache|retrying the connection|database connection error|database client error/i.test(
+      error.message ?? "",
+    )
+  );
 }
 
 async function wait(ms: number) {
