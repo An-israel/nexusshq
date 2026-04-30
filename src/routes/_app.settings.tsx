@@ -55,7 +55,7 @@ function SettingsPage() {
           {isAdmin && <TabsTrigger value="roles"><Shield className="mr-2 h-4 w-4" /> Roles</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="mt-4">
-          {profile && <ProfileForm profile={profile as ProfileRow} onSaved={refresh} />}
+          {profile && <ProfileForm profile={profile as unknown as ProfileRow} onSaved={refresh} />}
         </TabsContent>
         {isAdmin && (
           <TabsContent value="team" className="mt-4">
@@ -113,7 +113,7 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
         </div>
         <div className="col-span-2">
           <Label>Department</Label>
-          <Select value={form.department ?? "other"} onValueChange={(v) => setForm({ ...form, department: v })}>
+          <Select value={form.department ?? "other"} onValueChange={(v) => setForm({ ...form, department: v as Dept })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>)}
@@ -165,7 +165,7 @@ function TeamAdmin() {
             <div className="grid grid-cols-3 gap-2 items-end">
               <div>
                 <Label className="text-xs">Department</Label>
-                <Select value={p.department ?? "other"} onValueChange={(v) => update(p.id, { department: v })}>
+                <Select value={p.department ?? "other"} onValueChange={(v) => update(p.id, { department: v as Dept })}>
                   <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>)}
