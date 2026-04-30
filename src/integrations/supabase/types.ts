@@ -55,6 +55,54 @@ export type Database = {
           },
         ]
       }
+      deliverables: {
+        Row: {
+          created_at: string
+          description: string | null
+          file_name: string
+          file_size_bytes: number
+          id: string
+          mime_type: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          reviewer_note: string | null
+          status: Database["public"]["Enums"]["deliverable_status"]
+          storage_path: string
+          task_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          file_name: string
+          file_size_bytes?: number
+          id?: string
+          mime_type?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_note?: string | null
+          status?: Database["public"]["Enums"]["deliverable_status"]
+          storage_path: string
+          task_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          file_name?: string
+          file_size_bytes?: number
+          id?: string
+          mime_type?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          reviewer_note?: string | null
+          status?: Database["public"]["Enums"]["deliverable_status"]
+          storage_path?: string
+          task_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       flags: {
         Row: {
           created_at: string
@@ -195,36 +243,150 @@ export type Database = {
           },
         ]
       }
+      payslips: {
+        Row: {
+          base_salary: number
+          bonus: number
+          created_at: string
+          currency: string
+          deductions: number
+          id: string
+          issued_at: string
+          issued_by: string | null
+          net_pay: number
+          notes: string | null
+          period_month: number
+          period_year: number
+          user_id: string
+        }
+        Insert: {
+          base_salary?: number
+          bonus?: number
+          created_at?: string
+          currency?: string
+          deductions?: number
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          net_pay?: number
+          notes?: string | null
+          period_month: number
+          period_year: number
+          user_id: string
+        }
+        Update: {
+          base_salary?: number
+          bonus?: number
+          created_at?: string
+          currency?: string
+          deductions?: number
+          id?: string
+          issued_at?: string
+          issued_by?: string | null
+          net_pay?: number
+          notes?: string | null
+          period_month?: number
+          period_year?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      performance_reviews: {
+        Row: {
+          acknowledged_at: string | null
+          areas_to_improve: string | null
+          attendance_score: number
+          collaboration_score: number
+          created_at: string
+          employee_acknowledged: boolean
+          id: string
+          manager_notes: string | null
+          overall_rating: Database["public"]["Enums"]["review_rating"]
+          period_end: string
+          period_start: string
+          productivity_score: number
+          quality_score: number
+          reviewer_id: string | null
+          strengths: string | null
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          areas_to_improve?: string | null
+          attendance_score?: number
+          collaboration_score?: number
+          created_at?: string
+          employee_acknowledged?: boolean
+          id?: string
+          manager_notes?: string | null
+          overall_rating?: Database["public"]["Enums"]["review_rating"]
+          period_end: string
+          period_start: string
+          productivity_score?: number
+          quality_score?: number
+          reviewer_id?: string | null
+          strengths?: string | null
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          areas_to_improve?: string | null
+          attendance_score?: number
+          collaboration_score?: number
+          created_at?: string
+          employee_acknowledged?: boolean
+          id?: string
+          manager_notes?: string | null
+          overall_rating?: Database["public"]["Enums"]["review_rating"]
+          period_end?: string
+          period_start?: string
+          productivity_score?: number
+          quality_score?: number
+          reviewer_id?: string | null
+          strengths?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
+          base_salary: number | null
           created_at: string
           department: Database["public"]["Enums"]["department_type"] | null
           email: string | null
           full_name: string | null
+          hire_date: string | null
           id: string
           is_active: boolean
           job_title: string | null
+          phone: string | null
         }
         Insert: {
           avatar_url?: string | null
+          base_salary?: number | null
           created_at?: string
           department?: Database["public"]["Enums"]["department_type"] | null
           email?: string | null
           full_name?: string | null
+          hire_date?: string | null
           id: string
           is_active?: boolean
           job_title?: string | null
+          phone?: string | null
         }
         Update: {
           avatar_url?: string | null
+          base_salary?: number | null
           created_at?: string
           department?: Database["public"]["Enums"]["department_type"] | null
           email?: string | null
           full_name?: string | null
+          hire_date?: string | null
           id?: string
           is_active?: boolean
           job_title?: string | null
+          phone?: string | null
         }
         Relationships: []
       }
@@ -396,6 +558,11 @@ export type Database = {
     Enums: {
       app_role: "admin" | "manager" | "employee"
       attendance_status: "present" | "late" | "absent" | "half_day"
+      deliverable_status:
+        | "submitted"
+        | "approved"
+        | "rejected"
+        | "revision_requested"
       department_type:
         | "management"
         | "customer_success"
@@ -415,6 +582,11 @@ export type Database = {
         | "flag"
         | "kpi_reminder"
         | "clock_reminder"
+      review_rating:
+        | "exceeds"
+        | "meets"
+        | "needs_improvement"
+        | "unsatisfactory"
       task_priority: "low" | "medium" | "high" | "urgent"
       task_status: "todo" | "in_progress" | "completed" | "overdue"
       task_type: "daily" | "weekly" | "one_time"
@@ -547,6 +719,12 @@ export const Constants = {
     Enums: {
       app_role: ["admin", "manager", "employee"],
       attendance_status: ["present", "late", "absent", "half_day"],
+      deliverable_status: [
+        "submitted",
+        "approved",
+        "rejected",
+        "revision_requested",
+      ],
       department_type: [
         "management",
         "customer_success",
@@ -567,6 +745,12 @@ export const Constants = {
         "flag",
         "kpi_reminder",
         "clock_reminder",
+      ],
+      review_rating: [
+        "exceeds",
+        "meets",
+        "needs_improvement",
+        "unsatisfactory",
       ],
       task_priority: ["low", "medium", "high", "urgent"],
       task_status: ["todo", "in_progress", "completed", "overdue"],
