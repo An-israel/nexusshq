@@ -22,11 +22,13 @@ export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
 });
 
+type Dept = (typeof DEPARTMENTS)[number];
+
 interface ProfileRow {
   id: string;
   full_name: string | null;
   email: string | null;
-  department: string | null;
+  department: Dept | null;
   job_title: string | null;
   phone: string | null;
   hire_date: string | null;

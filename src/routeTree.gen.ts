@@ -16,8 +16,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppTeamRouteImport } from './routes/_app.team'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppReviewsRouteImport } from './routes/_app.reviews'
+import { Route as AppPayslipsRouteImport } from './routes/_app.payslips'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppKpisRouteImport } from './routes/_app.kpis'
+import { Route as AppDeliverablesRouteImport } from './routes/_app.deliverables'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
 import { Route as AppTeamUserIdRouteImport } from './routes/_app.team.$userId'
@@ -57,6 +60,16 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReviewsRoute = AppReviewsRouteImport.update({
+  id: '/reviews',
+  path: '/reviews',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppPayslipsRoute = AppPayslipsRouteImport.update({
+  id: '/payslips',
+  path: '/payslips',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppNotificationsRoute = AppNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -65,6 +78,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
 const AppKpisRoute = AppKpisRouteImport.update({
   id: '/kpis',
   path: '/kpis',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDeliverablesRoute = AppDeliverablesRouteImport.update({
+  id: '/deliverables',
+  path: '/deliverables',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDashboardRoute = AppDashboardRouteImport.update({
@@ -94,8 +112,11 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/attendance': typeof AppAttendanceRoute
   '/dashboard': typeof AppDashboardRoute
+  '/deliverables': typeof AppDeliverablesRoute
   '/kpis': typeof AppKpisRoute
   '/notifications': typeof AppNotificationsRoute
+  '/payslips': typeof AppPayslipsRoute
+  '/reviews': typeof AppReviewsRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
@@ -108,8 +129,11 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/attendance': typeof AppAttendanceRoute
   '/dashboard': typeof AppDashboardRoute
+  '/deliverables': typeof AppDeliverablesRoute
   '/kpis': typeof AppKpisRoute
   '/notifications': typeof AppNotificationsRoute
+  '/payslips': typeof AppPayslipsRoute
+  '/reviews': typeof AppReviewsRoute
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
@@ -124,8 +148,11 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_app/attendance': typeof AppAttendanceRoute
   '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/deliverables': typeof AppDeliverablesRoute
   '/_app/kpis': typeof AppKpisRoute
   '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/payslips': typeof AppPayslipsRoute
+  '/_app/reviews': typeof AppReviewsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tasks': typeof AppTasksRouteWithChildren
   '/_app/team': typeof AppTeamRouteWithChildren
@@ -140,8 +167,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/attendance'
     | '/dashboard'
+    | '/deliverables'
     | '/kpis'
     | '/notifications'
+    | '/payslips'
+    | '/reviews'
     | '/settings'
     | '/tasks'
     | '/team'
@@ -154,8 +184,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/attendance'
     | '/dashboard'
+    | '/deliverables'
     | '/kpis'
     | '/notifications'
+    | '/payslips'
+    | '/reviews'
     | '/settings'
     | '/tasks'
     | '/team'
@@ -169,8 +202,11 @@ export interface FileRouteTypes {
     | '/login'
     | '/_app/attendance'
     | '/_app/dashboard'
+    | '/_app/deliverables'
     | '/_app/kpis'
     | '/_app/notifications'
+    | '/_app/payslips'
+    | '/_app/reviews'
     | '/_app/settings'
     | '/_app/tasks'
     | '/_app/team'
@@ -236,6 +272,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/reviews': {
+      id: '/_app/reviews'
+      path: '/reviews'
+      fullPath: '/reviews'
+      preLoaderRoute: typeof AppReviewsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/payslips': {
+      id: '/_app/payslips'
+      path: '/payslips'
+      fullPath: '/payslips'
+      preLoaderRoute: typeof AppPayslipsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/notifications': {
       id: '/_app/notifications'
       path: '/notifications'
@@ -248,6 +298,13 @@ declare module '@tanstack/react-router' {
       path: '/kpis'
       fullPath: '/kpis'
       preLoaderRoute: typeof AppKpisRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/deliverables': {
+      id: '/_app/deliverables'
+      path: '/deliverables'
+      fullPath: '/deliverables'
+      preLoaderRoute: typeof AppDeliverablesRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/dashboard': {
@@ -307,8 +364,11 @@ const AppTeamRouteWithChildren =
 interface AppRouteChildren {
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppDashboardRoute: typeof AppDashboardRoute
+  AppDeliverablesRoute: typeof AppDeliverablesRoute
   AppKpisRoute: typeof AppKpisRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
+  AppPayslipsRoute: typeof AppPayslipsRoute
+  AppReviewsRoute: typeof AppReviewsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppTasksRoute: typeof AppTasksRouteWithChildren
   AppTeamRoute: typeof AppTeamRouteWithChildren
@@ -317,8 +377,11 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAttendanceRoute: AppAttendanceRoute,
   AppDashboardRoute: AppDashboardRoute,
+  AppDeliverablesRoute: AppDeliverablesRoute,
   AppKpisRoute: AppKpisRoute,
   AppNotificationsRoute: AppNotificationsRoute,
+  AppPayslipsRoute: AppPayslipsRoute,
+  AppReviewsRoute: AppReviewsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppTasksRoute: AppTasksRouteWithChildren,
   AppTeamRoute: AppTeamRouteWithChildren,
