@@ -41,22 +41,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadProfileAndRole = React.useCallback(async (userId: string) => {
     setRoleLoading(true);
-    const [{ data: prof }, roleResult] = await Promise.all([
+    const [profileResult, roleResult] = await Promise.all([
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       fetchUserRolesWithRetry(userId),
     ]);
-    setProfile((prof as NexusProfile) ?? null);
+
+    if (profileResult.error) {
+      console.warn("Failed to load user profile", profileResult.error);
+    } else {
+      setProfile((profileResult.data as NexusProfile) ?? null);
+    }
+
     if (roleResult.error) {
       console.warn("Failed to load user role", roleResult.error);
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
       retryTimerRef.current = setTimeout(() => {
         void loadProfileAndRole(userId);
       }, 2500);
-    } else if (retryTimerRef.current) {
-      clearTimeout(retryTimerRef.current);
-      retryTimerRef.current = null;
+    } else {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = null;
+      }
+      setRole(pickTopRole(roleResult.roles as { role: AppRole }[]));
     }
-    setRole(pickTopRole(roleResult.roles as { role: AppRole }[]));
+
     setRoleLoading(false);
   }, []);
 
@@ -94,7 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const value: AuthContextValue = React.useMemo(
     () => ({
-      loading: loading || roleLoading,
+      loading,
       session,
       user: session?.user ?? null,
       profile,
