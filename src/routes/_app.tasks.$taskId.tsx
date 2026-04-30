@@ -167,7 +167,7 @@ function TaskDetailPage() {
     if (task.assigned_by && task.assigned_by !== user.id) {
       await supabase.from("notifications").insert({
         user_id: task.assigned_by,
-        type: "task_update",
+        type: "task_assigned",
         title: newStatus === "completed" ? "✅ Task completed" : "📈 Task updated",
         message: `${task.title} — ${progress}%`,
         related_task_id: task.id,
