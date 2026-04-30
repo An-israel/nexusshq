@@ -59,8 +59,15 @@ export async function requireAnyRole(allowedRoles: AppRole[]) {
     error,
   } = await supabase.auth.getUser();
 
-  if (error || !user) {
+  const isTransientAuthError =
+    !!error && /unexpected failure|database error querying schema|please check server logs/i.test(error.message);
+
+  if (!user && !isTransientAuthError) {
     throw redirect({ to: "/login" });
+  }
+
+  if (!user) {
+    return;
   }
 
   const { roles, error: roleError } = await fetchUserRolesWithRetry(user.id);
