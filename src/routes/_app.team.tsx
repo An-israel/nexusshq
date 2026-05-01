@@ -165,7 +165,12 @@ function TeamPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {members.map((m) => (
-            <MemberCard key={m.profile.id} m={m} />
+            <MemberCard
+              key={m.profile.id}
+              m={m}
+              isAdmin={isAdmin}
+              onRoleChanged={() => setReloadKey((k) => k + 1)}
+            />
           ))}
         </div>
       )}
@@ -197,49 +202,87 @@ function StatCard({
   );
 }
 
-function MemberCard({ m }: { m: MemberRow }) {
+function MemberCard({
+  m,
+  isAdmin,
+  onRoleChanged,
+}: {
+  m: MemberRow;
+  isAdmin: boolean;
+  onRoleChanged: () => void;
+}) {
   const todayPct = m.todayTotal ? Math.round((m.todayDone / m.todayTotal) * 100) : 0;
-  return (
-    <Link
-      to="/team/$userId"
-      params={{ userId: m.profile.id }}
-      className="block rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
-    >
-      <div className="flex items-start gap-3">
-        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
-          {initialsOf(m.profile.full_name ?? m.profile.email)}
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold">{m.profile.full_name ?? "—"}</p>
-          <p className="truncate text-xs text-muted-foreground">{m.profile.job_title ?? "—"}</p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="text-[10px]">{deptLabel(m.profile.department)}</Badge>
-            <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-              <span className={`h-1.5 w-1.5 rounded-full ${m.clockedIn ? "bg-success animate-pulse" : "bg-muted-foreground/40"}`} />
-              {m.clockedIn ? "In" : "Not clocked in"}
-            </span>
-          </div>
-        </div>
-        {m.flagsCount > 0 && (
-          <Badge className="bg-destructive text-destructive-foreground">{m.flagsCount}</Badge>
-        )}
-      </div>
+  const roleStyle =
+    m.role === "admin"
+      ? "border-primary/50 text-primary"
+      : m.role === "manager"
+        ? "border-warning/50 text-warning"
+        : "text-muted-foreground";
 
-      <div className="mt-4 space-y-3">
-        <div>
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-muted-foreground">Today's tasks</span>
-            <span className="font-medium">{m.todayDone}/{m.todayTotal}</span>
+  return (
+    <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40">
+      <Link
+        to="/team/$userId"
+        params={{ userId: m.profile.id }}
+        className="block"
+      >
+        <div className="flex items-start gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/15 text-sm font-semibold text-primary">
+            {initialsOf(m.profile.full_name ?? m.profile.email)}
           </div>
-          <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-            <div className="h-full bg-primary" style={{ width: `${todayPct}%` }} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{m.profile.full_name ?? "—"}</p>
+            <p className="truncate text-xs text-muted-foreground">{m.profile.job_title ?? "—"}</p>
+            <div className="mt-1 flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="text-[10px]">{deptLabel(m.profile.department)}</Badge>
+              {m.role && (
+                <Badge variant="outline" className={`text-[10px] ${roleStyle}`}>
+                  {m.role}
+                </Badge>
+              )}
+              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                <span className={`h-1.5 w-1.5 rounded-full ${m.clockedIn ? "bg-success animate-pulse" : "bg-muted-foreground/40"}`} />
+                {m.clockedIn ? "In" : "Not clocked in"}
+              </span>
+            </div>
+          </div>
+          {m.flagsCount > 0 && (
+            <Badge className="bg-destructive text-destructive-foreground">{m.flagsCount}</Badge>
+          )}
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Today's tasks</span>
+              <span className="font-medium">{m.todayDone}/{m.todayTotal}</span>
+            </div>
+            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div className="h-full bg-primary" style={{ width: `${todayPct}%` }} />
+            </div>
+          </div>
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>This week</span>
+            <span className="font-medium text-foreground">{m.weekDone}/{m.weekTotal}</span>
           </div>
         </div>
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>This week</span>
-          <span className="font-medium text-foreground">{m.weekDone}/{m.weekTotal}</span>
+      </Link>
+
+      {isAdmin && (
+        <div className="mt-4 flex justify-end border-t border-border pt-3">
+          <ManageRoleDialog
+            userId={m.profile.id}
+            userName={m.profile.full_name ?? m.profile.email ?? undefined}
+            currentRole={m.role}
+            onChanged={onRoleChanged}
+            trigger={
+              <Button variant="ghost" size="sm" className="h-7 text-xs">
+                <Shield className="mr-1.5 h-3 w-3" /> Change role
+              </Button>
+            }
+          />
         </div>
-      </div>
-    </Link>
+      )}
+    </div>
   );
 }
