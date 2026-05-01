@@ -55,25 +55,23 @@ function AnnouncementsPage() {
 
   const load = React.useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("announcements")
-      .select("*")
-      .order("is_pinned", { ascending: false })
-      .order("created_at", { ascending: false });
+    const [{ data, error }, { data: profs }] = await Promise.all([
+      supabase
+        .from("announcements")
+        .select("*")
+        .order("is_pinned", { ascending: false })
+        .order("created_at", { ascending: false }),
+      supabase.from("profiles").select("id, full_name, email"),
+    ]);
     if (error) { toast.error(error.message); setLoading(false); return; }
     const rows = (data ?? []) as Announcement[];
-    // Filter to announcements targeting this user's department OR company-wide
     const visible = rows.filter(
       (r) => !r.department || r.department === profile?.department || isManager,
     );
     setItems(visible);
-    const ids = Array.from(new Set(rows.map((r) => r.author_id).filter(Boolean))) as string[];
-    if (ids.length) {
-      const { data: profs } = await supabase.from("profiles").select("id, full_name, email").in("id", ids);
-      const map: Record<string, AuthorMini> = {};
-      (profs ?? []).forEach((p) => { map[p.id] = p as AuthorMini; });
-      setAuthors(map);
-    }
+    const map: Record<string, AuthorMini> = {};
+    (profs ?? []).forEach((p) => { map[p.id] = p as AuthorMini; });
+    setAuthors(map);
     setLoading(false);
   }, [profile?.department, isManager]);
 

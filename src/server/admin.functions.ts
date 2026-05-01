@@ -38,7 +38,11 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data, context }) => {
-    await assertCallerIsAdmin(context.userId);
+    // Managers can invite employees/managers; only admins can invite admins
+    await assertCallerIsManagerOrAdmin(context.userId);
+    if (data.role === "admin") {
+      await assertCallerIsAdmin(context.userId);
+    }
     return inviteEmployee(data);
   });
 
@@ -64,7 +68,11 @@ export const setEmployeeRoleFn = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data, context }) => {
-    await assertCallerIsAdmin(context.userId);
+    // Managers can set employee/manager; only admins can grant admin
+    await assertCallerIsManagerOrAdmin(context.userId);
+    if (data.role === "admin") {
+      await assertCallerIsAdmin(context.userId);
+    }
     await setEmployeeRole(data.userId, data.role);
     return { ok: true };
   });

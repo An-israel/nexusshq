@@ -23,7 +23,7 @@ import { UserPlus } from "lucide-react";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
 import { inviteEmployeeFn } from "@/server/admin.functions";
 
-export function InviteEmployeeDialog({ onInvited }: { onInvited?: () => void }) {
+export function InviteEmployeeDialog({ onInvited, isAdmin = false }: { onInvited?: () => void; isAdmin?: boolean }) {
   const invite = useServerFn(inviteEmployeeFn);
   const [open, setOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
@@ -158,7 +158,7 @@ export function InviteEmployeeDialog({ onInvited }: { onInvited?: () => void }) 
                 <SelectContent>
                   <SelectItem value="employee">Employee</SelectItem>
                   <SelectItem value="manager">Manager</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  {isAdmin && <SelectItem value="admin">Admin</SelectItem>}
                 </SelectContent>
               </Select>
             </div>

@@ -60,20 +60,18 @@ function StandupsPage() {
         .maybeSingle();
       setTodayStandup((data as Standup) ?? null);
     } else {
-      const { data } = await supabase
-        .from("standups")
-        .select("*")
-        .eq("date", isoToday)
-        .order("submitted_at", { ascending: true });
-      const rows = (data ?? []) as Standup[];
-      setTeamStandups(rows);
-      const ids = Array.from(new Set(rows.map((r) => r.user_id)));
-      if (ids.length) {
-        const { data: profs } = await supabase.from("profiles").select("id, full_name, email").in("id", ids);
-        const map: Record<string, Profile> = {};
-        (profs ?? []).forEach((p) => { map[p.id] = p as Profile; });
-        setProfiles(map);
-      }
+      const [{ data: standupData }, { data: profData }] = await Promise.all([
+        supabase
+          .from("standups")
+          .select("*")
+          .eq("date", isoToday)
+          .order("submitted_at", { ascending: true }),
+        supabase.from("profiles").select("id, full_name, email").eq("is_active", true),
+      ]);
+      setTeamStandups((standupData ?? []) as Standup[]);
+      const map: Record<string, Profile> = {};
+      (profData ?? []).forEach((p) => { map[p.id] = p as Profile; });
+      setProfiles(map);
     }
     setLoading(false);
   }, [user, view]);
