@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import * as React from "react";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,10 @@ import {
 } from "@/lib/nexus";
 import { QuickAssignTaskDialog } from "@/components/team/QuickAssignTaskDialog";
 import { FlagEmployeeDialog } from "@/components/team/FlagEmployeeDialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
 import { setEmployeeActiveFn, resolveFlagFn } from "@/server/admin.functions";
+import { reopenFlagFn } from "@/server/tasks.functions";
 import { useRealtime } from "@/lib/use-realtime";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -39,6 +43,7 @@ function EmployeeDetailPage() {
   const { isAdmin } = useAuth();
   const setActive = useServerFn(setEmployeeActiveFn);
   const resolveFlag = useServerFn(resolveFlagFn);
+  const reopenFlag = useServerFn(reopenFlagFn);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -49,6 +54,14 @@ function EmployeeDetailPage() {
   const [att, setAtt] = useState<Att[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [togglingActive, setTogglingActive] = useState(false);
+  // Warning history filtering & pagination
+  const [warningFrom, setWarningFrom] = useState<string>("");
+  const [warningTo, setWarningTo] = useState<string>("");
+  const [warningStatusFilter, setWarningStatusFilter] = useState<"all" | "active" | "resolved">("all");
+  const [warningPage, setWarningPage] = useState(0);
+  const WARNING_PAGE_SIZE = 5;
+  // Confirm-resolve dialog state
+  const [confirmFlag, setConfirmFlag] = useState<Flag | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -99,12 +112,32 @@ function EmployeeDetailPage() {
   useRealtime({
     table: "tasks",
     filter: `assigned_to=eq.${userId}`,
-    onChange: () => setReloadKey((k) => k + 1),
+    shouldHandle: (p) => {
+      const row = (p.new ?? p.old) as { assigned_to?: string } | null;
+      return !row || row.assigned_to === userId;
+    },
+    onChange: (p) => {
+      setReloadKey((k) => k + 1);
+      if (p?.eventType === "INSERT") {
+        toast.message("New task assigned to this employee");
+      } else if (p?.eventType === "UPDATE") {
+        toast.message("Task updated");
+      }
+    },
   });
   useRealtime({
     table: "flags",
     filter: `flagged_user_id=eq.${userId}`,
-    onChange: () => setReloadKey((k) => k + 1),
+    shouldHandle: (p) => {
+      const row = (p.new ?? p.old) as { flagged_user_id?: string } | null;
+      return !row || row.flagged_user_id === userId;
+    },
+    onChange: (p) => {
+      setReloadKey((k) => k + 1);
+      if (p?.eventType === "INSERT") {
+        toast.warning("A new warning was added");
+      }
+    },
   });
 
   async function toggleActive() {
@@ -123,19 +156,59 @@ function EmployeeDetailPage() {
     }
   }
 
-  async function handleResolveFlag(flagId: string) {
+  async function performResolveFlag(flag: Flag) {
     try {
-      await resolveFlag({ data: { flagId } });
-      toast.success("Warning resolved");
+      await resolveFlag({ data: { flagId: flag.id } });
+      // Show toast with Undo action
+      toast.success("Warning marked as resolved", {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            try {
+              await reopenFlag({ data: { flagId: flag.id } });
+              toast.success("Warning reopened");
+              setReloadKey((k) => k + 1);
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Failed to undo");
+            }
+          },
+        },
+        duration: 6000,
+      });
       setReloadKey((k) => k + 1);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to resolve");
     }
   }
 
-
   const filteredTasks =
     statusFilter === "all" ? tasks : tasks.filter((t) => t.status === statusFilter);
+
+  // Warning history: apply filters + pagination
+  const filteredWarnings = React.useMemo(() => {
+    return flags.filter((f) => {
+      if (warningStatusFilter === "active" && f.is_resolved) return false;
+      if (warningStatusFilter === "resolved" && !f.is_resolved) return false;
+      const created = f.created_at.slice(0, 10);
+      if (warningFrom && created < warningFrom) return false;
+      if (warningTo && created > warningTo) return false;
+      return true;
+    });
+  }, [flags, warningStatusFilter, warningFrom, warningTo]);
+
+  const warningTotalPages = Math.max(1, Math.ceil(filteredWarnings.length / WARNING_PAGE_SIZE));
+  const safePage = Math.min(warningPage, warningTotalPages - 1);
+  const pagedWarnings = filteredWarnings.slice(
+    safePage * WARNING_PAGE_SIZE,
+    safePage * WARNING_PAGE_SIZE + WARNING_PAGE_SIZE,
+  );
+
+  function clearWarningFilters() {
+    setWarningFrom("");
+    setWarningTo("");
+    setWarningStatusFilter("all");
+    setWarningPage(0);
+  }
 
   const monthPresent = att.filter((a) => a.status === "present" || a.status === "late").length;
   const monthLate = att.filter((a) => a.status === "late").length;
@@ -202,7 +275,7 @@ function EmployeeDetailPage() {
                   </div>
                   <p className="mt-1.5">{f.reason}</p>
                   <div className="mt-2 flex justify-end">
-                    <Button size="sm" variant="outline" onClick={() => handleResolveFlag(f.id)}>
+                    <Button size="sm" variant="outline" onClick={() => setConfirmFlag(f)}>
                       Mark resolved
                     </Button>
                   </div>
@@ -213,44 +286,126 @@ function EmployeeDetailPage() {
         </div>
       </div>
 
-      {/* Warning history */}
+      {/* Warning history with filters + pagination */}
       <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-          Warning History ({flags.length})
-        </h2>
-        {flags.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No warnings on record.</p>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Warning History ({filteredWarnings.length}/{flags.length})
+          </h2>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex gap-1 rounded-lg border border-border bg-background/40 p-1">
+              {(["all", "active", "resolved"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => { setWarningStatusFilter(s); setWarningPage(0); }}
+                  className={`rounded-md px-2.5 py-1 text-xs capitalize ${
+                    warningStatusFilter === s
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+            <Input
+              type="date"
+              value={warningFrom}
+              onChange={(e) => { setWarningFrom(e.target.value); setWarningPage(0); }}
+              className="h-8 w-36 text-xs"
+              aria-label="From date"
+            />
+            <Input
+              type="date"
+              value={warningTo}
+              onChange={(e) => { setWarningTo(e.target.value); setWarningPage(0); }}
+              className="h-8 w-36 text-xs"
+              aria-label="To date"
+            />
+            {(warningFrom || warningTo || warningStatusFilter !== "all") && (
+              <Button variant="ghost" size="sm" onClick={clearWarningFilters} className="h-8 text-xs">
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+        {filteredWarnings.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No warnings match these filters.</p>
         ) : (
-          <ul className="space-y-2">
-            {flags.map((f) => (
-              <li
-                key={f.id}
-                className={`rounded-lg border p-3 text-sm ${
-                  f.is_resolved ? "border-border bg-background/40" : "border-destructive/30 bg-destructive/5"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-[10px]">{f.severity}</Badge>
-                    {f.is_resolved ? (
-                      <Badge variant="outline" className="text-[10px] text-success">Resolved</Badge>
-                    ) : (
-                      <Badge variant="outline" className="text-[10px] text-destructive">Active</Badge>
-                    )}
+          <>
+            <ul className="space-y-2">
+              {pagedWarnings.map((f) => (
+                <li
+                  key={f.id}
+                  className={`rounded-lg border p-3 text-sm ${
+                    f.is_resolved ? "border-border bg-background/40" : "border-destructive/30 bg-destructive/5"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-[10px]">{f.severity}</Badge>
+                      {f.is_resolved ? (
+                        <Badge variant="outline" className="text-[10px] text-success">Resolved</Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[10px] text-destructive">Active</Badge>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">{timeAgo(f.created_at)}</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">{timeAgo(f.created_at)}</span>
+                  <p className="mt-1.5">{f.reason}</p>
+                  {f.resolved_at && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Resolved {timeAgo(f.resolved_at)}
+                    </p>
+                  )}
+                </li>
+              ))}
+            </ul>
+            {warningTotalPages > 1 && (
+              <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Page {safePage + 1} of {warningTotalPages}</span>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={safePage === 0}
+                    onClick={() => setWarningPage((p) => Math.max(0, p - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={safePage >= warningTotalPages - 1}
+                    onClick={() => setWarningPage((p) => p + 1)}
+                  >
+                    Next
+                  </Button>
                 </div>
-                <p className="mt-1.5">{f.reason}</p>
-                {f.resolved_at && (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Resolved {timeAgo(f.resolved_at)}
-                  </p>
-                )}
-              </li>
-            ))}
-          </ul>
+              </div>
+            )}
+          </>
         )}
       </section>
+
+      <ConfirmDialog
+        open={!!confirmFlag}
+        onOpenChange={(o) => !o && setConfirmFlag(null)}
+        title="Mark warning as resolved?"
+        description={
+          confirmFlag ? (
+            <>
+              This will close the warning: <span className="italic">"{confirmFlag.reason}"</span>.
+              You can undo immediately from the toast.
+            </>
+          ) : null
+        }
+        confirmLabel="Mark resolved"
+        onConfirm={async () => {
+          if (confirmFlag) await performResolveFlag(confirmFlag);
+        }}
+      />
 
       {/* Tasks */}
       <section className="rounded-2xl border border-border bg-card p-5">
