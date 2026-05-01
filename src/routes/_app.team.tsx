@@ -57,7 +57,7 @@ function TeamPage() {
       const profiles = (profilesData as Profile[]) ?? [];
 
       const userIds = profiles.map((p) => p.id);
-      const [tasksRes, attRes, flagsRes, overdueRes, completedTodayRes] = await Promise.all([
+      const [tasksRes, attRes, flagsRes, overdueRes, completedTodayRes, rolesRes] = await Promise.all([
         userIds.length
           ? supabase.from("tasks").select("id, assigned_to, status, due_date, task_type")
               .in("assigned_to", userIds)
@@ -74,6 +74,9 @@ function TeamPage() {
           .lt("due_date", today).neq("status", "completed"),
         supabase.from("tasks").select("id", { count: "exact", head: true })
           .eq("status", "completed").gte("completed_at", `${today}T00:00:00`),
+        userIds.length
+          ? supabase.from("user_roles").select("user_id, role").in("user_id", userIds)
+          : Promise.resolve({ data: [], error: null }),
       ]);
 
       if (cancelled) return;
@@ -83,6 +86,14 @@ function TeamPage() {
       }>) ?? [];
       const att = (attRes.data as Array<{ user_id: string; clock_in: string | null; clock_out: string | null }>) ?? [];
       const flags = (flagsRes.data as Array<{ flagged_user_id: string }>) ?? [];
+      const roles = (rolesRes.data as Array<{ user_id: string; role: AppRole }>) ?? [];
+      const roleMap = new Map<string, AppRole>();
+      // Pick highest privilege if multiple
+      const rank = { admin: 1, manager: 2, employee: 3 } as const;
+      roles.forEach((r) => {
+        const cur = roleMap.get(r.user_id);
+        if (!cur || rank[r.role] < rank[cur]) roleMap.set(r.user_id, r.role);
+      });
 
       const weekStart = new Date();
       const day = weekStart.getDay();
@@ -100,6 +111,7 @@ function TeamPage() {
         const a = att.find((x) => x.user_id === p.id);
         return {
           profile: p,
+          role: roleMap.get(p.id) ?? null,
           todayTotal: todays.length,
           todayDone: todays.filter((t) => t.status === "completed").length,
           weekTotal: weeks.length,
