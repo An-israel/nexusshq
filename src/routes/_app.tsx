@@ -7,31 +7,57 @@ import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
 
+const TIMEOUT_SENTINEL = Symbol("timeout");
+
 export const Route = createFileRoute("/_app")({
+  // Race getUser() against a 4s timeout so a slow/stalled Supabase connection
+  // never leaves the router stuck in its pending state on mobile networks.
+  // If we time out, AuthProvider takes over auth-checking on the client side.
   beforeLoad: async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<typeof TIMEOUT_SENTINEL>((resolve) =>
+        setTimeout(() => resolve(TIMEOUT_SENTINEL), 4000),
+      ),
+    ]);
+
+    if (result === TIMEOUT_SENTINEL) return; // let AuthProvider handle it
+
+    const { data: { user }, error } = result;
 
     if (error) {
       logSupabaseClientError({
         scope: "app-layout:beforeLoad:getUser",
         error,
         matchers: ["/auth/v1/user"],
-        extra: {
-          route: "/_app",
-        },
+        extra: { route: "/_app" },
       });
     }
 
     const isTransientAuthError =
-      !!error && /unexpected failure|database error querying schema|please check server logs/i.test(error.message);
+      !!error &&
+      /unexpected failure|database error querying schema|please check server logs/i.test(
+        error.message,
+      );
 
     if (!user && !isTransientAuthError) throw redirect({ to: "/login" });
   },
+  // Show a styled spinner while beforeLoad runs so there's never a blank screen
+  pendingMs: 0,
+  pendingComponent: LoadingScreen,
   component: AppLayout,
 });
+
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex flex-col items-center gap-3">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      </div>
+    </div>
+  );
+}
 
 function AppLayout() {
   const { loading, session, role } = useAuth();
@@ -42,13 +68,7 @@ function AppLayout() {
     if (!loading && !session) navigate({ to: "/login" });
   }, [loading, session, navigate]);
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
-        Loading…
-      </div>
-    );
-  }
+  if (loading) return <LoadingScreen />;
 
   // Not loading but no session — redirect effect fires, render nothing in the meantime
   if (!session) return null;

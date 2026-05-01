@@ -66,11 +66,23 @@ export function pickTopRole(rows: RoleRow[]) {
   return null;
 }
 
+const TIMEOUT_SENTINEL = Symbol("timeout");
+
 export async function requireAnyRole(allowedRoles: AppRole[]) {
+  const raceResult = await Promise.race([
+    supabase.auth.getUser(),
+    new Promise<typeof TIMEOUT_SENTINEL>((resolve) =>
+      setTimeout(() => resolve(TIMEOUT_SENTINEL), 4000),
+    ),
+  ]);
+
+  // Timed out — treat as transient error; let client-side AuthProvider handle it
+  if (raceResult === TIMEOUT_SENTINEL) return;
+
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser();
+  } = raceResult;
 
   const isTransientAuthError =
     !!error && /unexpected failure|database error querying schema|please check server logs/i.test(error.message);

@@ -13,21 +13,35 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as TrackTokenRouteImport } from './routes/track.$token'
 import { Route as AppTeamBoardRouteImport } from './routes/_app.team-board'
 import { Route as AppTeamRouteImport } from './routes/_app.team'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
+import { Route as AppStandupsRouteImport } from './routes/_app.standups'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReviewsRouteImport } from './routes/_app.reviews'
+import { Route as AppRecurringTasksRouteImport } from './routes/_app.recurring-tasks'
 import { Route as AppPayslipsRouteImport } from './routes/_app.payslips'
+import { Route as AppOrgChartRouteImport } from './routes/_app.org-chart'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
+import { Route as AppMessagesRouteImport } from './routes/_app.messages'
 import { Route as AppKpisRouteImport } from './routes/_app.kpis'
+import { Route as AppHandbookRouteImport } from './routes/_app.handbook'
 import { Route as AppDeliverablesRouteImport } from './routes/_app.deliverables'
 import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
+import { Route as AppClientProjectsRouteImport } from './routes/_app.client-projects'
 import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
+import { Route as AppAnnouncementsRouteImport } from './routes/_app.announcements'
 import { Route as AppTeamUserIdRouteImport } from './routes/_app.team.$userId'
 import { Route as AppTasksTaskIdRouteImport } from './routes/_app.tasks.$taskId'
 import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
+import { Route as ApiPublicCronLateTaskReportRouteImport } from './routes/api/public/cron/late-task-report'
 
+const TrackTokenRoute = TrackTokenRouteImport.update({
+  id: '/track/$token',
+  path: '/track/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -62,6 +76,11 @@ const AppTasksRoute = AppTasksRouteImport.update({
   path: '/tasks',
   getParentRoute: () => AppRoute,
 } as any)
+const AppStandupsRoute = AppStandupsRouteImport.update({
+  id: '/standups',
+  path: '/standups',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -72,9 +91,19 @@ const AppReviewsRoute = AppReviewsRouteImport.update({
   path: '/reviews',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRecurringTasksRoute = AppRecurringTasksRouteImport.update({
+  id: '/recurring-tasks',
+  path: '/recurring-tasks',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppPayslipsRoute = AppPayslipsRouteImport.update({
   id: '/payslips',
   path: '/payslips',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrgChartRoute = AppOrgChartRouteImport.update({
+  id: '/org-chart',
+  path: '/org-chart',
   getParentRoute: () => AppRoute,
 } as any)
 const AppNotificationsRoute = AppNotificationsRouteImport.update({
@@ -82,9 +111,19 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
+const AppMessagesRoute = AppMessagesRouteImport.update({
+  id: '/messages',
+  path: '/messages',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppKpisRoute = AppKpisRouteImport.update({
   id: '/kpis',
   path: '/kpis',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHandbookRoute = AppHandbookRouteImport.update({
+  id: '/handbook',
+  path: '/handbook',
   getParentRoute: () => AppRoute,
 } as any)
 const AppDeliverablesRoute = AppDeliverablesRouteImport.update({
@@ -97,9 +136,19 @@ const AppDashboardRoute = AppDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppRoute,
 } as any)
+const AppClientProjectsRoute = AppClientProjectsRouteImport.update({
+  id: '/client-projects',
+  path: '/client-projects',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppAttendanceRoute = AppAttendanceRouteImport.update({
   id: '/attendance',
   path: '/attendance',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAnnouncementsRoute = AppAnnouncementsRouteImport.update({
+  id: '/announcements',
+  path: '/announcements',
   getParentRoute: () => AppRoute,
 } as any)
 const AppTeamUserIdRoute = AppTeamUserIdRouteImport.update({
@@ -118,44 +167,68 @@ const ApiPublicCronClockReminderRoute =
     path: '/api/public/cron/clock-reminder',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronLateTaskReportRoute =
+  ApiPublicCronLateTaskReportRouteImport.update({
+    id: '/api/public/cron/late-task-report',
+    path: '/api/public/cron/late-task-report',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
+  '/track/$token': typeof TrackTokenRoute
+  '/announcements': typeof AppAnnouncementsRoute
   '/attendance': typeof AppAttendanceRoute
+  '/client-projects': typeof AppClientProjectsRoute
   '/dashboard': typeof AppDashboardRoute
   '/deliverables': typeof AppDeliverablesRoute
+  '/handbook': typeof AppHandbookRoute
   '/kpis': typeof AppKpisRoute
+  '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
+  '/org-chart': typeof AppOrgChartRoute
   '/payslips': typeof AppPayslipsRoute
+  '/recurring-tasks': typeof AppRecurringTasksRoute
   '/reviews': typeof AppReviewsRoute
   '/settings': typeof AppSettingsRoute
+  '/standups': typeof AppStandupsRoute
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
   '/team-board': typeof AppTeamBoardRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
+  '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
+  '/track/$token': typeof TrackTokenRoute
+  '/announcements': typeof AppAnnouncementsRoute
   '/attendance': typeof AppAttendanceRoute
+  '/client-projects': typeof AppClientProjectsRoute
   '/dashboard': typeof AppDashboardRoute
   '/deliverables': typeof AppDeliverablesRoute
+  '/handbook': typeof AppHandbookRoute
   '/kpis': typeof AppKpisRoute
+  '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
+  '/org-chart': typeof AppOrgChartRoute
   '/payslips': typeof AppPayslipsRoute
+  '/recurring-tasks': typeof AppRecurringTasksRoute
   '/reviews': typeof AppReviewsRoute
   '/settings': typeof AppSettingsRoute
+  '/standups': typeof AppStandupsRoute
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
   '/team-board': typeof AppTeamBoardRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
+  '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -163,20 +236,29 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
+  '/track/$token': typeof TrackTokenRoute
+  '/_app/announcements': typeof AppAnnouncementsRoute
   '/_app/attendance': typeof AppAttendanceRoute
+  '/_app/client-projects': typeof AppClientProjectsRoute
   '/_app/dashboard': typeof AppDashboardRoute
   '/_app/deliverables': typeof AppDeliverablesRoute
+  '/_app/handbook': typeof AppHandbookRoute
   '/_app/kpis': typeof AppKpisRoute
+  '/_app/messages': typeof AppMessagesRoute
   '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/org-chart': typeof AppOrgChartRoute
   '/_app/payslips': typeof AppPayslipsRoute
+  '/_app/recurring-tasks': typeof AppRecurringTasksRoute
   '/_app/reviews': typeof AppReviewsRoute
   '/_app/settings': typeof AppSettingsRoute
+  '/_app/standups': typeof AppStandupsRoute
   '/_app/tasks': typeof AppTasksRouteWithChildren
   '/_app/team': typeof AppTeamRouteWithChildren
   '/_app/team-board': typeof AppTeamBoardRoute
   '/_app/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/_app/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
+  '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -184,59 +266,86 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/login'
+    | '/track/$token'
+    | '/announcements'
     | '/attendance'
+    | '/client-projects'
     | '/dashboard'
     | '/deliverables'
+    | '/handbook'
     | '/kpis'
+    | '/messages'
     | '/notifications'
+    | '/org-chart'
     | '/payslips'
+    | '/recurring-tasks'
     | '/reviews'
     | '/settings'
+    | '/standups'
     | '/tasks'
     | '/team'
     | '/team-board'
     | '/tasks/$taskId'
     | '/team/$userId'
     | '/api/public/cron/clock-reminder'
+    | '/api/public/cron/late-task-report'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/accept-invite'
     | '/login'
+    | '/track/$token'
+    | '/announcements'
     | '/attendance'
+    | '/client-projects'
     | '/dashboard'
     | '/deliverables'
+    | '/handbook'
     | '/kpis'
+    | '/messages'
     | '/notifications'
+    | '/org-chart'
     | '/payslips'
+    | '/recurring-tasks'
     | '/reviews'
     | '/settings'
+    | '/standups'
     | '/tasks'
     | '/team'
     | '/team-board'
     | '/tasks/$taskId'
     | '/team/$userId'
     | '/api/public/cron/clock-reminder'
+    | '/api/public/cron/late-task-report'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/accept-invite'
     | '/login'
+    | '/track/$token'
+    | '/_app/announcements'
     | '/_app/attendance'
+    | '/_app/client-projects'
     | '/_app/dashboard'
     | '/_app/deliverables'
+    | '/_app/handbook'
     | '/_app/kpis'
+    | '/_app/messages'
     | '/_app/notifications'
+    | '/_app/org-chart'
     | '/_app/payslips'
+    | '/_app/recurring-tasks'
     | '/_app/reviews'
     | '/_app/settings'
+    | '/_app/standups'
     | '/_app/tasks'
     | '/_app/team'
     | '/_app/team-board'
     | '/_app/tasks/$taskId'
     | '/_app/team/$userId'
     | '/api/public/cron/clock-reminder'
+    | '/api/public/cron/late-task-report'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -244,7 +353,9 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
   LoginRoute: typeof LoginRoute
+  TrackTokenRoute: typeof TrackTokenRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
+  ApiPublicCronLateTaskReportRoute: typeof ApiPublicCronLateTaskReportRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -277,6 +388,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/track/$token': {
+      id: '/track/$token'
+      path: '/track/$token'
+      fullPath: '/track/$token'
+      preLoaderRoute: typeof TrackTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_app/announcements': {
+      id: '/_app/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof AppAnnouncementsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/team-board': {
       id: '/_app/team-board'
       path: '/team-board'
@@ -298,6 +423,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTasksRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/standups': {
+      id: '/_app/standups'
+      path: '/standups'
+      fullPath: '/standups'
+      preLoaderRoute: typeof AppStandupsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/settings': {
       id: '/_app/settings'
       path: '/settings'
@@ -312,11 +444,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReviewsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/recurring-tasks': {
+      id: '/_app/recurring-tasks'
+      path: '/recurring-tasks'
+      fullPath: '/recurring-tasks'
+      preLoaderRoute: typeof AppRecurringTasksRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/payslips': {
       id: '/_app/payslips'
       path: '/payslips'
       fullPath: '/payslips'
       preLoaderRoute: typeof AppPayslipsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/org-chart': {
+      id: '/_app/org-chart'
+      path: '/org-chart'
+      fullPath: '/org-chart'
+      preLoaderRoute: typeof AppOrgChartRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/notifications': {
@@ -326,11 +472,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/messages': {
+      id: '/_app/messages'
+      path: '/messages'
+      fullPath: '/messages'
+      preLoaderRoute: typeof AppMessagesRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/kpis': {
       id: '/_app/kpis'
       path: '/kpis'
       fullPath: '/kpis'
       preLoaderRoute: typeof AppKpisRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/handbook': {
+      id: '/_app/handbook'
+      path: '/handbook'
+      fullPath: '/handbook'
+      preLoaderRoute: typeof AppHandbookRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/deliverables': {
@@ -345,6 +505,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/client-projects': {
+      id: '/_app/client-projects'
+      path: '/client-projects'
+      fullPath: '/client-projects'
+      preLoaderRoute: typeof AppClientProjectsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/attendance': {
@@ -375,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronClockReminderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/late-task-report': {
+      id: '/api/public/cron/late-task-report'
+      path: '/api/public/cron/late-task-report'
+      fullPath: '/api/public/cron/late-task-report'
+      preLoaderRoute: typeof ApiPublicCronLateTaskReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -402,28 +576,42 @@ const AppTeamRouteWithChildren =
   AppTeamRoute._addFileChildren(AppTeamRouteChildren)
 
 interface AppRouteChildren {
+  AppAnnouncementsRoute: typeof AppAnnouncementsRoute
   AppAttendanceRoute: typeof AppAttendanceRoute
+  AppClientProjectsRoute: typeof AppClientProjectsRoute
   AppDashboardRoute: typeof AppDashboardRoute
   AppDeliverablesRoute: typeof AppDeliverablesRoute
+  AppHandbookRoute: typeof AppHandbookRoute
   AppKpisRoute: typeof AppKpisRoute
+  AppMessagesRoute: typeof AppMessagesRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
+  AppOrgChartRoute: typeof AppOrgChartRoute
   AppPayslipsRoute: typeof AppPayslipsRoute
+  AppRecurringTasksRoute: typeof AppRecurringTasksRoute
   AppReviewsRoute: typeof AppReviewsRoute
   AppSettingsRoute: typeof AppSettingsRoute
+  AppStandupsRoute: typeof AppStandupsRoute
   AppTasksRoute: typeof AppTasksRouteWithChildren
   AppTeamRoute: typeof AppTeamRouteWithChildren
   AppTeamBoardRoute: typeof AppTeamBoardRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAnnouncementsRoute: AppAnnouncementsRoute,
   AppAttendanceRoute: AppAttendanceRoute,
+  AppClientProjectsRoute: AppClientProjectsRoute,
   AppDashboardRoute: AppDashboardRoute,
   AppDeliverablesRoute: AppDeliverablesRoute,
+  AppHandbookRoute: AppHandbookRoute,
   AppKpisRoute: AppKpisRoute,
+  AppMessagesRoute: AppMessagesRoute,
   AppNotificationsRoute: AppNotificationsRoute,
+  AppOrgChartRoute: AppOrgChartRoute,
   AppPayslipsRoute: AppPayslipsRoute,
+  AppRecurringTasksRoute: AppRecurringTasksRoute,
   AppReviewsRoute: AppReviewsRoute,
   AppSettingsRoute: AppSettingsRoute,
+  AppStandupsRoute: AppStandupsRoute,
   AppTasksRoute: AppTasksRouteWithChildren,
   AppTeamRoute: AppTeamRouteWithChildren,
   AppTeamBoardRoute: AppTeamBoardRoute,
@@ -436,7 +624,9 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
   LoginRoute: LoginRoute,
+  TrackTokenRoute: TrackTokenRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
+  ApiPublicCronLateTaskReportRoute: ApiPublicCronLateTaskReportRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
