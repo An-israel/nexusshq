@@ -163,14 +163,24 @@ function AttendancePage() {
             {scope === "me" ? "Your attendance history." : "Team attendance overview."}
           </p>
         </div>
-        {isManager && (
-          <Tabs value={scope} onValueChange={(v) => setScope(v as "me" | "team")}>
-            <TabsList>
-              <TabsTrigger value="me">Me</TabsTrigger>
-              <TabsTrigger value="team">Team</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
+        <div className="flex items-center gap-2">
+          {isManager && (
+            <Tabs value={scope} onValueChange={(v) => setScope(v as "me" | "team")}>
+              <TabsList>
+                <TabsTrigger value="me">Me</TabsTrigger>
+                <TabsTrigger value="team">Team</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportCsv}
+            disabled={rows.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" /> Export CSV
+          </Button>
+        </div>
       </div>
 
       {scope === "team" && isManager && (
