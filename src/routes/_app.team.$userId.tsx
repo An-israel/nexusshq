@@ -189,9 +189,9 @@ function EmployeeDetailPage() {
         </div>
 
         <div className="rounded-2xl border border-border bg-card p-5 lg:col-span-2">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Active Flags</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">Active Warnings</p>
           {flags.filter((f) => !f.is_resolved).length === 0 ? (
-            <p className="mt-3 text-sm text-muted-foreground">No active flags.</p>
+            <p className="mt-3 text-sm text-muted-foreground">No active warnings.</p>
           ) : (
             <ul className="mt-3 space-y-2">
               {flags.filter((f) => !f.is_resolved).map((f) => (
@@ -201,12 +201,56 @@ function EmployeeDetailPage() {
                     <span className="text-xs text-muted-foreground">{timeAgo(f.created_at)}</span>
                   </div>
                   <p className="mt-1.5">{f.reason}</p>
+                  <div className="mt-2 flex justify-end">
+                    <Button size="sm" variant="outline" onClick={() => handleResolveFlag(f.id)}>
+                      Mark resolved
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </div>
       </div>
+
+      {/* Warning history */}
+      <section className="rounded-2xl border border-border bg-card p-5">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          Warning History ({flags.length})
+        </h2>
+        {flags.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No warnings on record.</p>
+        ) : (
+          <ul className="space-y-2">
+            {flags.map((f) => (
+              <li
+                key={f.id}
+                className={`rounded-lg border p-3 text-sm ${
+                  f.is_resolved ? "border-border bg-background/40" : "border-destructive/30 bg-destructive/5"
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-[10px]">{f.severity}</Badge>
+                    {f.is_resolved ? (
+                      <Badge variant="outline" className="text-[10px] text-success">Resolved</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] text-destructive">Active</Badge>
+                    )}
+                  </div>
+                  <span className="text-xs text-muted-foreground">{timeAgo(f.created_at)}</span>
+                </div>
+                <p className="mt-1.5">{f.reason}</p>
+                {f.resolved_at && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Resolved {timeAgo(f.resolved_at)}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       {/* Tasks */}
       <section className="rounded-2xl border border-border bg-card p-5">
