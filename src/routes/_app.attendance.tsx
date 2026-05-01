@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -10,8 +11,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { todayISO } from "@/lib/nexus";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DEPARTMENTS, deptLabel, todayISO } from "@/lib/nexus";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, XCircle, Clock as ClockIcon, Download } from "lucide-react";
 import { useRealtime } from "@/lib/use-realtime";
@@ -34,6 +35,7 @@ interface ProfileMini {
   id: string;
   full_name: string | null;
   email: string | null;
+  department: string | null;
 }
 
 const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string; label: string }> = {
@@ -73,15 +75,22 @@ function fmtDuration(min: number | null): string {
   return `${Math.floor(min / 60)}h ${min % 60}m`;
 }
 
+function currentMonthStart(): string {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
+}
+
 function AttendancePage() {
   const { user, isManager } = useAuth();
   const [scope, setScope] = React.useState<"me" | "team">("me");
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [selectedUser, setSelectedUser] = React.useState<string>("");
-  const [month, setMonth] = React.useState<Date>(() => {
-    const d = new Date();
-    return new Date(d.getFullYear(), d.getMonth(), 1);
-  });
+  const [deptFilter, setDeptFilter] = React.useState<string>("all");
+
+  // Date range — defaults to current month
+  const [dateFrom, setDateFrom] = React.useState(currentMonthStart);
+  const [dateTo, setDateTo] = React.useState(todayISO);
+
   const [rows, setRows] = React.useState<AttendanceRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
@@ -90,41 +99,75 @@ function AttendancePage() {
     if (!isManager) return;
     void supabase
       .from("profiles")
-      .select("id, full_name, email")
+      .select("id, full_name, email, department")
       .eq("is_active", true)
       .order("full_name")
       .then(({ data }) => setEmployees((data ?? []) as ProfileMini[]));
   }, [isManager]);
+
+  // When dept filter changes, clear the selected employee so a valid one is picked
+  React.useEffect(() => {
+    setSelectedUser("");
+  }, [deptFilter]);
+
+  const filteredEmployees = React.useMemo(
+    () =>
+      deptFilter === "all"
+        ? employees
+        : employees.filter((e) => e.department === deptFilter),
+    [employees, deptFilter],
+  );
 
   const targetUserId = scope === "me" || !selectedUser ? user?.id : selectedUser;
 
   const load = React.useCallback(async () => {
     if (!targetUserId) return;
     setLoading(true);
-    const start = new Date(month.getFullYear(), month.getMonth(), 1);
-    const end = new Date(month.getFullYear(), month.getMonth() + 1, 0);
     const { data, error } = await supabase
       .from("attendance")
       .select("*")
       .eq("user_id", targetUserId)
-      .gte("date", start.toISOString().slice(0, 10))
-      .lte("date", end.toISOString().slice(0, 10))
+      .gte("date", dateFrom)
+      .lte("date", dateTo)
       .order("date", { ascending: true });
     if (!error) setRows((data ?? []) as AttendanceRow[]);
     setLoading(false);
-  }, [targetUserId, month]);
+  }, [targetUserId, dateFrom, dateTo]);
 
   React.useEffect(() => {
     void load();
   }, [load]);
 
-  // Realtime: refresh when attendance changes for the target user
   useRealtime({
     table: "attendance",
     filter: targetUserId ? `user_id=eq.${targetUserId}` : undefined,
     enabled: !!targetUserId,
     onChange: () => void load(),
   });
+
+  // Derive calendar month from dateFrom
+  const calendarMonth = React.useMemo(() => {
+    const [y, m] = dateFrom.split("-").map(Number);
+    return new Date(y, m - 1, 1);
+  }, [dateFrom]);
+
+  const monthLabel = calendarMonth.toLocaleDateString([], {
+    month: "long",
+    year: "numeric",
+  });
+
+  function changeMonth(delta: number) {
+    const [y, m] = dateFrom.split("-").map(Number);
+    const next = new Date(y, m - 1 + delta, 1);
+    const ny = next.getFullYear();
+    const nm = next.getMonth() + 1;
+    const newFrom = `${ny}-${String(nm).padStart(2, "0")}-01`;
+    const lastDay = new Date(ny, nm, 0).getDate();
+    const rawTo = `${ny}-${String(nm).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    const today = todayISO();
+    setDateFrom(newFrom);
+    setDateTo(rawTo > today ? today : rawTo);
+  }
 
   const filteredRows = React.useMemo(
     () => (statusFilter === "all" ? rows : rows.filter((r) => r.status === statusFilter)),
@@ -139,20 +182,11 @@ function AttendancePage() {
     return { present, late, absent, totalMins, count: rows.length };
   }, [rows]);
 
-  const monthLabel = month.toLocaleDateString([], { month: "long", year: "numeric" });
-
-  function changeMonth(delta: number) {
-    setMonth(new Date(month.getFullYear(), month.getMonth() + delta, 1));
-  }
-
   function exportCsv() {
-    const exportRows = filteredRows;
-    if (exportRows.length === 0) {
-      return;
-    }
+    if (filteredRows.length === 0) return;
     const header = ["Date", "Status", "Clock in", "Clock out", "Total minutes"];
     const lines = [header.join(",")];
-    for (const r of exportRows) {
+    for (const r of filteredRows) {
       const inT = r.clock_in ? new Date(r.clock_in).toISOString() : "";
       const outT = r.clock_out ? new Date(r.clock_out).toISOString() : "";
       lines.push([r.date, r.status, inT, outT, r.total_minutes ?? ""].join(","));
@@ -162,16 +196,18 @@ function AttendancePage() {
     const a = document.createElement("a");
     const who =
       scope === "team"
-        ? employees.find((e) => e.id === selectedUser)?.full_name ?? "team-member"
+        ? (filteredEmployees.find((e) => e.id === selectedUser)?.full_name ?? "team-member")
         : "me";
+    const rangeStr = dateFrom === dateTo ? dateFrom : `${dateFrom}_to_${dateTo}`;
     a.href = url;
-    a.download = `attendance-${who}-${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}.csv`;
+    a.download = `attendance-${who}-${rangeStr}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Attendance</h1>
@@ -192,13 +228,54 @@ function AttendancePage() {
             variant="outline"
             size="sm"
             onClick={exportCsv}
-            disabled={rows.length === 0}
+            disabled={filteredRows.length === 0}
           >
             <Download className="mr-2 h-4 w-4" /> Export CSV
           </Button>
         </div>
       </div>
 
+      {/* Filters row: date range + department */}
+      <Card className="p-3 flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground shrink-0">From</span>
+          <Input
+            type="date"
+            value={dateFrom}
+            max={dateTo}
+            onChange={(e) => setDateFrom(e.target.value)}
+            className="w-36 text-sm"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground shrink-0">To</span>
+          <Input
+            type="date"
+            value={dateTo}
+            min={dateFrom}
+            max={todayISO()}
+            onChange={(e) => setDateTo(e.target.value)}
+            className="w-36 text-sm"
+          />
+        </div>
+        {isManager && scope === "team" && (
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-44">
+              <SelectValue placeholder="All departments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All departments</SelectItem>
+              {DEPARTMENTS.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {deptLabel(d)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+      </Card>
+
+      {/* Team employee selector */}
       {scope === "team" && isManager && (
         <Card className="p-3 flex items-center gap-3">
           <span className="text-sm text-muted-foreground">Employee:</span>
@@ -207,16 +284,22 @@ function AttendancePage() {
               <SelectValue placeholder="Pick an employee" />
             </SelectTrigger>
             <SelectContent>
-              {employees.map((e) => (
+              {filteredEmployees.map((e) => (
                 <SelectItem key={e.id} value={e.id}>
                   {e.full_name ?? e.email}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {filteredEmployees.length === 0 && deptFilter !== "all" && (
+            <span className="text-xs text-muted-foreground">
+              No employees in {deptLabel(deptFilter)}.
+            </span>
+          )}
         </Card>
       )}
 
+      {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4 text-success" />}
@@ -240,6 +323,7 @@ function AttendancePage() {
         />
       </div>
 
+      {/* Calendar */}
       <Card className="p-4">
         <div className="flex items-center justify-between mb-4">
           <button
@@ -258,27 +342,39 @@ function AttendancePage() {
             Next →
           </button>
         </div>
-        <CalendarGrid month={month} rows={rows} />
+        <CalendarGrid month={calendarMonth} rows={rows} />
       </Card>
 
+      {/* Daily log */}
       <Card className="p-4">
         <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
           <h2 className="font-semibold">Daily log</h2>
-          <div className="flex gap-1 rounded-lg border border-border bg-background/40 p-1">
-            {(["all", "present", "late", "absent", "half_day"] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setStatusFilter(s)}
-                className={`rounded-md px-2.5 py-1 text-xs capitalize ${
-                  statusFilter === s
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {s.replace("_", " ")}
-              </button>
-            ))}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex gap-1 rounded-lg border border-border bg-background/40 p-1">
+              {(["all", "present", "late", "absent", "half_day"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatusFilter(s)}
+                  className={`rounded-md px-2.5 py-1 text-xs capitalize ${
+                    statusFilter === s
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {s.replace("_", " ")}
+                </button>
+              ))}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportCsv}
+              disabled={filteredRows.length === 0}
+              className="h-8 px-3 text-xs"
+            >
+              <Download className="mr-1.5 h-3.5 w-3.5" /> Export CSV
+            </Button>
           </div>
         </div>
         {loading ? (
@@ -345,7 +441,6 @@ function CalendarGrid({ month, rows }: { month: Date; rows: AttendanceRow[] }) {
   const m = month.getMonth();
   const firstDay = new Date(year, m, 1);
   const daysInMonth = new Date(year, m + 1, 0).getDate();
-  // Monday-first: shift Sun=0 to 6
   const startOffset = (firstDay.getDay() + 6) % 7;
 
   const cells: Array<{ day: number; iso: string } | null> = [];
@@ -369,7 +464,7 @@ function CalendarGrid({ month, rows }: { month: Date; rows: AttendanceRow[] }) {
           if (!c) return <div key={i} />;
           const rec = map[c.iso];
           const isToday = c.iso === today;
-          const isWeekend = (i % 7) >= 5;
+          const isWeekend = i % 7 >= 5;
           const isFuture = c.iso > today;
           let bg = "bg-card border-border";
           let textCol = "text-foreground";

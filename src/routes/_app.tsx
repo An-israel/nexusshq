@@ -42,13 +42,16 @@ function AppLayout() {
     if (!loading && !session) navigate({ to: "/login" });
   }, [loading, session, navigate]);
 
-  if (loading || !session) {
+  if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background text-sm text-muted-foreground">
         Loading…
       </div>
     );
   }
+
+  // Not loading but no session — redirect effect fires, render nothing in the meantime
+  if (!session) return null;
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground">

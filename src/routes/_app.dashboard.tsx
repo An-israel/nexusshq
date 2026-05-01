@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/lib/use-realtime";
 import { useAuth } from "@/lib/auth-context";
@@ -122,24 +123,66 @@ function DashboardPage() {
     void load();
   }, [load]);
 
-  // Live updates: tasks, attendance, notifications scoped to this user
+  // Track whether the initial load has completed so we don't toast on mount
+  const initialLoadDone = useRef(false);
+  useEffect(() => {
+    if (!loading) initialLoadDone.current = true;
+  }, [loading]);
+
+  // Live updates: tasks scoped to this user, with toast on assign/warning
   useRealtime({
     table: "tasks",
     filter: user ? `assigned_to=eq.${user.id}` : undefined,
     enabled: !!user,
-    onChange: () => void load(),
+    shouldHandle: (payload) => {
+      const row = (payload.new ?? payload.old) as Task | null;
+      return row?.assigned_to === user?.id;
+    },
+    onChange: (payload) => {
+      void load();
+      if (!initialLoadDone.current) return;
+      if (payload?.eventType === "INSERT") {
+        toast.info("New task assigned to you");
+      } else if (payload?.eventType === "UPDATE") {
+        const row = payload.new as Task;
+        if (row?.has_warning) toast.warning("A task has been flagged", { description: row.title });
+      }
+    },
   });
+
+  // Live updates: attendance scoped to this user — silent refresh only
   useRealtime({
     table: "attendance",
     filter: user ? `user_id=eq.${user.id}` : undefined,
     enabled: !!user,
+    shouldHandle: (payload) => {
+      const row = (payload.new ?? payload.old) as Attendance | null;
+      return row?.user_id === user?.id;
+    },
     onChange: () => void load(),
   });
+
+  // Live updates: notifications scoped to this user, toast on new flag/warning/task
   useRealtime({
     table: "notifications",
     filter: user ? `user_id=eq.${user.id}` : undefined,
     enabled: !!user,
-    onChange: () => void load(),
+    shouldHandle: (payload) => {
+      const row = (payload.new ?? payload.old) as Notif | null;
+      return row?.user_id === user?.id;
+    },
+    onChange: (payload) => {
+      void load();
+      if (!initialLoadDone.current) return;
+      if (payload?.eventType === "INSERT") {
+        const n = payload.new as Notif;
+        if (n?.type === "flag" || n?.type === "warning") {
+          toast.warning(n.title, { description: n.message ?? undefined });
+        } else if (n?.type === "task_assigned" || n?.type === "task_overdue" || n?.type === "task_due_soon") {
+          toast.info(n.title, { description: n.message ?? undefined });
+        }
+      }
+    },
   });
 
   const greeting = (() => {
