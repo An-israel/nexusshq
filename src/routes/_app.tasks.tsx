@@ -26,6 +26,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { PRIORITY_BADGE, STATUS_BADGE, PRIORITY_RANK, todayISO } from "@/lib/nexus";
 import { AlertTriangle, Plus, Calendar as CalIcon, Flag } from "lucide-react";
+import { useRealtime } from "@/lib/use-realtime";
 
 export const Route = createFileRoute("/_app/tasks")({
   component: TasksPage,
@@ -96,6 +97,14 @@ function TasksPage() {
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  // Realtime: refresh task list when tasks change for this user (or any task if manager)
+  useRealtime({
+    table: "tasks",
+    filter: isManager ? undefined : user ? `assigned_to=eq.${user.id}` : undefined,
+    enabled: !!user,
+    onChange: () => void load(),
+  });
 
   const today = todayISO();
   const filtered = React.useMemo(() => {
