@@ -39,9 +39,9 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     // Managers can invite employees/managers; only admins can invite admins
-    await assertCallerIsManagerOrAdmin(context.userId);
+    await assertCallerIsManagerOrAdmin(context.userId, context.supabase);
     if (data.role === "admin") {
-      await assertCallerIsAdmin(context.userId);
+      await assertCallerIsAdmin(context.userId, context.supabase);
     }
     return inviteEmployee(data);
   });
@@ -52,8 +52,8 @@ export const setEmployeeActiveFn = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), isActive: z.boolean() }).parse(data),
   )
   .handler(async ({ data, context }) => {
-    await assertCallerIsAdmin(context.userId);
-    await setEmployeeActive(data.userId, data.isActive);
+    await assertCallerIsAdmin(context.userId, context.supabase);
+    await setEmployeeActive(data.userId, data.isActive, context.supabase);
     return { ok: true };
   });
 
@@ -69,11 +69,11 @@ export const setEmployeeRoleFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     // Managers can set employee/manager; only admins can grant admin
-    await assertCallerIsManagerOrAdmin(context.userId);
+    await assertCallerIsManagerOrAdmin(context.userId, context.supabase);
     if (data.role === "admin") {
-      await assertCallerIsAdmin(context.userId);
+      await assertCallerIsAdmin(context.userId, context.supabase);
     }
-    await setEmployeeRole(data.userId, data.role);
+    await setEmployeeRole(data.userId, data.role, context.supabase);
     return { ok: true };
   });
 
@@ -81,7 +81,7 @@ export const resolveFlagFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ flagId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
-    await assertCallerIsManagerOrAdmin(context.userId);
-    await resolveFlag(data.flagId);
+    await assertCallerIsManagerOrAdmin(context.userId, context.supabase);
+    await resolveFlag(data.flagId, context.supabase);
     return { ok: true };
   });
