@@ -14,6 +14,7 @@ import {
   Star,
   Wallet,
   FolderUp,
+  Kanban,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -34,6 +35,7 @@ const NAV: NavItem[] = [
   { to: "/reviews", label: "Reviews", icon: Star, roles: ["admin", "manager", "employee"] },
   { to: "/payslips", label: "Payslips", icon: Wallet, roles: ["admin", "manager", "employee"] },
   { to: "/team", label: "Team", icon: Users, roles: ["admin", "manager"] },
+  { to: "/team-board", label: "Task Board", icon: Kanban, roles: ["admin", "manager"] },
   { to: "/kpis", label: "KPIs", icon: Target, roles: ["admin"] },
   { to: "/notifications", label: "Notifications", icon: Bell, roles: ["admin", "manager", "employee"] },
   { to: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
