@@ -18,7 +18,8 @@ import {
 } from "@/lib/nexus";
 import { QuickAssignTaskDialog } from "@/components/team/QuickAssignTaskDialog";
 import { FlagEmployeeDialog } from "@/components/team/FlagEmployeeDialog";
-import { setEmployeeActiveFn } from "@/server/admin.functions";
+import { setEmployeeActiveFn, resolveFlagFn } from "@/server/admin.functions";
+import { useRealtime } from "@/lib/use-realtime";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -37,6 +38,7 @@ function EmployeeDetailPage() {
   const { userId } = Route.useParams();
   const { isAdmin } = useAuth();
   const setActive = useServerFn(setEmployeeActiveFn);
+  const resolveFlag = useServerFn(resolveFlagFn);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -93,6 +95,18 @@ function EmployeeDetailPage() {
     };
   }, [userId, reloadKey]);
 
+  // Realtime: refresh when this employee's tasks or flags change
+  useRealtime({
+    table: "tasks",
+    filter: `assigned_to=eq.${userId}`,
+    onChange: () => setReloadKey((k) => k + 1),
+  });
+  useRealtime({
+    table: "flags",
+    filter: `flagged_user_id=eq.${userId}`,
+    onChange: () => setReloadKey((k) => k + 1),
+  });
+
   async function toggleActive() {
     if (!profile) return;
     const next = !profile.is_active;
@@ -106,6 +120,16 @@ function EmployeeDetailPage() {
       toast.error(err instanceof Error ? err.message : "Failed to update");
     } finally {
       setTogglingActive(false);
+    }
+  }
+
+  async function handleResolveFlag(flagId: string) {
+    try {
+      await resolveFlag({ data: { flagId } });
+      toast.success("Warning resolved");
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to resolve");
     }
   }
 
