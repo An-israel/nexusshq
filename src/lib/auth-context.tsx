@@ -30,20 +30,57 @@ interface AuthContextValue {
   refresh: () => Promise<void>;
 }
 
+// --- localStorage cache helpers (no-ops on server) ---
+const CACHE_PROFILE = "nexus_profile";
+const CACHE_ROLE = "nexus_role";
+
+function readCache<T>(key: string): T | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const v = window.localStorage.getItem(key);
+    return v ? (JSON.parse(v) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCache(key: string, value: unknown) {
+  if (typeof window === "undefined") return;
+  try { window.localStorage.setItem(key, JSON.stringify(value)); } catch {}
+}
+
+function clearProfileCache() {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.removeItem(CACHE_PROFILE);
+    window.localStorage.removeItem(CACHE_ROLE);
+  } catch {}
+}
+
 const AuthContext = React.createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
-  const [profile, setProfile] = React.useState<NexusProfile | null>(null);
-  const [role, setRole] = React.useState<AppRole | null>(null);
-  const [loading, setLoading] = React.useState(true);
-  const [roleLoading, setRoleLoading] = React.useState(false);
+  // Initialise from cache so returning users never see the loading spinner
+  const [profile, setProfile] = React.useState<NexusProfile | null>(
+    () => readCache<NexusProfile>(CACHE_PROFILE),
+  );
+  const [role, setRole] = React.useState<AppRole | null>(
+    () => readCache<AppRole>(CACHE_ROLE),
+  );
+  // Skip loading state if we already have cached data
+  const [loading, setLoading] = React.useState(
+    () => readCache<NexusProfile>(CACHE_PROFILE) === null,
+  );
   const retryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadProfileAndRole = React.useCallback(async (userId: string) => {
-    setRoleLoading(true);
     const [profileResult, roleResult] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, email, department, job_title, avatar_url, is_active").eq("id", userId).maybeSingle(),
+      supabase
+        .from("profiles")
+        .select("id, full_name, email, department, job_title, avatar_url, is_active")
+        .eq("id", userId)
+        .maybeSingle(),
       fetchUserRolesWithRetry(userId),
     ]);
 
@@ -52,14 +89,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         scope: "auth-context:profileLookup",
         error: profileResult.error,
         matchers: ["/rest/v1/profiles", `id=eq.${userId}`],
-        extra: {
-          userId,
-          query: "select * from profiles where id = ?",
-        },
+        extra: { userId },
       });
       console.warn("Failed to load user profile", profileResult.error);
-    } else {
-      setProfile((profileResult.data as NexusProfile) ?? null);
+    } else if (profileResult.data) {
+      const p = profileResult.data as NexusProfile;
+      setProfile(p);
+      writeCache(CACHE_PROFILE, p);
     }
 
     if (roleResult.error) {
@@ -67,10 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         scope: "auth-context:roleLookup",
         error: roleResult.error,
         matchers: ["/rest/v1/user_roles", `user_id=eq.${userId}`],
-        extra: {
-          userId,
-          query: "select role from user_roles where user_id = ?",
-        },
+        extra: { userId },
       });
       console.warn("Failed to load user role", roleResult.error);
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
@@ -82,34 +115,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         clearTimeout(retryTimerRef.current);
         retryTimerRef.current = null;
       }
-      setRole(pickTopRole(roleResult.roles as { role: AppRole }[]));
+      const picked = pickTopRole(roleResult.roles as { role: AppRole }[]);
+      setRole(picked);
+      writeCache(CACHE_ROLE, picked);
     }
-
-    setRoleLoading(false);
   }, []);
 
   React.useEffect(() => {
-    // 1) Set up listener FIRST
     const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       if (newSession?.user) {
-        // defer to avoid deadlocks
-        setTimeout(() => loadProfileAndRole(newSession.user.id), 0);
+        setTimeout(() => void loadProfileAndRole(newSession.user.id), 0);
       } else {
+        clearProfileCache();
         setProfile(null);
         setRole(null);
       }
     });
 
-    // Safety: never stay loading longer than 8s regardless of network issues
-    const safetyTimer = setTimeout(() => setLoading(false), 8000);
+    // Safety: cap loading at 4s even on total network failure
+    const safetyTimer = setTimeout(() => setLoading(false), 4000);
 
-    // 2) THEN check existing
+    // getSession() reads Supabase's own localStorage cache — nearly instant
     supabase.auth.getSession().then(({ data: { session: s } }) => {
       clearTimeout(safetyTimer);
       setSession(s);
       if (s?.user) {
-        loadProfileAndRole(s.user.id).finally(() => setLoading(false));
+        const hasCache = readCache<NexusProfile>(CACHE_PROFILE) !== null;
+        if (hasCache) {
+          // Show UI immediately; refresh data silently in background
+          setLoading(false);
+          void loadProfileAndRole(s.user.id);
+        } else {
+          // First visit — wait for profile before showing dashboard
+          void loadProfileAndRole(s.user.id).finally(() => setLoading(false));
+        }
       } else {
         setLoading(false);
       }
@@ -142,13 +182,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error: error?.message ?? null };
       },
       signOut: async () => {
+        clearProfileCache();
         await supabase.auth.signOut();
       },
       refresh: async () => {
         if (session?.user) await loadProfileAndRole(session.user.id);
       },
     }),
-    [loading, roleLoading, session, profile, role, loadProfileAndRole],
+    [loading, session, profile, role, loadProfileAndRole],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
