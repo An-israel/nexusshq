@@ -2,6 +2,7 @@ import * as React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { fetchUserRolesWithRetry, pickTopRole } from "@/lib/role-access";
+import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
 
 export type AppRole = "admin" | "manager" | "employee";
 
@@ -47,12 +48,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     ]);
 
     if (profileResult.error) {
+      logSupabaseClientError({
+        scope: "auth-context:profileLookup",
+        error: profileResult.error,
+        matchers: ["/rest/v1/profiles", `id=eq.${userId}`],
+        extra: {
+          userId,
+          query: "select * from profiles where id = ?",
+        },
+      });
       console.warn("Failed to load user profile", profileResult.error);
     } else {
       setProfile((profileResult.data as NexusProfile) ?? null);
     }
 
     if (roleResult.error) {
+      logSupabaseClientError({
+        scope: "auth-context:roleLookup",
+        error: roleResult.error,
+        matchers: ["/rest/v1/user_roles", `user_id=eq.${userId}`],
+        extra: {
+          userId,
+          query: "select role from user_roles where user_id = ?",
+        },
+      });
       console.warn("Failed to load user role", roleResult.error);
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
       retryTimerRef.current = setTimeout(() => {
