@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {
@@ -12,6 +13,17 @@ export const Route = createFileRoute("/_app")({
       data: { user },
       error,
     } = await supabase.auth.getUser();
+
+    if (error) {
+      logSupabaseClientError({
+        scope: "app-layout:beforeLoad:getUser",
+        error,
+        matchers: ["/auth/v1/user"],
+        extra: {
+          route: "/_app",
+        },
+      });
+    }
 
     const isTransientAuthError =
       !!error && /unexpected failure|database error querying schema|please check server logs/i.test(error.message);
