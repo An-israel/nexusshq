@@ -37,10 +37,9 @@ export function useRealtime({
     const channel = supabase
       .channel(channelName)
       .on(
-        // @ts-expect-error - supabase realtime typing is loose
-        "postgres_changes",
-        { event, schema, table, ...(filter ? { filter } : {}) },
-        trigger,
+        "postgres_changes" as never,
+        { event, schema, table, ...(filter ? { filter } : {}) } as never,
+        trigger as never,
       )
       .subscribe();
 
