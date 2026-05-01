@@ -91,7 +91,24 @@ function EmployeeDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, reloadKey]);
+
+  async function toggleActive() {
+    if (!profile) return;
+    const next = !profile.is_active;
+    if (!confirm(`${next ? "Reactivate" : "Deactivate"} ${profile.full_name ?? profile.email}?`)) return;
+    setTogglingActive(true);
+    try {
+      await setActive({ data: { userId: profile.id, isActive: next } });
+      toast.success(next ? "Account reactivated" : "Account deactivated");
+      setReloadKey((k) => k + 1);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update");
+    } finally {
+      setTogglingActive(false);
+    }
+  }
+
 
   const filteredTasks =
     statusFilter === "all" ? tasks : tasks.filter((t) => t.status === statusFilter);
@@ -264,10 +281,30 @@ function EmployeeDetailPage() {
       </section>
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" disabled title="Wired up in next phase">Assign Task</Button>
-        <Button variant="outline" disabled title="Wired up in next phase">Add Warning</Button>
-        <Button variant="outline" disabled title="Wired up in next phase">Flag Employee</Button>
-        <Button variant="outline" disabled title="Admin only — wired up next">Deactivate Account</Button>
+        <QuickAssignTaskDialog
+          assigneeId={userId}
+          assigneeName={profile?.full_name ?? profile?.email ?? undefined}
+          onCreated={() => setReloadKey((k) => k + 1)}
+        />
+        <FlagEmployeeDialog
+          userId={userId}
+          userName={profile?.full_name ?? profile?.email ?? undefined}
+          onCreated={() => setReloadKey((k) => k + 1)}
+        />
+        {isAdmin && profile && (
+          <Button
+            variant="outline"
+            onClick={toggleActive}
+            disabled={togglingActive}
+            className={profile.is_active ? "text-destructive hover:text-destructive" : ""}
+          >
+            {profile.is_active ? (
+              <><UserX className="mr-2 h-4 w-4" /> Deactivate Account</>
+            ) : (
+              <><UserCheck className="mr-2 h-4 w-4" /> Reactivate Account</>
+            )}
+          </Button>
+        )}
       </div>
     </div>
   );
