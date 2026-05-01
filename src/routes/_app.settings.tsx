@@ -55,7 +55,17 @@ function SettingsPage() {
           {isAdmin && <TabsTrigger value="roles"><Shield className="mr-2 h-4 w-4" /> Roles</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="mt-4">
-          {profile && <ProfileForm profile={profile as unknown as ProfileRow} onSaved={refresh} />}
+          {profile
+            ? <ProfileForm profile={profile as unknown as ProfileRow} onSaved={refresh} />
+            : (
+              <div className="flex flex-col gap-3 max-w-2xl">
+                <p className="text-sm text-muted-foreground">Profile is loading…</p>
+                <Button variant="outline" className="w-fit" onClick={() => void refresh()}>
+                  Retry
+                </Button>
+              </div>
+            )
+          }
         </TabsContent>
         {isAdmin && (
           <TabsContent value="team" className="mt-4">

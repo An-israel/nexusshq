@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadProfileAndRole = React.useCallback(async (userId: string) => {
     setRoleLoading(true);
     const [profileResult, roleResult] = await Promise.all([
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+      supabase.from("profiles").select("id, full_name, email, department, job_title, avatar_url, is_active").eq("id", userId).maybeSingle(),
       fetchUserRolesWithRetry(userId),
     ]);
 
