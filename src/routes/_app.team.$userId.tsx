@@ -111,12 +111,32 @@ function EmployeeDetailPage() {
   useRealtime({
     table: "tasks",
     filter: `assigned_to=eq.${userId}`,
-    onChange: () => setReloadKey((k) => k + 1),
+    shouldHandle: (p) => {
+      const row = (p.new ?? p.old) as { assigned_to?: string } | null;
+      return !row || row.assigned_to === userId;
+    },
+    onChange: (p) => {
+      setReloadKey((k) => k + 1);
+      if (p?.eventType === "INSERT") {
+        toast.message("New task assigned to this employee");
+      } else if (p?.eventType === "UPDATE") {
+        toast.message("Task updated");
+      }
+    },
   });
   useRealtime({
     table: "flags",
     filter: `flagged_user_id=eq.${userId}`,
-    onChange: () => setReloadKey((k) => k + 1),
+    shouldHandle: (p) => {
+      const row = (p.new ?? p.old) as { flagged_user_id?: string } | null;
+      return !row || row.flagged_user_id === userId;
+    },
+    onChange: (p) => {
+      setReloadKey((k) => k + 1);
+      if (p?.eventType === "INSERT") {
+        toast.warning("A new warning was added");
+      }
+    },
   });
 
   async function toggleActive() {
@@ -135,19 +155,59 @@ function EmployeeDetailPage() {
     }
   }
 
-  async function handleResolveFlag(flagId: string) {
+  async function performResolveFlag(flag: Flag) {
     try {
-      await resolveFlag({ data: { flagId } });
-      toast.success("Warning resolved");
+      await resolveFlag({ data: { flagId: flag.id } });
+      // Show toast with Undo action
+      toast.success("Warning marked as resolved", {
+        action: {
+          label: "Undo",
+          onClick: async () => {
+            try {
+              await reopenFlag({ data: { flagId: flag.id } });
+              toast.success("Warning reopened");
+              setReloadKey((k) => k + 1);
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Failed to undo");
+            }
+          },
+        },
+        duration: 6000,
+      });
       setReloadKey((k) => k + 1);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to resolve");
     }
   }
 
-
   const filteredTasks =
     statusFilter === "all" ? tasks : tasks.filter((t) => t.status === statusFilter);
+
+  // Warning history: apply filters + pagination
+  const filteredWarnings = React.useMemo(() => {
+    return flags.filter((f) => {
+      if (warningStatusFilter === "active" && f.is_resolved) return false;
+      if (warningStatusFilter === "resolved" && !f.is_resolved) return false;
+      const created = f.created_at.slice(0, 10);
+      if (warningFrom && created < warningFrom) return false;
+      if (warningTo && created > warningTo) return false;
+      return true;
+    });
+  }, [flags, warningStatusFilter, warningFrom, warningTo]);
+
+  const warningTotalPages = Math.max(1, Math.ceil(filteredWarnings.length / WARNING_PAGE_SIZE));
+  const safePage = Math.min(warningPage, warningTotalPages - 1);
+  const pagedWarnings = filteredWarnings.slice(
+    safePage * WARNING_PAGE_SIZE,
+    safePage * WARNING_PAGE_SIZE + WARNING_PAGE_SIZE,
+  );
+
+  function clearWarningFilters() {
+    setWarningFrom("");
+    setWarningTo("");
+    setWarningStatusFilter("all");
+    setWarningPage(0);
+  }
 
   const monthPresent = att.filter((a) => a.status === "present" || a.status === "late").length;
   const monthLate = att.filter((a) => a.status === "late").length;
