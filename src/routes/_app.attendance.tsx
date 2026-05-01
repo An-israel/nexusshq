@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { todayISO } from "@/lib/nexus";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, XCircle, Clock as ClockIcon, Download } from "lucide-react";
+import { useRealtime } from "@/lib/use-realtime";
 
 export const Route = createFileRoute("/_app/attendance")({
   component: AttendancePage,
@@ -83,6 +84,7 @@ function AttendancePage() {
   });
   const [rows, setRows] = React.useState<AttendanceRow[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
   React.useEffect(() => {
     if (!isManager) return;
@@ -115,6 +117,19 @@ function AttendancePage() {
   React.useEffect(() => {
     void load();
   }, [load]);
+
+  // Realtime: refresh when attendance changes for the target user
+  useRealtime({
+    table: "attendance",
+    filter: targetUserId ? `user_id=eq.${targetUserId}` : undefined,
+    enabled: !!targetUserId,
+    onChange: () => void load(),
+  });
+
+  const filteredRows = React.useMemo(
+    () => (statusFilter === "all" ? rows : rows.filter((r) => r.status === statusFilter)),
+    [rows, statusFilter],
+  );
 
   const stats = React.useMemo(() => {
     const present = rows.filter((r) => r.status === "present").length;
