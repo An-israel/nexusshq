@@ -1,5 +1,6 @@
 import { redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
 
 export type AppRole = "admin" | "manager" | "employee";
 
@@ -34,6 +35,18 @@ export async function fetchUserRolesWithRetry(userId: string, attempts = 5) {
 
     lastError = error;
 
+    logSupabaseClientError({
+      scope: "fetchUserRolesWithRetry",
+      error,
+      matchers: ["/rest/v1/user_roles", `user_id=eq.${userId}`],
+      extra: {
+        attempt: attempt + 1,
+        attempts,
+        userId,
+        query: "select role from user_roles where user_id = ?",
+      },
+    });
+
     if (!isRetryableRoleError(error) || attempt === attempts - 1) {
       break;
     }
@@ -62,6 +75,17 @@ export async function requireAnyRole(allowedRoles: AppRole[]) {
   const isTransientAuthError =
     !!error && /unexpected failure|database error querying schema|please check server logs/i.test(error.message);
 
+  if (error) {
+    logSupabaseClientError({
+      scope: "requireAnyRole:getUser",
+      error,
+      matchers: ["/auth/v1/user"],
+      extra: {
+        allowedRoles,
+      },
+    });
+  }
+
   if (!user && !isTransientAuthError) {
     throw redirect({ to: "/login" });
   }
@@ -73,6 +97,15 @@ export async function requireAnyRole(allowedRoles: AppRole[]) {
   const { roles, error: roleError } = await fetchUserRolesWithRetry(user.id);
 
   if (roleError) {
+    logSupabaseClientError({
+      scope: "requireAnyRole:roleLookup",
+      error: roleError,
+      matchers: ["/rest/v1/user_roles", `user_id=eq.${user.id}`],
+      extra: {
+        allowedRoles,
+        userId: user.id,
+      },
+    });
     console.warn("Role lookup failed during route access check", roleError);
     return;
   }
