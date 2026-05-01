@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AppTeamBoardRouteImport } from './routes/_app.team-board'
 import { Route as AppTeamRouteImport } from './routes/_app.team'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
@@ -45,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AppTeamBoardRoute = AppTeamBoardRouteImport.update({
+  id: '/team-board',
+  path: '/team-board',
+  getParentRoute: () => AppRoute,
 } as any)
 const AppTeamRoute = AppTeamRouteImport.update({
   id: '/team',
@@ -127,6 +133,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
+  '/team-board': typeof AppTeamBoardRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
@@ -145,6 +152,7 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
+  '/team-board': typeof AppTeamBoardRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
@@ -165,6 +173,7 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/tasks': typeof AppTasksRouteWithChildren
   '/_app/team': typeof AppTeamRouteWithChildren
+  '/_app/team-board': typeof AppTeamBoardRoute
   '/_app/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/_app/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
@@ -185,6 +194,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/team'
+    | '/team-board'
     | '/tasks/$taskId'
     | '/team/$userId'
     | '/api/public/cron/clock-reminder'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/tasks'
     | '/team'
+    | '/team-board'
     | '/tasks/$taskId'
     | '/team/$userId'
     | '/api/public/cron/clock-reminder'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/tasks'
     | '/_app/team'
+    | '/_app/team-board'
     | '/_app/tasks/$taskId'
     | '/_app/team/$userId'
     | '/api/public/cron/clock-reminder'
@@ -264,6 +276,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_app/team-board': {
+      id: '/_app/team-board'
+      path: '/team-board'
+      fullPath: '/team-board'
+      preLoaderRoute: typeof AppTeamBoardRouteImport
+      parentRoute: typeof AppRoute
     }
     '/_app/team': {
       id: '/_app/team'
@@ -393,6 +412,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppTasksRoute: typeof AppTasksRouteWithChildren
   AppTeamRoute: typeof AppTeamRouteWithChildren
+  AppTeamBoardRoute: typeof AppTeamBoardRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
@@ -406,6 +426,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppTasksRoute: AppTasksRouteWithChildren,
   AppTeamRoute: AppTeamRouteWithChildren,
+  AppTeamBoardRoute: AppTeamBoardRoute,
 }
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
