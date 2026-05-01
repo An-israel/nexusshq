@@ -1,16 +1,19 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { deptLabel, initialsOf, todayISO } from "@/lib/nexus";
 import { requireAnyRole } from "@/lib/role-access";
 import { useAuth } from "@/lib/auth-context";
 import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
-import { Users, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
+import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
+import { Users, CheckCircle2, AlertTriangle, Clock, Shield } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+type AppRole = "admin" | "manager" | "employee";
 
 export const Route = createFileRoute("/_app/team")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
@@ -19,6 +22,7 @@ export const Route = createFileRoute("/_app/team")({
 
 interface MemberRow {
   profile: Profile;
+  role: AppRole | null;
   todayDone: number;
   todayTotal: number;
   weekDone: number;
