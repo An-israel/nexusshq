@@ -3,7 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   assertCallerIsAdmin,
+  assertCallerIsManagerOrAdmin,
   inviteEmployee,
+  resolveFlag,
   setEmployeeActive,
   setEmployeeRole,
 } from "./admin.server";
@@ -64,5 +66,14 @@ export const setEmployeeRoleFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertCallerIsAdmin(context.userId);
     await setEmployeeRole(data.userId, data.role);
+    return { ok: true };
+  });
+
+export const resolveFlagFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) => z.object({ flagId: z.string().uuid() }).parse(data))
+  .handler(async ({ data, context }) => {
+    await assertCallerIsManagerOrAdmin(context.userId);
+    await resolveFlag(data.flagId);
     return { ok: true };
   });
