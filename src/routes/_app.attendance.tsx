@@ -146,12 +146,13 @@ function AttendancePage() {
   }
 
   function exportCsv() {
-    if (rows.length === 0) {
+    const exportRows = filteredRows;
+    if (exportRows.length === 0) {
       return;
     }
     const header = ["Date", "Status", "Clock in", "Clock out", "Total minutes"];
     const lines = [header.join(",")];
-    for (const r of rows) {
+    for (const r of exportRows) {
       const inT = r.clock_in ? new Date(r.clock_in).toISOString() : "";
       const outT = r.clock_out ? new Date(r.clock_out).toISOString() : "";
       lines.push([r.date, r.status, inT, outT, r.total_minutes ?? ""].join(","));
