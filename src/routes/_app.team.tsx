@@ -32,7 +32,7 @@ interface MemberRow {
 }
 
 function TeamPage() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, isManager } = useAuth();
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
   const [members, setMembers] = useState<MemberRow[]>([]);
