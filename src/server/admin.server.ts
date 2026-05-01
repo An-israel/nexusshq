@@ -96,3 +96,11 @@ export async function setEmployeeRole(userId: string, role: AppRole) {
     .insert({ user_id: userId, role });
   if (error) throw new Error(error.message);
 }
+
+export async function resolveFlag(flagId: string) {
+  const { error } = await supabaseAdmin
+    .from("flags")
+    .update({ is_resolved: true, resolved_at: new Date().toISOString() })
+    .eq("id", flagId);
+  if (error) throw new Error(error.message);
+}

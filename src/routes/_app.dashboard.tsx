@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useRealtime } from "@/lib/use-realtime";
 import { useAuth } from "@/lib/auth-context";
 import {
   PRIORITY_BADGE,
@@ -44,89 +45,102 @@ function DashboardPage() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => {
+  const load = useCallback(async () => {
     if (!user) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      const today = todayISO();
-      const weekStart = startOfWeekISO();
-      const weekEnd = endOfWeekISO();
+    setLoading(true);
+    const today = todayISO();
+    const weekStart = startOfWeekISO();
+    const weekEnd = endOfWeekISO();
 
-      const [tasksToday, tasksWeek, kpisRes, notifsRes, attRes] = await Promise.all([
-        supabase
-          .from("tasks")
-          .select("*")
-          .eq("assigned_to", user.id)
-          .eq("task_type", "daily")
-          .eq("due_date", today),
-        supabase
-          .from("tasks")
-          .select("*")
-          .eq("assigned_to", user.id)
-          .eq("task_type", "weekly")
-          .gte("due_date", weekStart)
-          .lte("due_date", weekEnd),
-        profile?.department
-          ? supabase.from("kpis").select("*").eq("department", profile.department as Database["public"]["Enums"]["department_type"])
-          : Promise.resolve({ data: [] as Kpi[], error: null }),
-        supabase
-          .from("notifications")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("is_read", false)
-          .order("created_at", { ascending: false })
-          .limit(5),
-        supabase
-          .from("attendance")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("date", today)
-          .maybeSingle(),
-      ]);
+    const [tasksToday, tasksWeek, kpisRes, notifsRes, attRes] = await Promise.all([
+      supabase
+        .from("tasks")
+        .select("*")
+        .eq("assigned_to", user.id)
+        .eq("task_type", "daily")
+        .eq("due_date", today),
+      supabase
+        .from("tasks")
+        .select("*")
+        .eq("assigned_to", user.id)
+        .eq("task_type", "weekly")
+        .gte("due_date", weekStart)
+        .lte("due_date", weekEnd),
+      profile?.department
+        ? supabase.from("kpis").select("*").eq("department", profile.department as Database["public"]["Enums"]["department_type"])
+        : Promise.resolve({ data: [] as Kpi[], error: null }),
+      supabase
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("is_read", false)
+        .order("created_at", { ascending: false })
+        .limit(5),
+      supabase
+        .from("attendance")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("date", today)
+        .maybeSingle(),
+    ]);
 
-      if (cancelled) return;
+    const tt = ((tasksToday.data as Task[]) ?? []).sort(
+      (a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9),
+    );
+    setTodayTasks(tt);
+    setWeekTasks((tasksWeek.data as Task[]) ?? []);
+    const kpiList = (kpisRes.data as Kpi[]) ?? [];
+    setKpis(kpiList);
+    setNotifs((notifsRes.data as Notif[]) ?? []);
+    setAtt((attRes.data as Attendance) ?? null);
 
-      const tt = ((tasksToday.data as Task[]) ?? []).sort(
-        (a, b) => (PRIORITY_RANK[a.priority] ?? 9) - (PRIORITY_RANK[b.priority] ?? 9),
+    if (kpiList.length) {
+      const periodStart = new Date();
+      periodStart.setDate(1);
+      periodStart.setHours(0, 0, 0, 0);
+      const startStr = periodStart.toISOString().slice(0, 10);
+      const counts: Record<string, number> = {};
+      await Promise.all(
+        kpiList.map(async (k) => {
+          const { count } = await supabase
+            .from("tasks")
+            .select("id", { count: "exact", head: true })
+            .eq("assigned_to", user.id)
+            .eq("kpi_id", k.id)
+            .eq("status", "completed")
+            .gte("due_date", k.period === "weekly" ? startOfWeekISO() : startStr);
+          counts[k.id] = count ?? 0;
+        }),
       );
-      setTodayTasks(tt);
-      setWeekTasks((tasksWeek.data as Task[]) ?? []);
-      const kpiList = (kpisRes.data as Kpi[]) ?? [];
-      setKpis(kpiList);
-      setNotifs((notifsRes.data as Notif[]) ?? []);
-      setAtt((attRes.data as Attendance) ?? null);
+      setKpiCounts(counts);
+    }
 
-      // KPI completed task counts: count tasks linked to each kpi for this user, completed this period
-      if (kpiList.length) {
-        const periodStart = new Date();
-        periodStart.setDate(1);
-        periodStart.setHours(0, 0, 0, 0);
-        const startStr = periodStart.toISOString().slice(0, 10);
-        const counts: Record<string, number> = {};
-        await Promise.all(
-          kpiList.map(async (k) => {
-            const { count } = await supabase
-              .from("tasks")
-              .select("id", { count: "exact", head: true })
-              .eq("assigned_to", user.id)
-              .eq("kpi_id", k.id)
-              .eq("status", "completed")
-              .gte("due_date", k.period === "weekly" ? startOfWeekISO() : startStr);
-            counts[k.id] = count ?? 0;
-          }),
-        );
-        if (!cancelled) setKpiCounts(counts);
-      }
+    setLoading(false);
+  }, [user, profile?.department]);
 
-      setLoading(false);
-    })();
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, profile?.department]);
+  // Live updates: tasks, attendance, notifications scoped to this user
+  useRealtime({
+    table: "tasks",
+    filter: user ? `assigned_to=eq.${user.id}` : undefined,
+    enabled: !!user,
+    onChange: () => void load(),
+  });
+  useRealtime({
+    table: "attendance",
+    filter: user ? `user_id=eq.${user.id}` : undefined,
+    enabled: !!user,
+    onChange: () => void load(),
+  });
+  useRealtime({
+    table: "notifications",
+    filter: user ? `user_id=eq.${user.id}` : undefined,
+    enabled: !!user,
+    onChange: () => void load(),
+  });
 
   const greeting = (() => {
     const h = new Date().getHours();

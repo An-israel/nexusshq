@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { todayISO } from "@/lib/nexus";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, XCircle, Clock as ClockIcon, Download } from "lucide-react";
+import { useRealtime } from "@/lib/use-realtime";
 
 export const Route = createFileRoute("/_app/attendance")({
   component: AttendancePage,
@@ -83,6 +84,7 @@ function AttendancePage() {
   });
   const [rows, setRows] = React.useState<AttendanceRow[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [statusFilter, setStatusFilter] = React.useState<string>("all");
 
   React.useEffect(() => {
     if (!isManager) return;
@@ -116,6 +118,19 @@ function AttendancePage() {
     void load();
   }, [load]);
 
+  // Realtime: refresh when attendance changes for the target user
+  useRealtime({
+    table: "attendance",
+    filter: targetUserId ? `user_id=eq.${targetUserId}` : undefined,
+    enabled: !!targetUserId,
+    onChange: () => void load(),
+  });
+
+  const filteredRows = React.useMemo(
+    () => (statusFilter === "all" ? rows : rows.filter((r) => r.status === statusFilter)),
+    [rows, statusFilter],
+  );
+
   const stats = React.useMemo(() => {
     const present = rows.filter((r) => r.status === "present").length;
     const late = rows.filter((r) => r.status === "late").length;
@@ -131,12 +146,13 @@ function AttendancePage() {
   }
 
   function exportCsv() {
-    if (rows.length === 0) {
+    const exportRows = filteredRows;
+    if (exportRows.length === 0) {
       return;
     }
     const header = ["Date", "Status", "Clock in", "Clock out", "Total minutes"];
     const lines = [header.join(",")];
-    for (const r of rows) {
+    for (const r of exportRows) {
       const inT = r.clock_in ? new Date(r.clock_in).toISOString() : "";
       const outT = r.clock_out ? new Date(r.clock_out).toISOString() : "";
       lines.push([r.date, r.status, inT, outT, r.total_minutes ?? ""].join(","));
@@ -246,14 +262,32 @@ function AttendancePage() {
       </Card>
 
       <Card className="p-4">
-        <h2 className="font-semibold mb-3">Daily log</h2>
+        <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
+          <h2 className="font-semibold">Daily log</h2>
+          <div className="flex gap-1 rounded-lg border border-border bg-background/40 p-1">
+            {(["all", "present", "late", "absent", "half_day"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`rounded-md px-2.5 py-1 text-xs capitalize ${
+                  statusFilter === s
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {s.replace("_", " ")}
+              </button>
+            ))}
+          </div>
+        </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No attendance records this month.</p>
+        ) : filteredRows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No attendance records match this filter.</p>
         ) : (
           <div className="divide-y divide-border">
-            {[...rows].reverse().map((r) => {
+            {[...filteredRows].reverse().map((r) => {
               const s = STATUS_STYLE[r.status];
               return (
                 <div key={r.id} className="flex items-center justify-between py-2 text-sm">
