@@ -5,6 +5,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { deptLabel, initialsOf, todayISO } from "@/lib/nexus";
 import { requireAnyRole } from "@/lib/role-access";
+import { useAuth } from "@/lib/auth-context";
+import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { Users, CheckCircle2, AlertTriangle, Clock } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -26,7 +28,9 @@ interface MemberRow {
 }
 
 function TeamPage() {
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [reloadKey, setReloadKey] = useState(0);
   const [members, setMembers] = useState<MemberRow[]>([]);
   const [stats, setStats] = useState({
     activeCount: 0,
@@ -113,13 +117,16 @@ function TeamPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Team Overview</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Live snapshot of every active employee.</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Team Overview</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Live snapshot of every active employee.</p>
+        </div>
+        {isAdmin && <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} />}
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">

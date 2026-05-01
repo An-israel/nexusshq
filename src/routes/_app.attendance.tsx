@@ -12,7 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { todayISO } from "@/lib/nexus";
-import { CheckCircle2, AlertCircle, XCircle, Clock as ClockIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, AlertCircle, XCircle, Clock as ClockIcon, Download } from "lucide-react";
 
 export const Route = createFileRoute("/_app/attendance")({
   component: AttendancePage,
@@ -129,6 +130,30 @@ function AttendancePage() {
     setMonth(new Date(month.getFullYear(), month.getMonth() + delta, 1));
   }
 
+  function exportCsv() {
+    if (rows.length === 0) {
+      return;
+    }
+    const header = ["Date", "Status", "Clock in", "Clock out", "Total minutes"];
+    const lines = [header.join(",")];
+    for (const r of rows) {
+      const inT = r.clock_in ? new Date(r.clock_in).toISOString() : "";
+      const outT = r.clock_out ? new Date(r.clock_out).toISOString() : "";
+      lines.push([r.date, r.status, inT, outT, r.total_minutes ?? ""].join(","));
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const who =
+      scope === "team"
+        ? employees.find((e) => e.id === selectedUser)?.full_name ?? "team-member"
+        : "me";
+    a.href = url;
+    a.download = `attendance-${who}-${month.getFullYear()}-${String(month.getMonth() + 1).padStart(2, "0")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
@@ -138,14 +163,24 @@ function AttendancePage() {
             {scope === "me" ? "Your attendance history." : "Team attendance overview."}
           </p>
         </div>
-        {isManager && (
-          <Tabs value={scope} onValueChange={(v) => setScope(v as "me" | "team")}>
-            <TabsList>
-              <TabsTrigger value="me">Me</TabsTrigger>
-              <TabsTrigger value="team">Team</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        )}
+        <div className="flex items-center gap-2">
+          {isManager && (
+            <Tabs value={scope} onValueChange={(v) => setScope(v as "me" | "team")}>
+              <TabsList>
+                <TabsTrigger value="me">Me</TabsTrigger>
+                <TabsTrigger value="team">Team</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportCsv}
+            disabled={rows.length === 0}
+          >
+            <Download className="mr-2 h-4 w-4" /> Export CSV
+          </Button>
+        </div>
       </div>
 
       {scope === "team" && isManager && (
