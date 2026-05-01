@@ -30,6 +30,7 @@ interface Props {
   currentRole: AppRole | null;
   onChanged?: (newRole: AppRole) => void;
   trigger?: React.ReactNode;
+  isAdmin?: boolean;
 }
 
 const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
@@ -44,6 +45,7 @@ export function ManageRoleDialog({
   currentRole,
   onChanged,
   trigger,
+  isAdmin = false,
 }: Props) {
   const setRole = useServerFn(setEmployeeRoleFn);
   const [open, setOpen] = React.useState(false);
@@ -102,7 +104,7 @@ export function ManageRoleDialog({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="admin">Admin</SelectItem>
+              {isAdmin && <SelectItem value="admin">Admin</SelectItem>}
               <SelectItem value="manager">Manager</SelectItem>
               <SelectItem value="employee">Employee</SelectItem>
             </SelectContent>

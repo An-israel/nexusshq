@@ -142,7 +142,7 @@ function TeamPage() {
           <h1 className="text-2xl font-bold">Team Overview</h1>
           <p className="mt-1 text-sm text-muted-foreground">Live snapshot of every active employee.</p>
         </div>
-        {isAdmin && <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} />}
+        {isManager && <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} isAdmin={isAdmin} />}
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -169,6 +169,7 @@ function TeamPage() {
               key={m.profile.id}
               m={m}
               isAdmin={isAdmin}
+              isManager={isManager}
               onRoleChanged={() => setReloadKey((k) => k + 1)}
             />
           ))}
@@ -205,10 +206,12 @@ function StatCard({
 function MemberCard({
   m,
   isAdmin,
+  isManager,
   onRoleChanged,
 }: {
   m: MemberRow;
   isAdmin: boolean;
+  isManager: boolean;
   onRoleChanged: () => void;
 }) {
   const todayPct = m.todayTotal ? Math.round((m.todayDone / m.todayTotal) * 100) : 0;
@@ -268,13 +271,14 @@ function MemberCard({
         </div>
       </Link>
 
-      {isAdmin && (
+      {isManager && (
         <div className="mt-4 flex justify-end border-t border-border pt-3">
           <ManageRoleDialog
             userId={m.profile.id}
             userName={m.profile.full_name ?? m.profile.email ?? undefined}
             currentRole={m.role}
             onChanged={onRoleChanged}
+            isAdmin={isAdmin}
             trigger={
               <Button variant="ghost" size="sm" className="h-7 text-xs">
                 <Shield className="mr-1.5 h-3 w-3" /> Change role
