@@ -262,14 +262,32 @@ function AttendancePage() {
       </Card>
 
       <Card className="p-4">
-        <h2 className="font-semibold mb-3">Daily log</h2>
+        <div className="mb-3 flex items-center justify-between gap-2 flex-wrap">
+          <h2 className="font-semibold">Daily log</h2>
+          <div className="flex gap-1 rounded-lg border border-border bg-background/40 p-1">
+            {(["all", "present", "late", "absent", "half_day"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setStatusFilter(s)}
+                className={`rounded-md px-2.5 py-1 text-xs capitalize ${
+                  statusFilter === s
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {s.replace("_", " ")}
+              </button>
+            ))}
+          </div>
+        </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : rows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No attendance records this month.</p>
+        ) : filteredRows.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No attendance records match this filter.</p>
         ) : (
           <div className="divide-y divide-border">
-            {[...rows].reverse().map((r) => {
+            {[...filteredRows].reverse().map((r) => {
               const s = STATUS_STYLE[r.status];
               return (
                 <div key={r.id} className="flex items-center justify-between py-2 text-sm">
