@@ -101,8 +101,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // Safety: never stay loading longer than 8s regardless of network issues
+    const safetyTimer = setTimeout(() => setLoading(false), 8000);
+
     // 2) THEN check existing
     supabase.auth.getSession().then(({ data: { session: s } }) => {
+      clearTimeout(safetyTimer);
       setSession(s);
       if (s?.user) {
         loadProfileAndRole(s.user.id).finally(() => setLoading(false));
@@ -111,7 +115,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      clearTimeout(safetyTimer);
+      sub.subscription.unsubscribe();
+    };
   }, [loadProfileAndRole]);
 
   React.useEffect(() => {
