@@ -34,14 +34,10 @@ import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
 import { Route as AppAnnouncementsRouteImport } from './routes/_app.announcements'
 import { Route as AppTeamUserIdRouteImport } from './routes/_app.team.$userId'
 import { Route as AppTasksTaskIdRouteImport } from './routes/_app.tasks.$taskId'
-import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicCronLateTaskReportRouteImport } from './routes/api/public/cron/late-task-report'
+import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
 
-const TrackTokenRoute = TrackTokenRouteImport.update({
-  id: '/track/$token',
-  path: '/track/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -59,6 +55,11 @@ const AppRoute = AppRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackTokenRoute = TrackTokenRouteImport.update({
+  id: '/track/$token',
+  path: '/track/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppTeamBoardRoute = AppTeamBoardRouteImport.update({
@@ -161,10 +162,10 @@ const AppTasksTaskIdRoute = AppTasksTaskIdRouteImport.update({
   path: '/$taskId',
   getParentRoute: () => AppTasksRoute,
 } as any)
-const ApiPublicCronClockReminderRoute =
-  ApiPublicCronClockReminderRouteImport.update({
-    id: '/api/public/cron/clock-reminder',
-    path: '/api/public/cron/clock-reminder',
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicCronLateTaskReportRoute =
@@ -173,12 +174,17 @@ const ApiPublicCronLateTaskReportRoute =
     path: '/api/public/cron/late-task-report',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronClockReminderRoute =
+  ApiPublicCronClockReminderRouteImport.update({
+    id: '/api/public/cron/clock-reminder',
+    path: '/api/public/cron/clock-reminder',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
-  '/track/$token': typeof TrackTokenRoute
   '/announcements': typeof AppAnnouncementsRoute
   '/attendance': typeof AppAttendanceRoute
   '/client-projects': typeof AppClientProjectsRoute
@@ -197,16 +203,17 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
   '/team-board': typeof AppTeamBoardRoute
+  '/track/$token': typeof TrackTokenRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
-  '/track/$token': typeof TrackTokenRoute
   '/announcements': typeof AppAnnouncementsRoute
   '/attendance': typeof AppAttendanceRoute
   '/client-projects': typeof AppClientProjectsRoute
@@ -225,10 +232,12 @@ export interface FileRoutesByTo {
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
   '/team-board': typeof AppTeamBoardRoute
+  '/track/$token': typeof TrackTokenRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -236,7 +245,6 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
-  '/track/$token': typeof TrackTokenRoute
   '/_app/announcements': typeof AppAnnouncementsRoute
   '/_app/attendance': typeof AppAttendanceRoute
   '/_app/client-projects': typeof AppClientProjectsRoute
@@ -255,10 +263,12 @@ export interface FileRoutesById {
   '/_app/tasks': typeof AppTasksRouteWithChildren
   '/_app/team': typeof AppTeamRouteWithChildren
   '/_app/team-board': typeof AppTeamBoardRoute
+  '/track/$token': typeof TrackTokenRoute
   '/_app/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/_app/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -266,7 +276,6 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/login'
-    | '/track/$token'
     | '/announcements'
     | '/attendance'
     | '/client-projects'
@@ -285,16 +294,17 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/team'
     | '/team-board'
+    | '/track/$token'
     | '/tasks/$taskId'
     | '/team/$userId'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/accept-invite'
     | '/login'
-    | '/track/$token'
     | '/announcements'
     | '/attendance'
     | '/client-projects'
@@ -313,17 +323,18 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/team'
     | '/team-board'
+    | '/track/$token'
     | '/tasks/$taskId'
     | '/team/$userId'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
     | '/_app'
     | '/accept-invite'
     | '/login'
-    | '/track/$token'
     | '/_app/announcements'
     | '/_app/attendance'
     | '/_app/client-projects'
@@ -342,10 +353,12 @@ export interface FileRouteTypes {
     | '/_app/tasks'
     | '/_app/team'
     | '/_app/team-board'
+    | '/track/$token'
     | '/_app/tasks/$taskId'
     | '/_app/team/$userId'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -356,6 +369,7 @@ export interface RootRouteChildren {
   TrackTokenRoute: typeof TrackTokenRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
   ApiPublicCronLateTaskReportRoute: typeof ApiPublicCronLateTaskReportRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -394,13 +408,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/track/$token'
       preLoaderRoute: typeof TrackTokenRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_app/announcements': {
-      id: '/_app/announcements'
-      path: '/announcements'
-      fullPath: '/announcements'
-      preLoaderRoute: typeof AppAnnouncementsRouteImport
-      parentRoute: typeof AppRoute
     }
     '/_app/team-board': {
       id: '/_app/team-board'
@@ -521,6 +528,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAttendanceRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/announcements': {
+      id: '/_app/announcements'
+      path: '/announcements'
+      fullPath: '/announcements'
+      preLoaderRoute: typeof AppAnnouncementsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/team/$userId': {
       id: '/_app/team/$userId'
       path: '/$userId'
@@ -535,11 +549,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTasksTaskIdRouteImport
       parentRoute: typeof AppTasksRoute
     }
-    '/api/public/cron/clock-reminder': {
-      id: '/api/public/cron/clock-reminder'
-      path: '/api/public/cron/clock-reminder'
-      fullPath: '/api/public/cron/clock-reminder'
-      preLoaderRoute: typeof ApiPublicCronClockReminderRouteImport
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/cron/late-task-report': {
@@ -547,6 +561,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/cron/late-task-report'
       fullPath: '/api/public/cron/late-task-report'
       preLoaderRoute: typeof ApiPublicCronLateTaskReportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/clock-reminder': {
+      id: '/api/public/cron/clock-reminder'
+      path: '/api/public/cron/clock-reminder'
+      fullPath: '/api/public/cron/clock-reminder'
+      preLoaderRoute: typeof ApiPublicCronClockReminderRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -627,6 +648,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrackTokenRoute: TrackTokenRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
   ApiPublicCronLateTaskReportRoute: ApiPublicCronLateTaskReportRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
