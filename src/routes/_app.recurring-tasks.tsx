@@ -25,6 +25,9 @@ import {
 import { toast } from "sonner";
 import { RefreshCw, Plus, Pause, Play, Trash2, Zap } from "lucide-react";
 import { todayISO } from "@/lib/nexus";
+import type { Database } from "@/integrations/supabase/types";
+
+type TaskPriority = Database["public"]["Enums"]["task_priority"];
 
 export const Route = createFileRoute("/_app/recurring-tasks")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
@@ -106,16 +109,17 @@ function RecurringTasksPage() {
       return;
     }
 
-    const { error } = await supabase.from("tasks").insert({
+    const payload: Database["public"]["Tables"]["tasks"]["Insert"] = {
       title: t.title,
       description: t.description,
       assigned_to: t.assigned_to,
       assigned_by: user?.id,
-      priority: t.priority,
+      priority: t.priority as TaskPriority,
       task_type: taskType,
       due_date: dueDate,
       status: "todo",
-    });
+    };
+    const { error } = await supabase.from("tasks").insert(payload);
 
     if (error) { toast.error(error.message); setGenerating(null); return; }
 
@@ -238,7 +242,7 @@ function NewTemplateDialog({
   const [title, setTitle] = React.useState("");
   const [desc, setDesc] = React.useState("");
   const [assignedTo, setAssignedTo] = React.useState("");
-  const [priority, setPriority] = React.useState<string>("medium");
+  const [priority, setPriority] = React.useState<TaskPriority>("medium");
   const [recurrence, setRecurrence] = React.useState<"daily" | "weekly">("weekly");
   const [dayOfWeek, setDayOfWeek] = React.useState<string>("0");
   const [saving, setSaving] = React.useState(false);
@@ -246,7 +250,7 @@ function NewTemplateDialog({
   async function save() {
     if (!title.trim() || !assignedTo) { toast.error("Title and assignee are required"); return; }
     setSaving(true);
-    const { error } = await supabase.from("recurring_tasks").insert({
+    const payload: Database["public"]["Tables"]["recurring_tasks"]["Insert"] = {
       title: title.trim(),
       description: desc.trim() || null,
       assigned_to: assignedTo,
@@ -254,7 +258,8 @@ function NewTemplateDialog({
       priority,
       recurrence,
       day_of_week: recurrence === "weekly" ? parseInt(dayOfWeek) : null,
-    });
+    };
+    const { error } = await supabase.from("recurring_tasks").insert(payload);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Template created");
@@ -285,7 +290,7 @@ function NewTemplateDialog({
         <div className="grid grid-cols-2 gap-3">
           <div>
             <Label>Priority</Label>
-            <Select value={priority} onValueChange={setPriority}>
+            <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}

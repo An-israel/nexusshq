@@ -26,6 +26,8 @@ interface OrgProfile {
   role: string | null;
 }
 
+type OrgProfileBase = Omit<OrgProfile, "role">;
+
 function OrgChartPage() {
   const { isManager } = useAuth();
   const [people, setPeople] = React.useState<OrgProfile[]>([]);
@@ -46,7 +48,7 @@ function OrgChartPage() {
           roleMap[r.user_id] = r.role;
         }
       });
-      const merged: OrgProfile[] = (profileRes.data ?? []).map((p: OrgProfile) => ({
+      const merged: OrgProfile[] = ((profileRes.data ?? []) as OrgProfileBase[]).map((p) => ({
         ...p,
         role: roleMap[p.id] ?? "employee",
       }));

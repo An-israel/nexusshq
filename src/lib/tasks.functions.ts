@@ -2,14 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { assertCallerIsManagerOrAdmin } from "./admin.server";
+import { assertCallerIsManagerOrAdmin } from "@/server/admin.server";
 
 const statusEnum = z.enum(["todo", "in_progress", "completed", "overdue"]);
 
-/**
- * Update task status and write an audit row to task_updates.
- * Allowed for: the assignee (their own task) or any manager/admin.
- */
 export const updateTaskStatusFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
@@ -24,7 +20,6 @@ export const updateTaskStatusFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { userId } = context;
 
-    // Load current task
     const { data: task, error: loadErr } = await supabaseAdmin
       .from("tasks")
       .select("id, assigned_to, status, progress_percent")
@@ -33,7 +28,6 @@ export const updateTaskStatusFn = createServerFn({ method: "POST" })
     if (loadErr) throw new Error(loadErr.message);
     if (!task) throw new Error("Task not found");
 
-    // Authorization: assignee or manager/admin
     if (task.assigned_to !== userId) {
       await assertCallerIsManagerOrAdmin(userId, context.supabase);
     }
@@ -59,7 +53,6 @@ export const updateTaskStatusFn = createServerFn({ method: "POST" })
       .eq("id", data.taskId);
     if (updErr) throw new Error(updErr.message);
 
-    // Audit trail
     const { error: auditErr } = await supabaseAdmin.from("task_updates").insert({
       task_id: data.taskId,
       updated_by: userId,
@@ -74,10 +67,6 @@ export const updateTaskStatusFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/**
- * Reopen a previously resolved warning (used for the "Undo" action after marking
- * a warning as resolved).
- */
 export const reopenFlagFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ flagId: z.string().uuid() }).parse(data))

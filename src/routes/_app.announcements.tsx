@@ -25,6 +25,9 @@ import { toast } from "sonner";
 import { Megaphone, Pin, Trash2, Plus } from "lucide-react";
 import { DEPARTMENTS, deptLabel, timeAgo } from "@/lib/nexus";
 import { useRealtime } from "@/lib/use-realtime";
+import type { Database } from "@/integrations/supabase/types";
+
+type Department = Database["public"]["Enums"]["department_type"];
 
 export const Route = createFileRoute("/_app/announcements")({
   component: AnnouncementsPage,
@@ -172,12 +175,13 @@ function ComposeDialog({ onSaved, authorId }: { onSaved: () => void; authorId: s
   async function save() {
     if (!title.trim() || !body.trim()) { toast.error("Title and body are required"); return; }
     setSaving(true);
-    const { error } = await supabase.from("announcements").insert({
+    const payload: Database["public"]["Tables"]["announcements"]["Insert"] = {
       title: title.trim(),
       body: body.trim(),
       author_id: authorId,
-      department: dept === "all" ? null : dept,
-    });
+      department: dept === "all" ? null : (dept as Department),
+    };
+    const { error } = await supabase.from("announcements").insert(payload);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Announcement posted");

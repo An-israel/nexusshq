@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { setEmployeeRoleFn } from "@/server/admin.functions";
+import { setEmployeeRoleFn } from "@/lib/admin.functions";
 
 type AppRole = "admin" | "manager" | "employee";
 
