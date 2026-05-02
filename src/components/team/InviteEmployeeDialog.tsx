@@ -21,7 +21,7 @@ import {
 import { toast } from "sonner";
 import { UserPlus } from "lucide-react";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
-import { inviteEmployeeFn } from "@/server/admin.functions";
+import { inviteEmployeeFn } from "@/lib/admin.functions";
 
 export function InviteEmployeeDialog({ onInvited, isAdmin = false }: { onInvited?: () => void; isAdmin?: boolean }) {
   const invite = useServerFn(inviteEmployeeFn);

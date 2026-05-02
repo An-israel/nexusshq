@@ -29,7 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ChevronDown, Clock, History as HistoryIcon } from "lucide-react";
 import { PRIORITY_BADGE, deptLabel, initialsOf, timeAgo } from "@/lib/nexus";
-import { updateTaskStatusFn } from "@/server/tasks.functions";
+import { updateTaskStatusFn } from "@/lib/tasks.functions";
 import type { Database } from "@/integrations/supabase/types";
 
 type Task = Database["public"]["Tables"]["tasks"]["Row"];
