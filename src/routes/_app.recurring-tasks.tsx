@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import { RefreshCw, Plus, Pause, Play, Trash2, Zap } from "lucide-react";
 import { todayISO } from "@/lib/nexus";
+import type { Database } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/_app/recurring-tasks")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
@@ -106,7 +107,7 @@ function RecurringTasksPage() {
       return;
     }
 
-    const { error } = await supabase.from("tasks").insert({
+    const payload: Database["public"]["Tables"]["tasks"]["Insert"] = {
       title: t.title,
       description: t.description,
       assigned_to: t.assigned_to,
@@ -115,7 +116,8 @@ function RecurringTasksPage() {
       task_type: taskType,
       due_date: dueDate,
       status: "todo",
-    });
+    };
+    const { error } = await supabase.from("tasks").insert(payload);
 
     if (error) { toast.error(error.message); setGenerating(null); return; }
 
@@ -246,7 +248,7 @@ function NewTemplateDialog({
   async function save() {
     if (!title.trim() || !assignedTo) { toast.error("Title and assignee are required"); return; }
     setSaving(true);
-    const { error } = await supabase.from("recurring_tasks").insert({
+    const payload: Database["public"]["Tables"]["recurring_tasks"]["Insert"] = {
       title: title.trim(),
       description: desc.trim() || null,
       assigned_to: assignedTo,
@@ -254,7 +256,8 @@ function NewTemplateDialog({
       priority,
       recurrence,
       day_of_week: recurrence === "weekly" ? parseInt(dayOfWeek) : null,
-    });
+    };
+    const { error } = await supabase.from("recurring_tasks").insert(payload);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Template created");
