@@ -35,7 +35,7 @@ export const updateTaskStatusFn = createServerFn({ method: "POST" })
 
     // Authorization: assignee or manager/admin
     if (task.assigned_to !== userId) {
-      await assertCallerIsManagerOrAdmin(userId);
+      await assertCallerIsManagerOrAdmin(userId, context.supabase);
     }
 
     if (task.status === data.status) {
@@ -82,7 +82,7 @@ export const reopenFlagFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) => z.object({ flagId: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
-    await assertCallerIsManagerOrAdmin(context.userId);
+    await assertCallerIsManagerOrAdmin(context.userId, context.supabase);
     const { error } = await supabaseAdmin
       .from("flags")
       .update({ is_resolved: false, resolved_at: null })
