@@ -32,6 +32,27 @@ export function ClockWidget() {
 
   const load = React.useCallback(async () => {
     if (!user) return;
+
+    // Auto-close any open records from previous days at 17:00 WAT (16:00 UTC) of that day.
+    const { data: stale } = await supabase
+      .from("attendance")
+      .select("*")
+      .eq("user_id", user.id)
+      .not("clock_in", "is", null)
+      .is("clock_out", null)
+      .lt("date", todayISO());
+    for (const row of (stale as AttendanceRow[]) ?? []) {
+      const autoOut = new Date(`${row.date}T16:00:00.000Z`);
+      const minutes = Math.max(
+        0,
+        Math.round((autoOut.getTime() - new Date(row.clock_in!).getTime()) / 60000),
+      );
+      await supabase
+        .from("attendance")
+        .update({ clock_out: autoOut.toISOString(), total_minutes: minutes })
+        .eq("id", row.id);
+    }
+
     const { data } = await supabase
       .from("attendance")
       .select("*")
