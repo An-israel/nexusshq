@@ -27,6 +27,8 @@ import { DEPARTMENTS, deptLabel, timeAgo } from "@/lib/nexus";
 import { useRealtime } from "@/lib/use-realtime";
 import type { Database } from "@/integrations/supabase/types";
 
+type Department = Database["public"]["Enums"]["department_type"];
+
 export const Route = createFileRoute("/_app/announcements")({
   component: AnnouncementsPage,
 });
@@ -177,7 +179,7 @@ function ComposeDialog({ onSaved, authorId }: { onSaved: () => void; authorId: s
       title: title.trim(),
       body: body.trim(),
       author_id: authorId,
-      department: dept === "all" ? null : dept,
+      department: dept === "all" ? null : (dept as Department),
     };
     const { error } = await supabase.from("announcements").insert(payload);
     setSaving(false);
