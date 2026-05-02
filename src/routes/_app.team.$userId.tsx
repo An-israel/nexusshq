@@ -21,8 +21,8 @@ import { QuickAssignTaskDialog } from "@/components/team/QuickAssignTaskDialog";
 import { FlagEmployeeDialog } from "@/components/team/FlagEmployeeDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
-import { setEmployeeActiveFn, resolveFlagFn } from "@/server/admin.functions";
-import { reopenFlagFn } from "@/server/tasks.functions";
+import { setEmployeeActiveFn, resolveFlagFn } from "@/lib/admin.functions";
+import { reopenFlagFn } from "@/lib/tasks.functions";
 import { useRealtime } from "@/lib/use-realtime";
 import type { Database } from "@/integrations/supabase/types";
 
