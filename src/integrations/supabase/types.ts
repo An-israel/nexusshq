@@ -361,6 +361,7 @@ export type Database = {
           is_active: boolean
           job_title: string | null
           phone: string | null
+          reports_to: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -374,6 +375,7 @@ export type Database = {
           is_active?: boolean
           job_title?: string | null
           phone?: string | null
+          reports_to?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -387,8 +389,17 @@ export type Database = {
           is_active?: boolean
           job_title?: string | null
           phone?: string | null
+          reports_to?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_reports_to_fkey"
+            columns: ["reports_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       task_updates: {
         Row: {
@@ -537,6 +548,386 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      announcements: {
+        Row: {
+          id: string
+          title: string
+          body: string
+          author_id: string | null
+          department: Database["public"]["Enums"]["department_type"] | null
+          is_pinned: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          body: string
+          author_id?: string | null
+          department?: Database["public"]["Enums"]["department_type"] | null
+          is_pinned?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          body?: string
+          author_id?: string | null
+          department?: Database["public"]["Enums"]["department_type"] | null
+          is_pinned?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcements_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direct_messages: {
+        Row: {
+          id: string
+          from_id: string
+          to_id: string
+          body: string
+          is_read: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          from_id: string
+          to_id: string
+          body: string
+          is_read?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          from_id?: string
+          to_id?: string
+          body?: string
+          is_read?: boolean
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_messages_from_id_fkey"
+            columns: ["from_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_to_id_fkey"
+            columns: ["to_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_sections: {
+        Row: {
+          id: string
+          title: string
+          order_index: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          order_index?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          order_index?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
+      wiki_pages: {
+        Row: {
+          id: string
+          section_id: string | null
+          title: string
+          content: string
+          is_pinned: boolean
+          author_id: string | null
+          updated_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          section_id?: string | null
+          title: string
+          content?: string
+          is_pinned?: boolean
+          author_id?: string | null
+          updated_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          section_id?: string | null
+          title?: string
+          content?: string
+          is_pinned?: boolean
+          author_id?: string | null
+          updated_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_pages_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_sections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wiki_pages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deliverable_scores: {
+        Row: {
+          id: string
+          deliverable_id: string
+          reviewer_id: string
+          quality_score: number
+          creativity_score: number
+          timeliness_score: number
+          comment: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          deliverable_id: string
+          reviewer_id: string
+          quality_score?: number
+          creativity_score?: number
+          timeliness_score?: number
+          comment?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          deliverable_id?: string
+          reviewer_id?: string
+          quality_score?: number
+          creativity_score?: number
+          timeliness_score?: number
+          comment?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliverable_scores_deliverable_id_fkey"
+            columns: ["deliverable_id"]
+            isOneToOne: false
+            referencedRelation: "deliverables"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliverable_scores_reviewer_id_fkey"
+            columns: ["reviewer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      recurring_tasks: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          assigned_to: string
+          created_by: string | null
+          kpi_id: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          recurrence: string
+          day_of_week: number | null
+          is_active: boolean
+          last_generated_date: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          description?: string | null
+          assigned_to: string
+          created_by?: string | null
+          kpi_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          recurrence?: string
+          day_of_week?: number | null
+          is_active?: boolean
+          last_generated_date?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          assigned_to?: string
+          created_by?: string | null
+          kpi_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          recurrence?: string
+          day_of_week?: number | null
+          is_active?: boolean
+          last_generated_date?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "recurring_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      standups: {
+        Row: {
+          id: string
+          user_id: string
+          date: string
+          yesterday: string
+          today: string
+          blockers: string | null
+          submitted_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          date: string
+          yesterday: string
+          today: string
+          blockers?: string | null
+          submitted_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          date?: string
+          yesterday?: string
+          today?: string
+          blockers?: string | null
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standups_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_projects: {
+        Row: {
+          id: string
+          name: string
+          client_name: string
+          description: string | null
+          status: string
+          access_token: string
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          client_name: string
+          description?: string | null
+          status?: string
+          access_token?: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          client_name?: string
+          description?: string | null
+          status?: string
+          access_token?: string
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_projects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      client_project_tasks: {
+        Row: {
+          id: string
+          project_id: string
+          title: string
+          description: string | null
+          status: string
+          due_date: string | null
+          completed_at: string | null
+          order_index: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          title: string
+          description?: string | null
+          status?: string
+          due_date?: string | null
+          completed_at?: string | null
+          order_index?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          title?: string
+          description?: string | null
+          status?: string
+          due_date?: string | null
+          completed_at?: string | null
+          order_index?: number
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_project_tasks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "client_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
