@@ -3,4 +3,4 @@ export {
   resolveFlagFn,
   setEmployeeActiveFn,
   setEmployeeRoleFn,
-} from "@/server/admin.functions";
+} from "@/lib/admin.functions";
