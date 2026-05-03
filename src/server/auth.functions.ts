@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-
 export const signUpFn = createServerFn({ method: "POST" })
   .inputValidator((data) =>
     z
