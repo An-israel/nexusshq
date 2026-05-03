@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { createConfirmedUser } from "./auth.server";
+
 
 export const signUpFn = createServerFn({ method: "POST" })
   .inputValidator((data) =>
@@ -13,6 +13,7 @@ export const signUpFn = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ data }) => {
+    const { createConfirmedUser } = await import("./auth.server");
     await createConfirmedUser({
       email: data.email.trim().toLowerCase(),
       password: data.password,
