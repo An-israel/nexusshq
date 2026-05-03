@@ -35,6 +35,8 @@ import { Route as AppAnnouncementsRouteImport } from './routes/_app.announcement
 import { Route as AppTeamUserIdRouteImport } from './routes/_app.team.$userId'
 import { Route as AppTasksTaskIdRouteImport } from './routes/_app.tasks.$taskId'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicCronLateTaskReportRouteImport } from './routes/api/public/cron/late-task-report'
 import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
 import { Route as ApiPublicCronAutoClockOutRouteImport } from './routes/api/public/cron/auto-clock-out'
@@ -169,6 +171,16 @@ const LovableEmailQueueProcessRoute =
     path: '/lovable/email/queue/process',
     getParentRoute: () => rootRouteImport,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronLateTaskReportRoute =
   ApiPublicCronLateTaskReportRouteImport.update({
     id: '/api/public/cron/late-task-report',
@@ -216,6 +228,8 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
@@ -246,6 +260,8 @@ export interface FileRoutesByTo {
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
@@ -278,6 +294,8 @@ export interface FileRoutesById {
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
@@ -310,6 +328,8 @@ export interface FileRouteTypes {
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -340,6 +360,8 @@ export interface FileRouteTypes {
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
   id:
     | '__root__'
@@ -371,6 +393,8 @@ export interface FileRouteTypes {
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
@@ -383,6 +407,8 @@ export interface RootRouteChildren {
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
   ApiPublicCronLateTaskReportRoute: typeof ApiPublicCronLateTaskReportRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
@@ -570,6 +596,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/late-task-report': {
       id: '/api/public/cron/late-task-report'
       path: '/api/public/cron/late-task-report'
@@ -670,6 +710,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
   ApiPublicCronLateTaskReportRoute: ApiPublicCronLateTaskReportRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
