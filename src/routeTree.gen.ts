@@ -37,6 +37,7 @@ import { Route as AppTasksTaskIdRouteImport } from './routes/_app.tasks.$taskId'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as ApiPublicCronLateTaskReportRouteImport } from './routes/api/public/cron/late-task-report'
 import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
+import { Route as ApiPublicCronAutoClockOutRouteImport } from './routes/api/public/cron/auto-clock-out'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -180,6 +181,12 @@ const ApiPublicCronClockReminderRoute =
     path: '/api/public/cron/clock-reminder',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronAutoClockOutRoute =
+  ApiPublicCronAutoClockOutRouteImport.update({
+    id: '/api/public/cron/auto-clock-out',
+    path: '/api/public/cron/auto-clock-out',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByFullPath {
   '/track/$token': typeof TrackTokenRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
+  '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -235,6 +243,7 @@ export interface FileRoutesByTo {
   '/track/$token': typeof TrackTokenRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
+  '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -266,6 +275,7 @@ export interface FileRoutesById {
   '/track/$token': typeof TrackTokenRoute
   '/_app/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/_app/team/$userId': typeof AppTeamUserIdRoute
+  '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -297,6 +307,7 @@ export interface FileRouteTypes {
     | '/track/$token'
     | '/tasks/$taskId'
     | '/team/$userId'
+    | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/lovable/email/queue/process'
@@ -326,6 +337,7 @@ export interface FileRouteTypes {
     | '/track/$token'
     | '/tasks/$taskId'
     | '/team/$userId'
+    | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/lovable/email/queue/process'
@@ -356,6 +368,7 @@ export interface FileRouteTypes {
     | '/track/$token'
     | '/_app/tasks/$taskId'
     | '/_app/team/$userId'
+    | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/lovable/email/queue/process'
@@ -367,6 +380,7 @@ export interface RootRouteChildren {
   AcceptInviteRoute: typeof AcceptInviteRoute
   LoginRoute: typeof LoginRoute
   TrackTokenRoute: typeof TrackTokenRoute
+  ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
   ApiPublicCronLateTaskReportRoute: typeof ApiPublicCronLateTaskReportRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -570,6 +584,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronClockReminderRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/auto-clock-out': {
+      id: '/api/public/cron/auto-clock-out'
+      path: '/api/public/cron/auto-clock-out'
+      fullPath: '/api/public/cron/auto-clock-out'
+      preLoaderRoute: typeof ApiPublicCronAutoClockOutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -646,6 +667,7 @@ const rootRouteChildren: RootRouteChildren = {
   AcceptInviteRoute: AcceptInviteRoute,
   LoginRoute: LoginRoute,
   TrackTokenRoute: TrackTokenRoute,
+  ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
   ApiPublicCronLateTaskReportRoute: ApiPublicCronLateTaskReportRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
@@ -653,3 +675,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
