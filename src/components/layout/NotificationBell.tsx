@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
-import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock, Target } from "lucide-react";
+import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock, Target, MessageSquare, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -23,6 +23,8 @@ function iconFor(type: string) {
     case "flag": return AlertCircle;
     case "clock_reminder": return Clock;
     case "kpi_reminder": return Target;
+    case "direct_message": return MessageSquare;
+    case "group_message": return Users;
     default: return Bell;
   }
 }
