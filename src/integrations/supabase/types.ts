@@ -1116,6 +1116,8 @@ export type Database = {
         | "flag"
         | "kpi_reminder"
         | "clock_reminder"
+        | "direct_message"
+        | "group_message"
       review_rating:
         | "exceeds"
         | "meets"
@@ -1279,6 +1281,8 @@ export const Constants = {
         "flag",
         "kpi_reminder",
         "clock_reminder",
+        "direct_message",
+        "group_message",
       ],
       review_rating: [
         "exceeds",
