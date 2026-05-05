@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
-import { signUpFn } from "@/server/auth.functions";
+import { signUpFn } from "@/lib/auth.functions";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
