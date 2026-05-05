@@ -1,0 +1,1 @@
+CREATE POLICY "creators view own groups" ON public.message_groups FOR SELECT USING (created_by = auth.uid());
