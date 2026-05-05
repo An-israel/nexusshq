@@ -17,6 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
 import { Save, UserCog, Shield, Users as UsersIcon } from "lucide-react";
+import { AvatarUploader } from "@/components/AvatarUploader";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
