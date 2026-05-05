@@ -5,28 +5,32 @@ import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { useRealtime } from "@/lib/use-realtime";
 import { toast } from "sonner";
-import { Send, Plus, Users, Settings, UserPlus, LogOut, X } from "lucide-react";
-import { initialsOf, timeAgo } from "@/lib/nexus";
+import {
+  Send, Plus, Users, Pencil, Trash2, Check, X, Camera,
+  UserPlus, Hash,
+} from "lucide-react";
+import { initialsOf } from "@/lib/nexus";
 import { cn } from "@/lib/utils";
-import { AvatarUploader } from "@/components/AvatarUploader";
 
 export const Route = createFileRoute("/_app/messages")({
   component: MessagesPage,
 });
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Profile {
   id: string;
@@ -42,14 +46,15 @@ interface Msg {
   body: string;
   is_read: boolean;
   created_at: string;
+  edited_at?: string | null;
 }
 
 interface Group {
   id: string;
   name: string;
-  avatar_url: string | null;
   created_by: string;
   created_at: string;
+  avatar_url?: string | null;
   members: Profile[];
   unread: number;
 }
@@ -60,6 +65,7 @@ interface GroupMsg {
   from_id: string;
   body: string;
   created_at: string;
+  edited_at?: string | null;
   sender: Profile | null;
 }
 
@@ -67,46 +73,616 @@ type View =
   | { type: "dm"; contact: Profile }
   | { type: "group"; group: Group };
 
-// ── Avatar component ────────────────────────────────────────────────────────
-function Avatar({ url, name, size = 28, kind = "user" }: { url?: string | null; name?: string | null; size?: number; kind?: "user" | "group" }) {
-  const radius = "rounded-full";
-  if (url) {
-    return <img src={url} alt="" className={cn(radius, "object-cover shrink-0")} style={{ width: size, height: size }} />;
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function formatTime(iso: string) {
+  const d = new Date(iso);
+  const now = new Date();
+  const sameDay =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  if (sameDay) {
+    return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   }
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const wasYesterday =
+    d.getFullYear() === yesterday.getFullYear() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getDate() === yesterday.getDate();
+  if (wasYesterday) return `Yesterday ${d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+  return d.toLocaleDateString([], { month: "short", day: "numeric" }) +
+    " " + d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function isGroupStart(messages: { from_id: string; created_at: string }[], idx: number) {
+  if (idx === 0) return true;
+  const prev = messages[idx - 1];
+  const cur = messages[idx];
+  if (prev.from_id !== cur.from_id) return true;
+  return new Date(cur.created_at).getTime() - new Date(prev.created_at).getTime() > 5 * 60_000;
+}
+
+// Render body text with @mention highlights
+function MessageBody({ body }: { body: string }) {
+  const parts = body.split(/(@\S+)/g);
   return (
+    <span className="whitespace-pre-wrap break-words">
+      {parts.map((part, i) =>
+        part.startsWith("@") ? (
+          <span key={i} className="font-semibold text-primary">
+            {part}
+          </span>
+        ) : (
+          part
+        ),
+      )}
+    </span>
+  );
+}
+
+// Upload avatar to storage, return public URL
+async function uploadAvatar(bucket: string, path: string, file: File): Promise<string> {
+  const { error } = await supabase.storage
+    .from(bucket)
+    .upload(path, file, { upsert: true, contentType: file.type });
+  if (error) throw error;
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  // Cache bust
+  return `${data.publicUrl}?t=${Date.now()}`;
+}
+
+// ── UserAvatar ────────────────────────────────────────────────────────────────
+
+function UserAvatar({
+  profile,
+  size = "md",
+  uploadable,
+  onUploaded,
+}: {
+  profile: Profile | null;
+  size?: "xs" | "sm" | "md" | "lg";
+  uploadable?: boolean;
+  onUploaded?: (url: string) => void;
+}) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = React.useState(false);
+
+  const sizeClass = {
+    xs: "h-6 w-6 text-[9px]",
+    sm: "h-8 w-8 text-[11px]",
+    md: "h-9 w-9 text-xs",
+    lg: "h-16 w-16 text-lg",
+  }[size];
+
+  const displayName = profile?.full_name ?? profile?.email ?? "?";
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !profile) return;
+    setUploading(true);
+    try {
+      const url = await uploadAvatar("avatars", `user-${profile.id}`, file);
+      await supabase.from("profiles").update({ avatar_url: url }).eq("id", profile.id);
+      onUploaded?.(url);
+      toast.success("Profile picture updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
+    }
+  }
+
+  const inner = profile?.avatar_url ? (
+    <img
+      src={profile.avatar_url}
+      alt={displayName}
+      className={cn("rounded-full object-cover", sizeClass)}
+    />
+  ) : (
     <div
-      className={cn(radius, "shrink-0 flex items-center justify-center font-semibold",
-        kind === "user" ? "bg-primary/15 text-primary" : "bg-secondary text-secondary-foreground")}
-      style={{ width: size, height: size, fontSize: size * 0.4 }}
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full bg-primary/15 font-semibold text-primary",
+        sizeClass,
+      )}
     >
-      {kind === "group" && !name ? <Users className="h-3.5 w-3.5" /> : initialsOf(name ?? "")}
+      {initialsOf(displayName)}
+    </div>
+  );
+
+  if (!uploadable) return inner;
+
+  return (
+    <div className="group relative cursor-pointer" onClick={() => inputRef.current?.click()}>
+      {inner}
+      <div className={cn(
+        "absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100",
+        sizeClass,
+      )}>
+        {uploading
+          ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          : <Camera className="h-3.5 w-3.5 text-white" />}
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
     </div>
   );
 }
 
-// Render message body with @mentions highlighted
-function renderBody(body: string, members: Profile[]) {
-  const tokens = body.split(/(@[\w.-]+|@all)/g);
-  return tokens.map((t, i) => {
-    if (t === "@all") {
-      return <span key={i} className="rounded bg-primary/20 px-1 font-medium text-primary">@all</span>;
+// ── GroupAvatar ───────────────────────────────────────────────────────────────
+
+function GroupAvatar({
+  group,
+  size = "md",
+  uploadable,
+  onUploaded,
+}: {
+  group: Group;
+  size?: "xs" | "sm" | "md" | "lg";
+  uploadable?: boolean;
+  onUploaded?: (url: string) => void;
+}) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = React.useState(false);
+
+  const sizeClass = {
+    xs: "h-6 w-6 text-[9px]",
+    sm: "h-8 w-8 text-[11px]",
+    md: "h-9 w-9 text-xs",
+    lg: "h-16 w-16 text-lg",
+  }[size];
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const url = await uploadAvatar("avatars", `group-${group.id}`, file);
+      await supabase.from("message_groups").update({ avatar_url: url }).eq("id", group.id);
+      onUploaded?.(url);
+      toast.success("Group picture updated");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+      e.target.value = "";
     }
-    if (t.startsWith("@")) {
-      const handle = t.slice(1).toLowerCase();
-      const match = members.find((m) => {
-        const name = (m.full_name ?? m.email ?? "").toLowerCase();
-        return name.replace(/\s+/g, "") === handle.replace(/\s+/g, "") || (m.email ?? "").toLowerCase().split("@")[0] === handle;
-      });
-      if (match) {
-        return <span key={i} className="rounded bg-primary/20 px-1 font-medium text-primary">{t}</span>;
-      }
-    }
-    return <span key={i}>{t}</span>;
-  });
+  }
+
+  const inner = group.avatar_url ? (
+    <img
+      src={group.avatar_url}
+      alt={group.name}
+      className={cn("rounded-full object-cover", sizeClass)}
+    />
+  ) : (
+    <div
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full bg-secondary font-semibold text-secondary-foreground",
+        sizeClass,
+      )}
+    >
+      <Hash className="h-4 w-4" />
+    </div>
+  );
+
+  if (!uploadable) return inner;
+
+  return (
+    <div className="group relative cursor-pointer" onClick={() => inputRef.current?.click()}>
+      {inner}
+      <div className={cn(
+        "absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100",
+        sizeClass,
+      )}>
+        {uploading
+          ? <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          : <Camera className="h-3.5 w-3.5 text-white" />}
+      </div>
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  );
 }
 
+// ── MessageRow ────────────────────────────────────────────────────────────────
+
+function MessageRow({
+  id,
+  fromId,
+  senderProfile,
+  body,
+  createdAt,
+  editedAt,
+  isStart,
+  mine,
+  onEdit,
+  onDelete,
+}: {
+  id: string;
+  fromId: string;
+  senderProfile: Profile | null;
+  body: string;
+  createdAt: string;
+  editedAt?: string | null;
+  isStart: boolean;
+  mine: boolean;
+  onEdit: (id: string, newBody: string) => Promise<void>;
+  onDelete: (id: string) => Promise<void>;
+}) {
+  const [hovered, setHovered] = React.useState(false);
+  const [editing, setEditing] = React.useState(false);
+  const [editText, setEditText] = React.useState(body);
+  const [saving, setSaving] = React.useState(false);
+  const [confirmDelete, setConfirmDelete] = React.useState(false);
+  const editRef = React.useRef<HTMLTextAreaElement>(null);
+
+  React.useEffect(() => {
+    if (editing && editRef.current) {
+      editRef.current.focus();
+      editRef.current.selectionStart = editRef.current.value.length;
+    }
+  }, [editing]);
+
+  async function saveEdit() {
+    if (!editText.trim() || editText.trim() === body) { setEditing(false); return; }
+    setSaving(true);
+    await onEdit(id, editText.trim());
+    setSaving(false);
+    setEditing(false);
+  }
+
+  async function doDelete() {
+    await onDelete(id);
+    setConfirmDelete(false);
+  }
+
+  const displayName = senderProfile?.full_name ?? senderProfile?.email ?? "Unknown";
+
+  return (
+    <div
+      className={cn("group relative flex gap-3 px-5 hover:bg-accent/30 transition-colors", isStart ? "mt-4 pt-1" : "mt-0.5")}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setConfirmDelete(false); }}
+    >
+      {/* Avatar column */}
+      <div className="w-9 shrink-0">
+        {isStart ? (
+          <UserAvatar profile={senderProfile} size="sm" />
+        ) : (
+          <span className={cn(
+            "block text-center text-[9px] text-muted-foreground/0 group-hover:text-muted-foreground/60 transition-colors leading-[36px]",
+          )}>
+            {formatTime(createdAt).slice(0, 5)}
+          </span>
+        )}
+      </div>
+
+      {/* Body column */}
+      <div className="flex-1 min-w-0">
+        {isStart && (
+          <div className="flex items-baseline gap-2 mb-0.5">
+            <span className="text-sm font-semibold">{displayName}</span>
+            <span className="text-[11px] text-muted-foreground">{formatTime(createdAt)}</span>
+          </div>
+        )}
+
+        {editing ? (
+          <div className="space-y-1">
+            <textarea
+              ref={editRef}
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void saveEdit(); }
+                if (e.key === "Escape") { setEditing(false); setEditText(body); }
+              }}
+              className="w-full resize-none rounded-md border border-border bg-background p-2 text-sm outline-none focus:ring-1 focus:ring-primary"
+              rows={Math.min(6, editText.split("\n").length + 1)}
+              disabled={saving}
+            />
+            <div className="flex gap-1.5 text-xs text-muted-foreground">
+              <button
+                onClick={() => void saveEdit()}
+                disabled={saving}
+                className="flex items-center gap-1 rounded bg-primary px-2 py-0.5 text-primary-foreground hover:bg-primary/90"
+              >
+                <Check className="h-3 w-3" /> Save
+              </button>
+              <button
+                onClick={() => { setEditing(false); setEditText(body); }}
+                className="flex items-center gap-1 rounded px-2 py-0.5 hover:bg-accent"
+              >
+                <X className="h-3 w-3" /> Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm leading-relaxed">
+            <MessageBody body={body} />
+            {editedAt && (
+              <span className="ml-1 text-[10px] text-muted-foreground">(edited)</span>
+            )}
+          </p>
+        )}
+      </div>
+
+      {/* Hover actions */}
+      {mine && !editing && hovered && (
+        <div className="absolute right-5 top-1 flex items-center gap-0.5 rounded-md border border-border bg-background shadow-sm">
+          <button
+            onClick={() => { setEditing(true); setEditText(body); }}
+            className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+            title="Edit"
+          >
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          {confirmDelete ? (
+            <>
+              <span className="px-1.5 text-xs text-destructive">Delete?</span>
+              <button onClick={() => void doDelete()} className="rounded p-1.5 text-destructive hover:bg-destructive/10" title="Confirm">
+                <Check className="h-3.5 w-3.5" />
+              </button>
+              <button onClick={() => setConfirmDelete(false)} className="rounded p-1.5 text-muted-foreground hover:bg-accent" title="Cancel">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-destructive"
+              title="Delete"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── MentionInput ──────────────────────────────────────────────────────────────
+
+function MentionInput({
+  value,
+  onChange,
+  onSend,
+  placeholder,
+  members,
+  disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  onSend: () => void;
+  placeholder: string;
+  members: Profile[];
+  disabled?: boolean;
+}) {
+  const [mentionQuery, setMentionQuery] = React.useState<string | null>(null);
+  const [mentionStart, setMentionStart] = React.useState(0);
+  const ref = React.useRef<HTMLTextAreaElement>(null);
+
+  const suggestions = React.useMemo(() => {
+    if (mentionQuery === null) return [];
+    const q = mentionQuery.toLowerCase();
+    const all: Profile[] = [{ id: "__all__", full_name: "all", email: null }];
+    return [...all, ...members].filter((m) =>
+      (m.full_name ?? m.email ?? "").toLowerCase().includes(q),
+    );
+  }, [mentionQuery, members]);
+
+  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
+    const text = e.target.value;
+    onChange(text);
+    const cursor = e.target.selectionStart ?? text.length;
+    const before = text.slice(0, cursor);
+    const match = before.match(/@(\w*)$/);
+    if (match) {
+      setMentionQuery(match[1]);
+      setMentionStart(cursor - match[0].length);
+    } else {
+      setMentionQuery(null);
+    }
+  }
+
+  function pickMention(profile: Profile) {
+    const name = profile.full_name ?? profile.email ?? "all";
+    const before = value.slice(0, mentionStart);
+    const after = value.slice(ref.current?.selectionStart ?? mentionStart + (mentionQuery?.length ?? 0) + 1);
+    const newVal = `${before}@${name} ${after}`;
+    onChange(newVal);
+    setMentionQuery(null);
+    setTimeout(() => {
+      if (ref.current) {
+        const pos = before.length + name.length + 2;
+        ref.current.focus();
+        ref.current.setSelectionRange(pos, pos);
+      }
+    }, 0);
+  }
+
+  return (
+    <div className="relative">
+      {suggestions.length > 0 && (
+        <div className="absolute bottom-full left-0 mb-1 w-56 overflow-hidden rounded-lg border border-border bg-popover shadow-lg z-10">
+          {suggestions.map((m) => (
+            <button
+              key={m.id}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); pickMention(m); }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-accent"
+            >
+              {m.id === "__all__" ? (
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted">
+                  <Users className="h-3 w-3" />
+                </div>
+              ) : (
+                <UserAvatar profile={m} size="xs" />
+              )}
+              <span>{m.full_name ?? m.email}</span>
+              {m.id === "__all__" && <span className="ml-auto text-[10px] text-muted-foreground">everyone</span>}
+            </button>
+          ))}
+        </div>
+      )}
+      <textarea
+        ref={ref}
+        value={value}
+        onChange={handleChange}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            if (mentionQuery !== null) return;
+            onSend();
+          }
+        }}
+        placeholder={placeholder}
+        disabled={disabled}
+        rows={1}
+        className="w-full resize-none rounded-xl border border-border bg-background px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-primary disabled:opacity-50"
+        style={{ minHeight: "44px", maxHeight: "200px", overflowY: "auto" }}
+        onInput={(e) => {
+          const el = e.currentTarget;
+          el.style.height = "auto";
+          el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+        }}
+      />
+    </div>
+  );
+}
+
+// ── GroupInfoSheet ────────────────────────────────────────────────────────────
+
+function GroupInfoSheet({
+  group,
+  currentUserId,
+  contacts,
+  open,
+  onClose,
+  onGroupUpdated,
+}: {
+  group: Group;
+  currentUserId: string;
+  contacts: Profile[];
+  open: boolean;
+  onClose: () => void;
+  onGroupUpdated: () => void;
+}) {
+  const isCreator = group.created_by === currentUserId;
+  const memberIds = new Set(group.members.map((m) => m.id));
+  const nonMembers = contacts.filter((c) => !memberIds.has(c.id));
+  const [adding, setAdding] = React.useState<string[]>([]);
+  const [saving, setSaving] = React.useState(false);
+
+  const toggleAdd = (id: string) =>
+    setAdding((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
+
+  async function addMembers() {
+    if (!adding.length) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("message_group_members")
+        .insert(adding.map((uid) => ({ group_id: group.id, user_id: uid })));
+      if (error) throw error;
+      toast.success(`${adding.length} member${adding.length > 1 ? "s" : ""} added`);
+      setAdding([]);
+      onGroupUpdated();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to add members");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <SheetContent className="w-72 sm:w-80">
+        <SheetHeader>
+          <SheetTitle className="text-left">Group info</SheetTitle>
+        </SheetHeader>
+        <div className="mt-4 space-y-5">
+          {/* Group avatar */}
+          <div className="flex flex-col items-center gap-2">
+            <GroupAvatar
+              group={group}
+              size="lg"
+              uploadable={isCreator}
+              onUploaded={() => onGroupUpdated()}
+            />
+            <p className="font-semibold">{group.name}</p>
+            {isCreator && (
+              <p className="text-[11px] text-muted-foreground">Click picture to change</p>
+            )}
+          </div>
+
+          {/* Members */}
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Members ({group.members.length})
+            </p>
+            <div className="space-y-1">
+              {group.members.map((m) => (
+                <div key={m.id} className="flex items-center gap-2 rounded-lg px-2 py-1.5">
+                  <UserAvatar profile={m} size="xs" />
+                  <span className="text-sm">{m.full_name ?? m.email}</span>
+                  {m.id === group.created_by && (
+                    <span className="ml-auto text-[10px] text-muted-foreground">creator</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add members */}
+          {nonMembers.length > 0 && (
+            <div>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Add members
+              </p>
+              <div className="max-h-40 overflow-y-auto space-y-0.5 rounded-lg border border-border p-1">
+                {nonMembers.map((c) => (
+                  <label
+                    key={c.id}
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-accent"
+                  >
+                    <input
+                      type="checkbox"
+                      className="h-3.5 w-3.5 rounded accent-primary"
+                      checked={adding.includes(c.id)}
+                      onChange={() => toggleAdd(c.id)}
+                    />
+                    <UserAvatar profile={c} size="xs" />
+                    <span className="text-sm">{c.full_name ?? c.email}</span>
+                  </label>
+                ))}
+              </div>
+              {adding.length > 0 && (
+                <Button
+                  size="sm"
+                  className="mt-2 w-full"
+                  onClick={() => void addMembers()}
+                  disabled={saving}
+                >
+                  <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+                  {saving ? "Adding…" : `Add ${adding.length} member${adding.length > 1 ? "s" : ""}`}
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+// ── MessagesPage ──────────────────────────────────────────────────────────────
+
 function MessagesPage() {
-  const { user } = useAuth();
+  const { user, profile: myProfile } = useAuth();
   const [contacts, setContacts] = React.useState<Profile[]>([]);
   const [groups, setGroups] = React.useState<Group[]>([]);
   const [view, setView] = React.useState<View | null>(null);
@@ -119,13 +695,20 @@ function MessagesPage() {
   const [groupName, setGroupName] = React.useState("");
   const [pickedMembers, setPickedMembers] = React.useState<string[]>([]);
   const [creating, setCreating] = React.useState(false);
-  const [detailsOpen, setDetailsOpen] = React.useState(false);
-  const [addOpen, setAddOpen] = React.useState(false);
-  const [mentionState, setMentionState] = React.useState<{ open: boolean; query: string; start: number }>({ open: false, query: "", start: 0 });
-  const inputRef = React.useRef<HTMLInputElement>(null);
+  const [groupInfoOpen, setGroupInfoOpen] = React.useState(false);
   const bottomRef = React.useRef<HTMLDivElement>(null);
 
-  // ── Load contacts ──
+  // Me as Profile (for DM sender display)
+  const meProfile: Profile | null = myProfile
+    ? {
+        id: (myProfile as { id: string }).id,
+        full_name: (myProfile as { full_name: string | null }).full_name,
+        email: (myProfile as { email: string | null }).email,
+        avatar_url: (myProfile as { avatar_url?: string | null }).avatar_url,
+      }
+    : null;
+
+  // ── Load contacts ──────────────────────────────────────────────────────────
   React.useEffect(() => {
     if (!user) return;
     void supabase
@@ -137,37 +720,41 @@ function MessagesPage() {
       .then(({ data }) => setContacts((data ?? []) as Profile[]));
   }, [user]);
 
-  // ── Load groups ──
+  // ── Load groups ────────────────────────────────────────────────────────────
   const loadGroups = React.useCallback(async () => {
     if (!user) return;
+
     const { data: myMemberships } = await supabase
       .from("message_group_members")
       .select("group_id, last_read_at")
       .eq("user_id", user.id);
+
     if (!myMemberships?.length) { setGroups([]); return; }
 
     const groupIds = myMemberships.map((m) => m.group_id);
-    const lastReadByGroup = Object.fromEntries(myMemberships.map((m) => [m.group_id, m.last_read_at]));
+    const lastReadByGroup = Object.fromEntries(
+      myMemberships.map((m) => [m.group_id, m.last_read_at]),
+    );
 
-    const { data: groupRows } = await supabase
-      .from("message_groups")
-      .select("id, name, avatar_url, created_by, created_at")
-      .in("id", groupIds)
-      .order("created_at", { ascending: false });
-
-    const { data: memberRows } = await supabase
-      .from("message_group_members")
-      .select("group_id, user_id, profiles(id, full_name, email, avatar_url)")
-      .in("group_id", groupIds);
-
-    const { data: unreadRows } = await supabase
-      .from("group_messages")
-      .select("group_id, created_at")
-      .in("group_id", groupIds)
-      .neq("from_id", user.id);
+    const [groupRes, memberRes, unreadRes] = await Promise.all([
+      supabase
+        .from("message_groups")
+        .select("id, name, created_by, created_at, avatar_url")
+        .in("id", groupIds)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("message_group_members")
+        .select("group_id, user_id, profiles(id, full_name, email, avatar_url)")
+        .in("group_id", groupIds),
+      supabase
+        .from("group_messages")
+        .select("group_id, created_at")
+        .in("group_id", groupIds)
+        .neq("from_id", user.id),
+    ]);
 
     const unreadByGroup: Record<string, number> = {};
-    for (const row of unreadRows ?? []) {
+    for (const row of unreadRes.data ?? []) {
       const lr = lastReadByGroup[row.group_id];
       if (!lr || new Date(row.created_at) > new Date(lr)) {
         unreadByGroup[row.group_id] = (unreadByGroup[row.group_id] ?? 0) + 1;
@@ -175,33 +762,33 @@ function MessagesPage() {
     }
 
     const membersByGroup: Record<string, Profile[]> = {};
-    for (const row of memberRows ?? []) {
+    for (const row of memberRes.data ?? []) {
       const p = row.profiles as unknown as Profile | null;
       if (!p) continue;
       membersByGroup[row.group_id] ??= [];
       membersByGroup[row.group_id].push(p);
     }
 
-    const list = (groupRows ?? []).map((g) => ({
-      ...g,
-      members: membersByGroup[g.id] ?? [],
-      unread: unreadByGroup[g.id] ?? 0,
-    }));
-    setGroups(list);
-
-    // sync currently-open group view with fresh data
-    setView((cur) => {
-      if (cur?.type === "group") {
-        const fresh = list.find((g) => g.id === cur.group.id);
-        if (fresh) return { type: "group", group: fresh };
-      }
-      return cur;
-    });
+    setGroups(
+      (groupRes.data ?? []).map((g) => ({
+        ...g,
+        members: membersByGroup[g.id] ?? [],
+        unread: unreadByGroup[g.id] ?? 0,
+      })),
+    );
   }, [user]);
 
   React.useEffect(() => { void loadGroups(); }, [loadGroups]);
 
-  // ── DM unread ──
+  // Sync active group when groups reload (e.g. after new member added)
+  React.useEffect(() => {
+    if (view?.type === "group") {
+      const updated = groups.find((g) => g.id === view.group.id);
+      if (updated) setView({ type: "group", group: updated });
+    }
+  }, [groups]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── DM unread ──────────────────────────────────────────────────────────────
   const loadDmUnread = React.useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
@@ -218,14 +805,16 @@ function MessagesPage() {
 
   React.useEffect(() => { void loadDmUnread(); }, [loadDmUnread]);
 
-  // ── DM thread ──
+  // ── Load DM thread ─────────────────────────────────────────────────────────
   const loadDmThread = React.useCallback(async () => {
     if (!user || view?.type !== "dm") return;
     const contact = view.contact;
     const { data } = await supabase
       .from("direct_messages")
       .select("*")
-      .or(`and(from_id.eq.${user.id},to_id.eq.${contact.id}),and(from_id.eq.${contact.id},to_id.eq.${user.id})`)
+      .or(
+        `and(from_id.eq.${user.id},to_id.eq.${contact.id}),and(from_id.eq.${contact.id},to_id.eq.${user.id})`,
+      )
       .order("created_at", { ascending: true });
     setDmThread((data ?? []) as Msg[]);
     await supabase
@@ -242,23 +831,30 @@ function MessagesPage() {
     void loadDmUnread();
   }, [user, view, loadDmUnread]);
 
-  // ── Group thread ──
+  // ── Load group thread ──────────────────────────────────────────────────────
   const loadGroupThread = React.useCallback(async () => {
     if (!user || view?.type !== "group") return;
     const group = view.group;
     const { data } = await supabase
       .from("group_messages")
-      .select("id, group_id, from_id, body, created_at")
+      .select("id, group_id, from_id, body, created_at, edited_at")
       .eq("group_id", group.id)
       .order("created_at", { ascending: true });
 
     const senderIds = [...new Set((data ?? []).map((m) => m.from_id))];
     const { data: profileRows } = senderIds.length
-      ? await supabase.from("profiles").select("id, full_name, email, avatar_url").in("id", senderIds)
+      ? await supabase
+          .from("profiles")
+          .select("id, full_name, email, avatar_url")
+          .in("id", senderIds)
       : { data: [] };
-    const profileById = Object.fromEntries((profileRows ?? []).map((p) => [p.id, p as Profile]));
+    const profileById = Object.fromEntries(
+      (profileRows ?? []).map((p) => [p.id, p as Profile]),
+    );
 
-    setGroupThread((data ?? []).map((m) => ({ ...m, sender: profileById[m.from_id] ?? null })));
+    setGroupThread(
+      (data ?? []).map((m) => ({ ...m, sender: profileById[m.from_id] ?? null })),
+    );
 
     await supabase
       .from("message_group_members")
@@ -269,20 +865,20 @@ function MessagesPage() {
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", user.id)
-      .in("type", ["group_message", "mention"]);
+      .eq("type", "group_message");
     void loadGroups();
   }, [user, view, loadGroups]);
 
   React.useEffect(() => {
     if (view?.type === "dm") void loadDmThread();
     else if (view?.type === "group") void loadGroupThread();
-  }, [view?.type, view?.type === "dm" ? view.contact.id : view?.type === "group" ? view.group.id : null]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [view, loadDmThread, loadGroupThread]);
 
   React.useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [dmThread, groupThread]);
 
-  // ── Realtime ──
+  // ── Realtime ───────────────────────────────────────────────────────────────
   useRealtime({
     table: "direct_messages",
     filter: user ? `to_id=eq.${user.id}` : undefined,
@@ -300,22 +896,16 @@ function MessagesPage() {
     enabled: !!user,
     onChange: () => void loadGroups(),
   });
-  useRealtime({
-    table: "message_groups",
-    enabled: !!user,
-    onChange: () => void loadGroups(),
-  });
 
-  // ── Send ──
+  // ── Send ───────────────────────────────────────────────────────────────────
   async function send() {
     if (!draft.trim() || !user) return;
     setSending(true);
-    const body = draft.trim();
     if (view?.type === "dm") {
       const { error } = await supabase.from("direct_messages").insert({
         from_id: user.id,
         to_id: view.contact.id,
-        body,
+        body: draft.trim(),
       });
       if (error) { toast.error(error.message); setSending(false); return; }
       void loadDmThread();
@@ -323,86 +913,48 @@ function MessagesPage() {
       const { error } = await supabase.from("group_messages").insert({
         group_id: view.group.id,
         from_id: user.id,
-        body,
+        body: draft.trim(),
       });
       if (error) { toast.error(error.message); setSending(false); return; }
-      // Process mentions → notifications
-      await processMentions(body, view.group);
       void loadGroupThread();
     }
     setDraft("");
-    setMentionState({ open: false, query: "", start: 0 });
     setSending(false);
   }
 
-  async function processMentions(body: string, group: Group) {
-    if (!user) return;
-    const mentioned = new Set<string>();
-    const all = /(^|\s)@all(\b|$)/i.test(body);
-    if (all) {
-      group.members.forEach((m) => { if (m.id !== user.id) mentioned.add(m.id); });
-    } else {
-      const matches = body.match(/@[\w.-]+/g) ?? [];
-      for (const tok of matches) {
-        const handle = tok.slice(1).toLowerCase();
-        const m = group.members.find((p) => {
-          const n = (p.full_name ?? "").toLowerCase().replace(/\s+/g, "");
-          const e = (p.email ?? "").toLowerCase().split("@")[0];
-          return n === handle.replace(/\s+/g, "") || e === handle;
-        });
-        if (m && m.id !== user.id) mentioned.add(m.id);
-      }
-    }
-    if (!mentioned.size) return;
-    const { data: senderProf } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
-    const senderName = senderProf?.full_name ?? "Someone";
-    const rows = [...mentioned].map((uid) => ({
-      user_id: uid,
-      type: "mention" as const,
-      title: `${senderName} mentioned you in ${group.name}`,
-      message: body,
-    }));
-    await supabase.from("notifications").insert(rows);
+  // ── Edit / Delete DM ───────────────────────────────────────────────────────
+  async function editDm(id: string, body: string) {
+    const { error } = await supabase
+      .from("direct_messages")
+      .update({ body, edited_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) toast.error(error.message);
+    else void loadDmThread();
   }
 
-  // ── Mention autocomplete ──
-  const mentionCandidates = React.useMemo(() => {
-    if (view?.type !== "group" || !mentionState.open) return [];
-    const q = mentionState.query.toLowerCase();
-    const opts: { id: string; label: string; sub?: string }[] = [
-      { id: "all", label: "all", sub: "Notify the entire group" },
-      ...view.group.members
-        .filter((m) => m.id !== user?.id)
-        .map((m) => ({ id: m.id, label: (m.full_name ?? m.email ?? "").replace(/\s+/g, ""), sub: m.email ?? undefined })),
-    ];
-    return opts.filter((o) => o.label.toLowerCase().includes(q)).slice(0, 6);
-  }, [view, mentionState, user]);
-
-  function onDraftChange(value: string) {
-    setDraft(value);
-    if (view?.type !== "group") return;
-    const cursor = inputRef.current?.selectionStart ?? value.length;
-    const before = value.slice(0, cursor);
-    const m = before.match(/(?:^|\s)@([\w.-]*)$/);
-    if (m) {
-      setMentionState({ open: true, query: m[1], start: cursor - m[1].length - 1 });
-    } else {
-      setMentionState({ open: false, query: "", start: 0 });
-    }
+  async function deleteDm(id: string) {
+    const { error } = await supabase.from("direct_messages").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else void loadDmThread();
   }
 
-  function pickMention(label: string) {
-    if (!inputRef.current) return;
-    const cursor = inputRef.current.selectionStart ?? draft.length;
-    const before = draft.slice(0, mentionState.start);
-    const after = draft.slice(cursor);
-    const next = `${before}@${label} ${after}`;
-    setDraft(next);
-    setMentionState({ open: false, query: "", start: 0 });
-    requestAnimationFrame(() => inputRef.current?.focus());
+  // ── Edit / Delete group message ────────────────────────────────────────────
+  async function editGroupMsg(id: string, body: string) {
+    const { error } = await supabase
+      .from("group_messages")
+      .update({ body, edited_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) toast.error(error.message);
+    else void loadGroupThread();
   }
 
-  // ── Create group ──
+  async function deleteGroupMsg(id: string) {
+    const { error } = await supabase.from("group_messages").delete().eq("id", id);
+    if (error) toast.error(error.message);
+    else void loadGroupThread();
+  }
+
+  // ── Create group ───────────────────────────────────────────────────────────
   async function createGroup() {
     if (!groupName.trim() || !user) return;
     setCreating(true);
@@ -413,11 +965,13 @@ function MessagesPage() {
         .select("id")
         .single();
       if (grpErr) throw new Error(grpErr.message);
+
       const memberIds = Array.from(new Set([user.id, ...pickedMembers]));
       const { error: memErr } = await supabase
         .from("message_group_members")
         .insert(memberIds.map((uid) => ({ group_id: grp.id, user_id: uid })));
       if (memErr) throw new Error(memErr.message);
+
       toast.success(`Group "${groupName.trim()}" created`);
       setCreateOpen(false);
       setGroupName("");
@@ -430,94 +984,54 @@ function MessagesPage() {
     }
   }
 
-  // ── Group settings actions ──
-  async function updateGroupAvatar(url: string) {
-    if (view?.type !== "group") return;
-    const { error } = await supabase.from("message_groups").update({ avatar_url: url }).eq("id", view.group.id);
-    if (error) { toast.error(error.message); return; }
-    void loadGroups();
-  }
-  async function renameGroup(name: string) {
-    if (view?.type !== "group" || !name.trim()) return;
-    const { error } = await supabase.from("message_groups").update({ name: name.trim() }).eq("id", view.group.id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Group renamed");
-    void loadGroups();
-  }
-  async function leaveGroup() {
-    if (view?.type !== "group" || !user) return;
-    if (!confirm(`Leave "${view.group.name}"?`)) return;
-    const { error } = await supabase
-      .from("message_group_members")
-      .delete()
-      .eq("group_id", view.group.id)
-      .eq("user_id", user.id);
-    if (error) { toast.error(error.message); return; }
-    setView(null);
-    setDetailsOpen(false);
-    void loadGroups();
-  }
-  async function removeMember(uid: string) {
-    if (view?.type !== "group") return;
-    const { error } = await supabase
-      .from("message_group_members")
-      .delete()
-      .eq("group_id", view.group.id)
-      .eq("user_id", uid);
-    if (error) { toast.error(error.message); return; }
-    void loadGroups();
-  }
-  async function addMembers(ids: string[]) {
-    if (view?.type !== "group" || !ids.length) return;
-    const { error } = await supabase
-      .from("message_group_members")
-      .insert(ids.map((uid) => ({ group_id: view.group.id, user_id: uid })));
-    if (error) { toast.error(error.message); return; }
-    toast.success(`${ids.length} member(s) added`);
-    setAddOpen(false);
-    void loadGroups();
-  }
-
   const toggleMember = (id: string) =>
-    setPickedMembers((prev) => prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]);
+    setPickedMembers((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
 
-  const threadIsEmpty = view?.type === "dm" ? dmThread.length === 0 : groupThread.length === 0;
-  const isCreator = view?.type === "group" && view.group.created_by === user?.id;
-  const memberIdsInGroup = view?.type === "group" ? new Set(view.group.members.map((m) => m.id)) : new Set<string>();
-  const addableContacts = contacts.filter((c) => !memberIdsInGroup.has(c.id));
+  // ── Render ─────────────────────────────────────────────────────────────────
+  const activeGroup = view?.type === "group" ? view.group : null;
 
   return (
     <>
       <div className="flex h-[calc(100vh-7rem)] gap-0 overflow-hidden rounded-xl border border-border">
-        {/* Sidebar */}
-        <aside className="w-64 shrink-0 border-r border-border flex flex-col">
-          <div className="p-4 border-b border-border">
+        {/* ── Sidebar ──────────────────────────────────────────────────────── */}
+        <aside className="flex w-64 shrink-0 flex-col border-r border-border">
+          <div className="border-b border-border p-4">
             <h2 className="font-semibold">Messages</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
-            <p className="px-4 pt-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Direct Messages</p>
+            {/* Direct Messages */}
+            <p className="px-4 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Direct Messages
+            </p>
             {contacts.map((c) => (
               <button
                 key={c.id}
                 onClick={() => { setView({ type: "dm", contact: c }); setDraft(""); }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-accent transition-colors",
+                  "flex w-full items-center gap-2.5 px-4 py-2 text-left transition-colors hover:bg-accent",
                   view?.type === "dm" && view.contact.id === c.id && "bg-accent",
                 )}
               >
-                <Avatar url={c.avatar_url} name={c.full_name ?? c.email} />
-                <span className="flex-1 min-w-0 text-sm truncate">{c.full_name ?? c.email}</span>
+                <UserAvatar profile={c} size="xs" />
+                <span className="min-w-0 flex-1 truncate text-sm">{c.full_name ?? c.email}</span>
                 {(dmUnread[c.id] ?? 0) > 0 && (
-                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                  <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
                     {dmUnread[c.id]}
                   </span>
                 )}
               </button>
             ))}
-            {contacts.length === 0 && <p className="px-4 py-2 text-xs text-muted-foreground">No team members yet.</p>}
+            {contacts.length === 0 && (
+              <p className="px-4 py-2 text-xs text-muted-foreground">No team members yet.</p>
+            )}
 
-            <div className="flex items-center justify-between px-4 pt-4 pb-1">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Groups</p>
+            {/* Groups */}
+            <div className="flex items-center justify-between px-4 pb-1 pt-4">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Groups
+              </p>
               <button
                 onClick={() => setCreateOpen(true)}
                 className="flex h-5 w-5 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -531,14 +1045,14 @@ function MessagesPage() {
                 key={g.id}
                 onClick={() => { setView({ type: "group", group: g }); setDraft(""); }}
                 className={cn(
-                  "w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-accent transition-colors",
+                  "flex w-full items-center gap-2.5 px-4 py-2 text-left transition-colors hover:bg-accent",
                   view?.type === "group" && view.group.id === g.id && "bg-accent",
                 )}
               >
-                <Avatar url={g.avatar_url} name={g.name} kind="group" />
-                <span className="flex-1 min-w-0 text-sm truncate">{g.name}</span>
+                <GroupAvatar group={g} size="xs" />
+                <span className="min-w-0 flex-1 truncate text-sm">{g.name}</span>
                 {g.unread > 0 && (
-                  <span className="flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
+                  <span className="flex h-4 min-w-[16px] items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
                     {g.unread}
                   </span>
                 )}
@@ -547,288 +1061,219 @@ function MessagesPage() {
             {groups.length === 0 && (
               <p className="px-4 py-2 text-xs text-muted-foreground">
                 No groups yet.{" "}
-                <button onClick={() => setCreateOpen(true)} className="text-primary hover:underline">Create one</button>
+                <button onClick={() => setCreateOpen(true)} className="text-primary hover:underline">
+                  Create one
+                </button>
               </p>
             )}
           </div>
         </aside>
 
-        {/* Thread panel */}
-        <div className="flex flex-1 flex-col min-w-0">
+        {/* ── Thread panel ──────────────────────────────────────────────────── */}
+        <div className="flex min-w-0 flex-1 flex-col">
           {view ? (
             <>
-              <div className="flex items-center gap-3 border-b border-border px-5 py-3 shrink-0">
+              {/* Header */}
+              <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-3">
                 {view.type === "dm" ? (
-                  <Avatar url={view.contact.avatar_url} name={view.contact.full_name ?? view.contact.email} size={32} />
+                  <UserAvatar profile={view.contact} size="sm" />
                 ) : (
-                  <Avatar url={view.group.avatar_url} name={view.group.name} size={32} kind="group" />
+                  <GroupAvatar group={view.group} size="sm" />
                 )}
-                <button
-                  onClick={() => view.type === "group" && setDetailsOpen(true)}
-                  className="text-left flex-1 min-w-0 hover:opacity-80"
-                  disabled={view.type !== "group"}
-                >
+                <div className="flex-1 min-w-0">
                   <p className="font-semibold leading-tight truncate">
-                    {view.type === "dm" ? (view.contact.full_name ?? view.contact.email) : view.group.name}
+                    {view.type === "dm"
+                      ? (view.contact.full_name ?? view.contact.email)
+                      : view.group.name}
                   </p>
                   {view.type === "group" && (
-                    <p className="text-xs text-muted-foreground">
-                      {view.group.members.length} member{view.group.members.length !== 1 ? "s" : ""} · View details
-                    </p>
+                    <button
+                      onClick={() => setGroupInfoOpen(true)}
+                      className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+                    >
+                      {view.group.members.length} member{view.group.members.length !== 1 ? "s" : ""} · click to manage
+                    </button>
                   )}
-                </button>
+                </div>
                 {view.type === "group" && (
-                  <Button variant="ghost" size="icon" onClick={() => setDetailsOpen(true)} title="Group settings">
-                    <Settings className="h-4 w-4" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setGroupInfoOpen(true)}
+                    className="h-7 text-xs"
+                  >
+                    <Users className="h-3.5 w-3.5" />
                   </Button>
                 )}
               </div>
 
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                {threadIsEmpty && (
-                  <p className="text-center text-sm text-muted-foreground py-8">
-                    {view.type === "dm" ? "No messages yet. Say hello!" : "No messages yet. Start the conversation!"}
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto py-2">
+                {view.type === "dm" && dmThread.length === 0 && (
+                  <p className="py-10 text-center text-sm text-muted-foreground">
+                    No messages yet. Say hello!
+                  </p>
+                )}
+                {view.type === "group" && groupThread.length === 0 && (
+                  <p className="py-10 text-center text-sm text-muted-foreground">
+                    No messages yet. Start the conversation!
                   </p>
                 )}
 
                 {view.type === "dm" &&
-                  dmThread.map((m) => {
-                    const mine = m.from_id === user?.id;
-                    return (
-                      <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                        <div className={cn(
-                          "max-w-md rounded-2xl px-4 py-2 text-sm whitespace-pre-wrap break-words",
-                          mine ? "bg-primary text-primary-foreground rounded-br-sm" : "bg-muted text-foreground rounded-bl-sm",
-                        )}>
-                          <p>{m.body}</p>
-                          <p className={`text-[10px] mt-1 ${mine ? "text-primary-foreground/60" : "text-muted-foreground"}`}>{timeAgo(m.created_at)}</p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  dmThread.map((m, i) => (
+                    <MessageRow
+                      key={m.id}
+                      id={m.id}
+                      fromId={m.from_id}
+                      senderProfile={m.from_id === user?.id ? meProfile : view.contact}
+                      body={m.body}
+                      createdAt={m.created_at}
+                      editedAt={m.edited_at}
+                      isStart={isGroupStart(dmThread, i)}
+                      mine={m.from_id === user?.id}
+                      onEdit={editDm}
+                      onDelete={deleteDm}
+                    />
+                  ))}
 
                 {view.type === "group" &&
-                  groupThread.map((m, idx) => {
-                    const prev = groupThread[idx - 1];
-                    const showHeader = !prev || prev.from_id !== m.from_id || (new Date(m.created_at).getTime() - new Date(prev.created_at).getTime()) > 5 * 60 * 1000;
-                    const senderName = m.sender?.full_name ?? m.sender?.email ?? "Unknown";
-                    return (
-                      <div key={m.id} className={cn("flex gap-3", showHeader ? "mt-3" : "mt-0.5")}>
-                        <div className="w-8 shrink-0">
-                          {showHeader && <Avatar url={m.sender?.avatar_url} name={senderName} size={32} />}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          {showHeader && (
-                            <div className="flex items-baseline gap-2">
-                              <span className="font-semibold text-sm">{senderName}</span>
-                              <span className="text-[10px] text-muted-foreground">{timeAgo(m.created_at)}</span>
-                            </div>
-                          )}
-                          <p className="text-sm whitespace-pre-wrap break-words">
-                            {renderBody(m.body, view.group.members)}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  groupThread.map((m, i) => (
+                    <MessageRow
+                      key={m.id}
+                      id={m.id}
+                      fromId={m.from_id}
+                      senderProfile={m.sender}
+                      body={m.body}
+                      createdAt={m.created_at}
+                      editedAt={m.edited_at}
+                      isStart={isGroupStart(groupThread, i)}
+                      mine={m.from_id === user?.id}
+                      onEdit={editGroupMsg}
+                      onDelete={deleteGroupMsg}
+                    />
+                  ))}
 
                 <div ref={bottomRef} />
               </div>
 
-              <form
-                className="relative flex gap-2 border-t border-border px-5 py-3 shrink-0"
-                onSubmit={(e) => { e.preventDefault(); void send(); }}
-              >
-                {mentionState.open && mentionCandidates.length > 0 && (
-                  <div className="absolute bottom-full left-5 mb-1 w-64 rounded-lg border border-border bg-popover shadow-lg overflow-hidden z-10">
-                    {mentionCandidates.map((opt) => (
-                      <button
-                        key={opt.id}
-                        type="button"
-                        onMouseDown={(e) => { e.preventDefault(); pickMention(opt.label); }}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-accent"
-                      >
-                        <span className="font-medium">@{opt.label}</span>
-                        {opt.sub && <span className="text-xs text-muted-foreground truncate">{opt.sub}</span>}
-                      </button>
-                    ))}
+              {/* Input */}
+              <div className="shrink-0 border-t border-border px-4 py-3">
+                <div className="flex items-end gap-2">
+                  <div className="flex-1">
+                    <MentionInput
+                      value={draft}
+                      onChange={setDraft}
+                      onSend={() => void send()}
+                      placeholder={
+                        view.type === "dm"
+                          ? `Message ${view.contact.full_name ?? view.contact.email}…`
+                          : `Message #${view.group.name}… (type @ to mention)`
+                      }
+                      members={view.type === "group" ? view.group.members.filter((m) => m.id !== user?.id) : []}
+                      disabled={sending}
+                    />
                   </div>
-                )}
-                <Input
-                  ref={inputRef}
-                  value={draft}
-                  onChange={(e) => onDraftChange(e.target.value)}
-                  placeholder={view.type === "dm" ? "Type a message…" : `Message ${view.group.name} (use @ to mention)`}
-                  className="flex-1"
-                  autoFocus
-                />
-                <Button type="submit" disabled={sending || !draft.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
+                  <Button
+                    onClick={() => void send()}
+                    disabled={sending || !draft.trim()}
+                    size="icon"
+                    className="h-11 w-11 shrink-0"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Enter to send · Shift+Enter for new line{view.type === "group" ? " · @ to mention" : ""}
+                </p>
+              </div>
             </>
           ) : (
             <div className="flex flex-1 items-center justify-center">
-              <p className="text-sm text-muted-foreground">
-                Select a conversation or{" "}
-                <button onClick={() => setCreateOpen(true)} className="text-primary hover:underline">create a group</button>
-              </p>
+              <div className="text-center">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                  <Send className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium">Select a conversation</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Or{" "}
+                  <button onClick={() => setCreateOpen(true)} className="text-primary hover:underline">
+                    create a group
+                  </button>
+                </p>
+              </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* Create group dialog */}
-      <Dialog open={createOpen} onOpenChange={(o) => { setCreateOpen(o); if (!o) { setGroupName(""); setPickedMembers([]); } }}>
+      {/* ── Create group dialog ──────────────────────────────────────────────── */}
+      <Dialog
+        open={createOpen}
+        onOpenChange={(o) => {
+          setCreateOpen(o);
+          if (!o) { setGroupName(""); setPickedMembers([]); }
+        }}
+      >
         <DialogContent className="max-w-sm">
-          <DialogHeader><DialogTitle>New Group</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>New Group</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium">Group name</label>
-              <Input className="mt-1" placeholder="e.g. Design team" value={groupName} onChange={(e) => setGroupName(e.target.value)} autoFocus />
+              <Input
+                className="mt-1"
+                placeholder="e.g. Design team"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter") void createGroup(); }}
+              />
             </div>
             <div>
               <label className="text-sm font-medium">Add members</label>
-              <div className="mt-2 max-h-48 overflow-y-auto space-y-1 rounded-md border border-border p-2">
+              <div className="mt-2 max-h-48 space-y-0.5 overflow-y-auto rounded-lg border border-border p-1">
                 {contacts.map((c) => (
-                  <label key={c.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-accent">
+                  <label
+                    key={c.id}
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-accent"
+                  >
                     <input
                       type="checkbox"
-                      className="h-4 w-4 rounded border-border accent-primary"
+                      className="h-3.5 w-3.5 rounded accent-primary"
                       checked={pickedMembers.includes(c.id)}
                       onChange={() => toggleMember(c.id)}
                     />
-                    <Avatar url={c.avatar_url} name={c.full_name ?? c.email} size={24} />
+                    <UserAvatar profile={c} size="xs" />
                     <span className="text-sm">{c.full_name ?? c.email}</span>
                   </label>
                 ))}
-                {contacts.length === 0 && <p className="px-2 py-1 text-xs text-muted-foreground">No other members.</p>}
+                {contacts.length === 0 && (
+                  <p className="px-2 py-1 text-xs text-muted-foreground">No other members.</p>
+                )}
               </div>
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={createGroup} disabled={creating || !groupName.trim()}>
+            <Button onClick={() => void createGroup()} disabled={creating || !groupName.trim()}>
               {creating ? "Creating…" : "Create group"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Group details sheet */}
-      {view?.type === "group" && (
-        <Sheet open={detailsOpen} onOpenChange={setDetailsOpen}>
-          <SheetContent className="w-96 sm:w-[420px] overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Group details</SheetTitle>
-            </SheetHeader>
-
-            <div className="mt-6 flex flex-col items-center gap-3">
-              {isCreator ? (
-                <AvatarUploader
-                  pathPrefix={`groups/${view.group.id}`}
-                  currentUrl={view.group.avatar_url}
-                  fallbackName={view.group.name}
-                  onUploaded={updateGroupAvatar}
-                  size={88}
-                  rounded="lg"
-                />
-              ) : (
-                <Avatar url={view.group.avatar_url} name={view.group.name} size={88} kind="group" />
-              )}
-
-              {isCreator ? (
-                <Input
-                  defaultValue={view.group.name}
-                  onBlur={(e) => { if (e.target.value.trim() !== view.group.name) void renameGroup(e.target.value); }}
-                  className="text-center font-semibold"
-                />
-              ) : (
-                <p className="text-lg font-semibold">{view.group.name}</p>
-              )}
-              <p className="text-xs text-muted-foreground">{view.group.members.length} members</p>
-            </div>
-
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold">Members</h3>
-                <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
-                  <UserPlus className="mr-1 h-3.5 w-3.5" /> Add
-                </Button>
-              </div>
-              <div className="space-y-1">
-                {view.group.members.map((m) => (
-                  <div key={m.id} className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-accent">
-                    <Avatar url={m.avatar_url} name={m.full_name ?? m.email} size={32} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{m.full_name ?? m.email}</p>
-                      {m.id === view.group.created_by && <p className="text-[10px] text-muted-foreground">Creator</p>}
-                    </div>
-                    {isCreator && m.id !== user?.id && (
-                      <Button size="icon" variant="ghost" onClick={() => void removeMember(m.id)} title="Remove">
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {!isCreator && (
-              <div className="mt-6">
-                <Button variant="destructive" className="w-full" onClick={leaveGroup}>
-                  <LogOut className="mr-2 h-4 w-4" /> Leave group
-                </Button>
-              </div>
-            )}
-          </SheetContent>
-        </Sheet>
-      )}
-
-      {/* Add members dialog */}
-      {view?.type === "group" && (
-        <AddMembersDialog
-          open={addOpen}
-          onOpenChange={setAddOpen}
-          contacts={addableContacts}
-          onConfirm={addMembers}
+      {/* ── Group info sheet ─────────────────────────────────────────────────── */}
+      {activeGroup && user && (
+        <GroupInfoSheet
+          group={activeGroup}
+          currentUserId={user.id}
+          contacts={contacts}
+          open={groupInfoOpen}
+          onClose={() => setGroupInfoOpen(false)}
+          onGroupUpdated={() => void loadGroups()}
         />
       )}
     </>
-  );
-}
-
-function AddMembersDialog({ open, onOpenChange, contacts, onConfirm }: {
-  open: boolean;
-  onOpenChange: (o: boolean) => void;
-  contacts: Profile[];
-  onConfirm: (ids: string[]) => Promise<void>;
-}) {
-  const [picked, setPicked] = React.useState<string[]>([]);
-  React.useEffect(() => { if (!open) setPicked([]); }, [open]);
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
-        <DialogHeader><DialogTitle>Add members</DialogTitle></DialogHeader>
-        <div className="max-h-64 overflow-y-auto space-y-1 rounded-md border border-border p-2">
-          {contacts.map((c) => (
-            <label key={c.id} className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-accent">
-              <input
-                type="checkbox"
-                className="h-4 w-4 rounded border-border accent-primary"
-                checked={picked.includes(c.id)}
-                onChange={() => setPicked((prev) => prev.includes(c.id) ? prev.filter((x) => x !== c.id) : [...prev, c.id])}
-              />
-              <span className="text-sm">{c.full_name ?? c.email}</span>
-            </label>
-          ))}
-          {contacts.length === 0 && <p className="px-2 py-2 text-xs text-muted-foreground">Everyone is already in this group.</p>}
-        </div>
-        <DialogFooter>
-          <Button disabled={!picked.length} onClick={() => void onConfirm(picked)}>
-            Add {picked.length || ""}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
