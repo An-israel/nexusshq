@@ -11,7 +11,7 @@ import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { setEmployeeActiveFn } from "@/server/admin.functions";
+import { setEmployeeActiveFn } from "@/lib/admin.functions";
 import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
