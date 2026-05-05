@@ -1,4 +1,5 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { AuthProvider } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { installSupabaseDiagnostics } from "@/lib/supabase-diagnostics";
@@ -52,6 +53,9 @@ export const Route = createRootRoute({
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap",
       },
+      { rel: "manifest", href: "/manifest.json" },
+      { rel: "icon", href: "/icons/icon.svg", type: "image/svg+xml" },
+      { rel: "apple-touch-icon", href: "/icons/icon.svg" },
     ],
   }),
   shellComponent: RootShell,
@@ -75,6 +79,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   installSupabaseDiagnostics();
+
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js", { scope: "/" });
+    }
+  }, []);
 
   return (
     <AuthProvider>
