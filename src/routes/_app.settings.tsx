@@ -35,6 +35,7 @@ interface ProfileRow {
   hire_date: string | null;
   base_salary: number | null;
   is_active: boolean;
+  avatar_url: string | null;
 }
 
 interface RoleRow { user_id: string; role: "admin" | "manager" | "employee"; }
