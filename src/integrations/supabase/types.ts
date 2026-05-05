@@ -572,18 +572,21 @@ export type Database = {
       }
       message_groups: {
         Row: {
+          avatar_url: string | null
           created_at: string
           created_by: string
           id: string
           name: string
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           created_by: string
           id?: string
           name: string
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           created_by?: string
           id?: string
@@ -1229,6 +1232,7 @@ export type Database = {
         | "clock_reminder"
         | "direct_message"
         | "group_message"
+        | "mention"
       review_rating:
         | "exceeds"
         | "meets"
@@ -1394,6 +1398,7 @@ export const Constants = {
         "clock_reminder",
         "direct_message",
         "group_message",
+        "mention",
       ],
       review_rating: [
         "exceeds",
