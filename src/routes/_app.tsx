@@ -6,6 +6,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
+import { useAppBadge } from "@/lib/use-app-badge";
 
 const TIMEOUT_SENTINEL = Symbol("timeout");
 
@@ -63,6 +64,7 @@ function AppLayout() {
   const { loading, session, role } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  useAppBadge();
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login" });
