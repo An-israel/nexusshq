@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { signUpFn } from "@/lib/auth.functions";
+import { Eye, EyeOff } from "lucide-react";
+import { signUpFn } from "@/server/auth.functions";
 
 export const Route = createFileRoute("/login")({
   component: LoginPage,
@@ -23,6 +24,8 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     if (session) void navigate({ to: "/dashboard" });
@@ -117,16 +120,26 @@ function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="bg-input"
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="bg-input pr-10"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? "Signing in…" : "Sign in"}
@@ -168,30 +181,50 @@ function LoginPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="su-password">Password</Label>
-              <Input
-                id="su-password"
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
-                className="bg-input"
-              />
+              <div className="relative">
+                <Input
+                  id="su-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  minLength={8}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="At least 8 characters"
+                  className="bg-input pr-10"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirm password</Label>
-              <Input
-                id="confirm"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                placeholder="••••••••"
-                className="bg-input"
-              />
+              <div className="relative">
+                <Input
+                  id="confirm"
+                  type={showConfirm ? "text" : "password"}
+                  autoComplete="new-password"
+                  required
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  placeholder="••••••••"
+                  className="bg-input pr-10"
+                />
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  onClick={() => setShowConfirm((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showConfirm ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
             </div>
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? "Creating account…" : "Create account"}

@@ -9,7 +9,10 @@ import { requireAnyRole } from "@/lib/role-access";
 import { useAuth } from "@/lib/auth-context";
 import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
-import { Users, CheckCircle2, AlertTriangle, Clock, Shield } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { toast } from "sonner";
+import { setEmployeeActiveFn } from "@/server/admin.functions";
+import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -36,6 +39,7 @@ function TeamPage() {
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
   const [members, setMembers] = useState<MemberRow[]>([]);
+  const [showInactive, setShowInactive] = useState(false);
   const [stats, setStats] = useState({
     activeCount: 0,
     completedToday: 0,
@@ -52,7 +56,6 @@ function TeamPage() {
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("*")
-        .eq("is_active", true)
         .order("full_name");
       const profiles = (profilesData as Profile[]) ?? [];
 
@@ -123,7 +126,7 @@ function TeamPage() {
 
       setMembers(rows);
       setStats({
-        activeCount: profiles.length,
+        activeCount: profiles.filter((p) => p.is_active).length,
         completedToday: completedTodayRes.count ?? 0,
         overdueNow: overdueRes.count ?? 0,
         clockedInToday: att.filter((a) => a.clock_in).length,
@@ -142,7 +145,19 @@ function TeamPage() {
           <h1 className="text-2xl font-bold">Team Overview</h1>
           <p className="mt-1 text-sm text-muted-foreground">Live snapshot of every active employee.</p>
         </div>
-        {isManager && <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} isAdmin={isAdmin} />}
+        <div className="flex items-center gap-2">
+          {isManager && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowInactive((v) => !v)}
+              className="text-xs"
+            >
+              {showInactive ? "Hide deactivated" : "Show deactivated"}
+            </Button>
+          )}
+          {isManager && <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} isAdmin={isAdmin} />}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -158,22 +173,46 @@ function TeamPage() {
             <Skeleton key={i} className="h-44 w-full" />
           ))}
         </div>
-      ) : members.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          No active employees yet.
-        </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {members.map((m) => (
-            <MemberCard
-              key={m.profile.id}
-              m={m}
-              isAdmin={isAdmin}
-              isManager={isManager}
-              onRoleChanged={() => setReloadKey((k) => k + 1)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {members.filter((m) => m.profile.is_active).map((m) => (
+              <MemberCard
+                key={m.profile.id}
+                m={m}
+                isAdmin={isAdmin}
+                isManager={isManager}
+                onRoleChanged={() => setReloadKey((k) => k + 1)}
+                onActivationChanged={() => setReloadKey((k) => k + 1)}
+              />
+            ))}
+            {members.filter((m) => m.profile.is_active).length === 0 && (
+              <div className="col-span-full rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
+                No active employees yet.
+              </div>
+            )}
+          </div>
+
+          {showInactive && members.filter((m) => !m.profile.is_active).length > 0 && (
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Deactivated accounts
+              </p>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 opacity-60">
+                {members.filter((m) => !m.profile.is_active).map((m) => (
+                  <MemberCard
+                    key={m.profile.id}
+                    m={m}
+                    isAdmin={isAdmin}
+                    isManager={isManager}
+                    onRoleChanged={() => setReloadKey((k) => k + 1)}
+                    onActivationChanged={() => setReloadKey((k) => k + 1)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
@@ -208,12 +247,30 @@ function MemberCard({
   isAdmin,
   isManager,
   onRoleChanged,
+  onActivationChanged,
 }: {
   m: MemberRow;
   isAdmin: boolean;
   isManager: boolean;
   onRoleChanged: () => void;
+  onActivationChanged: () => void;
 }) {
+  const setActive = useServerFn(setEmployeeActiveFn);
+  const [toggling, setToggling] = useState(false);
+
+  async function toggleActive() {
+    setToggling(true);
+    try {
+      await setActive({ data: { userId: m.profile.id, isActive: !m.profile.is_active } });
+      toast.success(m.profile.is_active ? "Account deactivated" : "Account reactivated");
+      onActivationChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update account");
+    } finally {
+      setToggling(false);
+    }
+  }
+
   const todayPct = m.todayTotal ? Math.round((m.todayDone / m.todayTotal) * 100) : 0;
   const roleStyle =
     m.role === "admin"
@@ -272,19 +329,32 @@ function MemberCard({
       </Link>
 
       {isManager && (
-        <div className="mt-4 flex justify-end border-t border-border pt-3">
-          <ManageRoleDialog
-            userId={m.profile.id}
-            userName={m.profile.full_name ?? m.profile.email ?? undefined}
-            currentRole={m.role}
-            onChanged={onRoleChanged}
-            isAdmin={isAdmin}
-            trigger={
-              <Button variant="ghost" size="sm" className="h-7 text-xs">
-                <Shield className="mr-1.5 h-3 w-3" /> Change role
-              </Button>
-            }
-          />
+        <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-7 text-xs ${m.profile.is_active ? "text-destructive hover:text-destructive" : "text-success hover:text-success"}`}
+            onClick={toggleActive}
+            disabled={toggling}
+          >
+            {m.profile.is_active
+              ? <><UserX className="mr-1.5 h-3 w-3" />Deactivate</>
+              : <><UserCheck className="mr-1.5 h-3 w-3" />Reactivate</>}
+          </Button>
+          {m.profile.is_active && (
+            <ManageRoleDialog
+              userId={m.profile.id}
+              userName={m.profile.full_name ?? m.profile.email ?? undefined}
+              currentRole={m.role}
+              onChanged={onRoleChanged}
+              isAdmin={isAdmin}
+              trigger={
+                <Button variant="ghost" size="sm" className="h-7 text-xs">
+                  <Shield className="mr-1.5 h-3 w-3" /> Change role
+                </Button>
+              }
+            />
+          )}
         </div>
       )}
     </div>

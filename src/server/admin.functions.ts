@@ -52,7 +52,7 @@ export const setEmployeeActiveFn = createServerFn({ method: "POST" })
     z.object({ userId: z.string().uuid(), isActive: z.boolean() }).parse(data),
   )
   .handler(async ({ data, context }) => {
-    await assertCallerIsAdmin(context.userId, context.supabase);
+    await assertCallerIsManagerOrAdmin(context.userId, context.supabase);
     await setEmployeeActive(data.userId, data.isActive, context.supabase);
     return { ok: true };
   });
