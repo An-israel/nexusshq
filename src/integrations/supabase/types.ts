@@ -451,6 +451,45 @@ export type Database = {
           },
         ]
       }
+      group_messages: {
+        Row: {
+          body: string
+          created_at: string
+          from_id: string
+          group_id: string
+          id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          from_id: string
+          group_id: string
+          id?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          from_id?: string
+          group_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_messages_from_id_fkey"
+            columns: ["from_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "message_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kpis: {
         Row: {
           created_at: string
@@ -495,9 +534,75 @@ export type Database = {
           },
         ]
       }
+      message_group_members: {
+        Row: {
+          group_id: string
+          joined_at: string
+          last_read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          joined_at?: string
+          last_read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "message_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_groups: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
+          email_sent_at: string | null
           id: string
           is_read: boolean
           message: string
@@ -508,6 +613,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email_sent_at?: string | null
           id?: string
           is_read?: boolean
           message: string
@@ -518,6 +624,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email_sent_at?: string | null
           id?: string
           is_read?: boolean
           message?: string
@@ -1069,6 +1176,10 @@ export type Database = {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_group_member: {
+        Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
       }
       move_to_dlq: {
