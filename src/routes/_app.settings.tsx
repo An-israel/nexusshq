@@ -17,6 +17,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
 import { Save, UserCog, Shield, Users as UsersIcon } from "lucide-react";
+import { AvatarUploader } from "@/components/AvatarUploader";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
@@ -34,6 +35,7 @@ interface ProfileRow {
   hire_date: string | null;
   base_salary: number | null;
   is_active: boolean;
+  avatar_url: string | null;
 }
 
 interface RoleRow { user_id: string; role: "admin" | "manager" | "employee"; }
@@ -104,6 +106,20 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
 
   return (
     <Card className="p-6 space-y-4 max-w-2xl">
+      <AvatarUploader
+        pathPrefix={form.id}
+        currentUrl={form.avatar_url}
+        fallbackName={form.full_name ?? form.email}
+        onUploaded={async (url) => {
+          const { error } = await supabase
+            .from("profiles")
+            .update({ avatar_url: url })
+            .eq("id", form.id);
+          if (error) { toast.error(error.message); return; }
+          setForm({ ...form, avatar_url: url });
+          await onSaved();
+        }}
+      />
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Full name</Label>
