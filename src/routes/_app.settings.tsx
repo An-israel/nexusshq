@@ -106,6 +106,20 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
 
   return (
     <Card className="p-6 space-y-4 max-w-2xl">
+      <AvatarUploader
+        pathPrefix={form.id}
+        currentUrl={form.avatar_url}
+        fallbackName={form.full_name ?? form.email}
+        onUploaded={async (url) => {
+          const { error } = await supabase
+            .from("profiles")
+            .update({ avatar_url: url })
+            .eq("id", form.id);
+          if (error) { toast.error(error.message); return; }
+          setForm({ ...form, avatar_url: url });
+          await onSaved();
+        }}
+      />
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Full name</Label>
