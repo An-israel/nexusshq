@@ -9,7 +9,10 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "tauri:icons": "node scripts/gen-tauri-icons.mjs"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.25.5",
@@ -73,6 +76,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2",
     "@eslint/js": "^9.32.0",
     "@lovable.dev/vite-tanstack-config": "^1.4.0",
     "@types/node": "^22.16.5",

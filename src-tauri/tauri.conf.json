@@ -1,0 +1,52 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Nexus HQ",
+  "version": "1.0.0",
+  "identifier": "com.skryveai.nexushq",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "",
+    "devUrl": "http://localhost:5173",
+    "frontendDist": "../dist"
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": [],
+    "externalBin": [],
+    "copyright": "© 2025 SkryveAI",
+    "category": "Productivity",
+    "shortDescription": "Internal team management",
+    "longDescription": "Nexus HQ — internal team management platform for SkryveAI.",
+    "macOS": {
+      "minimumSystemVersion": "10.15",
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": []
+    },
+    "windows": {
+      "digestAlgorithm": "sha256",
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      }
+    }
+  },
+  "app": {
+    "security": {
+      "csp": null,
+      "dangerousRemoteDomainIpcAccess": []
+    },
+    "trayIcon": {
+      "iconPath": "icons/icon.png",
+      "iconAsTemplate": true,
+      "menuOnLeftClick": false
+    }
+  }
+}
