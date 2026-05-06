@@ -9,9 +9,15 @@ import {
   Shield,
   ArrowRight,
   Zap,
+  Monitor,
+  Download,
 } from "lucide-react";
 
 const TIMEOUT_SENTINEL = Symbol("timeout");
+
+// Update this URL after publishing a GitHub Release
+const DOWNLOAD_URL =
+  "https://github.com/An-israel/nexusshq/releases/latest";
 
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
@@ -129,6 +135,20 @@ function LandingPage() {
               Sign in to your workspace
             </Link>
           </div>
+
+          {/* Desktop download strip */}
+          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+            <Monitor className="h-4 w-4 shrink-0" />
+            <span>Also available as a native desktop app —</span>
+            <a
+              href={DOWNLOAD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+            >
+              <Download className="h-3.5 w-3.5" /> Download for Windows
+            </a>
+          </div>
         </div>
       </section>
 
@@ -157,6 +177,32 @@ function LandingPage() {
                 <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Desktop app download ─────────────────────────────────────────── */}
+      <section className="border-t border-border/40 py-16">
+        <div className="mx-auto max-w-4xl px-6">
+          <div className="flex flex-col items-center gap-6 rounded-2xl border border-border bg-card p-8 text-center sm:flex-row sm:text-left">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+              <Monitor className="h-8 w-8" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold">Desktop App for Windows</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Install Nexus HQ as a native Windows app. Lives in your system
+                tray, works like a regular desktop app — no browser needed.
+              </p>
+            </div>
+            <a
+              href={DOWNLOAD_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Download className="h-4 w-4" /> Download .exe
+            </a>
           </div>
         </div>
       </section>
