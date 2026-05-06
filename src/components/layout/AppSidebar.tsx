@@ -25,6 +25,7 @@ import {
   Sparkles,
   CalendarOff,
   Flag,
+  BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -56,6 +57,7 @@ const NAV: NavItem[] = [
   { to: "/client-projects", label: "Client Projects", icon: Briefcase, roles: ["admin", "manager"] },
   { to: "/kpis", label: "KPIs", icon: Target, roles: ["admin"] },
   { to: "/okrs", label: "Goals & OKRs", icon: Flag, roles: ["admin", "manager", "employee"] },
+  { to: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "manager"] },
   { to: "/ai-tasks", label: "AI Tasks", icon: Sparkles, roles: ["admin", "manager"] },
   { to: "/notifications", label: "Notifications", icon: Bell, roles: ["admin", "manager", "employee"] },
   { to: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },

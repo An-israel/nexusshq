@@ -23,7 +23,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ExternalLink, Plus, Trash2, CheckCircle2, Circle, Clock, Copy } from "lucide-react";
+import { ExternalLink, Plus, Trash2, CheckCircle2, Circle, Clock, Copy, Eye } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
 
 export const Route = createFileRoute("/_app/client-projects")({
@@ -68,6 +68,7 @@ function ClientProjectsPage() {
   const [projects, setProjects] = React.useState<ClientProject[]>([]);
   const [selected, setSelected] = React.useState<ClientProject | null>(null);
   const [tasks, setTasks] = React.useState<ProjectTask[]>([]);
+  const [viewCounts, setViewCounts] = React.useState<Record<string, number>>({});
   const [loading, setLoading] = React.useState(true);
   const [newProjectOpen, setNewProjectOpen] = React.useState(false);
   const [newTaskOpen, setNewTaskOpen] = React.useState(false);
@@ -78,7 +79,22 @@ function ClientProjectsPage() {
       .from("client_projects")
       .select("*")
       .order("created_at", { ascending: false });
-    setProjects((data ?? []) as ClientProject[]);
+    const projs = (data ?? []) as ClientProject[];
+    setProjects(projs);
+
+    // Load view counts for all projects
+    if (projs.length) {
+      const { data: views } = await supabase
+        .from("client_portal_views")
+        .select("project_id")
+        .in("project_id", projs.map((p) => p.id));
+      const counts: Record<string, number> = {};
+      (views ?? []).forEach((v: { project_id: string }) => {
+        counts[v.project_id] = (counts[v.project_id] ?? 0) + 1;
+      });
+      setViewCounts(counts);
+    }
+
     setLoading(false);
   }, []);
 
@@ -162,6 +178,11 @@ function ClientProjectsPage() {
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{p.client_name}</p>
+              {viewCounts[p.id] ? (
+                <p className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1">
+                  <Eye className="h-3 w-3" /> {viewCounts[p.id]} view{viewCounts[p.id] !== 1 ? "s" : ""}
+                </p>
+              ) : null}
             </button>
           ))}
           {!loading && projects.length === 0 && (

@@ -67,6 +67,12 @@ function PublicTracker() {
         .order("order_index");
       setTasks((taskData ?? []) as ProjectTask[]);
       setLoading(false);
+
+      // Log this view (fire-and-forget, no auth needed)
+      void supabase.from("client_portal_views").insert({
+        project_id: proj.id,
+        token,
+      });
     })();
   }, [token]);
 
