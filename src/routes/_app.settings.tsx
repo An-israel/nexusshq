@@ -21,6 +21,31 @@ import { AvatarUploader } from "@/components/AvatarUploader";
 import { Switch } from "@/components/ui/switch";
 import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
 
+class FeatureErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: Error | null }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { error: null };
+  }
+  static getDerivedStateFromError(error: Error) { return { error }; }
+  render() {
+    if (this.state.error) {
+      return (
+        <Card className="max-w-2xl p-6">
+          <p className="text-sm text-destructive font-medium">Failed to load feature toggles.</p>
+          <p className="text-xs text-muted-foreground mt-1">{this.state.error.message}</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => this.setState({ error: null })}>
+            Retry
+          </Button>
+        </Card>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
 });
@@ -84,7 +109,9 @@ function SettingsPage() {
         )}
         {isAdmin && (
           <TabsContent value="features" className="mt-4">
-            <FeatureToggles />
+            <FeatureErrorBoundary>
+              <FeatureToggles />
+            </FeatureErrorBoundary>
           </TabsContent>
         )}
       </Tabs>
@@ -243,7 +270,7 @@ function TeamAdmin() {
               <p className="font-medium">{p.full_name ?? p.email}</p>
               <p className="text-xs text-muted-foreground">{p.email}</p>
             </div>
-            <div className="grid grid-cols-3 gap-2 items-end">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end w-full sm:w-auto">
               <div>
                 <Label className="text-xs">Department</Label>
                 <Select value={p.department ?? "other"} onValueChange={(v) => update(p.id, { department: v as Dept })}>

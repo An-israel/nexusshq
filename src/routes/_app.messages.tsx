@@ -1108,10 +1108,10 @@ function MessagesPage() {
 
   return (
     <>
-      <div className="flex h-[calc(100vh-7rem)] gap-0 overflow-hidden rounded-xl border border-border">
-        {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-        <aside className="flex w-64 shrink-0 flex-col border-r border-border">
-          <div className="border-b border-border p-4">
+      <div className="flex h-[calc(100vh-8rem)] md:h-[calc(100vh-7rem)] gap-0 overflow-hidden rounded-xl border border-border">
+        {/* ── Sidebar — full-width on mobile when no chat open ─────────────── */}
+        <aside className={`border-b md:border-b-0 md:border-r border-border flex flex-col md:w-64 md:shrink-0 ${view ? "hidden md:flex" : "flex w-full"}`}>
+          <div className="border-b border-border p-4 flex items-center justify-between">
             <h2 className="font-semibold">Messages</h2>
           </div>
           <div className="flex-1 overflow-y-auto">
@@ -1183,12 +1183,19 @@ function MessagesPage() {
           </div>
         </aside>
 
-        {/* ── Thread panel ──────────────────────────────────────────────────── */}
-        <div className="flex min-w-0 flex-1 flex-col">
+        {/* ── Thread panel — full-width on mobile when chat open ────────────── */}
+        <div className={`min-w-0 flex-1 flex-col ${!view ? "hidden md:flex" : "flex"}`}>
           {view ? (
             <>
               {/* Header */}
-              <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-3">
+              <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 md:px-5 py-3">
+                {/* Mobile back button */}
+                <button
+                  className="flex items-center gap-1 text-xs text-muted-foreground md:hidden shrink-0"
+                  onClick={() => { setView(null); setDraft(""); }}
+                >
+                  ← Back
+                </button>
                 {view.type === "dm" ? (
                   <UserAvatar profile={view.contact} size="sm" />
                 ) : (
