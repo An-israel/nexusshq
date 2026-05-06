@@ -308,6 +308,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           from_id: string
           id: string
           is_read: boolean
@@ -316,6 +317,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           from_id: string
           id?: string
           is_read?: boolean
@@ -324,6 +326,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           from_id?: string
           id?: string
           is_read?: boolean
@@ -485,6 +488,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           from_id: string
           group_id: string
           id: string
@@ -492,6 +496,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           from_id: string
           group_id: string
           id?: string
@@ -499,6 +504,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           from_id?: string
           group_id?: string
           id?: string
