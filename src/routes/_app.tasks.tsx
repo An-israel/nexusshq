@@ -245,15 +245,15 @@ function TaskCard({
                 {task.description}
               </p>
             )}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground mt-2">
-              <span className="inline-flex items-center gap-1">
+            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">
+              <span className="inline-flex items-center gap-1 shrink-0">
                 <CalIcon className="h-3 w-3" /> {task.due_date}
               </span>
-              <span>{task.task_type.replace("_", " ")}</span>
+              <span className="shrink-0">{task.task_type.replace("_", " ")}</span>
               {showAssignee && assignee && (
-                <span>→ {assignee.full_name ?? assignee.email}</span>
+                <span className="truncate max-w-[120px]">→ {assignee.full_name ?? assignee.email}</span>
               )}
-              <span className="ml-auto">{task.progress_percent}%</span>
+              <span className="ml-auto shrink-0">{task.progress_percent}%</span>
             </div>
             <div className="mt-2 h-1 rounded bg-muted overflow-hidden">
               <div

@@ -39,36 +39,49 @@ function buildDefaults(): FlagsMap {
   return out;
 }
 
+let instanceCounter = 0;
+
 export function useFeatureFlags(): { flags: FlagsMap; loading: boolean } {
   const [flags, setFlags] = React.useState<FlagsMap>(buildDefaults);
   const [loading, setLoading] = React.useState(true);
+  const channelName = React.useRef(`feature_flags_${++instanceCounter}`);
 
   React.useEffect(() => {
     let active = true;
     async function load() {
-      const { data } = await supabase
-        .from("feature_flags")
-        .select("key, enabled");
-      if (!active) return;
-      const next = buildDefaults();
-      for (const row of data ?? []) next[row.key] = row.enabled;
-      setFlags(next);
-      setLoading(false);
+      try {
+        const { data } = await supabase
+          .from("feature_flags")
+          .select("key, enabled");
+        if (!active) return;
+        const next = buildDefaults();
+        for (const row of data ?? []) next[row.key] = row.enabled;
+        setFlags(next);
+      } catch {
+        // Table may not exist yet; fall back to defaults
+      } finally {
+        if (active) setLoading(false);
+      }
     }
     void load();
 
-    const channel = supabase
-      .channel("feature_flags")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "feature_flags" },
-        () => void load(),
-      )
-      .subscribe();
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+    try {
+      channel = supabase
+        .channel(channelName.current)
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "feature_flags" },
+          () => void load(),
+        )
+        .subscribe();
+    } catch {
+      // Realtime unavailable; polling not needed
+    }
 
     return () => {
       active = false;
-      void supabase.removeChannel(channel);
+      if (channel) void supabase.removeChannel(channel);
     };
   }, []);
 
