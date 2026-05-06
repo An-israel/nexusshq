@@ -93,6 +93,36 @@ export type Database = {
           },
         ]
       }
+      burnout_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          detected_at: string
+          id: string
+          reason: string
+          risk_level: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          detected_at?: string
+          id?: string
+          reason: string
+          risk_level: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          detected_at?: string
+          id?: string
+          reason?: string
+          risk_level?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_project_tasks: {
         Row: {
           completed_at: string | null
