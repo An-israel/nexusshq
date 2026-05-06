@@ -12,40 +12,36 @@ import { useAppBadge } from "@/lib/use-app-badge";
 const TIMEOUT_SENTINEL = Symbol("timeout");
 
 export const Route = createFileRoute("/_app")({
-  // Race getUser() against a 4s timeout so a slow/stalled Supabase connection
-  // never leaves the router stuck in its pending state on mobile networks.
-  // If we time out, AuthProvider takes over auth-checking on the client side.
+  // Use getSession() (reads from localStorage — instant, no network round-trip)
+  // instead of getUser() so navigating between pages never triggers a loading
+  // spinner. getUser() made a network call every navigation which caused the
+  // "Loading…" flash. AuthProvider still verifies the full JWT on mount.
   beforeLoad: async () => {
     const result = await Promise.race([
-      supabase.auth.getUser(),
+      supabase.auth.getSession(),
       new Promise<typeof TIMEOUT_SENTINEL>((resolve) =>
-        setTimeout(() => resolve(TIMEOUT_SENTINEL), 4000),
+        setTimeout(() => resolve(TIMEOUT_SENTINEL), 1000),
       ),
     ]);
 
     if (result === TIMEOUT_SENTINEL) return; // let AuthProvider handle it
 
-    const { data: { user }, error } = result;
+    const { data: { session }, error } = result;
 
     if (error) {
       logSupabaseClientError({
-        scope: "app-layout:beforeLoad:getUser",
+        scope: "app-layout:beforeLoad:getSession",
         error,
-        matchers: ["/auth/v1/user"],
+        matchers: ["/auth/v1/session"],
         extra: { route: "/_app" },
       });
     }
 
-    const isTransientAuthError =
-      !!error &&
-      /unexpected failure|database error querying schema|please check server logs/i.test(
-        error.message,
-      );
-
-    if (!user && !isTransientAuthError) throw redirect({ to: "/login" });
+    if (!session && !error) throw redirect({ to: "/login" });
   },
-  // Show a styled spinner while beforeLoad runs so there's never a blank screen
-  pendingMs: 0,
+  // Only show a spinner if the layout takes longer than 800ms to load.
+  // Fast in-app navigation completes well under that threshold so no flash appears.
+  pendingMs: 800,
   pendingComponent: LoadingScreen,
   component: AppLayout,
 });
