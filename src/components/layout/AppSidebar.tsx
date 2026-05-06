@@ -30,35 +30,38 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useFeatureFlags } from "@/lib/feature-flags";
 
 interface NavItem {
   to: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   roles: Array<"admin" | "manager" | "employee">;
+  /** Optional feature-flag key. When the flag is disabled, the item is hidden for non-admins. */
+  flagKey?: string;
 }
 
 const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
   { to: "/tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
   { to: "/attendance", label: "Attendance", icon: Clock, roles: ["admin", "manager", "employee"] },
-  { to: "/leave", label: "Leave", icon: CalendarOff, roles: ["admin", "manager", "employee"] },
-  { to: "/standups", label: "Standups", icon: ClipboardList, roles: ["admin", "manager", "employee"] },
-  { to: "/deliverables", label: "Deliverables", icon: FolderUp, roles: ["admin", "manager", "employee"] },
-  { to: "/reviews", label: "Reviews", icon: Star, roles: ["admin", "manager", "employee"] },
-  { to: "/payslips", label: "Payslips", icon: Wallet, roles: ["admin", "manager", "employee"] },
-  { to: "/announcements", label: "Announcements", icon: Megaphone, roles: ["admin", "manager", "employee"] },
-  { to: "/messages", label: "Messages", icon: MessageSquare, roles: ["admin", "manager", "employee"] },
-  { to: "/handbook", label: "Handbook", icon: BookOpen, roles: ["admin", "manager", "employee"] },
-  { to: "/org-chart", label: "Org Chart", icon: GitBranch, roles: ["admin", "manager", "employee"] },
+  { to: "/leave", label: "Leave", icon: CalendarOff, roles: ["admin", "manager", "employee"], flagKey: "leave" },
+  { to: "/standups", label: "Standups", icon: ClipboardList, roles: ["admin", "manager", "employee"], flagKey: "standups" },
+  { to: "/deliverables", label: "Deliverables", icon: FolderUp, roles: ["admin", "manager", "employee"], flagKey: "deliverables" },
+  { to: "/reviews", label: "Reviews", icon: Star, roles: ["admin", "manager", "employee"], flagKey: "reviews" },
+  { to: "/payslips", label: "Payslips", icon: Wallet, roles: ["admin", "manager", "employee"], flagKey: "payslips" },
+  { to: "/announcements", label: "Announcements", icon: Megaphone, roles: ["admin", "manager", "employee"], flagKey: "announcements" },
+  { to: "/messages", label: "Messages", icon: MessageSquare, roles: ["admin", "manager", "employee"], flagKey: "messages" },
+  { to: "/handbook", label: "Handbook", icon: BookOpen, roles: ["admin", "manager", "employee"], flagKey: "handbook" },
+  { to: "/org-chart", label: "Org Chart", icon: GitBranch, roles: ["admin", "manager", "employee"], flagKey: "org-chart" },
   { to: "/team", label: "Team", icon: Users, roles: ["admin", "manager"] },
-  { to: "/team-board", label: "Task Board", icon: Kanban, roles: ["admin", "manager"] },
-  { to: "/recurring-tasks", label: "Recurring Tasks", icon: RefreshCw, roles: ["admin", "manager"] },
-  { to: "/client-projects", label: "Client Projects", icon: Briefcase, roles: ["admin", "manager"] },
-  { to: "/kpis", label: "KPIs", icon: Target, roles: ["admin"] },
-  { to: "/okrs", label: "Goals & OKRs", icon: Flag, roles: ["admin", "manager", "employee"] },
-  { to: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "manager"] },
-  { to: "/ai-tasks", label: "AI Tasks", icon: Sparkles, roles: ["admin", "manager"] },
+  { to: "/team-board", label: "Task Board", icon: Kanban, roles: ["admin", "manager"], flagKey: "team-board" },
+  { to: "/recurring-tasks", label: "Recurring Tasks", icon: RefreshCw, roles: ["admin", "manager"], flagKey: "recurring-tasks" },
+  { to: "/client-projects", label: "Client Projects", icon: Briefcase, roles: ["admin", "manager"], flagKey: "client-projects" },
+  { to: "/kpis", label: "KPIs", icon: Target, roles: ["admin"], flagKey: "kpis" },
+  { to: "/okrs", label: "Goals & OKRs", icon: Flag, roles: ["admin", "manager", "employee"], flagKey: "okrs" },
+  { to: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "manager"], flagKey: "reports" },
+  { to: "/ai-tasks", label: "AI Tasks", icon: Sparkles, roles: ["admin", "manager"], flagKey: "ai-tasks" },
   { to: "/notifications", label: "Notifications", icon: Bell, roles: ["admin", "manager", "employee"] },
   { to: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
 ];
@@ -74,7 +77,10 @@ export function AppSidebar({
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const items = role ? NAV.filter((n) => n.roles.includes(role)) : NAV;
+  const { flags } = useFeatureFlags();
+  const items = (role ? NAV.filter((n) => n.roles.includes(role)) : NAV).filter(
+    (n) => !n.flagKey || flags[n.flagKey] !== false || role === "admin",
+  );
 
   const isActive = (to: string) =>
     pathname === to || (to !== "/dashboard" && pathname.startsWith(to));

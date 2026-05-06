@@ -16,8 +16,10 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
-import { Save, UserCog, Shield, Users as UsersIcon } from "lucide-react";
+import { Save, UserCog, Shield, Users as UsersIcon, ToggleRight } from "lucide-react";
 import { AvatarUploader } from "@/components/AvatarUploader";
+import { Switch } from "@/components/ui/switch";
+import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
@@ -55,6 +57,7 @@ function SettingsPage() {
           <TabsTrigger value="profile"><UserCog className="mr-2 h-4 w-4" /> Profile</TabsTrigger>
           {isAdmin && <TabsTrigger value="team"><UsersIcon className="mr-2 h-4 w-4" /> Team</TabsTrigger>}
           {isAdmin && <TabsTrigger value="roles"><Shield className="mr-2 h-4 w-4" /> Roles</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="features"><ToggleRight className="mr-2 h-4 w-4" /> Features</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="mt-4">
           {profile
@@ -79,8 +82,60 @@ function SettingsPage() {
             <RolesAdmin />
           </TabsContent>
         )}
+        {isAdmin && (
+          <TabsContent value="features" className="mt-4">
+            <FeatureToggles />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
+  );
+}
+
+function FeatureToggles() {
+  const { flags, loading } = useFeatureFlags();
+  const { profile } = useAuth();
+  const [pending, setPending] = React.useState<string | null>(null);
+
+  async function toggle(key: string, next: boolean) {
+    setPending(key);
+    try {
+      await setFeatureFlag(key, next, profile?.id);
+      toast.success(next ? "Page enabled" : "Page disabled");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Failed to update");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  return (
+    <Card className="max-w-2xl p-6 space-y-4">
+      <div>
+        <h3 className="font-semibold">Page visibility</h3>
+        <p className="text-sm text-muted-foreground">
+          Turn pages off for everyone. Admins can still see disabled pages in the sidebar (greyed in normal use) so you can toggle them back on.
+        </p>
+      </div>
+      <div className="divide-y divide-border">
+        {TOGGLEABLE_PAGES.map((p) => {
+          const enabled = flags[p.key] !== false;
+          return (
+            <div key={p.key} className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-sm font-medium">{p.label}</p>
+                <p className="text-xs text-muted-foreground">/{p.key}</p>
+              </div>
+              <Switch
+                checked={enabled}
+                disabled={loading || pending === p.key}
+                onCheckedChange={(v) => void toggle(p.key, v)}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </Card>
   );
 }
 
