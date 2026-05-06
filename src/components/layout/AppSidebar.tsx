@@ -24,6 +24,7 @@ import {
   Briefcase,
   Sparkles,
   CalendarOff,
+  Flag,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ const NAV: NavItem[] = [
   { to: "/recurring-tasks", label: "Recurring Tasks", icon: RefreshCw, roles: ["admin", "manager"] },
   { to: "/client-projects", label: "Client Projects", icon: Briefcase, roles: ["admin", "manager"] },
   { to: "/kpis", label: "KPIs", icon: Target, roles: ["admin"] },
+  { to: "/okrs", label: "Goals & OKRs", icon: Flag, roles: ["admin", "manager", "employee"] },
   { to: "/ai-tasks", label: "AI Tasks", icon: Sparkles, roles: ["admin", "manager"] },
   { to: "/notifications", label: "Notifications", icon: Bell, roles: ["admin", "manager", "employee"] },
   { to: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
