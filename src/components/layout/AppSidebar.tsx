@@ -30,12 +30,15 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useFeatureFlags } from "@/lib/feature-flags";
 
 interface NavItem {
   to: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   roles: Array<"admin" | "manager" | "employee">;
+  /** Optional feature-flag key. When the flag is disabled, the item is hidden for non-admins. */
+  flagKey?: string;
 }
 
 const NAV: NavItem[] = [
