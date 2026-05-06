@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Card } from "@/components/ui/card";
@@ -25,7 +25,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { PRIORITY_BADGE, STATUS_BADGE, PRIORITY_RANK, todayISO } from "@/lib/nexus";
-import { AlertTriangle, Plus, Calendar as CalIcon, Sparkles } from "lucide-react";
+import { AlertTriangle, Plus, Calendar as CalIcon, Sparkles, Pencil, Trash2, Check } from "lucide-react";
 import { useRealtime } from "@/lib/use-realtime";
 
 export const Route = createFileRoute("/_app/tasks")({
@@ -38,7 +38,7 @@ interface TaskRow {
   description: string | null;
   assigned_to: string;
   assigned_by: string | null;
-  task_type: "daily" | "one_time" | "weekly";
+  task_type: "daily" | "one_time" | "weekly" | "monthly";
   priority: "low" | "medium" | "high" | "urgent";
   status: "todo" | "in_progress" | "completed" | "overdue";
   progress_percent: number;
@@ -98,7 +98,6 @@ function TasksPage() {
     void load();
   }, [load]);
 
-  // Realtime: refresh task list when tasks change for this user (or any task if manager)
   useRealtime({
     table: "tasks",
     filter: isManager ? undefined : user ? `assigned_to=eq.${user.id}` : undefined,
@@ -172,6 +171,8 @@ function TasksPage() {
                   task={t}
                   assignee={profiles[t.assigned_to]}
                   showAssignee={isManager}
+                  isManager={isManager}
+                  onRefresh={load}
                 />
               ))}
             </div>
@@ -186,19 +187,41 @@ function TaskCard({
   task,
   assignee,
   showAssignee,
+  isManager,
+  onRefresh,
 }: {
   task: TaskRow;
   assignee?: ProfileMini;
   showAssignee: boolean;
+  isManager: boolean;
+  onRefresh: () => void;
 }) {
-  const overdue =
-    task.status !== "completed" && task.due_date < todayISO();
+  const navigate = useNavigate();
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
+
+  const overdue = task.status !== "completed" && task.due_date < todayISO();
   const statusKey = overdue ? "overdue" : task.status;
+
+  async function handleDelete(e: React.MouseEvent) {
+    e.stopPropagation();
+    if (!confirm(`Delete "${task.title}"? This cannot be undone.`)) return;
+    setDeleting(true);
+    const { error } = await supabase.from("tasks").delete().eq("id", task.id);
+    setDeleting(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Task deleted");
+    onRefresh();
+  }
+
   return (
-    <Link to="/tasks/$taskId" params={{ taskId: task.id }} className="block">
+    <>
       <Card className="p-4 hover:border-primary/50 transition-colors">
         <div className="flex items-start gap-3">
-          <div className="flex-1 min-w-0">
+          <div
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={() => void navigate({ to: "/tasks/$taskId", params: { taskId: task.id } })}
+          >
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-medium truncate">{task.title}</h3>
               <span
@@ -239,9 +262,180 @@ function TaskCard({
               />
             </div>
           </div>
+          {isManager && (
+            <div className="flex shrink-0 items-center gap-1 ml-1">
+              <button
+                onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}
+                className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                title="Edit task"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={(e) => void handleDelete(e)}
+                disabled={deleting}
+                className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-destructive transition-colors disabled:opacity-50"
+                title="Delete task"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </Card>
-    </Link>
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <EditTaskDialog
+          task={task}
+          onSaved={() => { setEditOpen(false); onRefresh(); }}
+        />
+      </Dialog>
+    </>
+  );
+}
+
+function EditTaskDialog({ task, onSaved }: { task: TaskRow; onSaved: () => void }) {
+  const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
+  const [saving, setSaving] = React.useState(false);
+  const [form, setForm] = React.useState({
+    title: task.title,
+    description: task.description ?? "",
+    assigned_to: task.assigned_to,
+    priority: task.priority,
+    task_type: task.task_type,
+    due_date: task.due_date,
+    status: task.status === "overdue" ? "todo" : task.status,
+  });
+
+  React.useEffect(() => {
+    void supabase
+      .from("profiles")
+      .select("id, full_name, email, department")
+      .eq("is_active", true)
+      .order("full_name")
+      .then(({ data }) => setEmployees((data ?? []) as ProfileMini[]));
+  }, []);
+
+  async function save() {
+    if (!form.title.trim()) { toast.error("Title is required"); return; }
+    setSaving(true);
+    const { error } = await supabase
+      .from("tasks")
+      .update({
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        assigned_to: form.assigned_to,
+        priority: form.priority as TaskRow["priority"],
+        task_type: form.task_type as TaskRow["task_type"],
+        due_date: form.due_date,
+        status: form.status as TaskRow["status"],
+      })
+      .eq("id", task.id);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Task updated");
+    onSaved();
+  }
+
+  return (
+    <DialogContent className="max-w-lg">
+      <DialogHeader>
+        <DialogTitle>Edit Task</DialogTitle>
+      </DialogHeader>
+      <div className="space-y-3">
+        <div>
+          <Label>Title</Label>
+          <Input
+            value={form.title}
+            onChange={(e) => setForm({ ...form, title: e.target.value })}
+          />
+        </div>
+        <div>
+          <Label>Description</Label>
+          <Textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            rows={3}
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label>Assignee</Label>
+            <Select
+              value={form.assigned_to}
+              onValueChange={(v) => setForm({ ...form, assigned_to: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pick employee" />
+              </SelectTrigger>
+              <SelectContent>
+                {employees.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.full_name ?? e.email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Due date</Label>
+            <Input
+              type="date"
+              value={form.due_date}
+              onChange={(e) => setForm({ ...form, due_date: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Priority</Label>
+            <Select
+              value={form.priority}
+              onValueChange={(v) => setForm({ ...form, priority: v })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="urgent">Urgent</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Type</Label>
+            <Select
+              value={form.task_type}
+              onValueChange={(v) => setForm({ ...form, task_type: v })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="one_time">One-time</SelectItem>
+                <SelectItem value="daily">Daily</SelectItem>
+                <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Status</Label>
+            <Select
+              value={form.status}
+              onValueChange={(v) => setForm({ ...form, status: v })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todo">To do</SelectItem>
+                <SelectItem value="in_progress">In progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+      <DialogFooter>
+        <Button onClick={save} disabled={saving}>
+          <Check className="mr-2 h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
   );
 }
 
@@ -324,7 +518,6 @@ function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
       setSubmitting(false);
       return;
     }
-    // Notify assignee
     await supabase.from("notifications").insert({
       user_id: form.assigned_to,
       type: "task_assigned",
@@ -430,6 +623,7 @@ function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
                 <SelectItem value="one_time">One-time</SelectItem>
                 <SelectItem value="daily">Daily</SelectItem>
                 <SelectItem value="weekly">Weekly</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -437,7 +631,7 @@ function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
       </div>
       <DialogFooter>
         <Button onClick={submit} disabled={submitting}>
-          <Flag className="mr-2 h-4 w-4" /> {submitting ? "Assigning…" : "Assign Task"}
+          <Plus className="mr-2 h-4 w-4" /> {submitting ? "Assigning…" : "Assign Task"}
         </Button>
       </DialogFooter>
     </DialogContent>
