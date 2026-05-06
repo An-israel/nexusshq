@@ -25,7 +25,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { PRIORITY_BADGE, STATUS_BADGE, PRIORITY_RANK, todayISO } from "@/lib/nexus";
-import { AlertTriangle, Plus, Calendar as CalIcon, Sparkles } from "lucide-react";
+import { AlertTriangle, Plus, Calendar as CalIcon, Sparkles, Flag } from "lucide-react";
 import { useRealtime } from "@/lib/use-realtime";
 
 export const Route = createFileRoute("/_app/tasks")({

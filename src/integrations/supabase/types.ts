@@ -123,6 +123,35 @@ export type Database = {
         }
         Relationships: []
       }
+      client_portal_views: {
+        Row: {
+          id: string
+          project_id: string
+          user_agent: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_views_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "client_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_project_tasks: {
         Row: {
           completed_at: string | null
@@ -651,6 +680,124 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      leave_balances: {
+        Row: {
+          created_at: string
+          days_allocated: number
+          days_used: number
+          id: string
+          leave_type_id: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          days_allocated?: number
+          days_used?: number
+          id?: string
+          leave_type_id: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          days_allocated?: number
+          days_used?: number
+          id?: string
+          leave_type_id?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_requests: {
+        Row: {
+          created_at: string
+          days_requested: number
+          end_date: string
+          id: string
+          leave_type_id: string
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          start_date: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days_requested?: number
+          end_date: string
+          id?: string
+          leave_type_id: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          start_date: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days_requested?: number
+          end_date?: string
+          id?: string
+          leave_type_id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          start_date?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_types: {
+        Row: {
+          color: string
+          created_at: string
+          days_per_year: number
+          id: string
+          name: string
+          requires_approval: boolean
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          days_per_year?: number
+          id?: string
+          name: string
+          requires_approval?: boolean
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          days_per_year?: number
+          id?: string
+          name?: string
+          requires_approval?: boolean
+        }
+        Relationships: []
       }
       message_group_members: {
         Row: {
@@ -1341,6 +1488,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      init_leave_balances: {
+        Args: { p_user_id: string; p_year: number }
+        Returns: undefined
+      }
       is_group_member: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
@@ -1393,6 +1544,7 @@ export type Database = {
         | "direct_message"
         | "group_message"
         | "mention"
+        | "info"
       review_rating:
         | "exceeds"
         | "meets"
@@ -1559,6 +1711,7 @@ export const Constants = {
         "direct_message",
         "group_message",
         "mention",
+        "info",
       ],
       review_rating: [
         "exceeds",
