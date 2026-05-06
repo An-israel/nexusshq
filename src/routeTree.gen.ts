@@ -14,6 +14,7 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackTokenRouteImport } from './routes/track.$token'
+import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppTeamBoardRouteImport } from './routes/_app.team-board'
 import { Route as AppTeamRouteImport } from './routes/_app.team'
 import { Route as AppTasksRouteImport } from './routes/_app.tasks'
@@ -32,14 +33,17 @@ import { Route as AppDashboardRouteImport } from './routes/_app.dashboard'
 import { Route as AppClientProjectsRouteImport } from './routes/_app.client-projects'
 import { Route as AppAttendanceRouteImport } from './routes/_app.attendance'
 import { Route as AppAnnouncementsRouteImport } from './routes/_app.announcements'
+import { Route as AppAiTasksRouteImport } from './routes/_app.ai-tasks'
 import { Route as AppTeamUserIdRouteImport } from './routes/_app.team.$userId'
 import { Route as AppTasksTaskIdRouteImport } from './routes/_app.tasks.$taskId'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicCronWeeklySummaryEmailRouteImport } from './routes/api/public/cron/weekly-summary-email'
 import { Route as ApiPublicCronMessageEmailRouteImport } from './routes/api/public/cron/message-email'
 import { Route as ApiPublicCronLateTaskReportRouteImport } from './routes/api/public/cron/late-task-report'
 import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
+import { Route as ApiPublicCronBurnoutDetectionRouteImport } from './routes/api/public/cron/burnout-detection'
 import { Route as ApiPublicCronAutoClockOutRouteImport } from './routes/api/public/cron/auto-clock-out'
 
 const LoginRoute = LoginRouteImport.update({
@@ -64,6 +68,11 @@ const IndexRoute = IndexRouteImport.update({
 const TrackTokenRoute = TrackTokenRouteImport.update({
   id: '/track/$token',
   path: '/track/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiRoute = ApiAiRouteImport.update({
+  id: '/api/ai',
+  path: '/api/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppTeamBoardRoute = AppTeamBoardRouteImport.update({
@@ -156,6 +165,11 @@ const AppAnnouncementsRoute = AppAnnouncementsRouteImport.update({
   path: '/announcements',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAiTasksRoute = AppAiTasksRouteImport.update({
+  id: '/ai-tasks',
+  path: '/ai-tasks',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppTeamUserIdRoute = AppTeamUserIdRouteImport.update({
   id: '/$userId',
   path: '/$userId',
@@ -182,6 +196,12 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronWeeklySummaryEmailRoute =
+  ApiPublicCronWeeklySummaryEmailRouteImport.update({
+    id: '/api/public/cron/weekly-summary-email',
+    path: '/api/public/cron/weekly-summary-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronMessageEmailRoute =
   ApiPublicCronMessageEmailRouteImport.update({
     id: '/api/public/cron/message-email',
@@ -200,6 +220,12 @@ const ApiPublicCronClockReminderRoute =
     path: '/api/public/cron/clock-reminder',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronBurnoutDetectionRoute =
+  ApiPublicCronBurnoutDetectionRouteImport.update({
+    id: '/api/public/cron/burnout-detection',
+    path: '/api/public/cron/burnout-detection',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronAutoClockOutRoute =
   ApiPublicCronAutoClockOutRouteImport.update({
     id: '/api/public/cron/auto-clock-out',
@@ -211,6 +237,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
+  '/ai-tasks': typeof AppAiTasksRoute
   '/announcements': typeof AppAnnouncementsRoute
   '/attendance': typeof AppAttendanceRoute
   '/client-projects': typeof AppClientProjectsRoute
@@ -229,13 +256,16 @@ export interface FileRoutesByFullPath {
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
   '/team-board': typeof AppTeamBoardRoute
+  '/api/ai': typeof ApiAiRoute
   '/track/$token': typeof TrackTokenRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
+  '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -244,6 +274,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
+  '/ai-tasks': typeof AppAiTasksRoute
   '/announcements': typeof AppAnnouncementsRoute
   '/attendance': typeof AppAttendanceRoute
   '/client-projects': typeof AppClientProjectsRoute
@@ -262,13 +293,16 @@ export interface FileRoutesByTo {
   '/tasks': typeof AppTasksRouteWithChildren
   '/team': typeof AppTeamRouteWithChildren
   '/team-board': typeof AppTeamBoardRoute
+  '/api/ai': typeof ApiAiRoute
   '/track/$token': typeof TrackTokenRoute
   '/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
+  '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -279,6 +313,7 @@ export interface FileRoutesById {
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
   '/login': typeof LoginRoute
+  '/_app/ai-tasks': typeof AppAiTasksRoute
   '/_app/announcements': typeof AppAnnouncementsRoute
   '/_app/attendance': typeof AppAttendanceRoute
   '/_app/client-projects': typeof AppClientProjectsRoute
@@ -297,13 +332,16 @@ export interface FileRoutesById {
   '/_app/tasks': typeof AppTasksRouteWithChildren
   '/_app/team': typeof AppTeamRouteWithChildren
   '/_app/team-board': typeof AppTeamBoardRoute
+  '/api/ai': typeof ApiAiRoute
   '/track/$token': typeof TrackTokenRoute
   '/_app/tasks/$taskId': typeof AppTasksTaskIdRoute
   '/_app/team/$userId': typeof AppTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
+  '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -314,6 +352,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/login'
+    | '/ai-tasks'
     | '/announcements'
     | '/attendance'
     | '/client-projects'
@@ -332,13 +371,16 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/team'
     | '/team-board'
+    | '/api/ai'
     | '/track/$token'
     | '/tasks/$taskId'
     | '/team/$userId'
     | '/api/public/cron/auto-clock-out'
+    | '/api/public/cron/burnout-detection'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -347,6 +389,7 @@ export interface FileRouteTypes {
     | '/'
     | '/accept-invite'
     | '/login'
+    | '/ai-tasks'
     | '/announcements'
     | '/attendance'
     | '/client-projects'
@@ -365,13 +408,16 @@ export interface FileRouteTypes {
     | '/tasks'
     | '/team'
     | '/team-board'
+    | '/api/ai'
     | '/track/$token'
     | '/tasks/$taskId'
     | '/team/$userId'
     | '/api/public/cron/auto-clock-out'
+    | '/api/public/cron/burnout-detection'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -381,6 +427,7 @@ export interface FileRouteTypes {
     | '/_app'
     | '/accept-invite'
     | '/login'
+    | '/_app/ai-tasks'
     | '/_app/announcements'
     | '/_app/attendance'
     | '/_app/client-projects'
@@ -399,13 +446,16 @@ export interface FileRouteTypes {
     | '/_app/tasks'
     | '/_app/team'
     | '/_app/team-board'
+    | '/api/ai'
     | '/track/$token'
     | '/_app/tasks/$taskId'
     | '/_app/team/$userId'
     | '/api/public/cron/auto-clock-out'
+    | '/api/public/cron/burnout-detection'
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -416,11 +466,14 @@ export interface RootRouteChildren {
   AppRoute: typeof AppRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
   LoginRoute: typeof LoginRoute
+  ApiAiRoute: typeof ApiAiRoute
   TrackTokenRoute: typeof TrackTokenRoute
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
+  ApiPublicCronBurnoutDetectionRoute: typeof ApiPublicCronBurnoutDetectionRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
   ApiPublicCronLateTaskReportRoute: typeof ApiPublicCronLateTaskReportRoute
   ApiPublicCronMessageEmailRoute: typeof ApiPublicCronMessageEmailRoute
+  ApiPublicCronWeeklySummaryEmailRoute: typeof ApiPublicCronWeeklySummaryEmailRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -461,6 +514,13 @@ declare module '@tanstack/react-router' {
       path: '/track/$token'
       fullPath: '/track/$token'
       preLoaderRoute: typeof TrackTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai': {
+      id: '/api/ai'
+      path: '/api/ai'
+      fullPath: '/api/ai'
+      preLoaderRoute: typeof ApiAiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/team-board': {
@@ -589,6 +649,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAnnouncementsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/ai-tasks': {
+      id: '/_app/ai-tasks'
+      path: '/ai-tasks'
+      fullPath: '/ai-tasks'
+      preLoaderRoute: typeof AppAiTasksRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/team/$userId': {
       id: '/_app/team/$userId'
       path: '/$userId'
@@ -624,6 +691,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/weekly-summary-email': {
+      id: '/api/public/cron/weekly-summary-email'
+      path: '/api/public/cron/weekly-summary-email'
+      fullPath: '/api/public/cron/weekly-summary-email'
+      preLoaderRoute: typeof ApiPublicCronWeeklySummaryEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/message-email': {
       id: '/api/public/cron/message-email'
       path: '/api/public/cron/message-email'
@@ -643,6 +717,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/cron/clock-reminder'
       fullPath: '/api/public/cron/clock-reminder'
       preLoaderRoute: typeof ApiPublicCronClockReminderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/burnout-detection': {
+      id: '/api/public/cron/burnout-detection'
+      path: '/api/public/cron/burnout-detection'
+      fullPath: '/api/public/cron/burnout-detection'
+      preLoaderRoute: typeof ApiPublicCronBurnoutDetectionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/cron/auto-clock-out': {
@@ -679,6 +760,7 @@ const AppTeamRouteWithChildren =
   AppTeamRoute._addFileChildren(AppTeamRouteChildren)
 
 interface AppRouteChildren {
+  AppAiTasksRoute: typeof AppAiTasksRoute
   AppAnnouncementsRoute: typeof AppAnnouncementsRoute
   AppAttendanceRoute: typeof AppAttendanceRoute
   AppClientProjectsRoute: typeof AppClientProjectsRoute
@@ -700,6 +782,7 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAiTasksRoute: AppAiTasksRoute,
   AppAnnouncementsRoute: AppAnnouncementsRoute,
   AppAttendanceRoute: AppAttendanceRoute,
   AppClientProjectsRoute: AppClientProjectsRoute,
@@ -727,11 +810,14 @@ const rootRouteChildren: RootRouteChildren = {
   AppRoute: AppRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
   LoginRoute: LoginRoute,
+  ApiAiRoute: ApiAiRoute,
   TrackTokenRoute: TrackTokenRoute,
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
+  ApiPublicCronBurnoutDetectionRoute: ApiPublicCronBurnoutDetectionRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
   ApiPublicCronLateTaskReportRoute: ApiPublicCronLateTaskReportRoute,
   ApiPublicCronMessageEmailRoute: ApiPublicCronMessageEmailRoute,
+  ApiPublicCronWeeklySummaryEmailRoute: ApiPublicCronWeeklySummaryEmailRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
@@ -739,3 +825,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
