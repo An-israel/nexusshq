@@ -71,7 +71,7 @@ function PublicTracker() {
       // Log this view (fire-and-forget, no auth needed)
       void supabase.from("client_portal_views").insert({
         project_id: proj.id,
-        token,
+        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
       });
     })();
   }, [token]);

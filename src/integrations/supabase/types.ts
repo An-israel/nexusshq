@@ -93,6 +93,65 @@ export type Database = {
           },
         ]
       }
+      burnout_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          detected_at: string
+          id: string
+          reason: string
+          risk_level: string
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          detected_at?: string
+          id?: string
+          reason: string
+          risk_level: string
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          detected_at?: string
+          id?: string
+          reason?: string
+          risk_level?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      client_portal_views: {
+        Row: {
+          id: string
+          project_id: string
+          user_agent: string | null
+          viewed_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_agent?: string | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_portal_views_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "client_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_project_tasks: {
         Row: {
           completed_at: string | null
@@ -278,6 +337,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           from_id: string
           id: string
           is_read: boolean
@@ -286,6 +346,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           from_id: string
           id?: string
           is_read?: boolean
@@ -294,6 +355,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           from_id?: string
           id?: string
           is_read?: boolean
@@ -403,6 +465,27 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          enabled: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       flags: {
         Row: {
           created_at: string
@@ -455,6 +538,7 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           from_id: string
           group_id: string
           id: string
@@ -462,6 +546,7 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           from_id: string
           group_id: string
           id?: string
@@ -469,6 +554,7 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           from_id?: string
           group_id?: string
           id?: string
@@ -486,6 +572,88 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "message_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      key_result_updates: {
+        Row: {
+          created_at: string | null
+          id: string
+          key_result_id: string
+          new_value: number
+          note: string | null
+          previous_value: number
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key_result_id: string
+          new_value: number
+          note?: string | null
+          previous_value: number
+          updated_by: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key_result_id?: string
+          new_value?: number
+          note?: string | null
+          previous_value?: number
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_result_updates_key_result_id_fkey"
+            columns: ["key_result_id"]
+            isOneToOne: false
+            referencedRelation: "key_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      key_results: {
+        Row: {
+          created_at: string | null
+          current_value: number
+          description: string | null
+          id: string
+          objective_id: string
+          owner_id: string | null
+          target_value: number
+          title: string
+          unit: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number
+          description?: string | null
+          id?: string
+          objective_id: string
+          owner_id?: string | null
+          target_value?: number
+          title: string
+          unit?: string
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number
+          description?: string | null
+          id?: string
+          objective_id?: string
+          owner_id?: string | null
+          target_value?: number
+          title?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_results_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "objectives"
             referencedColumns: ["id"]
           },
         ]
@@ -533,6 +701,124 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      leave_balances: {
+        Row: {
+          created_at: string
+          days_allocated: number
+          days_used: number
+          id: string
+          leave_type_id: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          days_allocated?: number
+          days_used?: number
+          id?: string
+          leave_type_id: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          days_allocated?: number
+          days_used?: number
+          id?: string
+          leave_type_id?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_balances_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_requests: {
+        Row: {
+          created_at: string
+          days_requested: number
+          end_date: string
+          id: string
+          leave_type_id: string
+          reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          reviewer_note: string | null
+          start_date: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days_requested?: number
+          end_date: string
+          id?: string
+          leave_type_id: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          start_date: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days_requested?: number
+          end_date?: string
+          id?: string
+          leave_type_id?: string
+          reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          reviewer_note?: string | null
+          start_date?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leave_requests_leave_type_id_fkey"
+            columns: ["leave_type_id"]
+            isOneToOne: false
+            referencedRelation: "leave_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leave_types: {
+        Row: {
+          color: string
+          created_at: string
+          days_per_year: number
+          id: string
+          name: string
+          requires_approval: boolean
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          days_per_year?: number
+          id?: string
+          name: string
+          requires_approval?: boolean
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          days_per_year?: number
+          id?: string
+          name?: string
+          requires_approval?: boolean
+        }
+        Relationships: []
       }
       message_group_members: {
         Row: {
@@ -652,6 +938,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      objectives: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          owner_id: string
+          period: string
+          progress_percent: number
+          start_date: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          owner_id: string
+          period?: string
+          progress_percent?: number
+          start_date?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          owner_id?: string
+          period?: string
+          progress_percent?: number
+          start_date?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
       }
       payslips: {
         Row: {
@@ -1181,6 +1509,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      init_leave_balances: {
+        Args: { p_user_id: string; p_year: number }
+        Returns: undefined
+      }
       is_group_member: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
@@ -1233,6 +1565,7 @@ export type Database = {
         | "direct_message"
         | "group_message"
         | "mention"
+        | "info"
       review_rating:
         | "exceeds"
         | "meets"
@@ -1399,6 +1732,7 @@ export const Constants = {
         "direct_message",
         "group_message",
         "mention",
+        "info",
       ],
       review_rating: [
         "exceeds",
