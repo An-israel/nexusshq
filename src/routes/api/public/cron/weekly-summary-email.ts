@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { Resend } from "@lovable.dev/email-js";
 
 // Called by pg_cron every Monday at 06:00 UTC (= 07:00 WAT).
 // Computes last-week stats, asks Claude for a summary paragraph, and emails
