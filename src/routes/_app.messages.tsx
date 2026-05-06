@@ -21,7 +21,7 @@ import { useRealtime } from "@/lib/use-realtime";
 import { toast } from "sonner";
 import {
   Send, Plus, Users, Pencil, Trash2, Check, X, Camera,
-  UserPlus, Hash,
+  UserPlus, Hash, Paperclip, FileText, Image as ImageIcon,
 } from "lucide-react";
 import { initialsOf } from "@/lib/nexus";
 import { cn } from "@/lib/utils";
@@ -47,6 +47,9 @@ interface Msg {
   is_read: boolean;
   created_at: string;
   edited_at?: string | null;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
+  attachment_mime?: string | null;
 }
 
 interface Group {
@@ -67,6 +70,9 @@ interface GroupMsg {
   created_at: string;
   edited_at?: string | null;
   sender: Profile | null;
+  attachment_url?: string | null;
+  attachment_name?: string | null;
+  attachment_mime?: string | null;
 }
 
 type View =
@@ -104,20 +110,40 @@ function isGroupStart(messages: { from_id: string; created_at: string }[], idx: 
   return new Date(cur.created_at).getTime() - new Date(prev.created_at).getTime() > 5 * 60_000;
 }
 
-// Render body text with @mention highlights
+// Render body text with auto-linked URLs and clickable @mentions
 function MessageBody({ body }: { body: string }) {
-  const parts = body.split(/(@\S+)/g);
+  const parts = body.split(/(https?:\/\/[^\s]+|@\S+)/g);
   return (
     <span className="whitespace-pre-wrap break-words">
-      {parts.map((part, i) =>
-        part.startsWith("@") ? (
-          <span key={i} className="font-semibold text-primary">
-            {part}
-          </span>
-        ) : (
-          part
-        ),
-      )}
+      {parts.map((part, i) => {
+        if (part.match(/^https?:\/\//)) {
+          return (
+            <a
+              key={i}
+              href={part}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline underline-offset-2 hover:text-primary/80"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {part}
+            </a>
+          );
+        }
+        if (part.startsWith("@")) {
+          return (
+            <a
+              key={i}
+              href="/team"
+              className="font-semibold text-primary hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {part}
+            </a>
+          );
+        }
+        return part;
+      })}
     </span>
   );
 }
@@ -298,6 +324,9 @@ function MessageRow({
   mine,
   onEdit,
   onDelete,
+  attachmentUrl,
+  attachmentName,
+  attachmentMime,
 }: {
   id: string;
   fromId: string;
@@ -309,6 +338,9 @@ function MessageRow({
   mine: boolean;
   onEdit: (id: string, newBody: string) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
+  attachmentUrl?: string | null;
+  attachmentName?: string | null;
+  attachmentMime?: string | null;
 }) {
   const [hovered, setHovered] = React.useState(false);
   const [editing, setEditing] = React.useState(false);
@@ -398,12 +430,41 @@ function MessageRow({
             </div>
           </div>
         ) : (
-          <p className="text-sm leading-relaxed">
-            <MessageBody body={body} />
-            {editedAt && (
-              <span className="ml-1 text-[10px] text-muted-foreground">(edited)</span>
+          <div className="space-y-1">
+            {body.trim() && (
+              <p className="text-sm leading-relaxed">
+                <MessageBody body={body} />
+                {editedAt && (
+                  <span className="ml-1 text-[10px] text-muted-foreground">(edited)</span>
+                )}
+              </p>
             )}
-          </p>
+            {attachmentUrl && (
+              <a
+                href={attachmentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-sm hover:bg-muted transition-colors"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {attachmentMime?.startsWith("image/") ? (
+                  <ImageIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                ) : (
+                  <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+                )}
+                <span className="truncate max-w-[180px]">{attachmentName ?? "Attachment"}</span>
+              </a>
+            )}
+            {attachmentUrl && attachmentMime?.startsWith("image/") && (
+              <a href={attachmentUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                <img
+                  src={attachmentUrl}
+                  alt={attachmentName ?? "image"}
+                  className="mt-1 max-w-[280px] rounded-lg border border-border object-cover hover:opacity-90 transition-opacity"
+                />
+              </a>
+            )}
+          </div>
         )}
       </div>
 
@@ -696,7 +757,11 @@ function MessagesPage() {
   const [pickedMembers, setPickedMembers] = React.useState<string[]>([]);
   const [creating, setCreating] = React.useState(false);
   const [groupInfoOpen, setGroupInfoOpen] = React.useState(false);
+  const [pendingFile, setPendingFile] = React.useState<File | null>(null);
+  const [uploadingFile, setUploadingFile] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
+  const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
   // Me as Profile (for DM sender display)
   const meProfile: Profile | null = myProfile
@@ -874,9 +939,27 @@ function MessagesPage() {
     else if (view?.type === "group") void loadGroupThread();
   }, [view, loadDmThread, loadGroupThread]);
 
+  // Scroll to bottom when conversation first loads; after that only if user is near bottom
+  const viewId = React.useMemo(
+    () => (view?.type === "dm" ? `dm-${view.contact.id}` : view?.type === "group" ? `grp-${view.group.id}` : null),
+    [view],
+  );
+  const prevViewIdRef = React.useRef<string | null>(null);
   React.useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [dmThread, groupThread]);
+    if (!viewId) return;
+    const isNewConversation = viewId !== prevViewIdRef.current;
+    prevViewIdRef.current = viewId;
+    if (isNewConversation) {
+      // Immediate scroll when switching conversations
+      setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "instant" }), 0);
+      return;
+    }
+    // For realtime updates, only scroll if user is already near bottom
+    const el = scrollAreaRef.current;
+    if (!el) return;
+    const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 150;
+    if (nearBottom) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [dmThread, groupThread, viewId]);
 
   // ── Realtime ───────────────────────────────────────────────────────────────
   useRealtime({
@@ -899,13 +982,41 @@ function MessagesPage() {
 
   // ── Send ───────────────────────────────────────────────────────────────────
   async function send() {
-    if (!draft.trim() || !user) return;
+    if (!draft.trim() && !pendingFile) return;
+    if (!user) return;
     setSending(true);
+
+    // Upload file if attached
+    let attachmentUrl: string | null = null;
+    let attachmentName: string | null = null;
+    let attachmentMime: string | null = null;
+    if (pendingFile) {
+      setUploadingFile(true);
+      const safeName = pendingFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${user.id}/${Date.now()}_${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from("message-attachments")
+        .upload(path, pendingFile, { contentType: pendingFile.type || "application/octet-stream" });
+      setUploadingFile(false);
+      if (upErr) { toast.error(upErr.message); setSending(false); return; }
+      const { data: urlData } = supabase.storage.from("message-attachments").getPublicUrl(path);
+      attachmentUrl = urlData.publicUrl;
+      attachmentName = pendingFile.name;
+      attachmentMime = pendingFile.type || null;
+      setPendingFile(null);
+    }
+
+    // Force scroll to bottom when sending
+    prevViewIdRef.current = null;
+
     if (view?.type === "dm") {
       const { error } = await supabase.from("direct_messages").insert({
         from_id: user.id,
         to_id: view.contact.id,
         body: draft.trim(),
+        attachment_url: attachmentUrl,
+        attachment_name: attachmentName,
+        attachment_mime: attachmentMime,
       });
       if (error) { toast.error(error.message); setSending(false); return; }
       void loadDmThread();
@@ -914,6 +1025,9 @@ function MessagesPage() {
         group_id: view.group.id,
         from_id: user.id,
         body: draft.trim(),
+        attachment_url: attachmentUrl,
+        attachment_name: attachmentName,
+        attachment_mime: attachmentMime,
       });
       if (error) { toast.error(error.message); setSending(false); return; }
       void loadGroupThread();
@@ -1108,7 +1222,7 @@ function MessagesPage() {
               </div>
 
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto py-2">
+              <div ref={scrollAreaRef} className="flex-1 overflow-y-auto py-2">
                 {view.type === "dm" && dmThread.length === 0 && (
                   <p className="py-10 text-center text-sm text-muted-foreground">
                     No messages yet. Say hello!
@@ -1134,6 +1248,9 @@ function MessagesPage() {
                       mine={m.from_id === user?.id}
                       onEdit={editDm}
                       onDelete={deleteDm}
+                      attachmentUrl={m.attachment_url}
+                      attachmentName={m.attachment_name}
+                      attachmentMime={m.attachment_mime}
                     />
                   ))}
 
@@ -1151,6 +1268,9 @@ function MessagesPage() {
                       mine={m.from_id === user?.id}
                       onEdit={editGroupMsg}
                       onDelete={deleteGroupMsg}
+                      attachmentUrl={m.attachment_url}
+                      attachmentName={m.attachment_name}
+                      attachmentMime={m.attachment_mime}
                     />
                   ))}
 
@@ -1159,7 +1279,35 @@ function MessagesPage() {
 
               {/* Input */}
               <div className="shrink-0 border-t border-border px-4 py-3">
+                {pendingFile && (
+                  <div className="mb-2 flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs">
+                    {pendingFile.type.startsWith("image/") ? (
+                      <ImageIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    ) : (
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    )}
+                    <span className="truncate flex-1">{pendingFile.name}</span>
+                    <button onClick={() => setPendingFile(null)} className="text-muted-foreground hover:text-destructive">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={sending || uploadingFile}
+                    className="flex h-11 w-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground transition-colors disabled:opacity-50"
+                    title="Attach file"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    className="hidden"
+                    onChange={(e) => { setPendingFile(e.target.files?.[0] ?? null); e.target.value = ""; }}
+                  />
                   <div className="flex-1">
                     <MentionInput
                       value={draft}
@@ -1171,16 +1319,20 @@ function MessagesPage() {
                           : `Message #${view.group.name}… (type @ to mention)`
                       }
                       members={view.type === "group" ? view.group.members.filter((m) => m.id !== user?.id) : []}
-                      disabled={sending}
+                      disabled={sending || uploadingFile}
                     />
                   </div>
                   <Button
                     onClick={() => void send()}
-                    disabled={sending || !draft.trim()}
+                    disabled={sending || uploadingFile || (!draft.trim() && !pendingFile)}
                     size="icon"
                     className="h-11 w-11 shrink-0"
                   >
-                    <Send className="h-4 w-4" />
+                    {uploadingFile ? (
+                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
                   </Button>
                 </div>
                 <p className="mt-1 text-[10px] text-muted-foreground">

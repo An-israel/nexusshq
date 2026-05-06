@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { AppSidebar } from "@/components/layout/AppSidebar";
+import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
@@ -77,12 +78,21 @@ function AppLayout() {
 
   return (
     <div className="flex h-screen w-full bg-background text-foreground">
-      <AppSidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
+      {/* Sidebar — desktop only */}
+      <div className="hidden md:flex">
+        <AppSidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
+      </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
-        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur">
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">
+        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur md:h-16 md:px-6">
+          {/* Mobile: brand mark */}
+          <div className="flex items-center gap-2 md:hidden">
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold">N</div>
+            <span className="text-sm font-semibold">Nexus HQ</span>
+          </div>
+          {/* Desktop: role label */}
+          <div className="hidden text-xs uppercase tracking-wider text-muted-foreground md:block">
             {role ? role.charAt(0).toUpperCase() + role.slice(1) : ""} workspace
           </div>
           <div className="flex items-center gap-2">
@@ -91,10 +101,14 @@ function AppLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-6">
+        {/* Main content — extra bottom padding on mobile for the bottom nav */}
+        <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6">
           <Outlet />
         </main>
       </div>
+
+      {/* Bottom nav — mobile only */}
+      <MobileBottomNav />
     </div>
   );
 }

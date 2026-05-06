@@ -374,10 +374,11 @@ function ScoreSlider({
 function UploadDialog({ onUploaded }: { onUploaded: () => void }) {
   const { user } = useAuth();
   const [tasks, setTasks] = React.useState<TaskMini[]>([]);
-  const [file, setFile] = React.useState<File | null>(null);
+  const [files, setFiles] = React.useState<File[]>([]);
   const [taskId, setTaskId] = React.useState<string>("");
   const [description, setDescription] = React.useState("");
   const [uploading, setUploading] = React.useState(false);
+  const [progress, setProgress] = React.useState<string>("");
 
   React.useEffect(() => {
     if (!user) return;
@@ -390,43 +391,72 @@ function UploadDialog({ onUploaded }: { onUploaded: () => void }) {
   }, [user]);
 
   async function submit() {
-    if (!file || !user) { toast.error("Pick a file"); return; }
-    if (file.size > MAX_BYTES) { toast.error("File exceeds 25MB"); return; }
+    if (!files.length || !user) { toast.error("Select at least one file"); return; }
+    const oversized = files.find((f) => f.size > MAX_BYTES);
+    if (oversized) { toast.error(`"${oversized.name}" exceeds 25MB`); return; }
     setUploading(true);
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const path = `${user.id}/${Date.now()}_${safeName}`;
-    const { error: upErr } = await supabase.storage.from("deliverables").upload(path, file, {
-      contentType: file.type || "application/octet-stream",
-    });
-    if (upErr) { toast.error(upErr.message); setUploading(false); return; }
-    const { error } = await supabase.from("deliverables").insert({
-      task_id: taskId || null,
-      user_id: user.id,
-      file_name: file.name,
-      file_size_bytes: file.size,
-      mime_type: file.type || null,
-      storage_path: path,
-      description: description.trim() || null,
-    });
-    if (error) {
-      toast.error(error.message);
-      await supabase.storage.from("deliverables").remove([path]);
-      setUploading(false);
-      return;
+
+    let succeeded = 0;
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setProgress(`Uploading ${i + 1} of ${files.length}…`);
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${user.id}/${Date.now()}_${safeName}`;
+      const { error: upErr } = await supabase.storage.from("deliverables").upload(path, file, {
+        contentType: file.type || "application/octet-stream",
+      });
+      if (upErr) { toast.error(`${file.name}: ${upErr.message}`); continue; }
+      const { error } = await supabase.from("deliverables").insert({
+        task_id: taskId || null,
+        user_id: user.id,
+        file_name: file.name,
+        file_size_bytes: file.size,
+        mime_type: file.type || null,
+        storage_path: path,
+        description: description.trim() || null,
+      });
+      if (error) {
+        toast.error(`${file.name}: ${error.message}`);
+        await supabase.storage.from("deliverables").remove([path]);
+        continue;
+      }
+      succeeded++;
     }
-    toast.success("Deliverable submitted");
+
     setUploading(false);
-    onUploaded();
+    setProgress("");
+    if (succeeded > 0) {
+      toast.success(`${succeeded} file${succeeded !== 1 ? "s" : ""} submitted`);
+      onUploaded();
+    }
   }
+
+  const totalSize = files.reduce((s, f) => s + f.size, 0);
 
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>Submit Deliverable</DialogTitle></DialogHeader>
+      <DialogHeader><DialogTitle>Submit Deliverables</DialogTitle></DialogHeader>
       <div className="space-y-3">
         <div>
-          <Label>File (max 25MB)</Label>
-          <Input type="file" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
-          {file && <p className="text-xs text-muted-foreground mt-1">{fmtSize(file.size)}</p>}
+          <Label>Files (max 25MB each · stored in Supabase Storage)</Label>
+          <Input
+            type="file"
+            multiple
+            onChange={(e) => setFiles(Array.from(e.target.files ?? []))}
+          />
+          {files.length > 0 && (
+            <div className="mt-1 space-y-0.5">
+              {files.map((f, i) => (
+                <p key={i} className="text-xs text-muted-foreground flex items-center justify-between">
+                  <span className="truncate">{f.name}</span>
+                  <span className="shrink-0 ml-2">{fmtSize(f.size)}</span>
+                </p>
+              ))}
+              {files.length > 1 && (
+                <p className="text-xs font-medium">Total: {fmtSize(totalSize)}</p>
+              )}
+            </div>
+          )}
         </div>
         <div>
           <Label>Linked task (optional)</Label>
@@ -439,12 +469,12 @@ function UploadDialog({ onUploaded }: { onUploaded: () => void }) {
         </div>
         <div>
           <Label>Description</Label>
-          <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's in this file?" />
+          <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's in these files?" />
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={submit} disabled={uploading || !file}>
-          {uploading ? "Uploading…" : "Submit"}
+        <Button onClick={submit} disabled={uploading || !files.length}>
+          {uploading ? progress || "Uploading…" : `Submit${files.length > 1 ? ` ${files.length} files` : ""}`}
         </Button>
       </DialogFooter>
     </DialogContent>

@@ -154,9 +154,9 @@ function ClientProjectsPage() {
   }, [tasks]);
 
   return (
-    <div className="flex h-[calc(100vh-7rem)] gap-0 overflow-hidden rounded-xl border border-border">
-      {/* Project list */}
-      <aside className="w-72 shrink-0 border-r border-border flex flex-col">
+    <div className="flex h-[calc(100vh-8rem)] md:h-[calc(100vh-7rem)] flex-col md:flex-row gap-0 overflow-hidden rounded-xl border border-border">
+      {/* Project list — full width on mobile, fixed sidebar on desktop */}
+      <aside className={`border-b md:border-b-0 md:border-r border-border flex flex-col md:w-72 ${selected ? "hidden md:flex" : "flex w-full"}`}>
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="font-semibold">Client Projects</h2>
           <Button size="sm" onClick={() => setNewProjectOpen(true)}>
@@ -192,11 +192,18 @@ function ClientProjectsPage() {
       </aside>
 
       {/* Project detail */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+      <div className={`flex flex-1 flex-col min-w-0 overflow-hidden ${!selected ? "hidden md:flex" : "flex"}`}>
         {selected ? (
           <>
-            <div className="flex items-start justify-between gap-3 border-b border-border px-6 py-4 shrink-0 flex-wrap">
+            <div className="flex items-start justify-between gap-3 border-b border-border px-4 md:px-6 py-4 shrink-0 flex-wrap">
               <div>
+                {/* Mobile back button */}
+                <button
+                  className="mb-1 flex items-center gap-1 text-xs text-muted-foreground md:hidden"
+                  onClick={() => setSelected(null)}
+                >
+                  ← All projects
+                </button>
                 <h2 className="font-bold text-lg">{selected.name}</h2>
                 <p className="text-sm text-muted-foreground">{selected.client_name}</p>
                 {selected.description && (
