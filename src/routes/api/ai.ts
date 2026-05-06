@@ -33,7 +33,7 @@ export const Route = createFileRoute("/api/ai")({
             "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify({
-            model: "claude-opus-4-7",
+            model: "claude-sonnet-4-5-20250929",
             max_tokens: maxTokens ?? 1024,
             system: systemPrompt,
             messages: [{ role: "user", content: userPrompt }],
