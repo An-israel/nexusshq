@@ -23,6 +23,7 @@ import {
   RefreshCw,
   Briefcase,
   Sparkles,
+  CalendarOff,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ const NAV: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
   { to: "/tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
   { to: "/attendance", label: "Attendance", icon: Clock, roles: ["admin", "manager", "employee"] },
+  { to: "/leave", label: "Leave", icon: CalendarOff, roles: ["admin", "manager", "employee"] },
   { to: "/standups", label: "Standups", icon: ClipboardList, roles: ["admin", "manager", "employee"] },
   { to: "/deliverables", label: "Deliverables", icon: FolderUp, roles: ["admin", "manager", "employee"] },
   { to: "/reviews", label: "Reviews", icon: Star, roles: ["admin", "manager", "employee"] },
