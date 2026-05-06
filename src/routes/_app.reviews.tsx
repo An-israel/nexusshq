@@ -24,8 +24,15 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Star, CheckCircle2, Plus } from "lucide-react";
+import { Star, CheckCircle2, Plus, Sparkles } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/reviews")({
   component: ReviewsPage,
@@ -78,6 +85,47 @@ function ReviewsPage() {
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
   const [loading, setLoading] = React.useState(true);
   const [createOpen, setCreateOpen] = React.useState(false);
+
+  // AI Insights state
+  const [insightReview, setInsightReview] = React.useState<ReviewRow | null>(null);
+  const [insightText, setInsightText] = React.useState("");
+  const [insightLoading, setInsightLoading] = React.useState(false);
+
+  async function fetchInsights(r: ReviewRow) {
+    setInsightReview(r);
+    setInsightText("");
+    setInsightLoading(true);
+    const subj = profiles[r.user_id];
+    try {
+      const resp = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "performance-insights",
+          context: {
+            name: subj?.full_name ?? subj?.email ?? "Employee",
+            scores: {
+              productivity: r.productivity_score,
+              quality: r.quality_score,
+              attendance: r.attendance_score,
+              collaboration: r.collaboration_score,
+            },
+            strengths: r.strengths ?? "",
+            improvements: r.areas_to_improve ?? "",
+          },
+        }),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      const data = (await resp.json()) as { result?: string; error?: string };
+      if (data.error) throw new Error(data.error);
+      setInsightText(data.result ?? "");
+    } catch (err) {
+      toast.error(`AI insights failed: ${(err as Error).message}`);
+      setInsightReview(null);
+    } finally {
+      setInsightLoading(false);
+    }
+  }
 
   const load = React.useCallback(async () => {
     if (!user) return;
@@ -143,6 +191,40 @@ function ReviewsPage() {
           </Dialog>
         )}
       </div>
+
+      {/* AI Insights Sheet */}
+      <Sheet open={!!insightReview} onOpenChange={(o) => !o && setInsightReview(null)}>
+        <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              AI Performance Insights
+            </SheetTitle>
+          </SheetHeader>
+          {insightReview && (
+            <div className="mt-4 space-y-3 text-sm">
+              <p className="text-muted-foreground">
+                Analysis for{" "}
+                <span className="font-medium text-foreground">
+                  {profiles[insightReview.user_id]?.full_name ??
+                    profiles[insightReview.user_id]?.email ??
+                    "Employee"}
+                </span>{" "}
+                · period {insightReview.period_start} → {insightReview.period_end}
+              </p>
+              {insightLoading ? (
+                <div className="space-y-2 pt-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-4 w-full rounded" />
+                  ))}
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap leading-relaxed">{insightText}</p>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
@@ -214,21 +296,34 @@ function ReviewsPage() {
 
                 <div className="flex items-center justify-between pt-2 border-t border-border text-xs">
                   <span className="text-muted-foreground">{timeAgo(r.created_at)}</span>
-                  {r.user_id === user?.id ? (
-                    r.employee_acknowledged ? (
-                      <span className="inline-flex items-center gap-1 text-success">
-                        <CheckCircle2 className="h-3 w-3" /> Acknowledged
-                      </span>
-                    ) : (
-                      <Button size="sm" onClick={() => acknowledge(r.id)}>
-                        Acknowledge
+                  <div className="flex items-center gap-2">
+                    {isManager && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs"
+                        onClick={() => fetchInsights(r)}
+                      >
+                        <Sparkles className="h-3 w-3" />
+                        AI Insights
                       </Button>
-                    )
-                  ) : r.employee_acknowledged ? (
-                    <span className="text-success">Acknowledged</span>
-                  ) : (
-                    <span className="text-muted-foreground">Pending acknowledgement</span>
-                  )}
+                    )}
+                    {r.user_id === user?.id ? (
+                      r.employee_acknowledged ? (
+                        <span className="inline-flex items-center gap-1 text-success">
+                          <CheckCircle2 className="h-3 w-3" /> Acknowledged
+                        </span>
+                      ) : (
+                        <Button size="sm" onClick={() => acknowledge(r.id)}>
+                          Acknowledge
+                        </Button>
+                      )
+                    ) : r.employee_acknowledged ? (
+                      <span className="text-success">Acknowledged</span>
+                    ) : (
+                      <span className="text-muted-foreground">Pending acknowledgement</span>
+                    )}
+                  </div>
                 </div>
               </Card>
             );
