@@ -21,11 +21,14 @@ import { Route as AppTasksRouteImport } from './routes/_app.tasks'
 import { Route as AppStandupsRouteImport } from './routes/_app.standups'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppReviewsRouteImport } from './routes/_app.reviews'
+import { Route as AppReportsRouteImport } from './routes/_app.reports'
 import { Route as AppRecurringTasksRouteImport } from './routes/_app.recurring-tasks'
 import { Route as AppPayslipsRouteImport } from './routes/_app.payslips'
 import { Route as AppOrgChartRouteImport } from './routes/_app.org-chart'
+import { Route as AppOkrsRouteImport } from './routes/_app.okrs'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppMessagesRouteImport } from './routes/_app.messages'
+import { Route as AppLeaveRouteImport } from './routes/_app.leave'
 import { Route as AppKpisRouteImport } from './routes/_app.kpis'
 import { Route as AppHandbookRouteImport } from './routes/_app.handbook'
 import { Route as AppDeliverablesRouteImport } from './routes/_app.deliverables'
@@ -105,6 +108,11 @@ const AppReviewsRoute = AppReviewsRouteImport.update({
   path: '/reviews',
   getParentRoute: () => AppRoute,
 } as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppRecurringTasksRoute = AppRecurringTasksRouteImport.update({
   id: '/recurring-tasks',
   path: '/recurring-tasks',
@@ -120,6 +128,11 @@ const AppOrgChartRoute = AppOrgChartRouteImport.update({
   path: '/org-chart',
   getParentRoute: () => AppRoute,
 } as any)
+const AppOkrsRoute = AppOkrsRouteImport.update({
+  id: '/okrs',
+  path: '/okrs',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppNotificationsRoute = AppNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
@@ -128,6 +141,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
 const AppMessagesRoute = AppMessagesRouteImport.update({
   id: '/messages',
   path: '/messages',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLeaveRoute = AppLeaveRouteImport.update({
+  id: '/leave',
+  path: '/leave',
   getParentRoute: () => AppRoute,
 } as any)
 const AppKpisRoute = AppKpisRouteImport.update({
@@ -245,11 +263,14 @@ export interface FileRoutesByFullPath {
   '/deliverables': typeof AppDeliverablesRoute
   '/handbook': typeof AppHandbookRoute
   '/kpis': typeof AppKpisRoute
+  '/leave': typeof AppLeaveRoute
   '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
+  '/okrs': typeof AppOkrsRoute
   '/org-chart': typeof AppOrgChartRoute
   '/payslips': typeof AppPayslipsRoute
   '/recurring-tasks': typeof AppRecurringTasksRoute
+  '/reports': typeof AppReportsRoute
   '/reviews': typeof AppReviewsRoute
   '/settings': typeof AppSettingsRoute
   '/standups': typeof AppStandupsRoute
@@ -282,11 +303,14 @@ export interface FileRoutesByTo {
   '/deliverables': typeof AppDeliverablesRoute
   '/handbook': typeof AppHandbookRoute
   '/kpis': typeof AppKpisRoute
+  '/leave': typeof AppLeaveRoute
   '/messages': typeof AppMessagesRoute
   '/notifications': typeof AppNotificationsRoute
+  '/okrs': typeof AppOkrsRoute
   '/org-chart': typeof AppOrgChartRoute
   '/payslips': typeof AppPayslipsRoute
   '/recurring-tasks': typeof AppRecurringTasksRoute
+  '/reports': typeof AppReportsRoute
   '/reviews': typeof AppReviewsRoute
   '/settings': typeof AppSettingsRoute
   '/standups': typeof AppStandupsRoute
@@ -321,11 +345,14 @@ export interface FileRoutesById {
   '/_app/deliverables': typeof AppDeliverablesRoute
   '/_app/handbook': typeof AppHandbookRoute
   '/_app/kpis': typeof AppKpisRoute
+  '/_app/leave': typeof AppLeaveRoute
   '/_app/messages': typeof AppMessagesRoute
   '/_app/notifications': typeof AppNotificationsRoute
+  '/_app/okrs': typeof AppOkrsRoute
   '/_app/org-chart': typeof AppOrgChartRoute
   '/_app/payslips': typeof AppPayslipsRoute
   '/_app/recurring-tasks': typeof AppRecurringTasksRoute
+  '/_app/reports': typeof AppReportsRoute
   '/_app/reviews': typeof AppReviewsRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/standups': typeof AppStandupsRoute
@@ -360,11 +387,14 @@ export interface FileRouteTypes {
     | '/deliverables'
     | '/handbook'
     | '/kpis'
+    | '/leave'
     | '/messages'
     | '/notifications'
+    | '/okrs'
     | '/org-chart'
     | '/payslips'
     | '/recurring-tasks'
+    | '/reports'
     | '/reviews'
     | '/settings'
     | '/standups'
@@ -397,11 +427,14 @@ export interface FileRouteTypes {
     | '/deliverables'
     | '/handbook'
     | '/kpis'
+    | '/leave'
     | '/messages'
     | '/notifications'
+    | '/okrs'
     | '/org-chart'
     | '/payslips'
     | '/recurring-tasks'
+    | '/reports'
     | '/reviews'
     | '/settings'
     | '/standups'
@@ -435,11 +468,14 @@ export interface FileRouteTypes {
     | '/_app/deliverables'
     | '/_app/handbook'
     | '/_app/kpis'
+    | '/_app/leave'
     | '/_app/messages'
     | '/_app/notifications'
+    | '/_app/okrs'
     | '/_app/org-chart'
     | '/_app/payslips'
     | '/_app/recurring-tasks'
+    | '/_app/reports'
     | '/_app/reviews'
     | '/_app/settings'
     | '/_app/standups'
@@ -565,6 +601,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppReviewsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/reports': {
+      id: '/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/recurring-tasks': {
       id: '/_app/recurring-tasks'
       path: '/recurring-tasks'
@@ -586,6 +629,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppOrgChartRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/okrs': {
+      id: '/_app/okrs'
+      path: '/okrs'
+      fullPath: '/okrs'
+      preLoaderRoute: typeof AppOkrsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/notifications': {
       id: '/_app/notifications'
       path: '/notifications'
@@ -598,6 +648,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/messages'
       preLoaderRoute: typeof AppMessagesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/leave': {
+      id: '/_app/leave'
+      path: '/leave'
+      fullPath: '/leave'
+      preLoaderRoute: typeof AppLeaveRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/kpis': {
@@ -768,11 +825,14 @@ interface AppRouteChildren {
   AppDeliverablesRoute: typeof AppDeliverablesRoute
   AppHandbookRoute: typeof AppHandbookRoute
   AppKpisRoute: typeof AppKpisRoute
+  AppLeaveRoute: typeof AppLeaveRoute
   AppMessagesRoute: typeof AppMessagesRoute
   AppNotificationsRoute: typeof AppNotificationsRoute
+  AppOkrsRoute: typeof AppOkrsRoute
   AppOrgChartRoute: typeof AppOrgChartRoute
   AppPayslipsRoute: typeof AppPayslipsRoute
   AppRecurringTasksRoute: typeof AppRecurringTasksRoute
+  AppReportsRoute: typeof AppReportsRoute
   AppReviewsRoute: typeof AppReviewsRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppStandupsRoute: typeof AppStandupsRoute
@@ -790,11 +850,14 @@ const AppRouteChildren: AppRouteChildren = {
   AppDeliverablesRoute: AppDeliverablesRoute,
   AppHandbookRoute: AppHandbookRoute,
   AppKpisRoute: AppKpisRoute,
+  AppLeaveRoute: AppLeaveRoute,
   AppMessagesRoute: AppMessagesRoute,
   AppNotificationsRoute: AppNotificationsRoute,
+  AppOkrsRoute: AppOkrsRoute,
   AppOrgChartRoute: AppOrgChartRoute,
   AppPayslipsRoute: AppPayslipsRoute,
   AppRecurringTasksRoute: AppRecurringTasksRoute,
+  AppReportsRoute: AppReportsRoute,
   AppReviewsRoute: AppReviewsRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppStandupsRoute: AppStandupsRoute,
@@ -825,12 +888,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}
