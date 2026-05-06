@@ -520,6 +520,88 @@ export type Database = {
           },
         ]
       }
+      key_result_updates: {
+        Row: {
+          created_at: string | null
+          id: string
+          key_result_id: string
+          new_value: number
+          note: string | null
+          previous_value: number
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          key_result_id: string
+          new_value: number
+          note?: string | null
+          previous_value: number
+          updated_by: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          key_result_id?: string
+          new_value?: number
+          note?: string | null
+          previous_value?: number
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_result_updates_key_result_id_fkey"
+            columns: ["key_result_id"]
+            isOneToOne: false
+            referencedRelation: "key_results"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      key_results: {
+        Row: {
+          created_at: string | null
+          current_value: number
+          description: string | null
+          id: string
+          objective_id: string
+          owner_id: string | null
+          target_value: number
+          title: string
+          unit: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_value?: number
+          description?: string | null
+          id?: string
+          objective_id: string
+          owner_id?: string | null
+          target_value?: number
+          title: string
+          unit?: string
+        }
+        Update: {
+          created_at?: string | null
+          current_value?: number
+          description?: string | null
+          id?: string
+          objective_id?: string
+          owner_id?: string | null
+          target_value?: number
+          title?: string
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_results_objective_id_fkey"
+            columns: ["objective_id"]
+            isOneToOne: false
+            referencedRelation: "objectives"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kpis: {
         Row: {
           created_at: string
@@ -682,6 +764,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      objectives: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          description: string | null
+          end_date: string | null
+          id: string
+          owner_id: string
+          period: string
+          progress_percent: number
+          start_date: string | null
+          status: string
+          title: string
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          owner_id: string
+          period?: string
+          progress_percent?: number
+          start_date?: string | null
+          status?: string
+          title: string
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          owner_id?: string
+          period?: string
+          progress_percent?: number
+          start_date?: string | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
       }
       payslips: {
         Row: {
