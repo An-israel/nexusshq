@@ -109,22 +109,31 @@ export const Route = createFileRoute("/api/public/cron/weekly-summary-email")({
           emailBody = `Hi team,\n\nLast week we completed ${completed ?? 0} of ${total ?? 0} tasks. Have a great week ahead!`;
         }
 
-        // ── Send emails ───────────────────────────────────────────────────
-        const resend = new Resend(process.env.RESEND_API_KEY ?? "");
+        // ── Send emails via Resend HTTP API ───────────────────────────────
+        const apiKey = process.env.RESEND_API_KEY;
         const recipients = (profiles ?? []).filter((p) => p.email);
         let sent = 0;
 
-        for (const p of recipients) {
-          try {
-            await resend.emails.send({
-              from: "Nexus HQ <noreply@nexushq.app>",
-              to: p.email!,
-              subject: `Nexus HQ Weekly Summary — week of ${weekStart}`,
-              text: emailBody,
-            });
-            sent++;
-          } catch {
-            // continue on individual failure
+        if (apiKey) {
+          for (const p of recipients) {
+            try {
+              const r = await fetch("https://api.resend.com/emails", {
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${apiKey}`,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  from: "Nexus HQ <noreply@nexushq.app>",
+                  to: [p.email!],
+                  subject: `Nexus HQ Weekly Summary — week of ${weekStart}`,
+                  text: emailBody,
+                }),
+              });
+              if (r.ok) sent++;
+            } catch {
+              // continue on individual failure
+            }
           }
         }
 
