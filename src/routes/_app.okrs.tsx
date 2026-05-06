@@ -232,7 +232,7 @@ function OkrsPage() {
         </div>
       ) : objectives.length === 0 ? (
         <Card className="p-10 text-center text-sm text-muted-foreground">
-          No objectives yet.{isManager && " Click "New Objective" to get started."}
+          No objectives yet.{isManager && ' Click "New Objective" to get started.'}
         </Card>
       ) : (
         <div className="space-y-4">
