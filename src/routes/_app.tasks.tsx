@@ -25,7 +25,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { PRIORITY_BADGE, STATUS_BADGE, PRIORITY_RANK, todayISO } from "@/lib/nexus";
-import { AlertTriangle, Plus, Calendar as CalIcon, Flag } from "lucide-react";
+import { AlertTriangle, Plus, Calendar as CalIcon, Sparkles } from "lucide-react";
 import { useRealtime } from "@/lib/use-realtime";
 
 export const Route = createFileRoute("/_app/tasks")({
@@ -249,6 +249,7 @@ function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
   const { user } = useAuth();
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
+  const [aiLoading, setAiLoading] = React.useState(false);
   const [form, setForm] = React.useState({
     title: "",
     description: "",
@@ -257,6 +258,34 @@ function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
     task_type: "one_time",
     due_date: todayISO(),
   });
+
+  async function suggestDescription() {
+    if (!form.title.trim()) {
+      toast.error("Enter a task title first");
+      return;
+    }
+    setAiLoading(true);
+    const assignee = employees.find((e) => e.id === form.assigned_to);
+    const dept = assignee?.department ?? "general";
+    try {
+      const resp = await fetch("/api/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "task-description",
+          context: { title: form.title.trim(), department: dept },
+        }),
+      });
+      if (!resp.ok) throw new Error(await resp.text());
+      const data = (await resp.json()) as { result?: string; error?: string };
+      if (data.error) throw new Error(data.error);
+      setForm((prev) => ({ ...prev, description: data.result?.trim() ?? "" }));
+    } catch (err) {
+      toast.error(`AI failed: ${(err as Error).message}`);
+    } finally {
+      setAiLoading(false);
+    }
+  }
 
   React.useEffect(() => {
     void supabase
@@ -323,7 +352,20 @@ function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
           />
         </div>
         <div>
-          <Label>Description</Label>
+          <div className="flex items-center justify-between mb-1.5">
+            <Label>Description</Label>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-primary"
+              onClick={suggestDescription}
+              disabled={aiLoading}
+            >
+              <Sparkles className="h-3 w-3" />
+              {aiLoading ? "Writing…" : "AI suggest"}
+            </Button>
+          </div>
           <Textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
