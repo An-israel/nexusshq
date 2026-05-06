@@ -16,8 +16,10 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
-import { Save, UserCog, Shield, Users as UsersIcon } from "lucide-react";
+import { Save, UserCog, Shield, Users as UsersIcon, ToggleRight } from "lucide-react";
 import { AvatarUploader } from "@/components/AvatarUploader";
+import { Switch } from "@/components/ui/switch";
+import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
