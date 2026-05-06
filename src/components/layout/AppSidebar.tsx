@@ -77,7 +77,10 @@ export function AppSidebar({
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const items = role ? NAV.filter((n) => n.roles.includes(role)) : NAV;
+  const { flags } = useFeatureFlags();
+  const items = (role ? NAV.filter((n) => n.roles.includes(role)) : NAV).filter(
+    (n) => !n.flagKey || flags[n.flagKey] !== false || role === "admin",
+  );
 
   const isActive = (to: string) =>
     pathname === to || (to !== "/dashboard" && pathname.startsWith(to));
