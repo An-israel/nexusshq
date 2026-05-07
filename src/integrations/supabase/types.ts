@@ -1462,11 +1462,54 @@ export type Database = {
           },
         ]
       }
+      standup_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          standup_id: string
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          standup_id: string
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          standup_id?: string
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standup_comments_standup_id_fkey"
+            columns: ["standup_id"]
+            isOneToOne: false
+            referencedRelation: "standups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "standup_comments_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       standups: {
         Row: {
           blockers: string | null
           date: string
           id: string
+          screenshot_url: string | null
           submitted_at: string
           today: string
           user_id: string
@@ -1477,6 +1520,7 @@ export type Database = {
           blockers?: string | null
           date: string
           id?: string
+          screenshot_url?: string | null
           submitted_at?: string
           today: string
           user_id: string
@@ -1487,6 +1531,7 @@ export type Database = {
           blockers?: string | null
           date?: string
           id?: string
+          screenshot_url?: string | null
           submitted_at?: string
           today?: string
           user_id?: string
