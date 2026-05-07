@@ -16,7 +16,8 @@ export interface Workspace {
 export type WorkspaceRole = "owner" | "admin" | "manager" | "employee";
 
 export interface WorkspaceContextValue {
-  workspace: Workspace | null;
+  // Non-null after the WorkspaceShell gate passes; consumers inside the shell can safely use workspace.id.
+  workspace: Workspace;
   workspaceRole: WorkspaceRole | null;
   isOwner: boolean;
   isWorkspaceAdmin: boolean;
