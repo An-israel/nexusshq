@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -17,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, XCircle, Clock as ClockIcon, Download } from "lucide-react";
 import { useRealtime } from "@/lib/use-realtime";
 
-export const Route = createFileRoute("/_app/attendance")({
+export const Route = createFileRoute("/_app/$workspaceSlug/attendance")({
   component: AttendancePage,
 });
 
@@ -82,6 +83,7 @@ function currentMonthStart(): string {
 
 function AttendancePage() {
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [scope, setScope] = React.useState<"me" | "team">("me");
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [selectedUser, setSelectedUser] = React.useState<string>("");
@@ -126,6 +128,7 @@ function AttendancePage() {
     const { data, error } = await supabase
       .from("attendance")
       .select("*")
+      .eq("workspace_id", workspace.id)
       .eq("user_id", targetUserId)
       .gte("date", dateFrom)
       .lte("date", dateTo)

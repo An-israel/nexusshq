@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ import { toast } from "sonner";
 import { CalendarOff, CheckCircle2, XCircle, Clock, Plus } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
 
-export const Route = createFileRoute("/_app/leave")({
+export const Route = createFileRoute("/_app/$workspaceSlug/leave")({
   component: LeavePage,
 });
 
@@ -107,6 +108,7 @@ function workdaysBetween(start: string, end: string): number {
 
 function LeavePage() {
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const year = new Date().getFullYear();
 
   const [leaveTypes, setLeaveTypes] = React.useState<LeaveType[]>([]);
@@ -121,13 +123,14 @@ function LeavePage() {
     setLoading(true);
 
     const [{ data: types }, { data: bals }, { data: reqs }] = await Promise.all([
-      supabase.from("leave_types").select("*").order("name"),
-      supabase.from("leave_balances").select("*").eq("year", year),
+      supabase.from("leave_types").select("*").eq("workspace_id", workspace.id).order("name"),
+      supabase.from("leave_balances").select("*").eq("workspace_id", workspace.id).eq("year", year),
       isManager
-        ? supabase.from("leave_requests").select("*").order("created_at", { ascending: false })
+        ? supabase.from("leave_requests").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false })
         : supabase
             .from("leave_requests")
             .select("*")
+            .eq("workspace_id", workspace.id)
             .eq("user_id", user.id)
             .order("created_at", { ascending: false }),
     ]);
@@ -263,6 +266,7 @@ function LeavePage() {
               typeMap={typeMap}
               profiles={profiles}
               showEmployee
+              workspaceId={workspace.id}
               onReview={load}
             />
           </TabsContent>
@@ -274,6 +278,7 @@ function LeavePage() {
             typeMap={typeMap}
             profiles={isManager ? profiles : {}}
             showEmployee={isManager}
+            workspaceId={workspace.id}
             onReview={load}
           />
         </TabsContent>
@@ -286,6 +291,7 @@ function LeavePage() {
         leaveTypes={leaveTypes}
         balances={myBalances}
         userId={user?.id ?? ""}
+        workspaceId={workspace.id}
         onCreated={() => { setRequestOpen(false); void load(); }}
       />
     </div>
@@ -299,12 +305,14 @@ function RequestList({
   typeMap,
   profiles,
   showEmployee,
+  workspaceId,
   onReview,
 }: {
   requests: LeaveRequest[];
   typeMap: Record<string, LeaveType>;
   profiles: Record<string, ProfileMini>;
   showEmployee: boolean;
+  workspaceId: string;
   onReview: () => void;
 }) {
   const { user, isManager } = useAuth();
@@ -349,6 +357,7 @@ function RequestList({
       await supabase
         .from("leave_balances")
         .update({ days_used: supabase.rpc as never }) // done via direct update below
+        .eq("workspace_id", workspaceId)
         .eq("user_id", req.user_id)
         .eq("leave_type_id", req.leave_type_id)
         .eq("year", yr);
@@ -357,6 +366,7 @@ function RequestList({
       const { data: bal } = await supabase
         .from("leave_balances")
         .select("days_used")
+        .eq("workspace_id", workspaceId)
         .eq("user_id", req.user_id)
         .eq("leave_type_id", req.leave_type_id)
         .eq("year", yr)
@@ -366,6 +376,7 @@ function RequestList({
         await supabase
           .from("leave_balances")
           .update({ days_used: (bal.days_used as number) + req.days_requested })
+          .eq("workspace_id", workspaceId)
           .eq("user_id", req.user_id)
           .eq("leave_type_id", req.leave_type_id)
           .eq("year", yr);
@@ -373,6 +384,7 @@ function RequestList({
 
       // Notify employee
       await supabase.from("notifications").insert({
+        workspace_id: workspaceId,
         user_id: req.user_id,
         type: action === "approved" ? "info" : "warning",
         title: `Leave request ${action}`,
@@ -510,6 +522,7 @@ function RequestLeaveDialog({
   leaveTypes,
   balances,
   userId,
+  workspaceId,
   onCreated,
 }: {
   open: boolean;
@@ -517,6 +530,7 @@ function RequestLeaveDialog({
   leaveTypes: LeaveType[];
   balances: LeaveBalance[];
   userId: string;
+  workspaceId: string;
   onCreated: () => void;
 }) {
   const today = new Date().toISOString().slice(0, 10);
@@ -547,6 +561,7 @@ function RequestLeaveDialog({
 
     setSubmitting(true);
     const { error } = await supabase.from("leave_requests").insert({
+      workspace_id: workspaceId,
       user_id: userId,
       leave_type_id: form.leave_type_id,
       start_date: form.start_date,
@@ -567,6 +582,7 @@ function RequestLeaveDialog({
     if (managers?.length) {
       await supabase.from("notifications").insert(
         managers.map((m) => ({
+          workspace_id: workspaceId,
           user_id: m.user_id,
           type: "info" as const,
           title: `Leave request: ${selectedType?.name ?? "Leave"}`,

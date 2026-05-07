@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import type { Database } from "@/integrations/supabase/types";
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type AppRole = "admin" | "manager" | "employee";
 
-export const Route = createFileRoute("/_app/team")({
+export const Route = createFileRoute("/_app/$workspaceSlug/team")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: TeamPage,
 });
@@ -36,6 +37,7 @@ interface MemberRow {
 
 function TeamPage() {
   const { isAdmin, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -63,6 +65,7 @@ function TeamPage() {
       const [tasksRes, attRes, flagsRes, overdueRes, completedTodayRes, rolesRes] = await Promise.all([
         userIds.length
           ? supabase.from("tasks").select("id, assigned_to, status, due_date, task_type")
+              .eq("workspace_id", workspace.id)
               .in("assigned_to", userIds)
           : Promise.resolve({ data: [], error: null }),
         userIds.length
@@ -71,11 +74,14 @@ function TeamPage() {
           : Promise.resolve({ data: [], error: null }),
         userIds.length
           ? supabase.from("flags").select("flagged_user_id, is_resolved").eq("is_resolved", false)
+              .eq("workspace_id", workspace.id)
               .in("flagged_user_id", userIds)
           : Promise.resolve({ data: [], error: null }),
         supabase.from("tasks").select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspace.id)
           .lt("due_date", today).neq("status", "completed"),
         supabase.from("tasks").select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspace.id)
           .eq("status", "completed").gte("completed_at", `${today}T00:00:00`),
         userIds.length
           ? supabase.from("user_roles").select("user_id, role").in("user_id", userIds)
@@ -136,7 +142,7 @@ function TeamPage() {
     return () => {
       cancelled = true;
     };
-  }, [reloadKey]);
+  }, [reloadKey, workspace.id]);
 
   return (
     <div className="space-y-6">

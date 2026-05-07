@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,7 +14,7 @@ import { CheckCircle2, AlertCircle, Clock, ImageIcon, MessageSquare, Send, Trash
 import { todayISO, initialsOf, timeAgo } from "@/lib/nexus";
 import { useRealtime } from "@/lib/use-realtime";
 
-export const Route = createFileRoute("/_app/standups")({
+export const Route = createFileRoute("/_app/$workspaceSlug/standups")({
   component: StandupsPage,
 });
 
@@ -46,6 +47,7 @@ const SCREENSHOT_MAX = 10 * 1024 * 1024; // 10MB
 
 function StandupsPage() {
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [view, setView] = React.useState<"mine" | "team">(isManager ? "team" : "mine");
   const [todayStandup, setTodayStandup] = React.useState<Standup | null>(null);
   const [teamStandups, setTeamStandups] = React.useState<Standup[]>([]);
@@ -70,6 +72,7 @@ function StandupsPage() {
         .select("*")
         .eq("user_id", user.id)
         .eq("date", isoToday)
+        .eq("workspace_id", workspace.id)
         .maybeSingle();
       setTodayStandup((data as Standup) ?? null);
     } else {
@@ -78,6 +81,7 @@ function StandupsPage() {
           .from("standups")
           .select("*")
           .eq("date", isoToday)
+          .eq("workspace_id", workspace.id)
           .order("submitted_at", { ascending: true }),
         supabase.from("profiles").select("id, full_name, email").eq("is_active", true),
       ]);

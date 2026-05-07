@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { requireAnyRole } from "@/lib/role-access";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type TaskPriority = Database["public"]["Enums"]["task_priority"];
 
-export const Route = createFileRoute("/_app/recurring-tasks")({
+export const Route = createFileRoute("/_app/$workspaceSlug/recurring-tasks")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: RecurringTasksPage,
 });
@@ -58,6 +59,7 @@ const PRIORITIES = ["low", "medium", "high", "urgent"] as const;
 
 function RecurringTasksPage() {
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
   const [templates, setTemplates] = React.useState<RecurringTask[]>([]);
   const [employees, setEmployees] = React.useState<Profile[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -67,7 +69,7 @@ function RecurringTasksPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [tmplRes, empRes] = await Promise.all([
-      supabase.from("recurring_tasks").select("*").order("created_at", { ascending: false }),
+      supabase.from("recurring_tasks").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, full_name, email").eq("is_active", true).order("full_name"),
     ]);
     setTemplates((tmplRes.data ?? []) as RecurringTask[]);
@@ -78,13 +80,13 @@ function RecurringTasksPage() {
   React.useEffect(() => { void load(); }, [load]);
 
   async function toggle(t: RecurringTask) {
-    await supabase.from("recurring_tasks").update({ is_active: !t.is_active }).eq("id", t.id);
+    await supabase.from("recurring_tasks").update({ is_active: !t.is_active }).eq("id", t.id).eq("workspace_id", workspace.id);
     void load();
   }
 
   async function del(id: string) {
     if (!confirm("Delete this recurring task template?")) return;
-    await supabase.from("recurring_tasks").delete().eq("id", id);
+    await supabase.from("recurring_tasks").delete().eq("id", id).eq("workspace_id", workspace.id);
     void load();
   }
 
@@ -101,6 +103,7 @@ function RecurringTasksPage() {
       .eq("assigned_to", t.assigned_to)
       .eq("title", t.title)
       .eq("due_date", today)
+      .eq("workspace_id", workspace.id)
       .maybeSingle();
 
     if (existing) {
@@ -118,18 +121,20 @@ function RecurringTasksPage() {
       task_type: taskType,
       due_date: dueDate,
       status: "todo",
+      workspace_id: workspace.id,
     };
     const { error } = await supabase.from("tasks").insert(payload);
 
     if (error) { toast.error(error.message); setGenerating(null); return; }
 
     // Update last generated date
-    await supabase.from("recurring_tasks").update({ last_generated_date: today }).eq("id", t.id);
+    await supabase.from("recurring_tasks").update({ last_generated_date: today }).eq("id", t.id).eq("workspace_id", workspace.id);
     await supabase.from("notifications").insert({
       user_id: t.assigned_to,
       type: "task_assigned",
       title: "Recurring task assigned",
       message: t.title,
+      workspace_id: workspace.id,
     });
 
     toast.success("Task generated");
@@ -223,6 +228,7 @@ function RecurringTasksPage() {
         <NewTemplateDialog
           employees={employees}
           createdBy={user?.id ?? ""}
+          workspaceId={workspace.id}
           onSaved={() => { setOpen(false); void load(); }}
         />
       </Dialog>
@@ -233,10 +239,12 @@ function RecurringTasksPage() {
 function NewTemplateDialog({
   employees,
   createdBy,
+  workspaceId,
   onSaved,
 }: {
   employees: Profile[];
   createdBy: string;
+  workspaceId: string;
   onSaved: () => void;
 }) {
   const [title, setTitle] = React.useState("");
@@ -258,6 +266,7 @@ function NewTemplateDialog({
       priority,
       recurrence,
       day_of_week: recurrence === "weekly" ? parseInt(dayOfWeek) : null,
+      workspace_id: workspaceId,
     };
     const { error } = await supabase.from("recurring_tasks").insert(payload);
     setSaving(false);

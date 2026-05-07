@@ -25,8 +25,9 @@ import {
 import { toast } from "sonner";
 import { ExternalLink, Plus, Trash2, CheckCircle2, Circle, Clock, Copy, Eye } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
+import { useWorkspace } from "@/lib/workspace-context";
 
-export const Route = createFileRoute("/_app/client-projects")({
+export const Route = createFileRoute("/_app/$workspaceSlug/client-projects")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: ClientProjectsPage,
 });
@@ -65,6 +66,7 @@ const TASK_STATUS_ICON: Record<string, React.ReactNode> = {
 
 function ClientProjectsPage() {
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
   const [projects, setProjects] = React.useState<ClientProject[]>([]);
   const [selected, setSelected] = React.useState<ClientProject | null>(null);
   const [tasks, setTasks] = React.useState<ProjectTask[]>([]);
@@ -75,10 +77,12 @@ function ClientProjectsPage() {
 
   const loadProjects = React.useCallback(async () => {
     setLoading(true);
-    const { data } = await supabase
+    let q = supabase
       .from("client_projects")
       .select("*")
       .order("created_at", { ascending: false });
+    if (workspace?.id) q = q.eq("workspace_id", workspace.id);
+    const { data } = await q;
     const projs = (data ?? []) as ClientProject[];
     setProjects(projs);
 
@@ -96,7 +100,7 @@ function ClientProjectsPage() {
     }
 
     setLoading(false);
-  }, []);
+  }, [workspace?.id]);
 
   const loadTasks = React.useCallback(async (projectId: string) => {
     const { data } = await supabase
@@ -308,6 +312,7 @@ function ClientProjectsPage() {
       <Dialog open={newProjectOpen} onOpenChange={setNewProjectOpen}>
         <NewProjectDialog
           createdBy={user?.id ?? ""}
+          workspaceId={workspace?.id ?? ""}
           onSaved={() => { setNewProjectOpen(false); void loadProjects(); }}
         />
       </Dialog>
@@ -324,7 +329,7 @@ function ClientProjectsPage() {
   );
 }
 
-function NewProjectDialog({ createdBy, onSaved }: { createdBy: string; onSaved: () => void }) {
+function NewProjectDialog({ createdBy, workspaceId, onSaved }: { createdBy: string; workspaceId: string; onSaved: () => void }) {
   const [name, setName] = React.useState("");
   const [clientName, setClientName] = React.useState("");
   const [desc, setDesc] = React.useState("");
@@ -337,6 +342,7 @@ function NewProjectDialog({ createdBy, onSaved }: { createdBy: string; onSaved: 
       client_name: clientName.trim(),
       description: desc.trim() || null,
       created_by: createdBy,
+      workspace_id: workspaceId,
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }

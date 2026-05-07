@@ -27,10 +27,22 @@ export async function fetchUserRolesWithRetry(userId: string, attempts = 5) {
   let lastError: { code?: string; message?: string; status?: number } | null = null;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
-    const { data, error } = await supabase.from("user_roles").select("role").eq("user_id", userId);
+    // Check both user_roles (legacy) and workspace_members (multi-tenant) in parallel
+    const [legacyResult, memberResult] = await Promise.all([
+      supabase.from("user_roles").select("role").eq("user_id", userId),
+      supabase.from("workspace_members").select("role").eq("user_id", userId).eq("is_active", true),
+    ]);
+
+    const error = legacyResult.error ?? memberResult.error;
 
     if (!error) {
-      return { roles: ((data ?? []) as RoleRow[]), error: null };
+      const legacyRoles = (legacyResult.data ?? []) as RoleRow[];
+      // Map 'owner' → 'admin' for workspace_members roles
+      const memberRoles = (memberResult.data ?? []).map((r) => ({
+        role: (r.role === "owner" ? "admin" : r.role) as AppRole,
+      }));
+      const combined = [...legacyRoles, ...memberRoles];
+      return { roles: combined, error: null };
     }
 
     lastError = error;
@@ -38,19 +50,11 @@ export async function fetchUserRolesWithRetry(userId: string, attempts = 5) {
     logSupabaseClientError({
       scope: "fetchUserRolesWithRetry",
       error,
-      matchers: ["/rest/v1/user_roles", `user_id=eq.${userId}`],
-      extra: {
-        attempt: attempt + 1,
-        attempts,
-        userId,
-        query: "select role from user_roles where user_id = ?",
-      },
+      matchers: ["/rest/v1/user_roles", "/rest/v1/workspace_members", `user_id=eq.${userId}`],
+      extra: { attempt: attempt + 1, attempts, userId },
     });
 
-    if (!isRetryableRoleError(error) || attempt === attempts - 1) {
-      break;
-    }
-
+    if (!isRetryableRoleError(error) || attempt === attempts - 1) break;
     await wait(400 * (attempt + 1));
   }
 

@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,7 +45,7 @@ import {
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
 import type { Database } from "@/integrations/supabase/types";
 
-export const Route = createFileRoute("/_app/okrs")({
+export const Route = createFileRoute("/_app/$workspaceSlug/okrs")({
   component: OkrsPage,
 });
 
@@ -138,6 +139,7 @@ const STATUS_LABEL: Record<Objective["status"], string> = {
 
 function OkrsPage() {
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [objectives, setObjectives] = React.useState<Objective[]>([]);
   const [keyResults, setKeyResults] = React.useState<KeyResult[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
@@ -149,8 +151,8 @@ function OkrsPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [{ data: objs }, { data: krs }] = await Promise.all([
-      supabase.from("objectives").select("*").order("created_at", { ascending: false }),
-      supabase.from("key_results").select("*").order("created_at"),
+      supabase.from("objectives").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false }),
+      supabase.from("key_results").select("*").eq("workspace_id", workspace.id).order("created_at"),
     ]);
 
     const objRows = (objs ?? []) as Objective[];
@@ -183,7 +185,7 @@ function OkrsPage() {
   function openEdit(o: Objective) { setEditObj(o); setObjDialogOpen(true); }
 
   async function deleteObj(id: string) {
-    const { error } = await supabase.from("objectives").delete().eq("id", id);
+    const { error } = await supabase.from("objectives").delete().eq("id", id).eq("workspace_id", workspace.id);
     if (error) toast.error(error.message);
     else { toast.success("Objective deleted"); void load(); }
   }
@@ -246,6 +248,7 @@ function OkrsPage() {
                 profiles={profiles}
                 isManager={isManager}
                 userId={user?.id ?? ""}
+                workspaceId={workspace.id}
                 onEdit={() => openEdit(obj)}
                 onDelete={() => deleteObj(obj.id)}
                 onRefresh={load}
@@ -261,6 +264,7 @@ function OkrsPage() {
         onOpenChange={setObjDialogOpen}
         existing={editObj}
         userId={user?.id ?? ""}
+        workspaceId={workspace.id}
         profiles={profiles}
         onSaved={() => { setObjDialogOpen(false); void load(); }}
       />
@@ -276,6 +280,7 @@ function ObjectiveCard({
   profiles,
   isManager,
   userId,
+  workspaceId,
   onEdit,
   onDelete,
   onRefresh,
@@ -285,6 +290,7 @@ function ObjectiveCard({
   profiles: Record<string, ProfileMini>;
   isManager: boolean;
   userId: string;
+  workspaceId: string;
   onEdit: () => void;
   onDelete: () => void;
   onRefresh: () => void;
@@ -306,7 +312,8 @@ function ObjectiveCard({
       void supabase
         .from("objectives")
         .update({ progress_percent: p, status: s })
-        .eq("id", objective.id);
+        .eq("id", objective.id)
+        .eq("workspace_id", workspaceId);
     }
   }, [keyResults, objective]);
 
@@ -393,7 +400,7 @@ function ObjectiveCard({
                 isLast={idx === keyResults.length - 1 && !isManager}
                 onUpdate={() => setUpdateKr(kr)}
                 onDelete={async () => {
-                  await supabase.from("key_results").delete().eq("id", kr.id);
+                  await supabase.from("key_results").delete().eq("id", kr.id).eq("workspace_id", workspaceId);
                   onRefresh();
                 }}
               />
@@ -420,6 +427,7 @@ function ObjectiveCard({
         open={addKrOpen}
         onOpenChange={setAddKrOpen}
         objectiveId={objective.id}
+        workspaceId={workspaceId}
         profiles={profiles}
         onSaved={() => { setAddKrOpen(false); onRefresh(); }}
       />
@@ -429,6 +437,7 @@ function ObjectiveCard({
         <UpdateKrDialog
           kr={updateKr}
           userId={userId}
+          workspaceId={workspaceId}
           open={!!updateKr}
           onOpenChange={(o) => !o && setUpdateKr(null)}
           onSaved={() => { setUpdateKr(null); onRefresh(); }}
@@ -514,12 +523,14 @@ function KeyResultRow({
 function UpdateKrDialog({
   kr,
   userId,
+  workspaceId,
   open,
   onOpenChange,
   onSaved,
 }: {
   kr: KeyResult;
   userId: string;
+  workspaceId: string;
   open: boolean;
   onOpenChange: (o: boolean) => void;
   onSaved: () => void;
@@ -536,7 +547,8 @@ function UpdateKrDialog({
     const { error: updateErr } = await supabase
       .from("key_results")
       .update({ current_value: val })
-      .eq("id", kr.id);
+      .eq("id", kr.id)
+      .eq("workspace_id", workspaceId);
 
     if (updateErr) { toast.error(updateErr.message); setSaving(false); return; }
 
@@ -546,6 +558,7 @@ function UpdateKrDialog({
       previous_value: kr.current_value,
       new_value: val,
       note: note.trim() || null,
+      workspace_id: workspaceId,
     });
 
     toast.success("Progress updated");
@@ -626,12 +639,14 @@ function KeyResultDialog({
   open,
   onOpenChange,
   objectiveId,
+  workspaceId,
   profiles,
   onSaved,
 }: {
   open: boolean;
   onOpenChange: (o: boolean) => void;
   objectiveId: string;
+  workspaceId: string;
   profiles: Record<string, ProfileMini>;
   onSaved: () => void;
 }) {
@@ -656,6 +671,7 @@ function KeyResultDialog({
       target_value: parseFloat(form.target_value) || 100,
       current_value: parseFloat(form.current_value) || 0,
       unit: form.unit.trim() || "%",
+      workspace_id: workspaceId,
     });
     if (error) { toast.error(error.message); setSaving(false); return; }
     toast.success("Key result added");
@@ -721,6 +737,7 @@ function ObjectiveDialog({
   onOpenChange,
   existing,
   userId,
+  workspaceId,
   profiles,
   onSaved,
 }: {
@@ -728,6 +745,7 @@ function ObjectiveDialog({
   onOpenChange: (o: boolean) => void;
   existing: Objective | null;
   userId: string;
+  workspaceId: string;
   profiles: Record<string, ProfileMini>;
   onSaved: () => void;
 }) {
@@ -772,8 +790,8 @@ function ObjectiveDialog({
       end_date: form.end_date || null,
     };
     const { error } = isEdit
-      ? await supabase.from("objectives").update(payload).eq("id", existing!.id)
-      : await supabase.from("objectives").insert({ ...payload, status: "on_track", progress_percent: 0 });
+      ? await supabase.from("objectives").update(payload).eq("id", existing!.id).eq("workspace_id", workspaceId)
+      : await supabase.from("objectives").insert({ ...payload, status: "on_track", progress_percent: 0, workspace_id: workspaceId });
 
     if (error) { toast.error(error.message); setSaving(false); return; }
     toast.success(isEdit ? "Objective updated" : "Objective created");

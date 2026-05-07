@@ -3,6 +3,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,7 +34,7 @@ type Update = Database["public"]["Tables"]["task_updates"]["Row"];
 type Kpi = Database["public"]["Tables"]["kpis"]["Row"];
 type Att = Database["public"]["Tables"]["attendance"]["Row"];
 
-export const Route = createFileRoute("/_app/team/$userId")({
+export const Route = createFileRoute("/_app/$workspaceSlug/team/$userId")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: EmployeeDetailPage,
 });
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/_app/team/$userId")({
 function EmployeeDetailPage() {
   const { userId } = Route.useParams();
   const { isAdmin } = useAuth();
+  const { workspace } = useWorkspace();
   const setActive = useServerFn(setEmployeeActiveFn);
   const resolveFlag = useServerFn(resolveFlagFn);
   const reopenFlag = useServerFn(reopenFlagFn);
@@ -76,11 +78,11 @@ function EmployeeDetailPage() {
       if (!cancelled) setProfile(p);
 
       const [tasksRes, flagsRes, attRes, kpisRes] = await Promise.all([
-        supabase.from("tasks").select("*").eq("assigned_to", userId).order("due_date", { ascending: false }),
-        supabase.from("flags").select("*").eq("flagged_user_id", userId).order("created_at", { ascending: false }),
+        supabase.from("tasks").select("*").eq("assigned_to", userId).eq("workspace_id", workspace.id).order("due_date", { ascending: false }),
+        supabase.from("flags").select("*").eq("flagged_user_id", userId).eq("workspace_id", workspace.id).order("created_at", { ascending: false }),
         supabase.from("attendance").select("*").eq("user_id", userId).gte("date", monthStartStr),
         p?.department
-          ? supabase.from("kpis").select("*").eq("department", p.department as Database["public"]["Enums"]["department_type"])
+          ? supabase.from("kpis").select("*").eq("department", p.department as Database["public"]["Enums"]["department_type"]).eq("workspace_id", workspace.id)
           : Promise.resolve({ data: [] as Kpi[], error: null }),
       ]);
       const t = (tasksRes.data as Task[]) ?? [];
@@ -106,7 +108,7 @@ function EmployeeDetailPage() {
     return () => {
       cancelled = true;
     };
-  }, [userId, reloadKey]);
+  }, [userId, reloadKey, workspace.id]);
 
   // Realtime: refresh when this employee's tasks or flags change
   useRealtime({

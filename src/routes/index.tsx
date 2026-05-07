@@ -106,7 +106,7 @@ function LandingPage() {
               Sign in
             </Link>
             <Link
-              to="/pricing"
+              to="/signup"
               className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Get started
@@ -135,10 +135,10 @@ function LandingPage() {
           </p>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
-              to="/pricing"
+              to="/signup"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              Start free <ArrowRight className="h-4 w-4" />
+              Start free trial <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               to="/login"
@@ -322,7 +322,7 @@ function LandingPage() {
           </p>
           <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
-              to="/pricing"
+              to="/signup"
               className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               Get started free <ArrowRight className="h-4 w-4" />

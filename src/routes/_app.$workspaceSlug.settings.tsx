@@ -20,6 +20,7 @@ import { Save, UserCog, Shield, Users as UsersIcon, ToggleRight } from "lucide-r
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { Switch } from "@/components/ui/switch";
 import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
+import { useWorkspace } from "@/lib/workspace-context";
 
 class FeatureErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -46,7 +47,7 @@ class FeatureErrorBoundary extends React.Component<
   }
 }
 
-export const Route = createFileRoute("/_app/settings")({
+export const Route = createFileRoute("/_app/$workspaceSlug/settings")({
   component: SettingsPage,
 });
 
@@ -120,14 +121,15 @@ function SettingsPage() {
 }
 
 function FeatureToggles() {
-  const { flags, loading } = useFeatureFlags();
+  const { workspace } = useWorkspace();
+  const { flags, loading } = useFeatureFlags(workspace?.id ?? null);
   const { profile } = useAuth();
   const [pending, setPending] = React.useState<string | null>(null);
 
   async function toggle(key: string, next: boolean) {
     setPending(key);
     try {
-      await setFeatureFlag(key, next, profile?.id);
+      await setFeatureFlag(key, next, workspace?.id ?? "", profile?.id);
       toast.success(next ? "Page enabled" : "Page disabled");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Failed to update");

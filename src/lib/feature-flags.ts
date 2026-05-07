@@ -41,18 +41,28 @@ function buildDefaults(): FlagsMap {
 
 let instanceCounter = 0;
 
-export function useFeatureFlags(): { flags: FlagsMap; loading: boolean } {
+export function useFeatureFlags(
+  workspaceId: string | null,
+): { flags: FlagsMap; loading: boolean } {
   const [flags, setFlags] = React.useState<FlagsMap>(buildDefaults);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState<boolean>(workspaceId !== null);
   const channelName = React.useRef(`feature_flags_${++instanceCounter}`);
 
   React.useEffect(() => {
+    if (workspaceId === null) {
+      setFlags(buildDefaults());
+      setLoading(false);
+      return;
+    }
+
     let active = true;
-    async function load() {
+
+    async function load(): Promise<void> {
       try {
         const { data } = await supabase
           .from("feature_flags")
-          .select("key, enabled");
+          .select("key, enabled")
+          .eq("workspace_id", workspaceId);
         if (!active) return;
         const next = buildDefaults();
         for (const row of data ?? []) next[row.key] = row.enabled;
@@ -63,6 +73,7 @@ export function useFeatureFlags(): { flags: FlagsMap; loading: boolean } {
         if (active) setLoading(false);
       }
     }
+
     void load();
 
     let channel: ReturnType<typeof supabase.channel> | null = null;
@@ -71,7 +82,12 @@ export function useFeatureFlags(): { flags: FlagsMap; loading: boolean } {
         .channel(channelName.current)
         .on(
           "postgres_changes",
-          { event: "*", schema: "public", table: "feature_flags" },
+          {
+            event: "*",
+            schema: "public",
+            table: "feature_flags",
+            filter: `workspace_id=eq.${workspaceId}`,
+          },
           () => void load(),
         )
         .subscribe();
@@ -83,17 +99,28 @@ export function useFeatureFlags(): { flags: FlagsMap; loading: boolean } {
       active = false;
       if (channel) void supabase.removeChannel(channel);
     };
-  }, []);
+  }, [workspaceId]);
 
   return { flags, loading };
 }
 
-export async function setFeatureFlag(key: string, enabled: boolean, userId?: string) {
+export async function setFeatureFlag(
+  key: string,
+  enabled: boolean,
+  workspaceId: string,
+  userId?: string,
+): Promise<void> {
   const { error } = await supabase
     .from("feature_flags")
     .upsert(
-      { key, enabled, updated_by: userId ?? null, updated_at: new Date().toISOString() },
-      { onConflict: "key" },
+      {
+        key,
+        enabled,
+        workspace_id: workspaceId,
+        updated_by: userId ?? null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "key,workspace_id" },
     );
   if (error) throw error;
 }

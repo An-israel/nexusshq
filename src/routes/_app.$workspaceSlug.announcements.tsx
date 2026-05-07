@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,7 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Department = Database["public"]["Enums"]["department_type"];
 
-export const Route = createFileRoute("/_app/announcements")({
+export const Route = createFileRoute("/_app/$workspaceSlug/announcements")({
   component: AnnouncementsPage,
 });
 
@@ -51,6 +52,7 @@ interface AuthorMini {
 
 function AnnouncementsPage() {
   const { user, isManager, profile } = useAuth();
+  const { workspace } = useWorkspace();
   const [items, setItems] = React.useState<Announcement[]>([]);
   const [authors, setAuthors] = React.useState<Record<string, AuthorMini>>({});
   const [loading, setLoading] = React.useState(true);
@@ -62,6 +64,7 @@ function AnnouncementsPage() {
       supabase
         .from("announcements")
         .select("*")
+        .eq("workspace_id", workspace.id)
         .order("is_pinned", { ascending: false })
         .order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, full_name, email"),
@@ -160,13 +163,13 @@ function AnnouncementsPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <ComposeDialog onSaved={() => { setOpen(false); void load(); }} authorId={user?.id ?? ""} />
+        <ComposeDialog onSaved={() => { setOpen(false); void load(); }} authorId={user?.id ?? ""} workspaceId={workspace.id} />
       </Dialog>
     </div>
   );
 }
 
-function ComposeDialog({ onSaved, authorId }: { onSaved: () => void; authorId: string }) {
+function ComposeDialog({ onSaved, authorId, workspaceId }: { onSaved: () => void; authorId: string; workspaceId: string }) {
   const [title, setTitle] = React.useState("");
   const [body, setBody] = React.useState("");
   const [dept, setDept] = React.useState<string>("all");
@@ -180,6 +183,7 @@ function ComposeDialog({ onSaved, authorId }: { onSaved: () => void; authorId: s
       body: body.trim(),
       author_id: authorId,
       department: dept === "all" ? null : (dept as Department),
+      workspace_id: workspaceId,
     };
     const { error } = await supabase.from("announcements").insert(payload);
     setSaving(false);

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock as ClockIcon, Target } from "lucide-react";
@@ -12,7 +13,7 @@ import type { Database } from "@/integrations/supabase/types";
 type Notif = Database["public"]["Tables"]["notifications"]["Row"];
 type NotifType = Database["public"]["Enums"]["notification_type"];
 
-export const Route = createFileRoute("/_app/notifications")({
+export const Route = createFileRoute("/_app/$workspaceSlug/notifications")({
   component: NotificationsPage,
 });
 
@@ -59,6 +60,7 @@ function colorFor(type: string) {
 
 function NotificationsPage() {
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [tab, setTab] = useState("all");
@@ -70,6 +72,7 @@ function NotificationsPage() {
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
+      .eq("workspace_id", workspace.id)
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) toast.error("Failed to load notifications");
@@ -108,6 +111,7 @@ function NotificationsPage() {
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", user.id)
+      .eq("workspace_id", workspace.id)
       .eq("is_read", false);
     if (error) toast.error(error.message);
     else {
@@ -118,7 +122,7 @@ function NotificationsPage() {
 
   const markRead = async (n: Notif) => {
     if (n.is_read) return;
-    await supabase.from("notifications").update({ is_read: true }).eq("id", n.id);
+    await supabase.from("notifications").update({ is_read: true }).eq("id", n.id).eq("workspace_id", workspace.id);
     setNotifs((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
   };
 

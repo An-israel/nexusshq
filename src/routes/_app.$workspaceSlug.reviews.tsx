@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,7 +35,7 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export const Route = createFileRoute("/_app/reviews")({
+export const Route = createFileRoute("/_app/$workspaceSlug/reviews")({
   component: ReviewsPage,
 });
 
@@ -81,6 +82,7 @@ const RATING_STYLE: Record<Rating, string> = {
 
 function ReviewsPage() {
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [reviews, setReviews] = React.useState<ReviewRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
   const [loading, setLoading] = React.useState(true);
@@ -130,7 +132,7 @@ function ReviewsPage() {
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from("performance_reviews").select("*").order("period_end", { ascending: false });
+    let q = supabase.from("performance_reviews").select("*").eq("workspace_id", workspace.id).order("period_end", { ascending: false });
     if (!isManager) q = q.eq("user_id", user.id);
     const { data, error } = await q;
     if (error) {
@@ -163,7 +165,8 @@ function ReviewsPage() {
     const { error } = await supabase
       .from("performance_reviews")
       .update({ employee_acknowledged: true, acknowledged_at: new Date().toISOString() })
-      .eq("id", id);
+      .eq("id", id)
+      .eq("workspace_id", workspace.id);
     if (error) toast.error(error.message);
     else {
       toast.success("Review acknowledged");
@@ -187,7 +190,7 @@ function ReviewsPage() {
                 <Plus className="mr-2 h-4 w-4" /> New Review
               </Button>
             </DialogTrigger>
-            <CreateReviewDialog onCreated={() => { setCreateOpen(false); void load(); }} />
+            <CreateReviewDialog workspaceId={workspace.id} onCreated={() => { setCreateOpen(false); void load(); }} />
           </Dialog>
         )}
       </div>
@@ -348,7 +351,7 @@ function ScoreBar({ label, value }: { label: string; value: number }) {
   );
 }
 
-function CreateReviewDialog({ onCreated }: { onCreated: () => void }) {
+function CreateReviewDialog({ workspaceId, onCreated }: { workspaceId: string; onCreated: () => void }) {
   const { user } = useAuth();
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
@@ -398,6 +401,7 @@ function CreateReviewDialog({ onCreated }: { onCreated: () => void }) {
         strengths: form.strengths.trim() || null,
         areas_to_improve: form.areas_to_improve.trim() || null,
         manager_notes: form.manager_notes.trim() || null,
+        workspace_id: workspaceId,
       })
       .select("id")
       .single();
@@ -412,6 +416,7 @@ function CreateReviewDialog({ onCreated }: { onCreated: () => void }) {
       title: "⭐ New performance review",
       message: `Review for ${form.period_start} → ${form.period_end} is ready.`,
       related_task_id: data.id,
+      workspace_id: workspaceId,
     });
     toast.success("Review created");
     setSubmitting(false);

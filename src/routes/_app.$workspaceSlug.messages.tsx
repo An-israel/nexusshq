@@ -24,9 +24,10 @@ import {
   UserPlus, Hash, Paperclip, FileText, Image as ImageIcon,
 } from "lucide-react";
 import { initialsOf } from "@/lib/nexus";
+import { useWorkspace } from "@/lib/workspace-context";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_app/messages")({
+export const Route = createFileRoute("/_app/$workspaceSlug/messages")({
   component: MessagesPage,
 });
 
@@ -630,6 +631,7 @@ function GroupInfoSheet({
   onClose: () => void;
   onGroupUpdated: () => void;
 }) {
+  const { workspace } = useWorkspace();
   const isCreator = group.created_by === currentUserId;
   const memberIds = new Set(group.members.map((m) => m.id));
   const nonMembers = contacts.filter((c) => !memberIds.has(c.id));
@@ -647,7 +649,7 @@ function GroupInfoSheet({
     try {
       const { error } = await supabase
         .from("message_group_members")
-        .insert(adding.map((uid) => ({ group_id: group.id, user_id: uid })));
+        .insert(adding.map((uid) => ({ group_id: group.id, user_id: uid, workspace_id: workspace?.id })));
       if (error) throw error;
       toast.success(`${adding.length} member${adding.length > 1 ? "s" : ""} added`);
       setAdding([]);
@@ -744,6 +746,7 @@ function GroupInfoSheet({
 
 function MessagesPage() {
   const { user, profile: myProfile } = useAuth();
+  const { workspace } = useWorkspace();
   const [contacts, setContacts] = React.useState<Profile[]>([]);
   const [groups, setGroups] = React.useState<Group[]>([]);
   const [view, setView] = React.useState<View | null>(null);
@@ -789,10 +792,12 @@ function MessagesPage() {
   const loadGroups = React.useCallback(async () => {
     if (!user) return;
 
-    const { data: myMemberships } = await supabase
+    let membershipQ = supabase
       .from("message_group_members")
       .select("group_id, last_read_at")
       .eq("user_id", user.id);
+    if (workspace?.id) membershipQ = membershipQ.eq("workspace_id", workspace.id);
+    const { data: myMemberships } = await membershipQ;
 
     if (!myMemberships?.length) { setGroups([]); return; }
 
@@ -841,7 +846,7 @@ function MessagesPage() {
         unread: unreadByGroup[g.id] ?? 0,
       })),
     );
-  }, [user]);
+  }, [user, workspace?.id]);
 
   React.useEffect(() => { void loadGroups(); }, [loadGroups]);
 
@@ -856,17 +861,19 @@ function MessagesPage() {
   // ── DM unread ──────────────────────────────────────────────────────────────
   const loadDmUnread = React.useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    let dmQ = supabase
       .from("direct_messages")
       .select("from_id")
       .eq("to_id", user.id)
       .eq("is_read", false);
+    if (workspace?.id) dmQ = dmQ.eq("workspace_id", workspace.id);
+    const { data } = await dmQ;
     const counts: Record<string, number> = {};
     (data ?? []).forEach((m: { from_id: string }) => {
       counts[m.from_id] = (counts[m.from_id] ?? 0) + 1;
     });
     setDmUnread(counts);
-  }, [user]);
+  }, [user, workspace?.id]);
 
   React.useEffect(() => { void loadDmUnread(); }, [loadDmUnread]);
 
@@ -1017,6 +1024,7 @@ function MessagesPage() {
         attachment_url: attachmentUrl,
         attachment_name: attachmentName,
         attachment_mime: attachmentMime,
+        workspace_id: workspace?.id,
       });
       if (error) { toast.error(error.message); setSending(false); return; }
       void loadDmThread();
@@ -1028,6 +1036,7 @@ function MessagesPage() {
         attachment_url: attachmentUrl,
         attachment_name: attachmentName,
         attachment_mime: attachmentMime,
+        workspace_id: workspace?.id,
       });
       if (error) { toast.error(error.message); setSending(false); return; }
       void loadGroupThread();
@@ -1075,7 +1084,7 @@ function MessagesPage() {
     try {
       const { data: grp, error: grpErr } = await supabase
         .from("message_groups")
-        .insert({ name: groupName.trim(), created_by: user.id })
+        .insert({ name: groupName.trim(), created_by: user.id, workspace_id: workspace?.id })
         .select("id")
         .single();
       if (grpErr) throw new Error(grpErr.message);
@@ -1083,7 +1092,7 @@ function MessagesPage() {
       const memberIds = Array.from(new Set([user.id, ...pickedMembers]));
       const { error: memErr } = await supabase
         .from("message_group_members")
-        .insert(memberIds.map((uid) => ({ group_id: grp.id, user_id: uid })));
+        .insert(memberIds.map((uid) => ({ group_id: grp.id, user_id: uid, workspace_id: workspace?.id })));
       if (memErr) throw new Error(memErr.message);
 
       toast.success(`Group "${groupName.trim()}" created`);

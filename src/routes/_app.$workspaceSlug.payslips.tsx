@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,7 @@ import {
 import { toast } from "sonner";
 import { Wallet, Plus, Download } from "lucide-react";
 
-export const Route = createFileRoute("/_app/payslips")({
+export const Route = createFileRoute("/_app/$workspaceSlug/payslips")({
   component: PayslipsPage,
 });
 
@@ -58,6 +59,7 @@ function fmtMoney(amt: number, ccy: string) {
 
 function PayslipsPage() {
   const { user, isAdmin } = useAuth();
+  const { workspace } = useWorkspace();
   const [payslips, setPayslips] = React.useState<PayslipRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
   const [loading, setLoading] = React.useState(true);
@@ -66,7 +68,7 @@ function PayslipsPage() {
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from("payslips").select("*").order("period_year", { ascending: false }).order("period_month", { ascending: false });
+    let q = supabase.from("payslips").select("*").eq("workspace_id", workspace.id).order("period_year", { ascending: false }).order("period_month", { ascending: false });
     if (!isAdmin) q = q.eq("user_id", user.id);
     const { data, error } = await q;
     if (error) {
@@ -133,7 +135,7 @@ function PayslipsPage() {
             <DialogTrigger asChild>
               <Button><Plus className="mr-2 h-4 w-4" /> Issue Payslip</Button>
             </DialogTrigger>
-            <CreatePayslipDialog onCreated={() => { setCreateOpen(false); void load(); }} />
+            <CreatePayslipDialog workspaceId={workspace.id} onCreated={() => { setCreateOpen(false); void load(); }} />
           </Dialog>
         )}
       </div>
@@ -194,7 +196,7 @@ function PayslipsPage() {
   );
 }
 
-function CreatePayslipDialog({ onCreated }: { onCreated: () => void }) {
+function CreatePayslipDialog({ workspaceId, onCreated }: { workspaceId: string; onCreated: () => void }) {
   const { user } = useAuth();
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
@@ -241,6 +243,7 @@ function CreatePayslipDialog({ onCreated }: { onCreated: () => void }) {
       currency: form.currency,
       notes: form.notes.trim() || null,
       issued_by: user?.id ?? null,
+      workspace_id: workspaceId,
     });
     if (error) {
       toast.error(error.message);
@@ -252,6 +255,7 @@ function CreatePayslipDialog({ onCreated }: { onCreated: () => void }) {
       type: "flag",
       title: "💰 New payslip issued",
       message: `${MONTHS[form.period_month - 1]} ${form.period_year} — ${fmtMoney(net, form.currency)}`,
+      workspace_id: workspaceId,
     });
     toast.success("Payslip issued");
     setSubmitting(false);

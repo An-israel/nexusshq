@@ -1,21 +1,13 @@
 import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { AppSidebar } from "@/components/layout/AppSidebar";
-import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
-import { ClockWidget } from "@/components/layout/ClockWidget";
-import { NotificationBell } from "@/components/layout/NotificationBell";
 import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
 import { useAppBadge } from "@/lib/use-app-badge";
 
 const TIMEOUT_SENTINEL = Symbol("timeout");
 
 export const Route = createFileRoute("/_app")({
-  // Use getSession() (reads from localStorage — instant, no network round-trip)
-  // instead of getUser() so navigating between pages never triggers a loading
-  // spinner. getUser() made a network call every navigation which caused the
-  // "Loading…" flash. AuthProvider still verifies the full JWT on mount.
   beforeLoad: async () => {
     const result = await Promise.race([
       supabase.auth.getSession(),
@@ -23,11 +15,8 @@ export const Route = createFileRoute("/_app")({
         setTimeout(() => resolve(TIMEOUT_SENTINEL), 1000),
       ),
     ]);
-
-    if (result === TIMEOUT_SENTINEL) return; // let AuthProvider handle it
-
+    if (result === TIMEOUT_SENTINEL) return;
     const { data: { session }, error } = result;
-
     if (error) {
       logSupabaseClientError({
         scope: "app-layout:beforeLoad:getSession",
@@ -36,75 +25,29 @@ export const Route = createFileRoute("/_app")({
         extra: { route: "/_app" },
       });
     }
-
     if (!session && !error) throw redirect({ to: "/login" });
   },
-  // Only show a spinner if the layout takes longer than 800ms to load.
-  // Fast in-app navigation completes well under that threshold so no flash appears.
   pendingMs: 800,
-  pendingComponent: LoadingScreen,
-  component: AppLayout,
+  component: AppAuthGate,
 });
 
-function LoadingScreen() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-3">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-        <p className="text-sm text-muted-foreground">Loading…</p>
-      </div>
-    </div>
-  );
-}
-
-function AppLayout() {
-  const { loading, session, role } = useAuth();
+function AppAuthGate() {
+  const { loading, session } = useAuth();
   const navigate = useNavigate();
-  const [collapsed, setCollapsed] = useState(false);
   useAppBadge();
 
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login" });
   }, [loading, session, navigate]);
 
-  if (loading) return <LoadingScreen />;
-
-  // Not loading but no session — redirect effect fires, render nothing in the meantime
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
   if (!session) return null;
 
-  return (
-    <div className="flex h-screen w-full bg-background text-foreground">
-      {/* Sidebar — desktop only */}
-      <div className="hidden md:flex">
-        <AppSidebar collapsed={collapsed} onToggle={() => setCollapsed((v) => !v)} />
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col">
-        {/* Topbar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur md:h-16 md:px-6">
-          {/* Mobile: brand mark */}
-          <div className="flex items-center gap-2 md:hidden">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground text-xs font-bold">N</div>
-            <span className="text-sm font-semibold">Nexus HQ</span>
-          </div>
-          {/* Desktop: role label */}
-          <div className="hidden text-xs uppercase tracking-wider text-muted-foreground md:block">
-            {role ? role.charAt(0).toUpperCase() + role.slice(1) : ""} workspace
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <ClockWidget />
-          </div>
-        </header>
-
-        {/* Main content — extra bottom padding on mobile for the bottom nav */}
-        <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6">
-          <Outlet />
-        </main>
-      </div>
-
-      {/* Bottom nav — mobile only */}
-      <MobileBottomNav />
-    </div>
-  );
+  return <Outlet />;
 }

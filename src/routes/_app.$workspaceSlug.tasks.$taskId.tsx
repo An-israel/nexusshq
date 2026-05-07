@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,7 +28,7 @@ import { toast } from "sonner";
 import { PRIORITY_BADGE, STATUS_BADGE, todayISO, timeAgo } from "@/lib/nexus";
 import { AlertTriangle, ArrowLeft, Trash2, Save } from "lucide-react";
 
-export const Route = createFileRoute("/_app/tasks/$taskId")({
+export const Route = createFileRoute("/_app/$workspaceSlug/tasks/$taskId")({
   component: TaskDetailPage,
 });
 
@@ -70,6 +71,7 @@ function TaskDetailPage() {
   const { taskId } = Route.useParams();
   const navigate = useNavigate();
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [task, setTask] = React.useState<TaskRow | null>(null);
   const [updates, setUpdates] = React.useState<UpdateRow[]>([]);
   const [profileMap, setProfileMap] = React.useState<Record<string, ProfileMini>>({});
@@ -86,7 +88,7 @@ function TaskDetailPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [{ data: t, error: te }, { data: u }] = await Promise.all([
-      supabase.from("tasks").select("*").eq("id", taskId).maybeSingle(),
+      supabase.from("tasks").select("*").eq("id", taskId).eq("workspace_id", workspace.id).maybeSingle(),
       supabase
         .from("task_updates")
         .select("*")
@@ -124,7 +126,7 @@ function TaskDetailPage() {
       setProfileMap(map);
     }
     setLoading(false);
-  }, [taskId]);
+  }, [taskId, workspace.id]);
 
   React.useEffect(() => {
     void load();
@@ -148,7 +150,7 @@ function TaskDetailPage() {
       status: newStatus,
       completed_at: newStatus === "completed" ? new Date().toISOString() : null,
     };
-    const { error } = await supabase.from("tasks").update(patch).eq("id", task.id);
+    const { error } = await supabase.from("tasks").update(patch).eq("id", task.id).eq("workspace_id", workspace.id);
     if (error) {
       toast.error(error.message);
       setSaving(false);
@@ -188,7 +190,8 @@ function TaskDetailPage() {
     const { error } = await supabase
       .from("tasks")
       .update({ has_warning: true, warning_message: warnMsg.trim() })
-      .eq("id", task.id);
+      .eq("id", task.id)
+      .eq("workspace_id", workspace.id);
     if (error) {
       toast.error(error.message);
       return;
@@ -205,6 +208,7 @@ function TaskDetailPage() {
       flagged_by: user?.id ?? null,
       severity: "medium",
       reason: `Task warning: ${task.title} — ${warnMsg.trim()}`,
+      workspace_id: workspace.id,
     });
     toast.success("Warning issued");
     setWarnOpen(false);
@@ -217,7 +221,8 @@ function TaskDetailPage() {
     const { error } = await supabase
       .from("tasks")
       .update({ has_warning: false, warning_message: null })
-      .eq("id", task.id);
+      .eq("id", task.id)
+      .eq("workspace_id", workspace.id);
     if (error) {
       toast.error(error.message);
       return;
@@ -229,7 +234,7 @@ function TaskDetailPage() {
   async function deleteTask() {
     if (!task) return;
     if (!confirm("Delete this task permanently?")) return;
-    const { error } = await supabase.from("tasks").delete().eq("id", task.id);
+    const { error } = await supabase.from("tasks").delete().eq("id", task.id).eq("workspace_id", workspace.id);
     if (error) {
       toast.error(error.message);
       return;

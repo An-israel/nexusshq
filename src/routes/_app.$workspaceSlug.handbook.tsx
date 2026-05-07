@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +19,7 @@ import { toast } from "sonner";
 import { BookOpen, Plus, Pin, Trash2, Edit2, ChevronDown, ChevronRight } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
 
-export const Route = createFileRoute("/_app/handbook")({
+export const Route = createFileRoute("/_app/$workspaceSlug/handbook")({
   component: HandbookPage,
 });
 
@@ -42,6 +43,7 @@ interface WikiPage {
 
 function HandbookPage() {
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [sections, setSections] = React.useState<WikiSection[]>([]);
   const [pages, setPages] = React.useState<WikiPage[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -54,8 +56,8 @@ function HandbookPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [secRes, pageRes] = await Promise.all([
-      supabase.from("wiki_sections").select("*").order("order_index").order("created_at"),
-      supabase.from("wiki_pages").select("*").order("is_pinned", { ascending: false }).order("updated_at", { ascending: false }),
+      supabase.from("wiki_sections").select("*").eq("workspace_id", workspace.id).order("order_index").order("created_at"),
+      supabase.from("wiki_pages").select("*").eq("workspace_id", workspace.id).order("is_pinned", { ascending: false }).order("updated_at", { ascending: false }),
     ]);
     const secs = (secRes.data ?? []) as WikiSection[];
     setSections(secs);
@@ -218,12 +220,14 @@ function HandbookPage() {
         <NewSectionDialog
           onSaved={() => { setNewSectionOpen(false); void load(); }}
           nextIndex={sections.length}
+          workspaceId={workspace.id}
         />
       </Dialog>
       <Dialog open={newPageOpen} onOpenChange={setNewPageOpen}>
         <NewPageDialog
           sections={sections}
           authorId={user?.id ?? ""}
+          workspaceId={workspace.id}
           onSaved={(page) => { setNewPageOpen(false); void load().then(() => setSelectedPage(page)); }}
         />
       </Dialog>
@@ -267,13 +271,13 @@ function PageNavItem({
   );
 }
 
-function NewSectionDialog({ onSaved, nextIndex }: { onSaved: () => void; nextIndex: number }) {
+function NewSectionDialog({ onSaved, nextIndex, workspaceId }: { onSaved: () => void; nextIndex: number; workspaceId: string }) {
   const [title, setTitle] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   async function save() {
     if (!title.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from("wiki_sections").insert({ title: title.trim(), order_index: nextIndex });
+    const { error } = await supabase.from("wiki_sections").insert({ workspace_id: workspaceId, title: title.trim(), order_index: nextIndex });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Section created");
@@ -294,10 +298,12 @@ function NewSectionDialog({ onSaved, nextIndex }: { onSaved: () => void; nextInd
 function NewPageDialog({
   sections,
   authorId,
+  workspaceId,
   onSaved,
 }: {
   sections: WikiSection[];
   authorId: string;
+  workspaceId: string;
   onSaved: (p: WikiPage) => void;
 }) {
   const [title, setTitle] = React.useState("");
@@ -309,7 +315,7 @@ function NewPageDialog({
     setSaving(true);
     const { data, error } = await supabase
       .from("wiki_pages")
-      .insert({ title: title.trim(), content: content.trim(), section_id: sectionId || null, author_id: authorId })
+      .insert({ workspace_id: workspaceId, title: title.trim(), content: content.trim(), section_id: sectionId || null, author_id: authorId })
       .select()
       .single();
     setSaving(false);

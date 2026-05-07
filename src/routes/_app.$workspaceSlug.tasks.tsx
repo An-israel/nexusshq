@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,7 +29,7 @@ import { PRIORITY_BADGE, STATUS_BADGE, PRIORITY_RANK, todayISO } from "@/lib/nex
 import { AlertTriangle, Plus, Calendar as CalIcon, Sparkles, Pencil, Trash2, Check } from "lucide-react";
 import { useRealtime } from "@/lib/use-realtime";
 
-export const Route = createFileRoute("/_app/tasks")({
+export const Route = createFileRoute("/_app/$workspaceSlug/tasks")({
   component: TasksPage,
 });
 
@@ -59,6 +60,7 @@ interface ProfileMini {
 
 function TasksPage() {
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [tasks, setTasks] = React.useState<TaskRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
   const [loading, setLoading] = React.useState(true);
@@ -68,7 +70,7 @@ function TasksPage() {
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from("tasks").select("*").order("due_date", { ascending: true });
+    let q = supabase.from("tasks").select("*").eq("workspace_id", workspace.id).order("due_date", { ascending: true });
     if (!isManager) q = q.eq("assigned_to", user.id);
     const { data, error } = await q;
     if (error) {
@@ -92,7 +94,7 @@ function TasksPage() {
       setProfiles(map);
     }
     setLoading(false);
-  }, [user, isManager]);
+  }, [user, isManager, workspace.id]);
 
   React.useEffect(() => {
     void load();
@@ -197,6 +199,7 @@ function TaskCard({
   onRefresh: () => void;
 }) {
   const navigate = useNavigate();
+  const { workspace } = useWorkspace();
   const [editOpen, setEditOpen] = React.useState(false);
   const [deleting, setDeleting] = React.useState(false);
 
@@ -207,7 +210,7 @@ function TaskCard({
     e.stopPropagation();
     if (!confirm(`Delete "${task.title}"? This cannot be undone.`)) return;
     setDeleting(true);
-    const { error } = await supabase.from("tasks").delete().eq("id", task.id);
+    const { error } = await supabase.from("tasks").delete().eq("id", task.id).eq("workspace_id", workspace.id);
     setDeleting(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Task deleted");
@@ -294,6 +297,7 @@ function TaskCard({
 }
 
 function EditTaskDialog({ task, onSaved }: { task: TaskRow; onSaved: () => void }) {
+  const { workspace } = useWorkspace();
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [saving, setSaving] = React.useState(false);
   const [form, setForm] = React.useState({
@@ -329,7 +333,8 @@ function EditTaskDialog({ task, onSaved }: { task: TaskRow; onSaved: () => void 
         due_date: form.due_date,
         status: form.status as TaskRow["status"],
       })
-      .eq("id", task.id);
+      .eq("id", task.id)
+      .eq("workspace_id", workspace.id);
     setSaving(false);
     if (error) { toast.error(error.message); return; }
     toast.success("Task updated");
@@ -441,6 +446,7 @@ function EditTaskDialog({ task, onSaved }: { task: TaskRow; onSaved: () => void 
 
 function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
   const [aiLoading, setAiLoading] = React.useState(false);
@@ -510,6 +516,7 @@ function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
         priority: form.priority as TaskRow["priority"],
         task_type: form.task_type as TaskRow["task_type"],
         due_date: form.due_date,
+        workspace_id: workspace.id,
       })
       .select("id")
       .single();
