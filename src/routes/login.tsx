@@ -13,6 +13,7 @@ export const Route = createFileRoute("/login")({
 });
 
 async function resolveWorkspace(userId: string): Promise<string | null> {
+  // Try workspace_members first (post-migration path)
   const { data } = await supabase
     .from("workspace_members")
     .select("workspace_id, workspaces(slug)")
@@ -20,9 +21,28 @@ async function resolveWorkspace(userId: string): Promise<string | null> {
     .eq("is_active", true)
     .limit(1)
     .maybeSingle();
-  if (!data) return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (data as any).workspaces?.slug ?? null;
+  if (data) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data as any).workspaces?.slug ?? null;
+  }
+
+  // Fall back: check legacy user_roles — existing team members before migration
+  const { data: legacyRole } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!legacyRole) return null;
+
+  // Has a legacy role — try to find any active workspace, default to "skryve"
+  const { data: ws } = await supabase
+    .from("workspaces")
+    .select("slug")
+    .eq("is_active", true)
+    .order("created_at")
+    .limit(1)
+    .maybeSingle();
+  return ws?.slug ?? "skryve";
 }
 
 function LoginPage() {
@@ -41,9 +61,8 @@ function LoginPage() {
       if (slug) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         navigate({ to: `/${slug}/dashboard` as any });
-      } else {
-        navigate({ to: "/signup" });
       }
+      // If no workspace found at all, stay on login — they may need to sign up
     });
   }, [session, user, navigate]);
 

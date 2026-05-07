@@ -15,13 +15,24 @@ export const Route = createFileRoute("/_app/$workspaceSlug")({
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) throw redirect({ to: "/login" });
 
-    const { data: workspace } = await supabase
+    const { data: workspace, error: wsError } = await supabase
       .from("workspaces")
       .select("id")
       .eq("slug", workspaceSlug)
       .eq("is_active", true)
       .maybeSingle();
-    if (!workspace) throw redirect({ to: "/" });
+
+    // Workspaces table may not exist yet (migration pending) — fall back to
+    // user_roles so existing team members are never locked out.
+    if (wsError || !workspace) {
+      const { data: legacyRole } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (legacyRole) return; // legacy user — let them through
+      throw redirect({ to: "/login" });
+    }
 
     const { data: membership } = await supabase
       .from("workspace_members")
@@ -29,7 +40,17 @@ export const Route = createFileRoute("/_app/$workspaceSlug")({
       .eq("workspace_id", workspace.id)
       .eq("user_id", session.user.id)
       .maybeSingle();
-    if (!membership) throw redirect({ to: "/" });
+
+    if (!membership) {
+      // Not in workspace_members yet — check legacy user_roles as fallback
+      const { data: legacyRole } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", session.user.id)
+        .maybeSingle();
+      if (!legacyRole) throw redirect({ to: "/" });
+      // Has legacy role — let them through
+    }
   },
   component: WorkspaceRoot,
 });
@@ -54,20 +75,54 @@ function WorkspaceShell() {
     let active = true;
 
     async function load() {
-      const { data: ws } = await supabase
+      const { data: ws, error: wsError } = await supabase
         .from("workspaces")
         .select("id, name, slug, logo_url, primary_color, plan, plan_seats, is_active, trial_ends_at, created_at")
         .eq("slug", workspaceSlug)
         .maybeSingle();
-      if (!active || !ws) return;
 
+      if (!active) return;
+
+      // If workspaces table doesn't exist yet (migration pending), fall back to
+      // user_roles and synthesise a workspace so the shell renders correctly.
+      if (wsError || !ws) {
+        const { data: ur } = await supabase
+          .from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
+        if (!active) return;
+        if (ur) {
+          const syntheticWs = {
+            id: "legacy", name: "Skryve", slug: workspaceSlug,
+            logo_url: null, primary_color: "#6366f1", plan: "growth" as const,
+            plan_seats: 100, is_active: true, trial_ends_at: null,
+            created_at: new Date().toISOString(),
+          };
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setWorkspaceData(syntheticWs as any, (ur.role === "admin" ? "admin" : ur.role) as any, 0);
+        } else {
+          navigate({ to: "/login" });
+        }
+        return;
+      }
+
+      // Try workspace_members for role; fall back to user_roles for legacy users
       const { data: mem } = await supabase
         .from("workspace_members")
         .select("role")
         .eq("workspace_id", ws.id)
         .eq("user_id", user.id)
         .maybeSingle();
-      if (!active || !mem) return;
+
+      if (!active) return;
+
+      let resolvedRole: string = "employee";
+      if (mem) {
+        resolvedRole = mem.role;
+      } else {
+        const { data: ur } = await supabase
+          .from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
+        if (!active) return;
+        resolvedRole = ur?.role ?? "employee";
+      }
 
       const { count } = await supabase
         .from("workspace_members")
@@ -76,12 +131,12 @@ function WorkspaceShell() {
       if (!active) return;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      setWorkspaceData(ws as any, mem.role as any, count ?? 0);
+      setWorkspaceData(ws as any, resolvedRole as any, count ?? 0);
     }
 
     void load();
     return () => { active = false; };
-  }, [workspaceSlug, user, setWorkspaceData]);
+  }, [workspaceSlug, user, setWorkspaceData, navigate]);
 
   if (loading || !workspace) {
     return (

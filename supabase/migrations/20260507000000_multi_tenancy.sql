@@ -143,11 +143,11 @@ DECLARE
   v_owner_id     uuid;
 BEGIN
   -- Use existing workspace if already seeded (idempotent)
-  SELECT id INTO v_workspace_id FROM public.workspaces WHERE slug = 'default' LIMIT 1;
+  SELECT id INTO v_workspace_id FROM public.workspaces WHERE slug IN ('skryve', 'default') LIMIT 1;
 
   IF v_workspace_id IS NULL THEN
     INSERT INTO public.workspaces (name, slug, plan, plan_seats, is_active, trial_ends_at)
-    VALUES ('Default Workspace', 'default', 'growth', 100, true, NULL)
+    VALUES ('Skryve', 'skryve', 'growth', 100, true, NULL)
     RETURNING id INTO v_workspace_id;
 
     -- Create subscription record for the default workspace
