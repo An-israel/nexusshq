@@ -26,13 +26,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Sparkles, Plus, CheckCircle2, RefreshCw } from "lucide-react";
 import { DEPARTMENTS, deptLabel, PRIORITY_BADGE } from "@/lib/nexus";
+import { useWorkspace } from "@/lib/workspace-context";
 import type { Database } from "@/integrations/supabase/types";
 
 type Department = Database["public"]["Enums"]["department_type"];
 type Priority = "low" | "medium" | "high" | "urgent";
 type TaskType = "daily" | "one_time" | "weekly";
 
-export const Route = createFileRoute("/_app/ai-tasks")({
+export const Route = createFileRoute("/_app/$workspaceSlug/ai-tasks")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: AiTasksPage,
 });
@@ -53,6 +54,7 @@ interface ProfileMini {
 
 function AiTasksPage() {
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
 
   const [department, setDepartment] = React.useState<Department>("marketing");
   const [focus, setFocus] = React.useState("");
@@ -83,11 +85,13 @@ function AiTasksPage() {
     setAdded(new Set());
 
     // Fetch a handful of current open tasks for context
-    const { data: openTasks } = await supabase
+    let tasksQ = supabase
       .from("tasks")
       .select("title")
       .in("status", ["todo", "in_progress"])
       .limit(10);
+    if (workspace?.id) tasksQ = tasksQ.eq("workspace_id", workspace.id);
+    const { data: openTasks } = await tasksQ;
 
     const existingTasks = (openTasks ?? []).map((t: { title: string }) => t.title);
 
@@ -135,6 +139,7 @@ function AiTasksPage() {
       due_date: dueDate,
       status: "todo",
       progress_percent: 0,
+      workspace_id: workspace?.id,
     });
 
     if (error) {
@@ -149,6 +154,7 @@ function AiTasksPage() {
         type: "info",
         title: `New task assigned: ${t.title}`,
         message: `Due ${dueDate}. Priority: ${t.priority}.`,
+        workspace_id: workspace?.id,
       });
     }
     setAssigning(false);

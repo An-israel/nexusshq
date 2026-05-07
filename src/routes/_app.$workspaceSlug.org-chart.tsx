@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { deptLabel, initialsOf } from "@/lib/nexus";
 
-export const Route = createFileRoute("/_app/org-chart")({
+export const Route = createFileRoute("/_app/$workspaceSlug/org-chart")({
   component: OrgChartPage,
 });
 

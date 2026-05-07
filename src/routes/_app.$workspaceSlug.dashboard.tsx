@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtime } from "@/lib/use-realtime";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import {
   PRIORITY_BADGE,
   PRIORITY_RANK,
@@ -26,12 +27,13 @@ type Notif = Database["public"]["Tables"]["notifications"]["Row"];
 type Kpi = Database["public"]["Tables"]["kpis"]["Row"];
 type Attendance = Database["public"]["Tables"]["attendance"]["Row"];
 
-export const Route = createFileRoute("/_app/dashboard")({
+export const Route = createFileRoute("/_app/$workspaceSlug/dashboard")({
   component: DashboardPage,
 });
 
 function DashboardPage() {
   const { profile, user } = useAuth();
+  const { workspace } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [todayTasks, setTodayTasks] = useState<Task[]>([]);
   const [weekTasks, setWeekTasks] = useState<Task[]>([]);
@@ -57,22 +59,25 @@ function DashboardPage() {
       supabase
         .from("tasks")
         .select("*")
+        .eq("workspace_id", workspace.id)
         .eq("assigned_to", user.id)
         .eq("task_type", "daily")
         .eq("due_date", today),
       supabase
         .from("tasks")
         .select("*")
+        .eq("workspace_id", workspace.id)
         .eq("assigned_to", user.id)
         .eq("task_type", "weekly")
         .gte("due_date", weekStart)
         .lte("due_date", weekEnd),
       profile?.department
-        ? supabase.from("kpis").select("*").eq("department", profile.department as Database["public"]["Enums"]["department_type"])
+        ? supabase.from("kpis").select("*").eq("workspace_id", workspace.id).eq("department", profile.department as Database["public"]["Enums"]["department_type"])
         : Promise.resolve({ data: [] as Kpi[], error: null }),
       supabase
         .from("notifications")
         .select("*")
+        .eq("workspace_id", workspace.id)
         .eq("user_id", user.id)
         .eq("is_read", false)
         .order("created_at", { ascending: false })
@@ -80,6 +85,7 @@ function DashboardPage() {
       supabase
         .from("attendance")
         .select("*")
+        .eq("workspace_id", workspace.id)
         .eq("user_id", user.id)
         .eq("date", today)
         .maybeSingle(),
@@ -106,6 +112,7 @@ function DashboardPage() {
           const { count } = await supabase
             .from("tasks")
             .select("id", { count: "exact", head: true })
+            .eq("workspace_id", workspace.id)
             .eq("assigned_to", user.id)
             .eq("kpi_id", k.id)
             .eq("status", "completed")

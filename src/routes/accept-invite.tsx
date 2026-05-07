@@ -38,7 +38,22 @@ function AcceptInvitePage() {
     setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("Password set. Welcome to Nexus HQ.");
-    navigate({ to: "/dashboard" });
+    // Resolve the user's workspace and redirect there
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      const { data: mem } = await supabase
+        .from("workspace_members")
+        .select("workspace_id, workspaces(slug)")
+        .eq("user_id", session.user.id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const slug = (mem as any)?.workspaces?.slug;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      if (slug) { navigate({ to: `/${slug}/dashboard` as any }); return; }
+    }
+    navigate({ to: "/login" });
   };
 
   return (

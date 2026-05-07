@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,7 @@ import { toast } from "sonner";
 import { Upload, Download, FileText, Check, X, RotateCcw, Star } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
 
-export const Route = createFileRoute("/_app/deliverables")({
+export const Route = createFileRoute("/_app/$workspaceSlug/deliverables")({
   component: DeliverablesPage,
 });
 
@@ -77,6 +78,7 @@ function fmtSize(b: number) {
 
 function DeliverablesPage() {
   const { user, isManager } = useAuth();
+  const { workspace } = useWorkspace();
   const [scope, setScope] = React.useState<"mine" | "all">(isManager ? "all" : "mine");
   const [items, setItems] = React.useState<DeliverableRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
@@ -88,7 +90,7 @@ function DeliverablesPage() {
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from("deliverables").select("*").order("created_at", { ascending: false });
+    let q = supabase.from("deliverables").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false });
     if (scope === "mine" || !isManager) q = q.eq("user_id", user.id);
     const { data, error } = await q;
     if (error) { toast.error(error.message); setLoading(false); return; }
@@ -107,6 +109,7 @@ function DeliverablesPage() {
       const { data: scoreData } = await supabase
         .from("deliverable_scores")
         .select("*")
+        .eq("workspace_id", workspace.id)
         .in("deliverable_id", rows.map((r) => r.id));
       const scoreMap: Record<string, QualityScore> = {};
       (scoreData ?? []).forEach((s: QualityScore) => { scoreMap[s.deliverable_id] = s; });
@@ -137,6 +140,7 @@ function DeliverablesPage() {
       .eq("id", d.id);
     if (error) { toast.error(error.message); return; }
     await supabase.from("notifications").insert({
+      workspace_id: workspace.id,
       user_id: d.user_id,
       type: status === "approved" ? "task_assigned" : "warning",
       title: status === "approved" ? "✅ Deliverable approved" : status === "rejected" ? "❌ Deliverable rejected" : "🔄 Revision requested",
@@ -167,7 +171,7 @@ function DeliverablesPage() {
             <DialogTrigger asChild>
               <Button><Upload className="mr-2 h-4 w-4" /> Submit File</Button>
             </DialogTrigger>
-            <UploadDialog onUploaded={() => { setUploadOpen(false); void load(); }} />
+            <UploadDialog onUploaded={() => { setUploadOpen(false); void load(); }} workspaceId={workspace.id} />
           </Dialog>
         </div>
       </div>
@@ -260,6 +264,7 @@ function DeliverablesPage() {
             deliverable={scoreTarget}
             existing={scores[scoreTarget.id] ?? null}
             reviewerId={user?.id ?? ""}
+            workspaceId={workspace.id}
             onSaved={() => { setScoreTarget(null); void load(); }}
           />
         )}
@@ -272,11 +277,13 @@ function QualityScoreDialog({
   deliverable,
   existing,
   reviewerId,
+  workspaceId,
   onSaved,
 }: {
   deliverable: DeliverableRow;
   existing: QualityScore | null;
   reviewerId: string;
+  workspaceId: string;
   onSaved: () => void;
 }) {
   const [quality, setQuality] = React.useState(existing?.quality_score ?? 3);
@@ -288,6 +295,7 @@ function QualityScoreDialog({
   async function save() {
     setSaving(true);
     const payload = {
+      workspace_id: workspaceId,
       deliverable_id: deliverable.id,
       reviewer_id: reviewerId,
       quality_score: quality,
@@ -302,6 +310,7 @@ function QualityScoreDialog({
     if (error) { toast.error(error.message); return; }
     // Notify employee of their score
     await supabase.from("notifications").insert({
+      workspace_id: workspaceId,
       user_id: deliverable.user_id,
       type: "task_assigned",
       title: "Quality score received",
@@ -371,7 +380,7 @@ function ScoreSlider({
   );
 }
 
-function UploadDialog({ onUploaded }: { onUploaded: () => void }) {
+function UploadDialog({ onUploaded, workspaceId }: { onUploaded: () => void; workspaceId: string }) {
   const { user } = useAuth();
   const [tasks, setTasks] = React.useState<TaskMini[]>([]);
   const [files, setFiles] = React.useState<File[]>([]);
@@ -384,6 +393,7 @@ function UploadDialog({ onUploaded }: { onUploaded: () => void }) {
     if (!user) return;
     void supabase
       .from("tasks").select("id, title")
+      .eq("workspace_id", workspaceId)
       .eq("assigned_to", user.id)
       .neq("status", "completed")
       .order("due_date")
@@ -407,6 +417,7 @@ function UploadDialog({ onUploaded }: { onUploaded: () => void }) {
       });
       if (upErr) { toast.error(`${file.name}: ${upErr.message}`); continue; }
       const { error } = await supabase.from("deliverables").insert({
+        workspace_id: workspaceId,
         task_id: taskId || null,
         user_id: user.id,
         file_name: file.name,

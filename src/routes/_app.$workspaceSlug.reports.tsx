@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { requireAnyRole } from "@/lib/role-access";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -24,7 +25,7 @@ import {
 import { Download, BarChart3, Users, Clock, CheckSquare } from "lucide-react";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
 
-export const Route = createFileRoute("/_app/reports")({
+export const Route = createFileRoute("/_app/$workspaceSlug/reports")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: ReportsPage,
 });
@@ -90,6 +91,7 @@ function StatCard({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function ReportsPage() {
+  const { workspace } = useWorkspace();
   const [loading, setLoading] = React.useState(true);
 
   // Task stats
@@ -108,7 +110,8 @@ function ReportsPage() {
 
   React.useEffect(() => {
     void loadAll();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workspace.id]);
 
   async function loadAll() {
     setLoading(true);
@@ -119,7 +122,8 @@ function ReportsPage() {
   async function loadTaskStats() {
     const { data: tasks } = await supabase
       .from("tasks")
-      .select("status, priority, assigned_to");
+      .select("status, priority, assigned_to")
+      .eq("workspace_id", workspace.id);
 
     const rows = tasks ?? [];
 
@@ -184,6 +188,7 @@ function ReportsPage() {
     const { data: att } = await supabase
       .from("attendance")
       .select("date, user_id, clock_out, total_minutes")
+      .eq("workspace_id", workspace.id)
       .gte("date", since)
       .order("date");
 

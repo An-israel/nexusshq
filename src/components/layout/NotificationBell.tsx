@@ -1,8 +1,9 @@
 import * as React from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock, Target, MessageSquare, Users } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import {
   Popover,
   PopoverContent,
@@ -42,20 +43,26 @@ function colorFor(type: string) {
 
 export function NotificationBell() {
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Extract workspaceSlug from the current URL: /<slug>/...
+  const workspaceSlug = pathname.split("/")[1] ?? "";
   const [unread, setUnread] = React.useState<Notif[]>([]);
   const [open, setOpen] = React.useState(false);
 
   const load = React.useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
+    let q = supabase
       .from("notifications")
       .select("*")
       .eq("user_id", user.id)
       .eq("is_read", false)
       .order("created_at", { ascending: false })
       .limit(10);
+    if (workspace?.id) q = q.eq("workspace_id", workspace.id);
+    const { data } = await q;
     setUnread((data as Notif[]) ?? []);
-  }, [user]);
+  }, [user, workspace?.id]);
 
   React.useEffect(() => {
     if (!user) return;
@@ -79,11 +86,13 @@ export function NotificationBell() {
   async function markAllRead() {
     if (!user) return;
     setUnread([]);
-    await supabase
+    let q = supabase
       .from("notifications")
       .update({ is_read: true })
       .eq("user_id", user.id)
       .eq("is_read", false);
+    if (workspace?.id) q = q.eq("workspace_id", workspace.id);
+    await q;
   }
 
   const count = unread.length;
@@ -148,7 +157,8 @@ export function NotificationBell() {
         </div>
         <div className="border-t border-border p-2">
           <Link
-            to="/notifications"
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            to={`/${workspaceSlug}/notifications` as any}
             onClick={() => setOpen(false)}
             className="block rounded-md px-3 py-2 text-center text-xs text-primary hover:bg-accent"
           >

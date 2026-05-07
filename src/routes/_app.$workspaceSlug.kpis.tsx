@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { requireAnyRole } from "@/lib/role-access";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ type Kpi = Database["public"]["Tables"]["kpis"]["Row"];
 type Department = Database["public"]["Enums"]["department_type"];
 type Period = Database["public"]["Enums"]["kpi_period"];
 
-export const Route = createFileRoute("/_app/kpis")({
+export const Route = createFileRoute("/_app/$workspaceSlug/kpis")({
   beforeLoad: () => requireAnyRole(["admin"]),
   component: KpisPage,
 });
@@ -69,6 +70,7 @@ const EMPTY_FORM: FormState = {
 
 function KpisPage() {
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [kpis, setKpis] = useState<Kpi[]>([]);
   const [progress, setProgress] = useState<Record<string, { done: number; target: number }>>({});
@@ -79,7 +81,7 @@ function KpisPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("kpis").select("*").order("department");
+    const { data, error } = await supabase.from("kpis").select("*").eq("workspace_id", workspace.id).order("department");
     if (error) {
       toast.error("Failed to load KPIs");
       setLoading(false);
@@ -98,6 +100,7 @@ function KpisPage() {
         const { count } = await supabase
           .from("tasks")
           .select("id", { count: "exact", head: true })
+          .eq("workspace_id", workspace.id)
           .eq("kpi_id", k.id)
           .eq("status", "completed")
           .gte("due_date", k.period === "weekly" ? startOfWeekISO() : monthStartStr);
@@ -148,6 +151,7 @@ function KpisPage() {
     }
     setSaving(true);
     const payload = {
+      workspace_id: workspace.id,
       department: form.department,
       title: form.title.trim(),
       description: form.description.trim() || null,

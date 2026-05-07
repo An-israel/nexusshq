@@ -29,6 +29,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ChevronDown, Clock, History as HistoryIcon } from "lucide-react";
 import { PRIORITY_BADGE, deptLabel, initialsOf, timeAgo } from "@/lib/nexus";
+import { useWorkspace } from "@/lib/workspace-context";
 import { updateTaskStatusFn } from "@/lib/tasks.functions";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -40,7 +41,7 @@ type Profile = Pick<
 type Update = Database["public"]["Tables"]["task_updates"]["Row"];
 type Status = "todo" | "in_progress" | "completed" | "overdue";
 
-export const Route = createFileRoute("/_app/team-board")({
+export const Route = createFileRoute("/_app/$workspaceSlug/team-board")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: TeamBoardPage,
 });
@@ -54,6 +55,8 @@ const COLUMNS: { id: Status; label: string; color: string }[] = [
 
 function TeamBoardPage() {
   const updateStatus = useServerFn(updateTaskStatusFn);
+  const { workspace } = useWorkspace();
+  const { workspaceSlug } = Route.useParams();
   const [tasks, setTasks] = React.useState<Task[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, Profile>>({});
   const [loading, setLoading] = React.useState(true);
@@ -63,8 +66,10 @@ function TeamBoardPage() {
 
   const load = React.useCallback(async () => {
     setLoading(true);
+    let tasksQ = supabase.from("tasks").select("*").order("due_date", { ascending: true });
+    if (workspace?.id) tasksQ = tasksQ.eq("workspace_id", workspace.id);
     const [tasksRes, profilesRes] = await Promise.all([
-      supabase.from("tasks").select("*").order("due_date", { ascending: true }),
+      tasksQ,
       supabase.from("profiles").select("id, full_name, email, department"),
     ]);
     setTasks((tasksRes.data as Task[]) ?? []);
@@ -72,7 +77,7 @@ function TeamBoardPage() {
     ((profilesRes.data as Profile[]) ?? []).forEach((p) => (map[p.id] = p));
     setProfiles(map);
     setLoading(false);
-  }, []);
+  }, [workspace?.id]);
 
   React.useEffect(() => {
     void load();
@@ -160,7 +165,8 @@ function TeamBoardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link to="/team" className="text-xs text-muted-foreground hover:text-foreground underline">
+          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+          <Link to={`/${workspaceSlug}/team` as any} className="text-xs text-muted-foreground hover:text-foreground underline">
             Team overview
           </Link>
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
@@ -217,9 +223,9 @@ function TeamBoardPage() {
                           className="rounded-lg border border-border bg-background p-3 text-sm shadow-sm"
                         >
                           <div className="flex items-start justify-between gap-2">
+                            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                             <Link
-                              to="/tasks/$taskId"
-                              params={{ taskId: t.id }}
+                              to={`/${workspaceSlug}/tasks/${t.id}` as any}
                               className="line-clamp-2 flex-1 font-medium hover:underline"
                             >
                               {t.title}

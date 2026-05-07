@@ -1,89 +1,75 @@
 import * as React from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard,
-  CheckSquare,
-  Users,
-  Target,
-  Clock,
-  Bell,
-  Settings,
-  LogOut,
-  ChevronLeft,
-  ChevronRight,
-  Star,
-  Wallet,
-  FolderUp,
-  Kanban,
-  Megaphone,
-  MessageSquare,
-  GitBranch,
-  BookOpen,
-  ClipboardList,
-  RefreshCw,
-  Briefcase,
-  Sparkles,
-  CalendarOff,
-  Flag,
-  BarChart3,
+  LayoutDashboard, CheckSquare, Users, Target, Clock, Bell, Settings,
+  LogOut, ChevronLeft, ChevronRight, Star, Wallet, FolderUp, Kanban,
+  Megaphone, MessageSquare, GitBranch, BookOpen, ClipboardList, RefreshCw,
+  Briefcase, Sparkles, CalendarOff, Flag, BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useFeatureFlags } from "@/lib/feature-flags";
 
 interface NavItem {
-  to: string;
+  slug: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
   roles: Array<"admin" | "manager" | "employee">;
-  /** Optional feature-flag key. When the flag is disabled, the item is hidden for non-admins. */
   flagKey?: string;
 }
 
 const NAV: NavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
-  { to: "/tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
-  { to: "/attendance", label: "Attendance", icon: Clock, roles: ["admin", "manager", "employee"] },
-  { to: "/leave", label: "Leave", icon: CalendarOff, roles: ["admin", "manager", "employee"], flagKey: "leave" },
-  { to: "/standups", label: "Standups", icon: ClipboardList, roles: ["admin", "manager", "employee"], flagKey: "standups" },
-  { to: "/deliverables", label: "Deliverables", icon: FolderUp, roles: ["admin", "manager", "employee"], flagKey: "deliverables" },
-  { to: "/reviews", label: "Reviews", icon: Star, roles: ["admin", "manager", "employee"], flagKey: "reviews" },
-  { to: "/payslips", label: "Payslips", icon: Wallet, roles: ["admin", "manager", "employee"], flagKey: "payslips" },
-  { to: "/announcements", label: "Announcements", icon: Megaphone, roles: ["admin", "manager", "employee"], flagKey: "announcements" },
-  { to: "/messages", label: "Messages", icon: MessageSquare, roles: ["admin", "manager", "employee"], flagKey: "messages" },
-  { to: "/handbook", label: "Handbook", icon: BookOpen, roles: ["admin", "manager", "employee"], flagKey: "handbook" },
-  { to: "/org-chart", label: "Org Chart", icon: GitBranch, roles: ["admin", "manager", "employee"], flagKey: "org-chart" },
-  { to: "/team", label: "Team", icon: Users, roles: ["admin", "manager"] },
-  { to: "/team-board", label: "Task Board", icon: Kanban, roles: ["admin", "manager"], flagKey: "team-board" },
-  { to: "/recurring-tasks", label: "Recurring Tasks", icon: RefreshCw, roles: ["admin", "manager"], flagKey: "recurring-tasks" },
-  { to: "/client-projects", label: "Client Projects", icon: Briefcase, roles: ["admin", "manager"], flagKey: "client-projects" },
-  { to: "/kpis", label: "KPIs", icon: Target, roles: ["admin"], flagKey: "kpis" },
-  { to: "/okrs", label: "Goals & OKRs", icon: Flag, roles: ["admin", "manager", "employee"], flagKey: "okrs" },
-  { to: "/reports", label: "Reports", icon: BarChart3, roles: ["admin", "manager"], flagKey: "reports" },
-  { to: "/ai-tasks", label: "AI Tasks", icon: Sparkles, roles: ["admin", "manager"], flagKey: "ai-tasks" },
-  { to: "/notifications", label: "Notifications", icon: Bell, roles: ["admin", "manager", "employee"] },
-  { to: "/settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
+  { slug: "dashboard",       label: "Dashboard",       icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
+  { slug: "tasks",           label: "Tasks",           icon: CheckSquare,     roles: ["admin", "manager", "employee"] },
+  { slug: "attendance",      label: "Attendance",      icon: Clock,           roles: ["admin", "manager", "employee"] },
+  { slug: "leave",           label: "Leave",           icon: CalendarOff,     roles: ["admin", "manager", "employee"], flagKey: "leave" },
+  { slug: "standups",        label: "Standups",        icon: ClipboardList,   roles: ["admin", "manager", "employee"], flagKey: "standups" },
+  { slug: "deliverables",    label: "Deliverables",    icon: FolderUp,        roles: ["admin", "manager", "employee"], flagKey: "deliverables" },
+  { slug: "reviews",         label: "Reviews",         icon: Star,            roles: ["admin", "manager", "employee"], flagKey: "reviews" },
+  { slug: "payslips",        label: "Payslips",        icon: Wallet,          roles: ["admin", "manager", "employee"], flagKey: "payslips" },
+  { slug: "announcements",   label: "Announcements",   icon: Megaphone,       roles: ["admin", "manager", "employee"], flagKey: "announcements" },
+  { slug: "messages",        label: "Messages",        icon: MessageSquare,   roles: ["admin", "manager", "employee"], flagKey: "messages" },
+  { slug: "handbook",        label: "Handbook",        icon: BookOpen,        roles: ["admin", "manager", "employee"], flagKey: "handbook" },
+  { slug: "org-chart",       label: "Org Chart",       icon: GitBranch,       roles: ["admin", "manager", "employee"], flagKey: "org-chart" },
+  { slug: "okrs",            label: "Goals & OKRs",    icon: Flag,            roles: ["admin", "manager", "employee"], flagKey: "okrs" },
+  { slug: "notifications",   label: "Notifications",   icon: Bell,            roles: ["admin", "manager", "employee"] },
+  { slug: "settings",        label: "Settings",        icon: Settings,        roles: ["admin", "manager", "employee"] },
+  { slug: "team",            label: "Team",            icon: Users,           roles: ["admin", "manager"] },
+  { slug: "team-board",      label: "Task Board",      icon: Kanban,          roles: ["admin", "manager"], flagKey: "team-board" },
+  { slug: "recurring-tasks", label: "Recurring Tasks", icon: RefreshCw,       roles: ["admin", "manager"], flagKey: "recurring-tasks" },
+  { slug: "client-projects", label: "Client Projects", icon: Briefcase,       roles: ["admin", "manager"], flagKey: "client-projects" },
+  { slug: "reports",         label: "Reports",         icon: BarChart3,       roles: ["admin", "manager"], flagKey: "reports" },
+  { slug: "ai-tasks",        label: "AI Tasks",        icon: Sparkles,        roles: ["admin", "manager"], flagKey: "ai-tasks" },
+  { slug: "kpis",            label: "KPIs",            icon: Target,          roles: ["admin"], flagKey: "kpis" },
 ];
 
 export function AppSidebar({
+  workspaceSlug,
   collapsed,
   onToggle,
 }: {
+  workspaceSlug: string;
   collapsed: boolean;
   onToggle: () => void;
 }) {
   const { role, profile, signOut } = useAuth();
+  const { workspace } = useWorkspace();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
-  const { flags } = useFeatureFlags();
+  const { flags } = useFeatureFlags(workspace?.id ?? null);
+
   const items = (role ? NAV.filter((n) => n.roles.includes(role)) : NAV).filter(
     (n) => !n.flagKey || flags[n.flagKey] !== false || role === "admin",
   );
 
-  const isActive = (to: string) =>
-    pathname === to || (to !== "/dashboard" && pathname.startsWith(to));
+  const href = (slug: string) => `/${workspaceSlug}/${slug}`;
+  const isActive = (slug: string) => {
+    const path = href(slug);
+    return pathname === path || (slug !== "dashboard" && pathname.startsWith(path));
+  };
 
   return (
     <aside
@@ -94,13 +80,26 @@ export function AppSidebar({
     >
       {/* Brand */}
       <div className="flex h-16 items-center justify-between border-b border-border px-3">
-        <Link to="/dashboard" className="flex items-center gap-2 px-1">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <span className="text-sm font-bold">N</span>
-          </div>
+        <Link
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          to={`/${workspaceSlug}/dashboard` as any}
+          className="flex items-center gap-2 px-1"
+        >
+          {workspace?.logo_url ? (
+            <img src={workspace.logo_url} alt={workspace.name} className="h-8 w-8 rounded-lg object-cover shrink-0" />
+          ) : (
+            <div
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
+              style={{ backgroundColor: workspace?.primary_color ?? "#3B82F6" }}
+            >
+              <span className="text-sm font-bold">
+                {(workspace?.name ?? "N").slice(0, 1).toUpperCase()}
+              </span>
+            </div>
+          )}
           {!collapsed && (
-            <div className="flex flex-col leading-tight">
-              <span className="text-sm font-semibold">Nexus HQ</span>
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="text-sm font-semibold truncate">{workspace?.name ?? "Nexus HQ"}</span>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 {role ?? ""}
               </span>
@@ -120,11 +119,12 @@ export function AppSidebar({
       <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
         {items.map((item) => {
           const Icon = item.icon;
-          const active = isActive(item.to);
+          const active = isActive(item.slug);
           return (
             <Link
-              key={item.to}
-              to={item.to}
+              key={item.slug}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              to={href(item.slug) as any}
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
                 active
