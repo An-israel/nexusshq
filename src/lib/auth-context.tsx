@@ -141,6 +141,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(safetyTimer);
       setSession(s);
       if (s?.user) {
+        // Ensure Skryve workspace + membership exist for this user (idempotent).
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        void (supabase.rpc as any)("ensure_skryve_seed").then((res: { error: unknown }) => {
+          if (res.error) console.warn("ensure_skryve_seed failed", res.error);
+        });
         const hasCache = readCache<NexusProfile>(CACHE_PROFILE) !== null;
         if (hasCache) {
           // Show UI immediately; refresh data silently in background
