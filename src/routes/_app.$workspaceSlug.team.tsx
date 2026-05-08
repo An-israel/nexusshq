@@ -285,11 +285,12 @@ function MemberCard({
         ? "border-warning/50 text-warning"
         : "text-muted-foreground";
 
+  const { workspaceSlug } = Route.useParams();
   return (
     <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40">
       <Link
-        to="/team/$userId"
-        params={{ userId: m.profile.id }}
+        to="/$workspaceSlug/team/$userId"
+        params={{ workspaceSlug, userId: m.profile.id }}
         className="block"
       >
         <div className="flex items-start gap-3">
@@ -298,38 +299,32 @@ function MemberCard({
           </div>
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold">{m.profile.full_name ?? "—"}</p>
-            <p className="truncate text-xs text-muted-foreground">{m.profile.job_title ?? "—"}</p>
-            <div className="mt-1 flex flex-wrap items-center gap-2">
-              <Badge variant="outline" className="text-[10px]">{deptLabel(m.profile.department)}</Badge>
-              {m.role && (
-                <Badge variant="outline" className={`text-[10px] ${roleStyle}`}>
-                  {m.role}
-                </Badge>
-              )}
-              <span className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-                <span className={`h-1.5 w-1.5 rounded-full ${m.clockedIn ? "bg-success animate-pulse" : "bg-muted-foreground/40"}`} />
-                {m.clockedIn ? "In" : "Not clocked in"}
+            <p className="truncate text-xs text-muted-foreground">{m.profile.email}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className={`rounded border px-1.5 py-0.5 text-[10px] uppercase ${roleStyle}`}>
+                {m.role}
               </span>
+              {m.profile.department && (
+                <span className="rounded border border-border px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
+                  {m.profile.department}
+                </span>
+              )}
+              {!m.profile.is_active && (
+                <span className="rounded border border-destructive/40 px-1.5 py-0.5 text-[10px] uppercase text-destructive">
+                  inactive
+                </span>
+              )}
             </div>
-          </div>
-          {m.flagsCount > 0 && (
-            <Badge className="bg-destructive text-destructive-foreground">{m.flagsCount}</Badge>
-          )}
-        </div>
-
-        <div className="mt-4 space-y-3">
-          <div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Today's tasks</span>
-              <span className="font-medium">{m.todayDone}/{m.todayTotal}</span>
+            <div className="mt-3 space-y-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Today</span>
+                <span className="font-medium text-foreground">{m.todayDone}/{m.todayTotal} ({todayPct}%)</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>This week</span>
+                <span className="font-medium text-foreground">{m.weekDone}/{m.weekTotal}</span>
+              </div>
             </div>
-            <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div className="h-full bg-primary" style={{ width: `${todayPct}%` }} />
-            </div>
-          </div>
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>This week</span>
-            <span className="font-medium text-foreground">{m.weekDone}/{m.weekTotal}</span>
           </div>
         </div>
       </Link>
