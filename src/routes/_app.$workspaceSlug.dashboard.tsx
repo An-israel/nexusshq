@@ -423,9 +423,11 @@ function EmptyRow({ children }: { children: React.ReactNode }) {
 }
 
 function TaskRow({ t }: { t: Task }) {
+  const { workspace } = useWorkspace();
   return (
     <Link
-      to="/tasks"
+      to="/$workspaceSlug/tasks/$taskId"
+      params={{ workspaceSlug: workspace.slug, taskId: t.id }}
       className="flex items-center gap-3 rounded-lg border border-border bg-background/40 p-3 hover:border-primary/40"
     >
       <div className="min-w-0 flex-1">
