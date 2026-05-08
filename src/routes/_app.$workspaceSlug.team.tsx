@@ -288,8 +288,8 @@ function MemberCard({
   return (
     <div className="rounded-2xl border border-border bg-card p-5 transition-colors hover:border-primary/40">
       <Link
-        to="/team/$userId"
-        params={{ userId: m.profile.id }}
+        to="/$workspaceSlug/team/$userId"
+        params={{ workspaceSlug: m.workspaceSlug, userId: m.profile.id }}
         className="block"
       >
         <div className="flex items-start gap-3">
