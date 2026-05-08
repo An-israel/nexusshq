@@ -298,7 +298,33 @@ function MemberCard({
             {initialsOf(m.profile.full_name ?? m.profile.email)}
           </div>
           <div className="min-w-0 flex-1">
-{/* keep existing inner content */}
+            <p className="truncate text-sm font-semibold">{m.profile.full_name ?? "—"}</p>
+            <p className="truncate text-xs text-muted-foreground">{m.profile.email}</p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className={`rounded border px-1.5 py-0.5 text-[10px] uppercase ${roleStyle}`}>
+                {m.role}
+              </span>
+              {m.profile.department && (
+                <span className="rounded border border-border px-1.5 py-0.5 text-[10px] uppercase text-muted-foreground">
+                  {m.profile.department}
+                </span>
+              )}
+              {!m.profile.is_active && (
+                <span className="rounded border border-destructive/40 px-1.5 py-0.5 text-[10px] uppercase text-destructive">
+                  inactive
+                </span>
+              )}
+            </div>
+            <div className="mt-3 space-y-1">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Today</span>
+                <span className="font-medium text-foreground">{m.todayDone}/{m.todayTotal} ({todayPct}%)</span>
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>This week</span>
+                <span className="font-medium text-foreground">{m.weekDone}/{m.weekTotal}</span>
+              </div>
+            </div>
           </div>
         </div>
       </Link>
