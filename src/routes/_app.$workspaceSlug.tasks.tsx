@@ -223,7 +223,7 @@ function TaskCard({
         <div className="flex items-start gap-3">
           <div
             className="flex-1 min-w-0 cursor-pointer"
-            onClick={() => void navigate({ to: "/tasks/$taskId", params: { taskId: task.id } })}
+            onClick={() => void navigate({ to: "/$workspaceSlug/tasks/$taskId", params: { workspaceSlug: workspace.slug, taskId: task.id } })}
           >
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="font-medium truncate">{task.title}</h3>

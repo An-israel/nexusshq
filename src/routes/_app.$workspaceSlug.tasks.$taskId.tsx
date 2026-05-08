@@ -240,7 +240,7 @@ function TaskDetailPage() {
       return;
     }
     toast.success("Task deleted");
-    navigate({ to: "/tasks" });
+    navigate({ to: "/$workspaceSlug/tasks", params: { workspaceSlug: workspace.slug } });
   }
 
   const assignee = profileMap[task.assigned_to];
@@ -248,7 +248,7 @@ function TaskDetailPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/tasks" })}>
+      <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/$workspaceSlug/tasks", params: { workspaceSlug: workspace.slug } })}>
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to tasks
       </Button>
 
