@@ -239,7 +239,7 @@ function DashboardPage() {
                 </p>
               </div>
             </div>
-            <Link to="/attendance">
+            <Link to="/$workspaceSlug/attendance" params={{ workspaceSlug: workspace.slug }}>
               <Button variant="outline" size="sm">
                 View attendance
               </Button>
@@ -270,7 +270,7 @@ function DashboardPage() {
                 <p className="text-xs text-muted-foreground">Work starts at 9:00 AM WAT.</p>
               </div>
             </div>
-            <Link to="/attendance">
+            <Link to="/$workspaceSlug/attendance" params={{ workspaceSlug: workspace.slug }}>
               <Button size="sm">Clock In</Button>
             </Link>
           </div>
@@ -284,7 +284,7 @@ function DashboardPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Today's Tasks
             </h2>
-            <Link to="/tasks" className="text-xs text-primary hover:underline">
+            <Link to="/$workspaceSlug/tasks" params={{ workspaceSlug: workspace.slug }} className="text-xs text-primary hover:underline">
               View all
             </Link>
           </div>
@@ -310,7 +310,7 @@ function DashboardPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               This Week
             </h2>
-            <Link to="/tasks" className="text-xs text-primary hover:underline">
+            <Link to="/$workspaceSlug/tasks" params={{ workspaceSlug: workspace.slug }} className="text-xs text-primary hover:underline">
               View all
             </Link>
           </div>
@@ -379,7 +379,7 @@ function DashboardPage() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Recent Notifications
           </h2>
-          <Link to="/notifications" className="text-xs text-primary hover:underline">
+          <Link to="/$workspaceSlug/notifications" params={{ workspaceSlug: workspace.slug }} className="text-xs text-primary hover:underline">
             View all
           </Link>
         </div>
