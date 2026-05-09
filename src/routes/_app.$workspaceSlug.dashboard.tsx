@@ -133,6 +133,43 @@ function DashboardPage() {
     void load();
   }, [load]);
 
+  // Managers/admins: who's currently clocked in today
+  const loadClockedInTeam = useCallback(async () => {
+    if (!isManager) return;
+    const today = todayISO();
+    const { data } = await supabase
+      .from("attendance")
+      .select("user_id, clock_in")
+      .eq("workspace_id", workspace.id)
+      .eq("date", today)
+      .not("clock_in", "is", null)
+      .is("clock_out", null);
+    const ids = (data ?? []).map((r) => r.user_id);
+    if (ids.length === 0) {
+      setClockedInTeam([]);
+      return;
+    }
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", ids);
+    const profMap = new Map((profs ?? []).map((p) => [p.id, p]));
+    setClockedInTeam(
+      (data ?? []).map((r) => ({
+        user_id: r.user_id,
+        clock_in: r.clock_in!,
+        full_name: profMap.get(r.user_id)?.full_name ?? null,
+        avatar_url: profMap.get(r.user_id)?.avatar_url ?? null,
+      })),
+    );
+  }, [isManager, workspace.id]);
+
+  useEffect(() => {
+    void loadClockedInTeam();
+    const t = setInterval(() => void loadClockedInTeam(), 60_000);
+    return () => clearInterval(t);
+  }, [loadClockedInTeam]);
+
   // Track whether the initial load has completed so we don't toast on mount
   const initialLoadDone = useRef(false);
   useEffect(() => {
