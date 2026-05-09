@@ -22,9 +22,11 @@ import { toast } from "sonner";
 import { UserPlus } from "lucide-react";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
 import { inviteEmployeeFn } from "@/lib/admin.functions";
+import { useWorkspace } from "@/lib/workspace-context";
 
 export function InviteEmployeeDialog({ onInvited, isAdmin = false }: { onInvited?: () => void; isAdmin?: boolean }) {
   const invite = useServerFn(inviteEmployeeFn);
+  const { workspace } = useWorkspace();
   const [open, setOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [form, setForm] = React.useState({
@@ -64,6 +66,7 @@ export function InviteEmployeeDialog({ onInvited, isAdmin = false }: { onInvited
           phone: form.phone.trim() || null,
           role: form.role,
           redirectTo,
+          workspaceId: workspace.id,
         },
       });
       toast.success("Invitation sent");

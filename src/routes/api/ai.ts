@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/ai")({
       POST: async ({ request }) => {
         const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
         if (!apiKey) {
-          return Response.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 500 });
+          return Response.json({ error: "AI features require ANTHROPIC_API_KEY to be set in your environment variables." }, { status: 500 });
         }
 
         let body: { action: string; context?: Record<string, unknown> };
@@ -33,7 +33,7 @@ export const Route = createFileRoute("/api/ai")({
             "anthropic-version": "2023-06-01",
           },
           body: JSON.stringify({
-            model: "claude-sonnet-4-5-20250929",
+            model: "claude-haiku-4-5-20251001",
             max_tokens: maxTokens ?? 1024,
             system: systemPrompt,
             messages: [{ role: "user", content: userPrompt }],

@@ -34,6 +34,7 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
         phone: z.string().nullable().optional(),
         role: roleEnum,
         redirectTo: z.string().url().optional(),
+        workspaceId: z.string().uuid(),
       })
       .parse(data),
   )

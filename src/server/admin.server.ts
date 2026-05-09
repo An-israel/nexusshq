@@ -54,6 +54,7 @@ export interface InviteEmployeeInput {
   phone?: string | null;
   role: AppRole;
   redirectTo?: string;
+  workspaceId: string;
 }
 
 export async function inviteEmployee(input: InviteEmployeeInput) {
@@ -90,6 +91,15 @@ export async function inviteEmployee(input: InviteEmployeeInput) {
     .from("user_roles")
     .insert({ user_id: userId, role: input.role });
   if (roleError) throw new Error(roleError.message);
+
+  // Add to workspace so RLS policies grant them access immediately on first login
+  const { error: memberError } = await adminClient
+    .from("workspace_members")
+    .upsert(
+      { workspace_id: input.workspaceId, user_id: userId, role: input.role, is_active: true },
+      { onConflict: "workspace_id,user_id" },
+    );
+  if (memberError) throw new Error(memberError.message);
 
   return { userId, email };
 }
