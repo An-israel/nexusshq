@@ -29,6 +29,7 @@ import { Route as AppWorkspaceSlugReportsRouteImport } from './routes/_app.$work
 import { Route as AppWorkspaceSlugRecurringTasksRouteImport } from './routes/_app.$workspaceSlug.recurring-tasks'
 import { Route as AppWorkspaceSlugPayslipsRouteImport } from './routes/_app.$workspaceSlug.payslips'
 import { Route as AppWorkspaceSlugOrgChartRouteImport } from './routes/_app.$workspaceSlug.org-chart'
+import { Route as AppWorkspaceSlugOnboardingRouteImport } from './routes/_app.$workspaceSlug.onboarding'
 import { Route as AppWorkspaceSlugOkrsRouteImport } from './routes/_app.$workspaceSlug.okrs'
 import { Route as AppWorkspaceSlugNotificationsRouteImport } from './routes/_app.$workspaceSlug.notifications'
 import { Route as AppWorkspaceSlugMessagesRouteImport } from './routes/_app.$workspaceSlug.messages'
@@ -52,6 +53,9 @@ import { Route as ApiPublicCronBurnoutDetectionRouteImport } from './routes/api/
 import { Route as ApiPublicCronAutoClockOutRouteImport } from './routes/api/public/cron/auto-clock-out'
 import { Route as AppWorkspaceSlugTeamUserIdRouteImport } from './routes/_app.$workspaceSlug.team.$userId'
 import { Route as AppWorkspaceSlugTasksTaskIdRouteImport } from './routes/_app.$workspaceSlug.tasks.$taskId'
+import { Route as AppWorkspaceSlugMessagesActivityRouteImport } from './routes/_app.$workspaceSlug.messages.activity'
+import { Route as AppWorkspaceSlugMessagesDmConversationIdRouteImport } from './routes/_app.$workspaceSlug.messages.dm.$conversationId'
+import { Route as AppWorkspaceSlugMessagesChannelChannelIdRouteImport } from './routes/_app.$workspaceSlug.messages.channel.$channelId'
 
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
@@ -156,6 +160,12 @@ const AppWorkspaceSlugOrgChartRoute =
   AppWorkspaceSlugOrgChartRouteImport.update({
     id: '/org-chart',
     path: '/org-chart',
+    getParentRoute: () => AppWorkspaceSlugRoute,
+  } as any)
+const AppWorkspaceSlugOnboardingRoute =
+  AppWorkspaceSlugOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
 const AppWorkspaceSlugOkrsRoute = AppWorkspaceSlugOkrsRouteImport.update({
@@ -290,6 +300,24 @@ const AppWorkspaceSlugTasksTaskIdRoute =
     path: '/$taskId',
     getParentRoute: () => AppWorkspaceSlugTasksRoute,
   } as any)
+const AppWorkspaceSlugMessagesActivityRoute =
+  AppWorkspaceSlugMessagesActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AppWorkspaceSlugMessagesRoute,
+  } as any)
+const AppWorkspaceSlugMessagesDmConversationIdRoute =
+  AppWorkspaceSlugMessagesDmConversationIdRouteImport.update({
+    id: '/dm/$conversationId',
+    path: '/dm/$conversationId',
+    getParentRoute: () => AppWorkspaceSlugMessagesRoute,
+  } as any)
+const AppWorkspaceSlugMessagesChannelChannelIdRoute =
+  AppWorkspaceSlugMessagesChannelChannelIdRouteImport.update({
+    id: '/channel/$channelId',
+    path: '/channel/$channelId',
+    getParentRoute: () => AppWorkspaceSlugMessagesRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -310,9 +338,10 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/handbook': typeof AppWorkspaceSlugHandbookRoute
   '/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
-  '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRoute
+  '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
+  '/$workspaceSlug/onboarding': typeof AppWorkspaceSlugOnboardingRoute
   '/$workspaceSlug/org-chart': typeof AppWorkspaceSlugOrgChartRoute
   '/$workspaceSlug/payslips': typeof AppWorkspaceSlugPayslipsRoute
   '/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
@@ -323,6 +352,7 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRouteWithChildren
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
   '/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
@@ -334,6 +364,8 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/$workspaceSlug/messages/channel/$channelId': typeof AppWorkspaceSlugMessagesChannelChannelIdRoute
+  '/$workspaceSlug/messages/dm/$conversationId': typeof AppWorkspaceSlugMessagesDmConversationIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -354,9 +386,10 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/handbook': typeof AppWorkspaceSlugHandbookRoute
   '/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
-  '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRoute
+  '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
+  '/$workspaceSlug/onboarding': typeof AppWorkspaceSlugOnboardingRoute
   '/$workspaceSlug/org-chart': typeof AppWorkspaceSlugOrgChartRoute
   '/$workspaceSlug/payslips': typeof AppWorkspaceSlugPayslipsRoute
   '/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
@@ -367,6 +400,7 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRouteWithChildren
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
   '/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
@@ -378,6 +412,8 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/$workspaceSlug/messages/channel/$channelId': typeof AppWorkspaceSlugMessagesChannelChannelIdRoute
+  '/$workspaceSlug/messages/dm/$conversationId': typeof AppWorkspaceSlugMessagesDmConversationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -400,9 +436,10 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/handbook': typeof AppWorkspaceSlugHandbookRoute
   '/_app/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/_app/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
-  '/_app/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRoute
+  '/_app/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/_app/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/_app/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
+  '/_app/$workspaceSlug/onboarding': typeof AppWorkspaceSlugOnboardingRoute
   '/_app/$workspaceSlug/org-chart': typeof AppWorkspaceSlugOrgChartRoute
   '/_app/$workspaceSlug/payslips': typeof AppWorkspaceSlugPayslipsRoute
   '/_app/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
@@ -413,6 +450,7 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRouteWithChildren
   '/_app/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/_app/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
   '/_app/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
@@ -424,6 +462,8 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
+  '/_app/$workspaceSlug/messages/channel/$channelId': typeof AppWorkspaceSlugMessagesChannelChannelIdRoute
+  '/_app/$workspaceSlug/messages/dm/$conversationId': typeof AppWorkspaceSlugMessagesDmConversationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -449,6 +489,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/messages'
     | '/$workspaceSlug/notifications'
     | '/$workspaceSlug/okrs'
+    | '/$workspaceSlug/onboarding'
     | '/$workspaceSlug/org-chart'
     | '/$workspaceSlug/payslips'
     | '/$workspaceSlug/recurring-tasks'
@@ -459,6 +500,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/tasks/$taskId'
     | '/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
@@ -470,6 +512,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/$workspaceSlug/messages/channel/$channelId'
+    | '/$workspaceSlug/messages/dm/$conversationId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -493,6 +537,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/messages'
     | '/$workspaceSlug/notifications'
     | '/$workspaceSlug/okrs'
+    | '/$workspaceSlug/onboarding'
     | '/$workspaceSlug/org-chart'
     | '/$workspaceSlug/payslips'
     | '/$workspaceSlug/recurring-tasks'
@@ -503,6 +548,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/tasks/$taskId'
     | '/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
@@ -514,6 +560,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/$workspaceSlug/messages/channel/$channelId'
+    | '/$workspaceSlug/messages/dm/$conversationId'
   id:
     | '__root__'
     | '/'
@@ -538,6 +586,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/messages'
     | '/_app/$workspaceSlug/notifications'
     | '/_app/$workspaceSlug/okrs'
+    | '/_app/$workspaceSlug/onboarding'
     | '/_app/$workspaceSlug/org-chart'
     | '/_app/$workspaceSlug/payslips'
     | '/_app/$workspaceSlug/recurring-tasks'
@@ -548,6 +597,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/tasks'
     | '/_app/$workspaceSlug/team'
     | '/_app/$workspaceSlug/team-board'
+    | '/_app/$workspaceSlug/messages/activity'
     | '/_app/$workspaceSlug/tasks/$taskId'
     | '/_app/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
@@ -559,6 +609,8 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/_app/$workspaceSlug/messages/channel/$channelId'
+    | '/_app/$workspaceSlug/messages/dm/$conversationId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -724,6 +776,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugOrgChartRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
+    '/_app/$workspaceSlug/onboarding': {
+      id: '/_app/$workspaceSlug/onboarding'
+      path: '/onboarding'
+      fullPath: '/$workspaceSlug/onboarding'
+      preLoaderRoute: typeof AppWorkspaceSlugOnboardingRouteImport
+      parentRoute: typeof AppWorkspaceSlugRoute
+    }
     '/_app/$workspaceSlug/okrs': {
       id: '/_app/$workspaceSlug/okrs'
       path: '/okrs'
@@ -885,8 +944,50 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugTasksTaskIdRouteImport
       parentRoute: typeof AppWorkspaceSlugTasksRoute
     }
+    '/_app/$workspaceSlug/messages/activity': {
+      id: '/_app/$workspaceSlug/messages/activity'
+      path: '/activity'
+      fullPath: '/$workspaceSlug/messages/activity'
+      preLoaderRoute: typeof AppWorkspaceSlugMessagesActivityRouteImport
+      parentRoute: typeof AppWorkspaceSlugMessagesRoute
+    }
+    '/_app/$workspaceSlug/messages/dm/$conversationId': {
+      id: '/_app/$workspaceSlug/messages/dm/$conversationId'
+      path: '/dm/$conversationId'
+      fullPath: '/$workspaceSlug/messages/dm/$conversationId'
+      preLoaderRoute: typeof AppWorkspaceSlugMessagesDmConversationIdRouteImport
+      parentRoute: typeof AppWorkspaceSlugMessagesRoute
+    }
+    '/_app/$workspaceSlug/messages/channel/$channelId': {
+      id: '/_app/$workspaceSlug/messages/channel/$channelId'
+      path: '/channel/$channelId'
+      fullPath: '/$workspaceSlug/messages/channel/$channelId'
+      preLoaderRoute: typeof AppWorkspaceSlugMessagesChannelChannelIdRouteImport
+      parentRoute: typeof AppWorkspaceSlugMessagesRoute
+    }
   }
 }
+
+interface AppWorkspaceSlugMessagesRouteChildren {
+  AppWorkspaceSlugMessagesActivityRoute: typeof AppWorkspaceSlugMessagesActivityRoute
+  AppWorkspaceSlugMessagesChannelChannelIdRoute: typeof AppWorkspaceSlugMessagesChannelChannelIdRoute
+  AppWorkspaceSlugMessagesDmConversationIdRoute: typeof AppWorkspaceSlugMessagesDmConversationIdRoute
+}
+
+const AppWorkspaceSlugMessagesRouteChildren: AppWorkspaceSlugMessagesRouteChildren =
+  {
+    AppWorkspaceSlugMessagesActivityRoute:
+      AppWorkspaceSlugMessagesActivityRoute,
+    AppWorkspaceSlugMessagesChannelChannelIdRoute:
+      AppWorkspaceSlugMessagesChannelChannelIdRoute,
+    AppWorkspaceSlugMessagesDmConversationIdRoute:
+      AppWorkspaceSlugMessagesDmConversationIdRoute,
+  }
+
+const AppWorkspaceSlugMessagesRouteWithChildren =
+  AppWorkspaceSlugMessagesRoute._addFileChildren(
+    AppWorkspaceSlugMessagesRouteChildren,
+  )
 
 interface AppWorkspaceSlugTasksRouteChildren {
   AppWorkspaceSlugTasksTaskIdRoute: typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -922,9 +1023,10 @@ interface AppWorkspaceSlugRouteChildren {
   AppWorkspaceSlugHandbookRoute: typeof AppWorkspaceSlugHandbookRoute
   AppWorkspaceSlugKpisRoute: typeof AppWorkspaceSlugKpisRoute
   AppWorkspaceSlugLeaveRoute: typeof AppWorkspaceSlugLeaveRoute
-  AppWorkspaceSlugMessagesRoute: typeof AppWorkspaceSlugMessagesRoute
+  AppWorkspaceSlugMessagesRoute: typeof AppWorkspaceSlugMessagesRouteWithChildren
   AppWorkspaceSlugNotificationsRoute: typeof AppWorkspaceSlugNotificationsRoute
   AppWorkspaceSlugOkrsRoute: typeof AppWorkspaceSlugOkrsRoute
+  AppWorkspaceSlugOnboardingRoute: typeof AppWorkspaceSlugOnboardingRoute
   AppWorkspaceSlugOrgChartRoute: typeof AppWorkspaceSlugOrgChartRoute
   AppWorkspaceSlugPayslipsRoute: typeof AppWorkspaceSlugPayslipsRoute
   AppWorkspaceSlugRecurringTasksRoute: typeof AppWorkspaceSlugRecurringTasksRoute
@@ -947,9 +1049,10 @@ const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
   AppWorkspaceSlugHandbookRoute: AppWorkspaceSlugHandbookRoute,
   AppWorkspaceSlugKpisRoute: AppWorkspaceSlugKpisRoute,
   AppWorkspaceSlugLeaveRoute: AppWorkspaceSlugLeaveRoute,
-  AppWorkspaceSlugMessagesRoute: AppWorkspaceSlugMessagesRoute,
+  AppWorkspaceSlugMessagesRoute: AppWorkspaceSlugMessagesRouteWithChildren,
   AppWorkspaceSlugNotificationsRoute: AppWorkspaceSlugNotificationsRoute,
   AppWorkspaceSlugOkrsRoute: AppWorkspaceSlugOkrsRoute,
+  AppWorkspaceSlugOnboardingRoute: AppWorkspaceSlugOnboardingRoute,
   AppWorkspaceSlugOrgChartRoute: AppWorkspaceSlugOrgChartRoute,
   AppWorkspaceSlugPayslipsRoute: AppWorkspaceSlugPayslipsRoute,
   AppWorkspaceSlugRecurringTasksRoute: AppWorkspaceSlugRecurringTasksRoute,
