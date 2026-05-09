@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug/dashboard")({
 });
 
 function DashboardPage() {
-  const { profile, user } = useAuth();
+  const { profile, user, isManager } = useAuth();
   const { workspace } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [todayTasks, setTodayTasks] = useState<Task[]>([]);
@@ -41,6 +41,9 @@ function DashboardPage() {
   const [kpiCounts, setKpiCounts] = useState<Record<string, number>>({});
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [att, setAtt] = useState<Attendance | null>(null);
+  const [clockedInTeam, setClockedInTeam] = useState<
+    Array<{ user_id: string; clock_in: string; full_name: string | null; avatar_url: string | null }>
+  >([]);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
