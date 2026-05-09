@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, Users, Target, Clock, Bell, Settings,
   LogOut, ChevronLeft, ChevronRight, Star, Wallet, FolderUp, Kanban,
   Megaphone, MessageSquare, GitBranch, BookOpen, ClipboardList, RefreshCw,
-  Briefcase, Sparkles, CalendarOff, Flag, BarChart3,
+  Briefcase, Sparkles, CalendarOff, Flag, BarChart3, UserCircle, CreditCard,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
@@ -43,6 +43,8 @@ const NAV: NavItem[] = [
   { slug: "reports",         label: "Reports",         icon: BarChart3,       roles: ["admin", "manager"], flagKey: "reports" },
   { slug: "ai-tasks",        label: "AI Tasks",        icon: Sparkles,        roles: ["admin", "manager"], flagKey: "ai-tasks" },
   { slug: "kpis",            label: "KPIs",            icon: Target,          roles: ["admin"], flagKey: "kpis" },
+  { slug: "billing",         label: "Billing",         icon: CreditCard,      roles: ["admin"] },
+  { slug: "profile",         label: "Profile",         icon: UserCircle,      roles: ["admin", "manager", "employee"] },
 ];
 
 export function AppSidebar({

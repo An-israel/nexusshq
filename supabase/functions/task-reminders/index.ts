@@ -92,9 +92,8 @@ Deno.serve(async (_req) => {
 
           if (assigneeEmail) {
             await supabase.rpc("enqueue_email", {
-              p_to: assigneeEmail,
-              p_subject: `⏰ Task Due Today — ${task.title}`,
-              p_html: buildDueTodayHtml(task.title, assigneeName),
+              queue_name: "transactional_emails",
+              payload: { to: assigneeEmail, subject: `⏰ Task Due Today — ${task.title}`, html: buildDueTodayHtml(task.title, assigneeName) },
             }).catch(() => {});
           }
 
@@ -134,9 +133,8 @@ Deno.serve(async (_req) => {
 
           if (assigneeEmail) {
             await supabase.rpc("enqueue_email", {
-              p_to: assigneeEmail,
-              p_subject: `🔴 Overdue Task — ${task.title}`,
-              p_html: buildOverdueHtml(task.title, assigneeName),
+              queue_name: "transactional_emails",
+              payload: { to: assigneeEmail, subject: `🔴 Overdue Task — ${task.title}`, html: buildOverdueHtml(task.title, assigneeName) },
             }).catch(() => {});
           }
 

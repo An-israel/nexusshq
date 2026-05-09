@@ -237,9 +237,8 @@ function AssignTaskPage() {
 
       await supabase
         .rpc("enqueue_email", {
-          p_to: assignee.email,
-          p_subject: `New Task Assigned — ${taskTitle}`,
-          p_html: html,
+          queue_name: "transactional_emails",
+          payload: { to: assignee.email, subject: `New Task Assigned — ${taskTitle}`, html },
         })
         .catch(() => {}); // non-fatal
     }
