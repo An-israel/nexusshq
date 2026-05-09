@@ -32,7 +32,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug/dashboard")({
 });
 
 function DashboardPage() {
-  const { profile, user } = useAuth();
+  const { profile, user, isManager } = useAuth();
   const { workspace } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [todayTasks, setTodayTasks] = useState<Task[]>([]);
@@ -41,6 +41,9 @@ function DashboardPage() {
   const [kpiCounts, setKpiCounts] = useState<Record<string, number>>({});
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [att, setAtt] = useState<Attendance | null>(null);
+  const [clockedInTeam, setClockedInTeam] = useState<
+    Array<{ user_id: string; clock_in: string; full_name: string | null; avatar_url: string | null }>
+  >([]);
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -129,6 +132,43 @@ function DashboardPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  // Managers/admins: who's currently clocked in today
+  const loadClockedInTeam = useCallback(async () => {
+    if (!isManager) return;
+    const today = todayISO();
+    const { data } = await supabase
+      .from("attendance")
+      .select("user_id, clock_in")
+      .eq("workspace_id", workspace.id)
+      .eq("date", today)
+      .not("clock_in", "is", null)
+      .is("clock_out", null);
+    const ids = (data ?? []).map((r) => r.user_id);
+    if (ids.length === 0) {
+      setClockedInTeam([]);
+      return;
+    }
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, full_name, avatar_url")
+      .in("id", ids);
+    const profMap = new Map((profs ?? []).map((p) => [p.id, p]));
+    setClockedInTeam(
+      (data ?? []).map((r) => ({
+        user_id: r.user_id,
+        clock_in: r.clock_in!,
+        full_name: profMap.get(r.user_id)?.full_name ?? null,
+        avatar_url: profMap.get(r.user_id)?.avatar_url ?? null,
+      })),
+    );
+  }, [isManager, workspace.id]);
+
+  useEffect(() => {
+    void loadClockedInTeam();
+    const t = setInterval(() => void loadClockedInTeam(), 60_000);
+    return () => clearInterval(t);
+  }, [loadClockedInTeam]);
 
   // Track whether the initial load has completed so we don't toast on mount
   const initialLoadDone = useRef(false);
@@ -277,8 +317,52 @@ function DashboardPage() {
         )}
       </div>
 
+      {/* Manager view: who's clocked in right now */}
+      {isManager && (
+        <section className="rounded-2xl border border-border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+              Clocked in now · {clockedInTeam.length}
+            </h2>
+            <Link to="/$workspaceSlug/attendance" params={{ workspaceSlug: workspace.slug }} className="text-xs text-primary hover:underline">
+              View attendance
+            </Link>
+          </div>
+          {clockedInTeam.length === 0 ? (
+            <EmptyRow>No team members are currently clocked in.</EmptyRow>
+          ) : (
+            <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              {clockedInTeam.map((m) => {
+                const elapsed = Math.floor((now - new Date(m.clock_in).getTime()) / 60000);
+                return (
+                  <li key={m.user_id} className="flex items-center gap-3 rounded-lg border border-border bg-background/40 p-3">
+                    <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted">
+                      {m.avatar_url ? (
+                        <img src={m.avatar_url} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center text-xs font-medium">
+                          {(m.full_name ?? "?").slice(0, 1).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card bg-success" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium">{m.full_name ?? "Unknown"}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {Math.floor(elapsed / 60)}h {elapsed % 60}m · since{" "}
+                        {new Date(m.clock_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+      )}
+
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Today's tasks */}
+
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
