@@ -27,6 +27,7 @@ import { Route as AppWorkspaceSlugSettingsRouteImport } from './routes/_app.$wor
 import { Route as AppWorkspaceSlugReviewsRouteImport } from './routes/_app.$workspaceSlug.reviews'
 import { Route as AppWorkspaceSlugReportsRouteImport } from './routes/_app.$workspaceSlug.reports'
 import { Route as AppWorkspaceSlugRecurringTasksRouteImport } from './routes/_app.$workspaceSlug.recurring-tasks'
+import { Route as AppWorkspaceSlugProfileRouteImport } from './routes/_app.$workspaceSlug.profile'
 import { Route as AppWorkspaceSlugPayslipsRouteImport } from './routes/_app.$workspaceSlug.payslips'
 import { Route as AppWorkspaceSlugOrgChartRouteImport } from './routes/_app.$workspaceSlug.org-chart'
 import { Route as AppWorkspaceSlugOnboardingRouteImport } from './routes/_app.$workspaceSlug.onboarding'
@@ -39,6 +40,7 @@ import { Route as AppWorkspaceSlugHandbookRouteImport } from './routes/_app.$wor
 import { Route as AppWorkspaceSlugDeliverablesRouteImport } from './routes/_app.$workspaceSlug.deliverables'
 import { Route as AppWorkspaceSlugDashboardRouteImport } from './routes/_app.$workspaceSlug.dashboard'
 import { Route as AppWorkspaceSlugClientProjectsRouteImport } from './routes/_app.$workspaceSlug.client-projects'
+import { Route as AppWorkspaceSlugBillingRouteImport } from './routes/_app.$workspaceSlug.billing'
 import { Route as AppWorkspaceSlugAttendanceRouteImport } from './routes/_app.$workspaceSlug.attendance'
 import { Route as AppWorkspaceSlugAnnouncementsRouteImport } from './routes/_app.$workspaceSlug.announcements'
 import { Route as AppWorkspaceSlugAiTasksRouteImport } from './routes/_app.$workspaceSlug.ai-tasks'
@@ -52,6 +54,7 @@ import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/pub
 import { Route as ApiPublicCronBurnoutDetectionRouteImport } from './routes/api/public/cron/burnout-detection'
 import { Route as ApiPublicCronAutoClockOutRouteImport } from './routes/api/public/cron/auto-clock-out'
 import { Route as AppWorkspaceSlugTeamUserIdRouteImport } from './routes/_app.$workspaceSlug.team.$userId'
+import { Route as AppWorkspaceSlugTasksAssignRouteImport } from './routes/_app.$workspaceSlug.tasks.assign'
 import { Route as AppWorkspaceSlugTasksTaskIdRouteImport } from './routes/_app.$workspaceSlug.tasks.$taskId'
 import { Route as AppWorkspaceSlugMessagesActivityRouteImport } from './routes/_app.$workspaceSlug.messages.activity'
 import { Route as AppWorkspaceSlugMessagesDmConversationIdRouteImport } from './routes/_app.$workspaceSlug.messages.dm.$conversationId'
@@ -150,6 +153,11 @@ const AppWorkspaceSlugRecurringTasksRoute =
     path: '/recurring-tasks',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
+const AppWorkspaceSlugProfileRoute = AppWorkspaceSlugProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AppWorkspaceSlugRoute,
+} as any)
 const AppWorkspaceSlugPayslipsRoute =
   AppWorkspaceSlugPayslipsRouteImport.update({
     id: '/payslips',
@@ -219,6 +227,11 @@ const AppWorkspaceSlugClientProjectsRoute =
     path: '/client-projects',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
+const AppWorkspaceSlugBillingRoute = AppWorkspaceSlugBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AppWorkspaceSlugRoute,
+} as any)
 const AppWorkspaceSlugAttendanceRoute =
   AppWorkspaceSlugAttendanceRouteImport.update({
     id: '/attendance',
@@ -294,6 +307,12 @@ const AppWorkspaceSlugTeamUserIdRoute =
     path: '/$userId',
     getParentRoute: () => AppWorkspaceSlugTeamRoute,
   } as any)
+const AppWorkspaceSlugTasksAssignRoute =
+  AppWorkspaceSlugTasksAssignRouteImport.update({
+    id: '/assign',
+    path: '/assign',
+    getParentRoute: () => AppWorkspaceSlugTasksRoute,
+  } as any)
 const AppWorkspaceSlugTasksTaskIdRoute =
   AppWorkspaceSlugTasksTaskIdRouteImport.update({
     id: '/$taskId',
@@ -332,6 +351,7 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
+  '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
   '/$workspaceSlug/client-projects': typeof AppWorkspaceSlugClientProjectsRoute
   '/$workspaceSlug/dashboard': typeof AppWorkspaceSlugDashboardRoute
   '/$workspaceSlug/deliverables': typeof AppWorkspaceSlugDeliverablesRoute
@@ -344,6 +364,7 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/onboarding': typeof AppWorkspaceSlugOnboardingRoute
   '/$workspaceSlug/org-chart': typeof AppWorkspaceSlugOrgChartRoute
   '/$workspaceSlug/payslips': typeof AppWorkspaceSlugPayslipsRoute
+  '/$workspaceSlug/profile': typeof AppWorkspaceSlugProfileRoute
   '/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
   '/$workspaceSlug/reports': typeof AppWorkspaceSlugReportsRoute
   '/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
@@ -354,6 +375,7 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
+  '/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
@@ -380,6 +402,7 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
+  '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
   '/$workspaceSlug/client-projects': typeof AppWorkspaceSlugClientProjectsRoute
   '/$workspaceSlug/dashboard': typeof AppWorkspaceSlugDashboardRoute
   '/$workspaceSlug/deliverables': typeof AppWorkspaceSlugDeliverablesRoute
@@ -392,6 +415,7 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/onboarding': typeof AppWorkspaceSlugOnboardingRoute
   '/$workspaceSlug/org-chart': typeof AppWorkspaceSlugOrgChartRoute
   '/$workspaceSlug/payslips': typeof AppWorkspaceSlugPayslipsRoute
+  '/$workspaceSlug/profile': typeof AppWorkspaceSlugProfileRoute
   '/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
   '/$workspaceSlug/reports': typeof AppWorkspaceSlugReportsRoute
   '/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
@@ -402,6 +426,7 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
+  '/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
@@ -430,6 +455,7 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/_app/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
+  '/_app/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
   '/_app/$workspaceSlug/client-projects': typeof AppWorkspaceSlugClientProjectsRoute
   '/_app/$workspaceSlug/dashboard': typeof AppWorkspaceSlugDashboardRoute
   '/_app/$workspaceSlug/deliverables': typeof AppWorkspaceSlugDeliverablesRoute
@@ -442,6 +468,7 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/onboarding': typeof AppWorkspaceSlugOnboardingRoute
   '/_app/$workspaceSlug/org-chart': typeof AppWorkspaceSlugOrgChartRoute
   '/_app/$workspaceSlug/payslips': typeof AppWorkspaceSlugPayslipsRoute
+  '/_app/$workspaceSlug/profile': typeof AppWorkspaceSlugProfileRoute
   '/_app/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
   '/_app/$workspaceSlug/reports': typeof AppWorkspaceSlugReportsRoute
   '/_app/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
@@ -452,6 +479,7 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/_app/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
+  '/_app/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/_app/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
@@ -480,6 +508,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/ai-tasks'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
+    | '/$workspaceSlug/billing'
     | '/$workspaceSlug/client-projects'
     | '/$workspaceSlug/dashboard'
     | '/$workspaceSlug/deliverables'
@@ -492,6 +521,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/onboarding'
     | '/$workspaceSlug/org-chart'
     | '/$workspaceSlug/payslips'
+    | '/$workspaceSlug/profile'
     | '/$workspaceSlug/recurring-tasks'
     | '/$workspaceSlug/reports'
     | '/$workspaceSlug/reviews'
@@ -502,6 +532,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/team-board'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/tasks/$taskId'
+    | '/$workspaceSlug/tasks/assign'
     | '/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/burnout-detection'
@@ -528,6 +559,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/ai-tasks'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
+    | '/$workspaceSlug/billing'
     | '/$workspaceSlug/client-projects'
     | '/$workspaceSlug/dashboard'
     | '/$workspaceSlug/deliverables'
@@ -540,6 +572,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/onboarding'
     | '/$workspaceSlug/org-chart'
     | '/$workspaceSlug/payslips'
+    | '/$workspaceSlug/profile'
     | '/$workspaceSlug/recurring-tasks'
     | '/$workspaceSlug/reports'
     | '/$workspaceSlug/reviews'
@@ -550,6 +583,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/team-board'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/tasks/$taskId'
+    | '/$workspaceSlug/tasks/assign'
     | '/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/burnout-detection'
@@ -577,6 +611,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/ai-tasks'
     | '/_app/$workspaceSlug/announcements'
     | '/_app/$workspaceSlug/attendance'
+    | '/_app/$workspaceSlug/billing'
     | '/_app/$workspaceSlug/client-projects'
     | '/_app/$workspaceSlug/dashboard'
     | '/_app/$workspaceSlug/deliverables'
@@ -589,6 +624,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/onboarding'
     | '/_app/$workspaceSlug/org-chart'
     | '/_app/$workspaceSlug/payslips'
+    | '/_app/$workspaceSlug/profile'
     | '/_app/$workspaceSlug/recurring-tasks'
     | '/_app/$workspaceSlug/reports'
     | '/_app/$workspaceSlug/reviews'
@@ -599,6 +635,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/team-board'
     | '/_app/$workspaceSlug/messages/activity'
     | '/_app/$workspaceSlug/tasks/$taskId'
+    | '/_app/$workspaceSlug/tasks/assign'
     | '/_app/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/burnout-detection'
@@ -762,6 +799,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugRecurringTasksRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
+    '/_app/$workspaceSlug/profile': {
+      id: '/_app/$workspaceSlug/profile'
+      path: '/profile'
+      fullPath: '/$workspaceSlug/profile'
+      preLoaderRoute: typeof AppWorkspaceSlugProfileRouteImport
+      parentRoute: typeof AppWorkspaceSlugRoute
+    }
     '/_app/$workspaceSlug/payslips': {
       id: '/_app/$workspaceSlug/payslips'
       path: '/payslips'
@@ -844,6 +888,13 @@ declare module '@tanstack/react-router' {
       path: '/client-projects'
       fullPath: '/$workspaceSlug/client-projects'
       preLoaderRoute: typeof AppWorkspaceSlugClientProjectsRouteImport
+      parentRoute: typeof AppWorkspaceSlugRoute
+    }
+    '/_app/$workspaceSlug/billing': {
+      id: '/_app/$workspaceSlug/billing'
+      path: '/billing'
+      fullPath: '/$workspaceSlug/billing'
+      preLoaderRoute: typeof AppWorkspaceSlugBillingRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
     '/_app/$workspaceSlug/attendance': {
@@ -937,6 +988,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugTeamUserIdRouteImport
       parentRoute: typeof AppWorkspaceSlugTeamRoute
     }
+    '/_app/$workspaceSlug/tasks/assign': {
+      id: '/_app/$workspaceSlug/tasks/assign'
+      path: '/assign'
+      fullPath: '/$workspaceSlug/tasks/assign'
+      preLoaderRoute: typeof AppWorkspaceSlugTasksAssignRouteImport
+      parentRoute: typeof AppWorkspaceSlugTasksRoute
+    }
     '/_app/$workspaceSlug/tasks/$taskId': {
       id: '/_app/$workspaceSlug/tasks/$taskId'
       path: '/$taskId'
@@ -991,10 +1049,12 @@ const AppWorkspaceSlugMessagesRouteWithChildren =
 
 interface AppWorkspaceSlugTasksRouteChildren {
   AppWorkspaceSlugTasksTaskIdRoute: typeof AppWorkspaceSlugTasksTaskIdRoute
+  AppWorkspaceSlugTasksAssignRoute: typeof AppWorkspaceSlugTasksAssignRoute
 }
 
 const AppWorkspaceSlugTasksRouteChildren: AppWorkspaceSlugTasksRouteChildren = {
   AppWorkspaceSlugTasksTaskIdRoute: AppWorkspaceSlugTasksTaskIdRoute,
+  AppWorkspaceSlugTasksAssignRoute: AppWorkspaceSlugTasksAssignRoute,
 }
 
 const AppWorkspaceSlugTasksRouteWithChildren =
@@ -1017,6 +1077,7 @@ interface AppWorkspaceSlugRouteChildren {
   AppWorkspaceSlugAiTasksRoute: typeof AppWorkspaceSlugAiTasksRoute
   AppWorkspaceSlugAnnouncementsRoute: typeof AppWorkspaceSlugAnnouncementsRoute
   AppWorkspaceSlugAttendanceRoute: typeof AppWorkspaceSlugAttendanceRoute
+  AppWorkspaceSlugBillingRoute: typeof AppWorkspaceSlugBillingRoute
   AppWorkspaceSlugClientProjectsRoute: typeof AppWorkspaceSlugClientProjectsRoute
   AppWorkspaceSlugDashboardRoute: typeof AppWorkspaceSlugDashboardRoute
   AppWorkspaceSlugDeliverablesRoute: typeof AppWorkspaceSlugDeliverablesRoute
@@ -1029,6 +1090,7 @@ interface AppWorkspaceSlugRouteChildren {
   AppWorkspaceSlugOnboardingRoute: typeof AppWorkspaceSlugOnboardingRoute
   AppWorkspaceSlugOrgChartRoute: typeof AppWorkspaceSlugOrgChartRoute
   AppWorkspaceSlugPayslipsRoute: typeof AppWorkspaceSlugPayslipsRoute
+  AppWorkspaceSlugProfileRoute: typeof AppWorkspaceSlugProfileRoute
   AppWorkspaceSlugRecurringTasksRoute: typeof AppWorkspaceSlugRecurringTasksRoute
   AppWorkspaceSlugReportsRoute: typeof AppWorkspaceSlugReportsRoute
   AppWorkspaceSlugReviewsRoute: typeof AppWorkspaceSlugReviewsRoute
@@ -1043,6 +1105,7 @@ const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
   AppWorkspaceSlugAiTasksRoute: AppWorkspaceSlugAiTasksRoute,
   AppWorkspaceSlugAnnouncementsRoute: AppWorkspaceSlugAnnouncementsRoute,
   AppWorkspaceSlugAttendanceRoute: AppWorkspaceSlugAttendanceRoute,
+  AppWorkspaceSlugBillingRoute: AppWorkspaceSlugBillingRoute,
   AppWorkspaceSlugClientProjectsRoute: AppWorkspaceSlugClientProjectsRoute,
   AppWorkspaceSlugDashboardRoute: AppWorkspaceSlugDashboardRoute,
   AppWorkspaceSlugDeliverablesRoute: AppWorkspaceSlugDeliverablesRoute,
@@ -1055,6 +1118,7 @@ const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
   AppWorkspaceSlugOnboardingRoute: AppWorkspaceSlugOnboardingRoute,
   AppWorkspaceSlugOrgChartRoute: AppWorkspaceSlugOrgChartRoute,
   AppWorkspaceSlugPayslipsRoute: AppWorkspaceSlugPayslipsRoute,
+  AppWorkspaceSlugProfileRoute: AppWorkspaceSlugProfileRoute,
   AppWorkspaceSlugRecurringTasksRoute: AppWorkspaceSlugRecurringTasksRoute,
   AppWorkspaceSlugReportsRoute: AppWorkspaceSlugReportsRoute,
   AppWorkspaceSlugReviewsRoute: AppWorkspaceSlugReviewsRoute,
