@@ -105,7 +105,12 @@ function AiTasksPage() {
         }),
       });
 
-      if (!resp.ok) throw new Error(await resp.text());
+      if (!resp.ok) {
+        const text = await resp.text();
+        let msg = text;
+        try { msg = (JSON.parse(text) as { error?: string }).error ?? text; } catch { /* raw text */ }
+        throw new Error(msg);
+      }
       const data = (await resp.json()) as { result?: string; error?: string };
       if (data.error) throw new Error(data.error);
 

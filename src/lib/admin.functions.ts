@@ -4,7 +4,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   assertCallerIsAdmin,
   assertCallerIsManagerOrAdmin,
+  createInvitation,
   inviteEmployee,
+  redeemInvitation,
   resolveFlag,
   setEmployeeActive,
   setEmployeeRole,
@@ -34,6 +36,7 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
         phone: z.string().nullable().optional(),
         role: roleEnum,
         redirectTo: z.string().url().optional(),
+        workspaceId: z.string().uuid(),
       })
       .parse(data),
   )
@@ -83,3 +86,38 @@ export const resolveFlagFn = createServerFn({ method: "POST" })
     await resolveFlag(data.flagId, context.supabase);
     return { ok: true };
   });
+
+export const createInvitationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        email: z.string().email(),
+        full_name: z.string().min(1),
+        job_title: z.string().nullable().optional(),
+        department: z.enum([
+          "management", "customer_success", "growth", "marketing",
+          "design", "video_editing", "operations", "other",
+        ]).nullable().optional(),
+        phone: z.string().nullable().optional(),
+        role: z.enum(["admin", "manager", "employee"]),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCallerIsManagerOrAdmin(context.userId, context.supabase);
+    if (data.role === "admin") await assertCallerIsAdmin(context.userId, context.supabase);
+    return createInvitation({ ...data, invitedBy: context.userId });
+  });
+
+export const redeemInvitationFn = createServerFn({ method: "POST" })
+  .inputValidator((data) =>
+    z
+      .object({
+        tokenOrPasscode: z.string().min(1),
+        password: z.string().min(8),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data }) => redeemInvitation(data));
