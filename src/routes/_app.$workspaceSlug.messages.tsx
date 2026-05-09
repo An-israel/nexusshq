@@ -11,6 +11,7 @@ import { CreateChannelModal } from "@/components/messages/CreateChannelModal";
 import { NewDmModal } from "@/components/messages/NewDmModal";
 import { QuickSwitcher } from "@/components/messages/QuickSwitcher";
 import { SearchModal } from "@/components/messages/SearchModal";
+import { usePushNotifications } from "@/lib/messaging/use-push-notifications";
 import type { MsgProfile, UserPresence } from "@/lib/messaging/types";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/messages")({
@@ -103,6 +104,8 @@ function MessagesLayout() {
       goToChannel(general.id);
     }
   }, [joinedChannels, pathname]);
+
+  usePushNotifications(currentUserId, workspaceSlug);
 
   const ctxValue = React.useMemo<MessagingCtxValue>(
     () => ({ workspaceMembers, presence, updateMyPresence }),

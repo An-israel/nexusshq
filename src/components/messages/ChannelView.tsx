@@ -1,6 +1,6 @@
 import * as React from "react";
 import { format, isToday, isYesterday, isSameDay } from "date-fns";
-import { Hash, Lock, Megaphone, Search, Settings, Users, ChevronDown, ArrowDown } from "lucide-react";
+import { Hash, Lock, Megaphone, Pin, Search, Settings, Users, ChevronDown, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -16,6 +16,8 @@ import { useReactions } from "@/lib/messaging/use-reactions";
 import { MessageItem } from "@/components/messages/MessageItem";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { ThreadPanel } from "@/components/messages/ThreadPanel";
+import { PinnedMessagesPanel } from "@/components/messages/PinnedMessagesPanel";
+import { ChannelMembersPanel } from "@/components/messages/ChannelMembersPanel";
 import type { ChannelWithMeta, Message, MsgProfile, UserPresence } from "@/lib/messaging/types";
 
 interface ChannelViewProps {
@@ -50,6 +52,8 @@ export function ChannelView({
   const [newMessagesBanner, setNewMessagesBanner] = React.useState(0);
   const [unreadFromIdx, setUnreadFromIdx] = React.useState<number | null>(null);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
+  const [pinnedOpen, setPinnedOpen] = React.useState(false);
+  const [membersOpen, setMembersOpen] = React.useState(false);
 
   const scrollRef = React.useRef<HTMLDivElement>(null);
   const bottomRef = React.useRef<HTMLDivElement>(null);
@@ -175,6 +179,7 @@ export function ChannelView({
           </div>
           <div className="flex shrink-0 items-center gap-1">
             <button
+              onClick={() => setMembersOpen(true)}
               className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-xs text-[#6B7280] hover:bg-[#1A1A1A] hover:text-white transition-colors"
               title="Members"
             >
@@ -182,10 +187,11 @@ export function ChannelView({
               <span>{channel.member_count}</span>
             </button>
             <button
+              onClick={() => setPinnedOpen(true)}
               className="rounded-md p-1.5 text-[#6B7280] hover:bg-[#1A1A1A] hover:text-white transition-colors"
-              title="Search in channel"
+              title="Pinned messages"
             >
-              <Search className="h-4 w-4" />
+              <Pin className="h-4 w-4" />
             </button>
             <DropdownMenu open={settingsOpen} onOpenChange={setSettingsOpen}>
               <DropdownMenuTrigger asChild>
@@ -194,11 +200,17 @@ export function ChannelView({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-[#2A2A2A]">
-                <DropdownMenuItem className="text-[#9CA3AF] hover:text-white focus:text-white focus:bg-[#2A2A2A] cursor-pointer">
+                <DropdownMenuItem
+                  className="text-[#9CA3AF] hover:text-white focus:text-white focus:bg-[#2A2A2A] cursor-pointer"
+                  onClick={() => { setSettingsOpen(false); setMembersOpen(true); }}
+                >
                   View members
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-[#9CA3AF] hover:text-white focus:text-white focus:bg-[#2A2A2A] cursor-pointer">
-                  Edit channel
+                <DropdownMenuItem
+                  className="text-[#9CA3AF] hover:text-white focus:text-white focus:bg-[#2A2A2A] cursor-pointer"
+                  onClick={() => { setSettingsOpen(false); setPinnedOpen(true); }}
+                >
+                  Pinned messages
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-red-400 hover:text-red-300 focus:text-red-300 focus:bg-[#2A2A2A] cursor-pointer"
@@ -342,6 +354,21 @@ export function ChannelView({
           />
         </div>
       )}
+
+      {/* Slide-in panels */}
+      <PinnedMessagesPanel
+        open={pinnedOpen}
+        onClose={() => setPinnedOpen(false)}
+        channelId={channel.id}
+        workspaceId={workspaceId}
+        currentUserId={currentUserId}
+      />
+      <ChannelMembersPanel
+        open={membersOpen}
+        onClose={() => setMembersOpen(false)}
+        channel={{ id: channel.id, name: channel.name, workspace_id: workspaceId, type: channel.type }}
+        currentUserId={currentUserId}
+      />
     </div>
   );
 }

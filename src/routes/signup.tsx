@@ -309,8 +309,9 @@ function SignupPage() {
 
       if (subError) throw subError;
 
-      toast.success("Workspace created! Taking you there now…");
-      void navigate({ to: `/${slug}/dashboard` });
+      toast.success("Workspace created! Let's get you set up…");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      void navigate({ to: `/${slug}/onboarding` as any });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
