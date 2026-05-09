@@ -406,6 +406,9 @@ export type Database = {
       }
       direct_messages: {
         Row: {
+          attachment_mime: string | null
+          attachment_name: string | null
+          attachment_url: string | null
           body: string
           created_at: string
           edited_at: string | null
@@ -416,6 +419,9 @@ export type Database = {
           workspace_id: string | null
         }
         Insert: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_url?: string | null
           body: string
           created_at?: string
           edited_at?: string | null
@@ -426,6 +432,9 @@ export type Database = {
           workspace_id?: string | null
         }
         Update: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_url?: string | null
           body?: string
           created_at?: string
           edited_at?: string | null
@@ -638,6 +647,9 @@ export type Database = {
       }
       group_messages: {
         Row: {
+          attachment_mime: string | null
+          attachment_name: string | null
+          attachment_url: string | null
           body: string
           created_at: string
           edited_at: string | null
@@ -647,6 +659,9 @@ export type Database = {
           workspace_id: string | null
         }
         Insert: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_url?: string | null
           body: string
           created_at?: string
           edited_at?: string | null
@@ -656,6 +671,9 @@ export type Database = {
           workspace_id?: string | null
         }
         Update: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_url?: string | null
           body?: string
           created_at?: string
           edited_at?: string | null
