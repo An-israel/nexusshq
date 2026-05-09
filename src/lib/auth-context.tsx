@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { fetchUserRolesWithRetry, pickTopRole } from "@/lib/role-access";
 import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
+import { ensureSkryveSeed } from "@/lib/seed.functions";
 
 export type AppRole = "admin" | "manager" | "employee";
 
