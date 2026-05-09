@@ -1,5 +1,5 @@
 import * as React from "react";
-import { createFileRoute, Outlet, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-context";
@@ -69,6 +69,7 @@ function WorkspaceShell() {
   const { user, role } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const isMessages = useRouterState({ select: (s) => s.location.pathname.includes("/messages") });
 
   React.useEffect(() => {
     if (!user) return;
@@ -221,7 +222,7 @@ function WorkspaceShell() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6">
+        <main className={isMessages ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6"}>
           <Outlet />
         </main>
       </div>
