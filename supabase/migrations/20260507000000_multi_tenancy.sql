@@ -188,8 +188,8 @@ BEGIN
     v_workspace_id,
     p.id,
     COALESCE(
-      (SELECT role FROM public.user_roles WHERE user_id = p.id ORDER BY
-        CASE role WHEN 'admin' THEN 0 WHEN 'manager' THEN 1 ELSE 2 END LIMIT 1),
+      (SELECT role::text FROM public.user_roles WHERE user_id = p.id ORDER BY
+        CASE role::text WHEN 'admin' THEN 0 WHEN 'manager' THEN 1 ELSE 2 END LIMIT 1),
       'employee'
     ),
     p.is_active
@@ -199,7 +199,7 @@ BEGIN
   -- Make the first admin the workspace owner
   SELECT p.id INTO v_owner_id
   FROM public.profiles p
-  JOIN public.user_roles ur ON ur.user_id = p.id AND ur.role = 'admin'
+  JOIN public.user_roles ur ON ur.user_id = p.id AND ur.role::text = 'admin'
   LIMIT 1;
 
   IF v_owner_id IS NOT NULL THEN
@@ -260,30 +260,36 @@ ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.super_admin_users ENABLE ROW LEVEL SECURITY;
 
 -- workspaces: members can read their own workspaces
+DROP POLICY IF EXISTS "workspaces members can read" ON public.workspaces;
 CREATE POLICY "workspaces members can read"
   ON public.workspaces FOR SELECT TO authenticated
   USING (public.is_workspace_member(id));
 
 -- workspace_members: members can read membership list
+DROP POLICY IF EXISTS "workspace_members readable by members" ON public.workspace_members;
 CREATE POLICY "workspace_members readable by members"
   ON public.workspace_members FOR SELECT TO authenticated
   USING (public.is_workspace_member(workspace_id));
 
+DROP POLICY IF EXISTS "workspace_members admins manage" ON public.workspace_members;
 CREATE POLICY "workspace_members admins manage"
   ON public.workspace_members FOR ALL TO authenticated
   USING (public.is_workspace_admin(workspace_id))
   WITH CHECK (public.is_workspace_admin(workspace_id));
 
 -- plans: anyone authenticated can read
+DROP POLICY IF EXISTS "plans readable by authenticated" ON public.plans;
 CREATE POLICY "plans readable by authenticated"
   ON public.plans FOR SELECT TO authenticated USING (true);
 
 -- subscriptions: workspace members can read
+DROP POLICY IF EXISTS "subscriptions readable by members" ON public.subscriptions;
 CREATE POLICY "subscriptions readable by members"
   ON public.subscriptions FOR SELECT TO authenticated
   USING (public.is_workspace_member(workspace_id));
 
 -- super_admin_users: only the super admin can read (their own row)
+DROP POLICY IF EXISTS "super_admin_users self read" ON public.super_admin_users;
 CREATE POLICY "super_admin_users self read"
   ON public.super_admin_users FOR SELECT TO authenticated
   USING (user_id = auth.uid());
@@ -771,5 +777,21 @@ CREATE INDEX IF NOT EXISTS idx_announcements_workspace_id    ON public.announcem
 
 ALTER TABLE public.feature_flags DROP CONSTRAINT IF EXISTS feature_flags_pkey;
 ALTER TABLE public.feature_flags ADD COLUMN IF NOT EXISTS id uuid NOT NULL DEFAULT gen_random_uuid();
-ALTER TABLE public.feature_flags ADD PRIMARY KEY (id);
-ALTER TABLE public.feature_flags ADD CONSTRAINT feature_flags_key_workspace_unique UNIQUE (key, workspace_id);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'feature_flags_pkey'
+      AND conrelid = 'public.feature_flags'::regclass
+  ) THEN
+    ALTER TABLE public.feature_flags ADD PRIMARY KEY (id);
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'feature_flags_key_workspace_unique'
+      AND conrelid = 'public.feature_flags'::regclass
+  ) THEN
+    ALTER TABLE public.feature_flags ADD CONSTRAINT feature_flags_key_workspace_unique UNIQUE (key, workspace_id);
+  END IF;
+END $$;

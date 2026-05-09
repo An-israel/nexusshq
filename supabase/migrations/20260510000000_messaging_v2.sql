@@ -215,6 +215,7 @@ ALTER TABLE public.user_presence      ENABLE ROW LEVEL SECURITY;
 
 -- channels: workspace members can see public/announcement channels,
 --           private channels only if they are a member
+DROP POLICY IF EXISTS "channels select" ON public.channels;
 CREATE POLICY "channels select" ON public.channels FOR SELECT TO authenticated
   USING (
     workspace_id IN (SELECT public.get_my_workspace_ids())
@@ -227,29 +228,37 @@ CREATE POLICY "channels select" ON public.channels FOR SELECT TO authenticated
     )
   );
 
+DROP POLICY IF EXISTS "channels insert" ON public.channels;
 CREATE POLICY "channels insert" ON public.channels FOR INSERT TO authenticated
   WITH CHECK (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "channels update" ON public.channels;
 CREATE POLICY "channels update" ON public.channels FOR UPDATE TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "channels delete" ON public.channels;
 CREATE POLICY "channels delete" ON public.channels FOR DELETE TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
 -- channel_members
+DROP POLICY IF EXISTS "channel_members select" ON public.channel_members;
 CREATE POLICY "channel_members select" ON public.channel_members FOR SELECT TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "channel_members insert" ON public.channel_members;
 CREATE POLICY "channel_members insert" ON public.channel_members FOR INSERT TO authenticated
   WITH CHECK (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "channel_members update" ON public.channel_members;
 CREATE POLICY "channel_members update" ON public.channel_members FOR UPDATE TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "channel_members delete" ON public.channel_members;
 CREATE POLICY "channel_members delete" ON public.channel_members FOR DELETE TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
 -- dm_conversations: only participants can see
+DROP POLICY IF EXISTS "dm_conversations select" ON public.dm_conversations;
 CREATE POLICY "dm_conversations select" ON public.dm_conversations FOR SELECT TO authenticated
   USING (
     workspace_id IN (SELECT public.get_my_workspace_ids())
@@ -259,9 +268,11 @@ CREATE POLICY "dm_conversations select" ON public.dm_conversations FOR SELECT TO
     )
   );
 
+DROP POLICY IF EXISTS "dm_conversations insert" ON public.dm_conversations;
 CREATE POLICY "dm_conversations insert" ON public.dm_conversations FOR INSERT TO authenticated
   WITH CHECK (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "dm_conversations update" ON public.dm_conversations;
 CREATE POLICY "dm_conversations update" ON public.dm_conversations FOR UPDATE TO authenticated
   USING (
     workspace_id IN (SELECT public.get_my_workspace_ids())
@@ -272,6 +283,7 @@ CREATE POLICY "dm_conversations update" ON public.dm_conversations FOR UPDATE TO
   );
 
 -- dm_members
+DROP POLICY IF EXISTS "dm_members select" ON public.dm_members;
 CREATE POLICY "dm_members select" ON public.dm_members FOR SELECT TO authenticated
   USING (
     EXISTS (
@@ -285,6 +297,7 @@ CREATE POLICY "dm_members select" ON public.dm_members FOR SELECT TO authenticat
     )
   );
 
+DROP POLICY IF EXISTS "dm_members insert" ON public.dm_members;
 CREATE POLICY "dm_members insert" ON public.dm_members FOR INSERT TO authenticated
   WITH CHECK (
     EXISTS (
@@ -294,25 +307,31 @@ CREATE POLICY "dm_members insert" ON public.dm_members FOR INSERT TO authenticat
     )
   );
 
+DROP POLICY IF EXISTS "dm_members update" ON public.dm_members;
 CREATE POLICY "dm_members update" ON public.dm_members FOR UPDATE TO authenticated
   USING (user_id = auth.uid());
 
 -- messages
+DROP POLICY IF EXISTS "messages select" ON public.messages;
 CREATE POLICY "messages select" ON public.messages FOR SELECT TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "messages insert" ON public.messages;
 CREATE POLICY "messages insert" ON public.messages FOR INSERT TO authenticated
   WITH CHECK (workspace_id IN (SELECT public.get_my_workspace_ids())
               AND sender_id = auth.uid());
 
+DROP POLICY IF EXISTS "messages update" ON public.messages;
 CREATE POLICY "messages update" ON public.messages FOR UPDATE TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "messages delete" ON public.messages;
 CREATE POLICY "messages delete" ON public.messages FOR DELETE TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids())
          AND sender_id = auth.uid());
 
 -- message_attachments
+DROP POLICY IF EXISTS "message_attachments select" ON public.message_attachments;
 CREATE POLICY "message_attachments select" ON public.message_attachments FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.messages m
@@ -320,6 +339,7 @@ CREATE POLICY "message_attachments select" ON public.message_attachments FOR SEL
       AND m.workspace_id IN (SELECT public.get_my_workspace_ids())
   ));
 
+DROP POLICY IF EXISTS "message_attachments insert" ON public.message_attachments;
 CREATE POLICY "message_attachments insert" ON public.message_attachments FOR INSERT TO authenticated
   WITH CHECK (EXISTS (
     SELECT 1 FROM public.messages m
@@ -328,6 +348,7 @@ CREATE POLICY "message_attachments insert" ON public.message_attachments FOR INS
       AND m.sender_id = auth.uid()
   ));
 
+DROP POLICY IF EXISTS "message_attachments delete" ON public.message_attachments;
 CREATE POLICY "message_attachments delete" ON public.message_attachments FOR DELETE TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.messages m
@@ -335,6 +356,7 @@ CREATE POLICY "message_attachments delete" ON public.message_attachments FOR DEL
   ));
 
 -- message_reactions
+DROP POLICY IF EXISTS "message_reactions select" ON public.message_reactions;
 CREATE POLICY "message_reactions select" ON public.message_reactions FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.messages m
@@ -342,6 +364,7 @@ CREATE POLICY "message_reactions select" ON public.message_reactions FOR SELECT 
       AND m.workspace_id IN (SELECT public.get_my_workspace_ids())
   ));
 
+DROP POLICY IF EXISTS "message_reactions insert" ON public.message_reactions;
 CREATE POLICY "message_reactions insert" ON public.message_reactions FOR INSERT TO authenticated
   WITH CHECK (user_id = auth.uid() AND EXISTS (
     SELECT 1 FROM public.messages m
@@ -349,16 +372,20 @@ CREATE POLICY "message_reactions insert" ON public.message_reactions FOR INSERT 
       AND m.workspace_id IN (SELECT public.get_my_workspace_ids())
   ));
 
+DROP POLICY IF EXISTS "message_reactions delete" ON public.message_reactions;
 CREATE POLICY "message_reactions delete" ON public.message_reactions FOR DELETE TO authenticated
   USING (user_id = auth.uid());
 
 -- user_presence: workspace members can see each other's presence
+DROP POLICY IF EXISTS "user_presence select" ON public.user_presence;
 CREATE POLICY "user_presence select" ON public.user_presence FOR SELECT TO authenticated
   USING (workspace_id IN (SELECT public.get_my_workspace_ids()));
 
+DROP POLICY IF EXISTS "user_presence insert" ON public.user_presence;
 CREATE POLICY "user_presence insert" ON public.user_presence FOR INSERT TO authenticated
   WITH CHECK (user_id = auth.uid());
 
+DROP POLICY IF EXISTS "user_presence update" ON public.user_presence;
 CREATE POLICY "user_presence update" ON public.user_presence FOR UPDATE TO authenticated
   USING (user_id = auth.uid());
 
