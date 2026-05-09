@@ -10,6 +10,7 @@ import { MessagesSidebar } from "@/components/messages/MessagesSidebar";
 import { CreateChannelModal } from "@/components/messages/CreateChannelModal";
 import { NewDmModal } from "@/components/messages/NewDmModal";
 import { QuickSwitcher } from "@/components/messages/QuickSwitcher";
+import { SearchModal } from "@/components/messages/SearchModal";
 import type { MsgProfile, UserPresence } from "@/lib/messaging/types";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/messages")({
@@ -47,6 +48,7 @@ function MessagesLayout() {
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
   const [newDmOpen, setNewDmOpen] = React.useState(false);
   const [quickSwitcherOpen, setQuickSwitcherOpen] = React.useState(false);
+  const [searchOpen, setSearchOpen] = React.useState(false);
 
   React.useEffect(() => {
     if (!workspaceId) return;
@@ -129,7 +131,7 @@ function MessagesLayout() {
             onSelectActivity={goToActivity}
             onOpenCreateChannel={() => setCreateChannelOpen(true)}
             onOpenNewDm={() => setNewDmOpen(true)}
-            onOpenSearch={() => setQuickSwitcherOpen(true)}
+            onOpenSearch={() => setSearchOpen(true)}
           />
         </div>
 
@@ -178,6 +180,15 @@ function MessagesLayout() {
           goToDm(id);
           setQuickSwitcherOpen(false);
         }}
+      />
+
+      <SearchModal
+        open={searchOpen}
+        onClose={() => setSearchOpen(false)}
+        workspaceId={workspaceId ?? ""}
+        currentUserId={currentUserId ?? ""}
+        onSelectChannel={(id) => { goToChannel(id); setSearchOpen(false); }}
+        onSelectDm={(id) => { goToDm(id); setSearchOpen(false); }}
       />
     </MessagingCtx.Provider>
   );
