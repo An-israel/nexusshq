@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Zap, ArrowRight, HelpCircle, Users, X } from "lucide-react";
+import { Check, Zap, ArrowRight, HelpCircle, Users, Headphones, Star } from "lucide-react";
 
 export const Route = createFileRoute("/pricing")({
   component: PricingPage,
@@ -8,179 +8,103 @@ export const Route = createFileRoute("/pricing")({
 
 type Billing = "monthly" | "annual";
 
+const MONTHLY_PRICES = { basic: 15000, enterprise: 25000, unlimited: 45000 };
+const DISCOUNT = 0.3;
+
 const PLANS = [
   {
-    id: "starter",
-    name: "Starter",
-    desc: "Perfect for small teams getting started.",
-    monthly: 0,
-    annual: 0,
-    userLimit: "Up to 10 users",
-    cta: "Start for free",
-    ctaTo: "/login",
+    id: "basic",
+    name: "Basic",
+    seats: 7,
+    seatLabel: "Up to 7 members",
+    support: "Email support",
+    supportIcon: Headphones,
     highlight: false,
     badge: null,
-    features: [
-      "Attendance tracking",
-      "Task management",
-      "Direct messages",
-      "Daily standups",
-      "Leave requests",
-      "Company handbook",
-      "Org chart",
-      "Mobile app (PWA)",
-      "Email notifications",
-    ],
-    missing: [
-      "AI intelligence layer",
-      "KPIs & OKRs",
-      "Reports & analytics",
-      "Client portal",
-      "Recurring tasks",
-      "Deliverable reviews",
-      "Priority support",
-    ],
-  },
-  {
-    id: "growth",
-    name: "Growth",
-    desc: "For growing teams that need the full picture.",
-    monthly: 49,
-    annual: 39,
-    userLimit: "Up to 100 users",
-    cta: "Start free trial",
-    ctaTo: "/login",
-    highlight: true,
-    badge: "Most popular",
-    features: [
-      "Everything in Starter",
-      "AI intelligence (Claude AI)",
-      "KPIs & OKRs tracking",
-      "Reports & analytics",
-      "Client portal with tracking",
-      "Recurring task automation",
-      "Deliverable reviews + scoring",
-      "Payslip management",
-      "Performance reviews",
-      "Task board (Kanban)",
-      "Email digest & alerts",
-      "Desktop app (Windows)",
-    ],
-    missing: [
-      "Custom branding",
-      "SSO / SAML",
-      "Dedicated onboarding",
-      "SLA guarantee",
-    ],
+    cta: "Start 7-day free trial",
+    colorClass: "text-muted-foreground",
+    accentClass: "border-border",
   },
   {
     id: "enterprise",
     name: "Enterprise",
-    desc: "For large organisations with custom needs.",
-    monthly: null,
-    annual: null,
-    userLimit: "Unlimited users",
-    cta: "Contact us",
-    ctaTo: "/login",
+    seats: 15,
+    seatLabel: "Up to 15 members",
+    support: "Priority support",
+    supportIcon: Star,
+    highlight: true,
+    badge: "Most popular",
+    cta: "Start 7-day free trial",
+    colorClass: "text-primary",
+    accentClass: "border-primary",
+  },
+  {
+    id: "unlimited",
+    name: "Unlimited",
+    seats: null,
+    seatLabel: "Unlimited members",
+    support: "Dedicated account manager",
+    supportIcon: Headphones,
     highlight: false,
     badge: null,
-    features: [
-      "Everything in Growth",
-      "Custom branding & domain",
-      "SSO / SAML authentication",
-      "Dedicated onboarding",
-      "Priority 24/7 support",
-      "SLA guarantee",
-      "Custom integrations",
-      "Data export & backup",
-      "Audit logs",
-    ],
-    missing: [],
+    cta: "Start 7-day free trial",
+    colorClass: "text-amber-400",
+    accentClass: "border-amber-500/60",
   },
-];
+] as const;
 
-const COMPARISON = [
-  {
-    category: "Core HR",
-    rows: [
-      { feature: "Attendance tracking", starter: true, growth: true, enterprise: true },
-      { feature: "Leave management", starter: true, growth: true, enterprise: true },
-      { feature: "Daily standups", starter: true, growth: true, enterprise: true },
-      { feature: "Performance reviews", starter: false, growth: true, enterprise: true },
-      { feature: "Payslip management", starter: false, growth: true, enterprise: true },
-    ],
-  },
-  {
-    category: "Tasks & Projects",
-    rows: [
-      { feature: "Task assignment & tracking", starter: true, growth: true, enterprise: true },
-      { feature: "Recurring task automation", starter: false, growth: true, enterprise: true },
-      { feature: "Kanban task board", starter: false, growth: true, enterprise: true },
-      { feature: "Deliverable submissions", starter: true, growth: true, enterprise: true },
-      { feature: "Deliverable scoring", starter: false, growth: true, enterprise: true },
-      { feature: "Client portal", starter: false, growth: true, enterprise: true },
-    ],
-  },
-  {
-    category: "Communication",
-    rows: [
-      { feature: "Direct messages", starter: true, growth: true, enterprise: true },
-      { feature: "Group channels", starter: true, growth: true, enterprise: true },
-      { feature: "File & image attachments", starter: true, growth: true, enterprise: true },
-      { feature: "Announcements", starter: true, growth: true, enterprise: true },
-      { feature: "Company handbook", starter: true, growth: true, enterprise: true },
-    ],
-  },
-  {
-    category: "Intelligence & Insights",
-    rows: [
-      { feature: "AI task descriptions", starter: false, growth: true, enterprise: true },
-      { feature: "AI performance insights", starter: false, growth: true, enterprise: true },
-      { feature: "Burnout risk detection", starter: false, growth: true, enterprise: true },
-      { feature: "KPIs dashboard", starter: false, growth: true, enterprise: true },
-      { feature: "Goals & OKRs", starter: false, growth: true, enterprise: true },
-      { feature: "Reports & analytics", starter: false, growth: true, enterprise: true },
-    ],
-  },
-  {
-    category: "Admin & Security",
-    rows: [
-      { feature: "Role-based access control", starter: true, growth: true, enterprise: true },
-      { feature: "Org chart", starter: true, growth: true, enterprise: true },
-      { feature: "Custom branding", starter: false, growth: false, enterprise: true },
-      { feature: "SSO / SAML", starter: false, growth: false, enterprise: true },
-      { feature: "Audit logs", starter: false, growth: false, enterprise: true },
-      { feature: "SLA guarantee", starter: false, growth: false, enterprise: true },
-    ],
-  },
+const ALL_FEATURES = [
+  "Task management & assignment",
+  "Attendance tracking & clock-in",
+  "Daily standups",
+  "Leave management",
+  "Performance reviews",
+  "Payslip management",
+  "Team messaging & channels",
+  "Company handbook",
+  "Org chart",
+  "Goals & OKRs",
+  "KPIs dashboard",
+  "Reports & analytics",
+  "AI weekly task generator",
+  "Client project tracking",
+  "Recurring task automation",
+  "Deliverable submissions & scoring",
+  "Role-based access control",
+  "Mobile app (PWA)",
+  "In-app notifications",
 ];
 
 const FAQ = [
   {
-    q: "Is the Starter plan really free forever?",
-    a: "Yes. The Starter plan is free for up to 10 users with no time limit. You only pay if you need more users or advanced features.",
+    q: "Is there a free trial?",
+    a: "Yes — every plan includes a 7-day free trial with no credit card required. You get full access to all features during the trial.",
   },
   {
-    q: "Can I switch plans at any time?",
-    a: "Absolutely. You can upgrade or downgrade at any time. Upgrades take effect immediately; downgrades take effect at the next billing cycle.",
+    q: "What happens after the trial ends?",
+    a: "You'll be prompted to choose a plan. Your data is safe — nothing is deleted. You can also contact us to extend the trial.",
   },
   {
-    q: "What happens if my team exceeds the user limit?",
-    a: "We'll notify you when you're close to the limit. You can upgrade at any time — existing data is never deleted.",
+    q: "Do all plans include the same features?",
+    a: "Yes. Every plan includes all features. The only differences are the number of seats and the level of support you receive.",
   },
   {
-    q: "How does annual billing work?",
-    a: "You pay upfront for 12 months and save 20% compared to monthly billing. You can switch back to monthly at renewal.",
+    q: "How does the 30% annual discount work?",
+    a: "Choose annual billing and pay upfront for 12 months at 30% off the monthly rate. You can switch back to monthly at renewal.",
   },
   {
-    q: "Do you offer a free trial for Growth?",
-    a: "Yes — Growth comes with a 14-day free trial, no credit card required.",
+    q: "What if my team grows beyond the seat limit?",
+    a: "We'll notify you when you're close. You can upgrade to the next plan at any time — existing data is never lost.",
   },
   {
-    q: "Can I self-host Nexus HQ?",
-    a: "Enterprise customers can request a self-hosted deployment. Contact us for details on the on-premise option.",
+    q: "What does 'dedicated account manager' mean?",
+    a: "Unlimited plan customers get a named contact at Nexus HQ for onboarding, training, and ongoing support via phone or WhatsApp.",
   },
 ];
+
+function fmt(n: number): string {
+  return "₦" + n.toLocaleString("en-NG");
+}
 
 function PricingPage() {
   const [billing, setBilling] = React.useState<Billing>("monthly");
@@ -198,8 +122,8 @@ function PricingPage() {
             <span className="text-lg font-bold tracking-tight">Nexus HQ</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <Link to="/" className="hover:text-foreground transition-colors">Features</Link>
-            <Link to="/pricing" className="text-foreground font-medium">Pricing</Link>
+            <Link to="/" className="transition-colors hover:text-foreground">Features</Link>
+            <Link to="/pricing" className="font-medium text-foreground">Pricing</Link>
           </nav>
           <div className="flex items-center gap-3">
             <Link
@@ -219,7 +143,7 @@ function PricingPage() {
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="py-20 text-center relative overflow-hidden">
+      <section className="relative overflow-hidden py-20 text-center">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-[400px] w-[400px] rounded-full bg-primary/5 blur-3xl" />
         </div>
@@ -227,15 +151,21 @@ function PricingPage() {
           <h1 className="mb-4 text-4xl font-extrabold tracking-tight sm:text-5xl">
             Simple, transparent pricing
           </h1>
-          <p className="mb-8 text-lg text-muted-foreground">
-            Start free. Scale as you grow. No hidden fees, no per-feature add-ons.
+          <p className="mb-2 text-lg text-muted-foreground">
+            Every plan includes every feature. Pay only for the seats you need.
           </p>
+          <p className="mb-8 text-sm text-muted-foreground">
+            7-day free trial on all plans · No credit card required
+          </p>
+
           {/* Billing toggle */}
           <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-card p-1">
             <button
               onClick={() => setBilling("monthly")}
               className={`rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
-                billing === "monthly" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                billing === "monthly"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Monthly
@@ -243,14 +173,20 @@ function PricingPage() {
             <button
               onClick={() => setBilling("annual")}
               className={`flex items-center gap-1.5 rounded-lg px-5 py-2 text-sm font-medium transition-colors ${
-                billing === "annual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                billing === "annual"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               Annual
-              <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
-                billing === "annual" ? "bg-primary-foreground/20 text-primary-foreground" : "bg-success/15 text-success"
-              }`}>
-                –20%
+              <span
+                className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
+                  billing === "annual"
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-green-500/15 text-green-500"
+                }`}
+              >
+                –30%
               </span>
             </button>
           </div>
@@ -259,10 +195,13 @@ function PricingPage() {
 
       {/* ── Plans ────────────────────────────────────────────────────────── */}
       <section className="pb-20">
-        <div className="mx-auto max-w-6xl px-6">
+        <div className="mx-auto max-w-5xl px-6">
           <div className="grid gap-6 md:grid-cols-3">
             {PLANS.map((plan) => {
-              const price = billing === "annual" ? plan.annual : plan.monthly;
+              const monthly = MONTHLY_PRICES[plan.id];
+              const price = billing === "annual" ? Math.round(monthly * (1 - DISCOUNT)) : monthly;
+              const SupportIcon = plan.supportIcon;
+
               return (
                 <div
                   key={plan.id}
@@ -279,34 +218,39 @@ function PricingPage() {
                       </span>
                     </div>
                   )}
+
                   <div className="mb-5">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{plan.name}</p>
-                    <div className="mt-2 flex items-end gap-1.5">
-                      {price === null ? (
-                        <span className="text-3xl font-extrabold">Custom</span>
-                      ) : price === 0 ? (
-                        <span className="text-3xl font-extrabold">Free</span>
-                      ) : (
-                        <>
-                          <span className="text-3xl font-extrabold">${price}</span>
-                          <span className="mb-1 text-sm text-muted-foreground">/ mo</span>
-                        </>
-                      )}
+                    <p className={`text-xs font-semibold uppercase tracking-wider ${plan.colorClass}`}>
+                      {plan.name}
+                    </p>
+                    <div className="mt-2 flex items-end gap-1">
+                      <span className="text-3xl font-extrabold">{fmt(price)}</span>
+                      <span className="mb-1 text-sm text-muted-foreground">/ mo</span>
                     </div>
-                    {price !== null && price > 0 && billing === "annual" && (
+                    {billing === "annual" && (
                       <p className="mt-0.5 text-xs text-muted-foreground">
-                        Billed annually (${price * 12}/yr)
+                        {fmt(price * 12)} billed annually
+                        <span className="ml-1.5 font-medium text-green-500">
+                          (save {fmt(monthly * 12 - price * 12)}/yr)
+                        </span>
                       </p>
                     )}
-                    <p className="mt-1 text-sm text-muted-foreground">{plan.desc}</p>
-                    <div className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-muted/40 px-2.5 py-1 text-xs">
-                      <Users className="h-3 w-3 text-muted-foreground" />
-                      <span>{plan.userLimit}</span>
+
+                    {/* Seat count */}
+                    <div className="mt-3 flex items-center gap-1.5 text-sm">
+                      <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{plan.seatLabel}</span>
+                    </div>
+
+                    {/* Support level */}
+                    <div className="mt-1.5 flex items-center gap-1.5 text-sm">
+                      <SupportIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span>{plan.support}</span>
                     </div>
                   </div>
 
                   <Link
-                    to={plan.ctaTo}
+                    to="/login"
                     className={`mb-6 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-colors ${
                       plan.highlight
                         ? "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -316,67 +260,63 @@ function PricingPage() {
                     {plan.cta} {plan.highlight && <ArrowRight className="h-4 w-4" />}
                   </Link>
 
-                  <div className="flex-1 space-y-2.5">
-                    {plan.features.map((f) => (
-                      <div key={f} className="flex items-start gap-2 text-sm">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-                        <span>{f}</span>
-                      </div>
-                    ))}
-                    {plan.missing.map((f) => (
-                      <div key={f} className="flex items-start gap-2 text-sm text-muted-foreground/50">
-                        <X className="mt-0.5 h-4 w-4 shrink-0" />
-                        <span>{f}</span>
-                      </div>
-                    ))}
+                  {/* All features included */}
+                  <div className="flex-1">
+                    <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      All features included
+                    </p>
+                    <div className="space-y-2">
+                      {ALL_FEATURES.map((f) => (
+                        <div key={f} className="flex items-start gap-2 text-sm">
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-green-500" />
+                          <span>{f}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
               );
             })}
           </div>
+
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            All plans include SSL, Supabase-backed database, and automatic backups. No credit card required for Starter.
+            Prices in Nigerian Naira (₦). All plans include SSL, automatic backups, and a 7-day free trial.
           </p>
         </div>
       </section>
 
-      {/* ── Comparison table ─────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-20 bg-card/20">
-        <div className="mx-auto max-w-5xl px-6">
-          <h2 className="mb-10 text-center text-2xl font-bold tracking-tight">Full feature comparison</h2>
+      {/* ── Support comparison ────────────────────────────────────────────── */}
+      <section className="border-t border-border/40 bg-card/20 py-20">
+        <div className="mx-auto max-w-3xl px-6">
+          <h2 className="mb-2 text-center text-2xl font-bold tracking-tight">What's different between plans?</h2>
+          <p className="mb-10 text-center text-sm text-muted-foreground">
+            Every plan unlocks every feature. The only differences are team size and support.
+          </p>
           <div className="overflow-x-auto rounded-2xl border border-border">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30">
-                  <th className="py-3 pl-5 pr-4 text-left font-medium text-muted-foreground">Feature</th>
-                  <th className="py-3 px-4 text-center font-medium text-muted-foreground">Starter</th>
-                  <th className="py-3 px-4 text-center font-medium text-primary">Growth</th>
-                  <th className="py-3 pl-4 pr-5 text-center font-medium text-muted-foreground">Enterprise</th>
+                  <th className="py-3 pl-5 pr-4 text-left font-medium text-muted-foreground"></th>
+                  <th className="px-4 py-3 text-center font-semibold">Basic</th>
+                  <th className="px-4 py-3 text-center font-semibold text-primary">Enterprise</th>
+                  <th className="py-3 pl-4 pr-5 text-center font-semibold text-amber-400">Unlimited</th>
                 </tr>
               </thead>
               <tbody>
-                {COMPARISON.map(({ category, rows }) => (
-                  <React.Fragment key={category}>
-                    <tr className="border-b border-border/50">
-                      <td colSpan={4} className="bg-muted/20 py-2.5 pl-5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {category}
-                      </td>
-                    </tr>
-                    {rows.map(({ feature, starter, growth, enterprise }) => (
-                      <tr key={feature} className="border-b border-border/30 hover:bg-accent/20 transition-colors">
-                        <td className="py-3 pl-5 pr-4">{feature}</td>
-                        <td className="py-3 px-4 text-center">
-                          {starter ? <Check className="mx-auto h-4 w-4 text-success" /> : <span className="text-muted-foreground/30">—</span>}
-                        </td>
-                        <td className="py-3 px-4 text-center bg-primary/3">
-                          {growth ? <Check className="mx-auto h-4 w-4 text-success" /> : <span className="text-muted-foreground/30">—</span>}
-                        </td>
-                        <td className="py-3 pl-4 pr-5 text-center">
-                          {enterprise ? <Check className="mx-auto h-4 w-4 text-success" /> : <span className="text-muted-foreground/30">—</span>}
-                        </td>
-                      </tr>
-                    ))}
-                  </React.Fragment>
+                {[
+                  { label: "Monthly price", basic: "₦15,000", enterprise: "₦25,000", unlimited: "₦45,000" },
+                  { label: "Annual price (per mo)", basic: "₦10,500", enterprise: "₦17,500", unlimited: "₦31,500" },
+                  { label: "Team members", basic: "Up to 7", enterprise: "Up to 15", unlimited: "Unlimited" },
+                  { label: "All features", basic: "✓", enterprise: "✓", unlimited: "✓" },
+                  { label: "Support", basic: "Email", enterprise: "Priority", unlimited: "Dedicated manager" },
+                  { label: "Free trial", basic: "7 days", enterprise: "7 days", unlimited: "7 days" },
+                ].map(({ label, basic, enterprise, unlimited }) => (
+                  <tr key={label} className="border-b border-border/30 transition-colors hover:bg-accent/20">
+                    <td className="py-3 pl-5 pr-4 font-medium">{label}</td>
+                    <td className="px-4 py-3 text-center text-muted-foreground">{basic}</td>
+                    <td className="bg-primary/3 px-4 py-3 text-center">{enterprise}</td>
+                    <td className="py-3 pl-4 pr-5 text-center text-muted-foreground">{unlimited}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -390,16 +330,17 @@ function PricingPage() {
           <h2 className="mb-10 text-center text-2xl font-bold tracking-tight">Frequently asked questions</h2>
           <div className="space-y-3">
             {FAQ.map(({ q, a }, i) => (
-              <div
-                key={i}
-                className="rounded-xl border border-border bg-card overflow-hidden"
-              >
+              <div key={i} className="overflow-hidden rounded-xl border border-border bg-card">
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-medium hover:bg-accent/30 transition-colors"
+                  className="flex w-full items-center justify-between px-5 py-4 text-left text-sm font-medium transition-colors hover:bg-accent/30"
                 >
                   <span>{q}</span>
-                  <HelpCircle className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${openFaq === i ? "text-primary" : ""}`} />
+                  <HelpCircle
+                    className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                      openFaq === i ? "text-primary" : ""
+                    }`}
+                  />
                 </button>
                 {openFaq === i && (
                   <div className="border-t border-border/50 px-5 py-4">
@@ -413,22 +354,20 @@ function PricingPage() {
       </section>
 
       {/* ── CTA ──────────────────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-20 relative overflow-hidden">
+      <section className="relative overflow-hidden border-t border-border/40 py-20">
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
           <div className="h-[300px] w-[300px] rounded-full bg-primary/5 blur-3xl" />
         </div>
         <div className="relative mx-auto max-w-xl px-6 text-center">
-          <h2 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">
-            Start free today
-          </h2>
+          <h2 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">Try Nexus HQ free for 7 days</h2>
           <p className="mb-8 text-muted-foreground">
-            No credit card required. Up and running in under 5 minutes.
+            No credit card required. Full access to every feature. Cancel any time.
           </p>
           <Link
             to="/login"
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Create your workspace <ArrowRight className="h-4 w-4" />
+            Start your free trial <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </section>
@@ -444,9 +383,9 @@ function PricingPage() {
               <span className="font-bold">Nexus HQ</span>
             </Link>
             <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link to="/" className="hover:text-foreground transition-colors">Home</Link>
-              <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
-              <Link to="/login" className="hover:text-foreground transition-colors">Sign in</Link>
+              <Link to="/" className="transition-colors hover:text-foreground">Home</Link>
+              <Link to="/pricing" className="transition-colors hover:text-foreground">Pricing</Link>
+              <Link to="/login" className="transition-colors hover:text-foreground">Sign in</Link>
             </nav>
             <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Nexus HQ. All rights reserved.</p>
           </div>

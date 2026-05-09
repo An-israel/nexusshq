@@ -45,61 +45,47 @@ interface UsageStats {
 
 // ─── Plan definitions ──────────────────────────────────────────────────────────
 
+const PLAN_MONTHLY: Record<string, number> = {
+  basic: 15000,
+  enterprise: 25000,
+  unlimited: 45000,
+};
+const ANNUAL_DISCOUNT = 0.3;
+
+function planPrice(id: string, billing: "monthly" | "annual"): string {
+  const monthly = PLAN_MONTHLY[id];
+  if (!monthly) return "—";
+  const price = billing === "annual" ? Math.round(monthly * (1 - ANNUAL_DISCOUNT)) : monthly;
+  return "₦" + price.toLocaleString("en-NG") + "/mo";
+}
+
 const PLANS = [
   {
-    id: "starter",
-    label: "Starter",
-    price: "Free",
-    seats: 5,
+    id: "basic",
+    label: "Basic",
+    seats: 7,
+    support: "Email support",
     colorClass: "text-muted-foreground",
     borderClass: "border-border",
     badgeClass: "bg-muted text-muted-foreground border-border",
-    features: ["Tasks", "Attendance", "Standups", "5 members"],
-  },
-  {
-    id: "growth",
-    label: "Growth",
-    price: "₦49,000/mo",
-    seats: 25,
-    colorClass: "text-blue-400",
-    borderClass: "border-blue-500/40",
-    badgeClass: "bg-blue-500/10 text-blue-400 border-blue-500/40",
-    features: [
-      "Everything in Starter",
-      "Leave management",
-      "OKRs & KPIs",
-      "25 members",
-    ],
-  },
-  {
-    id: "business",
-    label: "Business",
-    price: "₦149,000/mo",
-    seats: 100,
-    colorClass: "text-purple-400",
-    borderClass: "border-purple-500/40",
-    badgeClass: "bg-purple-500/10 text-purple-400 border-purple-500/40",
-    features: [
-      "Everything in Growth",
-      "Performance reviews",
-      "Client projects",
-      "100 members",
-    ],
   },
   {
     id: "enterprise",
     label: "Enterprise",
-    price: "Custom",
+    seats: 15,
+    support: "Priority support",
+    colorClass: "text-blue-400",
+    borderClass: "border-blue-500/40",
+    badgeClass: "bg-blue-500/10 text-blue-400 border-blue-500/40",
+  },
+  {
+    id: "unlimited",
+    label: "Unlimited",
     seats: 999,
+    support: "Dedicated account manager",
     colorClass: "text-amber-400",
     borderClass: "border-amber-500/40",
     badgeClass: "bg-amber-500/10 text-amber-400 border-amber-500/40",
-    features: [
-      "Everything in Business",
-      "Unlimited members",
-      "Priority support",
-      "Custom integrations",
-    ],
   },
 ] as const;
 
@@ -204,19 +190,19 @@ function StatCard({
 function PlanCard({
   plan,
   currentPlan,
+  billing,
 }: {
   plan: (typeof PLANS)[number];
   currentPlan: string;
+  billing: "monthly" | "annual";
 }) {
   const isCurrent = plan.id === currentPlan;
+  const monthly = PLAN_MONTHLY[plan.id] ?? 0;
+  const price = billing === "annual" ? Math.round(monthly * (1 - ANNUAL_DISCOUNT)) : monthly;
+  const annualTotal = price * 12;
 
   function handleUpgrade() {
-    if (plan.id === "enterprise") {
-      void navigator.clipboard?.writeText("hello@nexushq.io").catch(() => {});
-      toast.info("Contact hello@nexushq.io to upgrade to Enterprise");
-    } else {
-      toast.info("Contact hello@nexushq.io to upgrade");
-    }
+    toast.info("Contact hello@nexushq.io to upgrade your plan");
   }
 
   return (
@@ -228,50 +214,54 @@ function PlanCard({
     >
       {/* Header */}
       <div>
-        <div className="flex items-start justify-between gap-2 flex-wrap">
+        <div className="flex flex-wrap items-start justify-between gap-2">
           <p className={`text-base font-semibold ${plan.colorClass}`}>{plan.label}</p>
           {isCurrent && (
-            <span
-              className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${plan.badgeClass}`}
-            >
+            <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${plan.badgeClass}`}>
               Current Plan
             </span>
           )}
         </div>
-        <p className="mt-1 text-xl font-bold">{plan.price}</p>
-        <p className="text-xs text-muted-foreground">
-          {plan.seats >= 999 ? "Unlimited" : plan.seats} members
+        <p className="mt-1 text-xl font-bold">
+          ₦{price.toLocaleString("en-NG")}
+          <span className="text-sm font-normal text-muted-foreground">/mo</span>
         </p>
+        {billing === "annual" && (
+          <p className="text-xs text-green-500">
+            ₦{annualTotal.toLocaleString("en-NG")}/yr · 30% off
+          </p>
+        )}
       </div>
 
       <Separator />
 
-      {/* Features */}
+      {/* Seat + support */}
       <ul className="flex flex-col gap-2 flex-1">
-        {plan.features.map((f) => (
-          <li key={f} className="flex items-start gap-2 text-sm">
-            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
-            <span className="text-muted-foreground">{f}</span>
-          </li>
-        ))}
+        <li className="flex items-start gap-2 text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+          <span className="text-muted-foreground">
+            {plan.seats >= 999 ? "Unlimited" : `Up to ${plan.seats}`} members
+          </span>
+        </li>
+        <li className="flex items-start gap-2 text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+          <span className="text-muted-foreground">{plan.support}</span>
+        </li>
+        <li className="flex items-start gap-2 text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+          <span className="text-muted-foreground">All features included</span>
+        </li>
+        <li className="flex items-start gap-2 text-sm">
+          <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-green-400" />
+          <span className="text-muted-foreground">7-day free trial</span>
+        </li>
       </ul>
 
       {/* CTA */}
       {!isCurrent && (
-        <Button
-          variant="outline"
-          size="sm"
-          className="w-full"
-          onClick={handleUpgrade}
-        >
-          {plan.id === "enterprise" ? (
-            <>
-              <Mail className="mr-2 h-3.5 w-3.5" />
-              Contact Sales
-            </>
-          ) : (
-            "Upgrade"
-          )}
+        <Button variant="outline" size="sm" className="w-full" onClick={handleUpgrade}>
+          <Mail className="mr-2 h-3.5 w-3.5" />
+          Contact us to upgrade
         </Button>
       )}
     </Card>
@@ -283,6 +273,7 @@ function PlanCard({
 function BillingPage() {
   const { workspace } = useWorkspace();
 
+  const [billingCycle, setBillingCycle] = React.useState<"monthly" | "annual">("monthly");
   const [sub, setSub] = React.useState<Subscription | null>(null);
   const [usage, setUsage] = React.useState<UsageStats>({
     usedSeats: 0,
@@ -392,15 +383,47 @@ function BillingPage() {
 
       {/* ── Section 2: Plan comparison ── */}
       <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold">Plans</h2>
-          <p className="text-sm text-muted-foreground">
-            Compare plans and upgrade when you're ready.
-          </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-semibold">Plans</h2>
+            <p className="text-sm text-muted-foreground">
+              All plans include every feature. Upgrade when you're ready.
+            </p>
+          </div>
+          {/* Billing cycle toggle */}
+          <div className="inline-flex items-center gap-1 rounded-xl border border-border bg-muted/30 p-1">
+            <button
+              onClick={() => setBillingCycle("monthly")}
+              className={`rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${
+                billingCycle === "monthly"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingCycle("annual")}
+              className={`flex items-center gap-1 rounded-lg px-4 py-1.5 text-xs font-medium transition-colors ${
+                billingCycle === "annual"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Annual
+              <span className={`rounded-full px-1 text-[9px] font-bold ${
+                billingCycle === "annual"
+                  ? "bg-primary-foreground/20 text-primary-foreground"
+                  : "bg-green-500/15 text-green-500"
+              }`}>
+                –30%
+              </span>
+            </button>
+          </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {PLANS.map((plan) => (
-            <PlanCard key={plan.id} plan={plan} currentPlan={workspace.plan} />
+            <PlanCard key={plan.id} plan={plan} currentPlan={workspace.plan} billing={billingCycle} />
           ))}
         </div>
       </section>
@@ -573,15 +596,14 @@ function CurrentPlanCard({
             </div>
 
             {/* Upgrade CTA */}
-            {workspace.plan !== "enterprise" && (
+            {workspace.plan !== "unlimited" && (
               <div className="pt-1">
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() =>
-                    toast.info("Contact hello@nexushq.io to upgrade")
-                  }
+                  onClick={() => toast.info("Contact hello@nexushq.io to upgrade your plan")}
                 >
+                  <Mail className="mr-2 h-3.5 w-3.5" />
                   Upgrade plan
                 </Button>
               </div>
