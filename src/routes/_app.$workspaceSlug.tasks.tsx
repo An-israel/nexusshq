@@ -1,11 +1,10 @@
 import * as React from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
-import { Card } from "@/components/ui/card";
+import { useRealtime } from "@/lib/use-realtime";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,17 +20,41 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import { PRIORITY_BADGE, STATUS_BADGE, PRIORITY_RANK, todayISO } from "@/lib/nexus";
-import { AlertTriangle, Plus, Calendar as CalIcon, Sparkles, Pencil, Trash2, Check } from "lucide-react";
-import { useRealtime } from "@/lib/use-realtime";
+import {
+  PRIORITY_BADGE,
+  STATUS_BADGE,
+  PRIORITY_RANK,
+  todayISO,
+  startOfWeekISO,
+  endOfWeekISO,
+} from "@/lib/nexus";
+import {
+  MoreVertical,
+  X,
+  CheckSquare,
+  AlertTriangle,
+  Calendar,
+  Plus,
+  Check,
+  Flag,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/tasks")({
   component: TasksPage,
 });
+
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TaskRow {
   id: string;
@@ -58,19 +81,107 @@ interface ProfileMini {
   department: string | null;
 }
 
+interface KpiRow {
+  id: string;
+  title: string;
+  description: string | null;
+  department: string | null;
+  target_value: number | null;
+  unit: string | null;
+  period: "weekly" | "monthly";
+}
+
+type FilterTab = "all" | "daily" | "weekly" | "overdue" | "completed";
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function dueDateLabel(
+  dateStr: string,
+  status: string
+): { text: string; className: string } {
+  if (status === "completed")
+    return { text: "Completed", className: "text-green-400" };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dateStr + "T00:00:00");
+  const diff = Math.round((due.getTime() - today.getTime()) / 86400000);
+  if (diff < 0)
+    return {
+      text: `OVERDUE — ${Math.abs(diff)} day${Math.abs(diff) === 1 ? "" : "s"} ago`,
+      className: "text-red-400 font-medium",
+    };
+  if (diff === 0)
+    return { text: "Due today", className: "text-amber-400 font-medium" };
+  return {
+    text: `Due in ${diff} day${diff === 1 ? "" : "s"}`,
+    className: "text-muted-foreground",
+  };
+}
+
+// ─── Summary Ring ─────────────────────────────────────────────────────────────
+
+function ProgressRing({
+  percent,
+  size = 56,
+}: {
+  percent: number;
+  size?: number;
+}) {
+  const r = (size - 8) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (percent / 100) * circ;
+  return (
+    <svg width={size} height={size} className="-rotate-90">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        stroke="currentColor"
+        strokeWidth={6}
+        fill="none"
+        className="text-muted/30"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        stroke="currentColor"
+        strokeWidth={6}
+        fill="none"
+        strokeDasharray={circ}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        className="text-primary transition-all duration-500"
+      />
+    </svg>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 function TasksPage() {
   const { user, isManager } = useAuth();
   const { workspace } = useWorkspace();
+  const { workspaceSlug } = Route.useParams();
+
   const [tasks, setTasks] = React.useState<TaskRow[]>([]);
-  const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
+  const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>(
+    {}
+  );
   const [loading, setLoading] = React.useState(true);
-  const [filter, setFilter] = React.useState<"all" | "today" | "open" | "completed">("all");
-  const [assignOpen, setAssignOpen] = React.useState(false);
+  const [filter, setFilter] = React.useState<FilterTab>("all");
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(
+    null
+  );
 
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from("tasks").select("*").eq("workspace_id", workspace.id).order("due_date", { ascending: true });
+    let q = supabase
+      .from("tasks")
+      .select("*")
+      .eq("workspace_id", workspace.id)
+      .order("due_date", { ascending: true });
     if (!isManager) q = q.eq("assigned_to", user.id);
     const { data, error } = await q;
     if (error) {
@@ -102,18 +213,56 @@ function TasksPage() {
 
   useRealtime({
     table: "tasks",
-    filter: isManager ? undefined : user ? `assigned_to=eq.${user.id}` : undefined,
+    filter: isManager
+      ? undefined
+      : user
+        ? `assigned_to=eq.${user.id}`
+        : undefined,
     enabled: !!user,
     onChange: () => void load(),
   });
 
   const today = todayISO();
+  const weekStart = startOfWeekISO();
+  const weekEnd = endOfWeekISO();
+
+  // Weekly stats for summary bar
+  const weekTasks = React.useMemo(
+    () =>
+      tasks.filter((t) => t.due_date >= weekStart && t.due_date <= weekEnd),
+    [tasks, weekStart, weekEnd]
+  );
+  const weekTotal = weekTasks.length;
+  const weekCompleted = weekTasks.filter(
+    (t) => t.status === "completed"
+  ).length;
+  const weekInProgress = weekTasks.filter(
+    (t) => t.status === "in_progress"
+  ).length;
+  const weekOverdue = weekTasks.filter(
+    (t) =>
+      t.status === "overdue" ||
+      (t.status !== "completed" && t.due_date < today)
+  ).length;
+  const ringPercent = Math.round(
+    (weekCompleted / Math.max(weekTotal, 1)) * 100
+  );
+
+  // Filtered task list
   const filtered = React.useMemo(() => {
     let list = [...tasks];
-    if (filter === "today") list = list.filter((t) => t.due_date === today);
-    else if (filter === "open")
-      list = list.filter((t) => t.status === "todo" || t.status === "in_progress");
-    else if (filter === "completed") list = list.filter((t) => t.status === "completed");
+    if (filter === "daily") list = list.filter((t) => t.task_type === "daily");
+    else if (filter === "weekly")
+      list = list.filter((t) => t.task_type === "weekly");
+    else if (filter === "overdue")
+      list = list.filter(
+        (t) =>
+          t.status === "overdue" ||
+          (t.status !== "completed" && t.due_date < today)
+      );
+    else if (filter === "completed")
+      list = list.filter((t) => t.status === "completed");
+
     list.sort((a, b) => {
       const pa = PRIORITY_RANK[a.priority] ?? 9;
       const pb = PRIORITY_RANK[b.priority] ?? 9;
@@ -123,524 +272,908 @@ function TasksPage() {
     return list;
   }, [tasks, filter, today]);
 
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{isManager ? "All Tasks" : "My Tasks"}</h1>
-          <p className="text-sm text-muted-foreground">
-            {isManager
-              ? "Assign, track, and warn across the team."
-              : "Stay on top of what's due."}
-          </p>
-        </div>
-        {isManager && (
-          <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" /> Assign Task
-              </Button>
-            </DialogTrigger>
-            <AssignTaskDialog
-              onCreated={() => {
-                setAssignOpen(false);
-                void load();
-              }}
-            />
-          </Dialog>
-        )}
-      </div>
+  const selectedTask = tasks.find((t) => t.id === selectedTaskId) ?? null;
 
-      <Tabs value={filter} onValueChange={(v) => setFilter(v as typeof filter)}>
-        <TabsList>
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="today">Today</TabsTrigger>
-          <TabsTrigger value="open">Open</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-        </TabsList>
-        <TabsContent value={filter} className="mt-4">
+  return (
+    <div className="flex h-full overflow-hidden">
+      {/* ── Left column: list ── */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+          <div>
+            <h1 className="text-2xl font-bold">
+              {isManager ? "All Tasks" : "My Tasks"}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {isManager
+                ? "Assign, track, and warn across the team."
+                : "Stay on top of what's due."}
+            </p>
+          </div>
+          {isManager && (
+            <Button asChild size="sm">
+              <Link
+                to="/$workspaceSlug/tasks/assign"
+                params={{ workspaceSlug }}
+              >
+                <Plus className="mr-1.5 h-4 w-4" /> Assign Task
+              </Link>
+            </Button>
+          )}
+        </div>
+
+        {/* Summary bar */}
+        <div className="px-6 pb-4 shrink-0">
+          <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
+            {/* Ring */}
+            <div className="relative shrink-0 flex items-center justify-center">
+              <ProgressRing percent={ringPercent} size={56} />
+              <span className="absolute text-xs font-semibold text-foreground">
+                {ringPercent}%
+              </span>
+            </div>
+            <div className="h-10 w-px bg-border mx-1 shrink-0" />
+            {/* Chips */}
+            <div className="flex flex-wrap gap-2 flex-1 min-w-0">
+              <StatChip
+                label="Total this week"
+                value={weekTotal}
+                className="text-foreground bg-muted/50 border-border"
+              />
+              <StatChip
+                label="Completed"
+                value={weekCompleted}
+                className="text-green-400 bg-green-500/10 border-green-500/20"
+              />
+              <StatChip
+                label="In Progress"
+                value={weekInProgress}
+                className="text-blue-400 bg-blue-500/10 border-blue-500/20"
+              />
+              <StatChip
+                label="Overdue"
+                value={weekOverdue}
+                className="text-red-400 bg-red-500/10 border-red-500/20"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Filter tabs */}
+        <div className="px-6 pb-3 shrink-0">
+          <Tabs
+            value={filter}
+            onValueChange={(v) => setFilter(v as FilterTab)}
+          >
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="daily">Daily</TabsTrigger>
+              <TabsTrigger value="weekly">Weekly</TabsTrigger>
+              <TabsTrigger value="overdue">Overdue</TabsTrigger>
+              <TabsTrigger value="completed">Completed</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+
+        {/* Task list */}
+        <div className="flex-1 overflow-y-auto px-6 pb-6">
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-24 rounded-lg border border-border bg-card animate-pulse"
+                />
+              ))}
+            </div>
           ) : filtered.length === 0 ? (
-            <Card className="p-8 text-center text-sm text-muted-foreground">
-              No tasks to show.
-            </Card>
+            <EmptyState isManager={isManager} />
           ) : (
-            <div className="grid gap-3">
+            <div className="space-y-3">
               {filtered.map((t) => (
                 <TaskCard
                   key={t.id}
                   task={t}
                   assignee={profiles[t.assigned_to]}
-                  showAssignee={isManager}
                   isManager={isManager}
+                  isSelected={selectedTaskId === t.id}
+                  onSelect={() =>
+                    setSelectedTaskId((prev) =>
+                      prev === t.id ? null : t.id
+                    )
+                  }
                   onRefresh={load}
+                  workspaceId={workspace.id}
+                  userId={user?.id ?? ""}
                 />
               ))}
             </div>
           )}
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
+
+      {/* ── Right column: detail panel ── */}
+      {selectedTask && (
+        <div className="w-96 shrink-0 border-l border-border overflow-y-auto">
+          <TaskDetailPanel
+            task={selectedTask}
+            assignee={profiles[selectedTask.assigned_to]}
+            isManager={isManager}
+            user={user}
+            workspaceId={workspace.id}
+            onClose={() => setSelectedTaskId(null)}
+            onRefresh={load}
+          />
+        </div>
+      )}
     </div>
   );
 }
 
+// ─── Stat Chip ────────────────────────────────────────────────────────────────
+
+function StatChip({
+  label,
+  value,
+  className,
+}: {
+  label: string;
+  value: number;
+  className: string;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium ${className}`}
+    >
+      <span className="text-base font-bold leading-none">{value}</span>
+      <span className="opacity-80">{label}</span>
+    </div>
+  );
+}
+
+// ─── Empty State ──────────────────────────────────────────────────────────────
+
+function EmptyState({ isManager }: { isManager: boolean }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-20 text-center">
+      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
+        <CheckSquare className="h-7 w-7 text-muted-foreground" />
+      </div>
+      <p className="text-sm font-medium text-muted-foreground">
+        No tasks to show
+      </p>
+      <p className="text-xs text-muted-foreground/60 mt-1">
+        {isManager
+          ? "Assign tasks from the Assign Task page"
+          : "Check back when tasks are assigned to you"}
+      </p>
+    </div>
+  );
+}
+
+// ─── Task Card ────────────────────────────────────────────────────────────────
+
 function TaskCard({
   task,
   assignee,
-  showAssignee,
   isManager,
+  isSelected,
+  onSelect,
   onRefresh,
+  workspaceId,
+  userId,
 }: {
   task: TaskRow;
   assignee?: ProfileMini;
-  showAssignee: boolean;
   isManager: boolean;
+  isSelected: boolean;
+  onSelect: () => void;
   onRefresh: () => void;
+  workspaceId: string;
+  userId: string;
 }) {
-  const navigate = useNavigate();
-  const { workspace } = useWorkspace();
-  const [editOpen, setEditOpen] = React.useState(false);
-  const [deleting, setDeleting] = React.useState(false);
+  const today = todayISO();
+  const isOverdue =
+    task.status !== "completed" && task.due_date < today;
+  const dueLabel = dueDateLabel(task.due_date, task.status);
 
-  const overdue = task.status !== "completed" && task.due_date < todayISO();
-  const statusKey = overdue ? "overdue" : task.status;
+  const [warningOpen, setWarningOpen] = React.useState(false);
+  const [flagOpen, setFlagOpen] = React.useState(false);
 
-  async function handleDelete(e: React.MouseEvent) {
+  const borderAccent = isOverdue
+    ? "border-l-4 border-l-red-500"
+    : task.priority === "urgent"
+      ? "border-l-4 border-l-red-400"
+      : task.priority === "high"
+        ? "border-l-4 border-l-amber-400"
+        : "";
+
+  async function escalateToUrgent(e: React.MouseEvent) {
     e.stopPropagation();
-    if (!confirm(`Delete "${task.title}"? This cannot be undone.`)) return;
-    setDeleting(true);
-    const { error } = await supabase.from("tasks").delete().eq("id", task.id).eq("workspace_id", workspace.id);
-    setDeleting(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Task deleted");
+    const { error } = await supabase
+      .from("tasks")
+      .update({ priority: "urgent" })
+      .eq("id", task.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    await supabase.from("notifications").insert({
+      user_id: task.assigned_to,
+      type: "task_assigned",
+      title: "⚡ Task escalated to Urgent",
+      message: task.title,
+      related_task_id: task.id,
+      workspace_id: workspaceId,
+    });
+    toast.success("Task escalated to Urgent");
+    onRefresh();
+  }
+
+  async function removeWarning(e: React.MouseEvent) {
+    e.stopPropagation();
+    const { error } = await supabase
+      .from("tasks")
+      .update({ has_warning: false, warning_message: null })
+      .eq("id", task.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Warning removed");
     onRefresh();
   }
 
   return (
     <>
-      <Card className="p-4 hover:border-primary/50 transition-colors">
-        <div className="flex items-start gap-3">
-          <div
-            className="flex-1 min-w-0 cursor-pointer"
-            onClick={() => void navigate({ to: "/$workspaceSlug/tasks/$taskId", params: { workspaceSlug: workspace.slug, taskId: task.id } })}
-          >
+      <div
+        className={`relative rounded-lg border bg-card p-4 cursor-pointer transition-colors hover:border-primary/40
+          ${borderAccent}
+          ${task.status === "completed" ? "opacity-60" : ""}
+          ${isSelected ? "border-primary" : "border-border"}
+        `}
+        onClick={onSelect}
+      >
+        {/* Header row */}
+        <div className="flex items-start gap-2">
+          <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="font-medium truncate">{task.title}</h3>
+              <h3
+                className={`font-medium truncate ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}
+              >
+                {task.title}
+              </h3>
+              {/* Priority badge */}
               <span
                 className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${PRIORITY_BADGE[task.priority]}`}
               >
                 {task.priority}
               </span>
+              {/* Status badge */}
               <span
-                className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_BADGE[statusKey]}`}
+                className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_BADGE[isOverdue ? "overdue" : task.status]}`}
               >
-                {statusKey.replace("_", " ")}
+                {(isOverdue ? "overdue" : task.status).replace("_", " ")}
               </span>
+              {/* Warning badge */}
               {task.has_warning && (
-                <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-wide rounded border border-warning/30 bg-warning/15 text-warning px-1.5 py-0.5">
-                  <AlertTriangle className="h-3 w-3" /> Warning
+                <span className="animate-pulse bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded text-[10px] px-1.5 py-0.5 uppercase inline-flex items-center gap-1">
+                  <AlertTriangle className="h-2.5 w-2.5" /> Warning
                 </span>
               )}
             </div>
+
+            {/* Description */}
             {task.description && (
-              <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+              <p className="line-clamp-2 text-sm text-muted-foreground mt-1">
                 {task.description}
               </p>
             )}
-            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">
-              <span className="inline-flex items-center gap-1 shrink-0">
-                <CalIcon className="h-3 w-3" /> {task.due_date}
+
+            {/* Meta row */}
+            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs mt-2">
+              <span
+                className={`inline-flex items-center gap-1 ${dueLabel.className}`}
+              >
+                <Calendar className="h-3 w-3 shrink-0" />
+                {dueLabel.text}
               </span>
-              <span className="shrink-0">{task.task_type.replace("_", " ")}</span>
-              {showAssignee && assignee && (
-                <span className="truncate max-w-[120px]">→ {assignee.full_name ?? assignee.email}</span>
+              <span className="text-muted-foreground capitalize">
+                {task.task_type.replace("_", " ")}
+              </span>
+              {isManager && assignee && (
+                <span className="text-muted-foreground truncate max-w-[120px]">
+                  → {assignee.full_name ?? assignee.email}
+                </span>
               )}
-              <span className="ml-auto shrink-0">{task.progress_percent}%</span>
             </div>
-            <div className="mt-2 h-1 rounded bg-muted overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{ width: `${task.progress_percent}%` }}
-              />
-            </div>
+
+            {/* Progress bar (in_progress only) */}
+            {task.status === "in_progress" && (
+              <div className="mt-2.5">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>Progress</span>
+                  <span>{task.progress_percent}%</span>
+                </div>
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-300"
+                    style={{ width: `${task.progress_percent}%` }}
+                  />
+                </div>
+              </div>
+            )}
           </div>
+
+          {/* Three-dot menu (managers only) */}
           {isManager && (
-            <div className="flex shrink-0 items-center gap-1 ml-1">
-              <button
-                onClick={(e) => { e.stopPropagation(); setEditOpen(true); }}
-                className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
-                title="Edit task"
-              >
-                <Pencil className="h-3.5 w-3.5" />
-              </button>
-              <button
-                onClick={(e) => void handleDelete(e)}
-                disabled={deleting}
-                className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-destructive transition-colors disabled:opacity-50"
-                title="Delete task"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+            <div className="shrink-0 ml-1" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                    <MoreVertical className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    disabled={task.priority === "urgent"}
+                    onSelect={(e) =>
+                      void escalateToUrgent(e as unknown as React.MouseEvent)
+                    }
+                  >
+                    ⚡ Escalate to Urgent
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setWarningOpen(true);
+                    }}
+                  >
+                    ⚠ Add Warning
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={!task.has_warning}
+                    onSelect={(e) =>
+                      void removeWarning(e as unknown as React.MouseEvent)
+                    }
+                  >
+                    Remove Warning
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-red-400 focus:text-red-400"
+                    onSelect={(e) => {
+                      e.preventDefault();
+                      setFlagOpen(true);
+                    }}
+                  >
+                    <Flag className="h-3.5 w-3.5 mr-2" /> Flag Employee
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           )}
         </div>
-      </Card>
-      <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <EditTaskDialog
-          task={task}
-          onSaved={() => { setEditOpen(false); onRefresh(); }}
-        />
-      </Dialog>
+      </div>
+
+      {/* Add Warning Dialog */}
+      <AddWarningDialog
+        open={warningOpen}
+        onOpenChange={setWarningOpen}
+        task={task}
+        workspaceId={workspaceId}
+        onDone={() => {
+          setWarningOpen(false);
+          onRefresh();
+        }}
+      />
+
+      {/* Flag Employee Dialog */}
+      <FlagEmployeeDialog
+        open={flagOpen}
+        onOpenChange={setFlagOpen}
+        task={task}
+        workspaceId={workspaceId}
+        userId={userId}
+        onDone={() => {
+          setFlagOpen(false);
+        }}
+      />
     </>
   );
 }
 
-function EditTaskDialog({ task, onSaved }: { task: TaskRow; onSaved: () => void }) {
-  const { workspace } = useWorkspace();
-  const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
-  const [saving, setSaving] = React.useState(false);
-  const [form, setForm] = React.useState({
-    title: task.title,
-    description: task.description ?? "",
-    assigned_to: task.assigned_to,
-    priority: task.priority,
-    task_type: task.task_type,
-    due_date: task.due_date,
-    status: task.status === "overdue" ? "todo" : task.status,
-  });
+// ─── Add Warning Dialog ───────────────────────────────────────────────────────
 
-  React.useEffect(() => {
-    void supabase
-      .from("profiles")
-      .select("id, full_name, email, department")
-      .eq("is_active", true)
-      .order("full_name")
-      .then(({ data }) => setEmployees((data ?? []) as ProfileMini[]));
-  }, []);
+function AddWarningDialog({
+  open,
+  onOpenChange,
+  task,
+  workspaceId,
+  onDone,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  task: TaskRow;
+  workspaceId: string;
+  onDone: () => void;
+}) {
+  const [input, setInput] = React.useState(task.warning_message ?? "");
+  const [saving, setSaving] = React.useState(false);
 
   async function save() {
-    if (!form.title.trim()) { toast.error("Title is required"); return; }
+    if (!input.trim()) {
+      toast.error("Warning message is required");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase
+      .from("tasks")
+      .update({ has_warning: true, warning_message: input.trim() })
+      .eq("id", task.id);
+    if (error) {
+      toast.error(error.message);
+      setSaving(false);
+      return;
+    }
+    await supabase.from("notifications").insert({
+      user_id: task.assigned_to,
+      type: "warning",
+      title: "⚠ Warning added to your task",
+      message: `${task.title}: ${input.trim()}`,
+      related_task_id: task.id,
+      workspace_id: workspaceId,
+    });
+    toast.success("Warning added");
+    setSaving(false);
+    onDone();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle>Add Warning</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            This warning will be visible to the employee on their task.
+          </p>
+          <div>
+            <Label>Warning message</Label>
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Describe the issue or expectation…"
+              rows={3}
+              className="mt-1.5"
+            />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={saving}
+          >
+            Cancel
+          </Button>
+          <Button onClick={save} disabled={saving}>
+            {saving ? "Saving…" : "Add Warning"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Flag Employee Dialog ─────────────────────────────────────────────────────
+
+function FlagEmployeeDialog({
+  open,
+  onOpenChange,
+  task,
+  workspaceId,
+  userId,
+  onDone,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  task: TaskRow;
+  workspaceId: string;
+  userId: string;
+  onDone: () => void;
+}) {
+  const [reason, setReason] = React.useState("");
+  const [severity, setSeverity] = React.useState("medium");
+  const [saving, setSaving] = React.useState(false);
+
+  async function submit() {
+    if (!reason.trim()) {
+      toast.error("Reason is required");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from("flags").insert({
+      flagged_user_id: task.assigned_to,
+      flagged_by: userId,
+      reason: reason.trim(),
+      severity,
+      workspace_id: workspaceId,
+      is_resolved: false,
+    });
+    if (error) {
+      toast.error(error.message);
+      setSaving(false);
+      return;
+    }
+    await supabase.from("notifications").insert({
+      user_id: task.assigned_to,
+      type: "flag",
+      title: "🚩 You have been flagged",
+      message: reason.trim(),
+      workspace_id: workspaceId,
+    });
+    toast.success("Employee flagged");
+    setSaving(false);
+    setReason("");
+    setSeverity("medium");
+    onDone();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-sm">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Flag className="h-4 w-4 text-red-400" /> Flag Employee
+          </DialogTitle>
+        </DialogHeader>
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Flag this employee for review. They will be notified.
+          </p>
+          <div>
+            <Label>Reason</Label>
+            <Textarea
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Describe the reason for flagging…"
+              rows={3}
+              className="mt-1.5"
+            />
+          </div>
+          <div>
+            <Label>Severity</Label>
+            <Select value={severity} onValueChange={setSeverity}>
+              <SelectTrigger className="mt-1.5">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Low</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="critical">Critical</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={saving}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={submit}
+            disabled={saving}
+          >
+            {saving ? "Flagging…" : "Flag Employee"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Task Detail Panel ────────────────────────────────────────────────────────
+
+function TaskDetailPanel({
+  task,
+  assignee,
+  isManager,
+  user,
+  workspaceId,
+  onClose,
+  onRefresh,
+}: {
+  task: TaskRow;
+  assignee?: ProfileMini;
+  isManager: boolean;
+  user: { id: string } | null;
+  workspaceId: string;
+  onClose: () => void;
+  onRefresh: () => void;
+}) {
+  const [progress, setProgress] = React.useState(task.progress_percent);
+  const [note, setNote] = React.useState("");
+  const [saving, setSaving] = React.useState(false);
+  const [kpi, setKpi] = React.useState<KpiRow | null>(null);
+
+  // Sync progress when task changes
+  React.useEffect(() => {
+    setProgress(task.progress_percent);
+  }, [task.id, task.progress_percent]);
+
+  // Load KPI if linked
+  React.useEffect(() => {
+    if (!task.kpi_id) {
+      setKpi(null);
+      return;
+    }
+    void supabase
+      .from("kpis")
+      .select("id, title, description, department, target_value, unit, period")
+      .eq("id", task.kpi_id)
+      .single()
+      .then(({ data }) => setKpi(data as KpiRow | null));
+  }, [task.kpi_id]);
+
+  const canEdit =
+    isManager || (user?.id && task.assigned_to === user.id);
+  const isOverdue = task.status !== "completed" && task.due_date < todayISO();
+  const dueLabel = dueDateLabel(task.due_date, task.status);
+
+  async function updateStatus(newStatus: TaskRow["status"], newProgress: number) {
+    if (!canEdit) return;
     setSaving(true);
     const { error } = await supabase
       .from("tasks")
       .update({
-        title: form.title.trim(),
-        description: form.description.trim() || null,
-        assigned_to: form.assigned_to,
-        priority: form.priority as TaskRow["priority"],
-        task_type: form.task_type as TaskRow["task_type"],
-        due_date: form.due_date,
-        status: form.status as TaskRow["status"],
+        status: newStatus,
+        progress_percent: newProgress,
+        completed_at:
+          newStatus === "completed" ? new Date().toISOString() : null,
       })
-      .eq("id", task.id)
-      .eq("workspace_id", workspace.id);
-    setSaving(false);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Task updated");
-    onSaved();
-  }
-
-  return (
-    <DialogContent className="max-w-lg">
-      <DialogHeader>
-        <DialogTitle>Edit Task</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-3">
-        <div>
-          <Label>Title</Label>
-          <Input
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-          />
-        </div>
-        <div>
-          <Label>Description</Label>
-          <Textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={3}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Assignee</Label>
-            <Select
-              value={form.assigned_to}
-              onValueChange={(v) => setForm({ ...form, assigned_to: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pick employee" />
-              </SelectTrigger>
-              <SelectContent>
-                {employees.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.full_name ?? e.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Due date</Label>
-            <Input
-              type="date"
-              value={form.due_date}
-              onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Priority</Label>
-            <Select
-              value={form.priority}
-              onValueChange={(v) => setForm({ ...form, priority: v })}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Type</Label>
-            <Select
-              value={form.task_type}
-              onValueChange={(v) => setForm({ ...form, task_type: v })}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="one_time">One-time</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Status</Label>
-            <Select
-              value={form.status}
-              onValueChange={(v) => setForm({ ...form, status: v })}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todo">To do</SelectItem>
-                <SelectItem value="in_progress">In progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-      <DialogFooter>
-        <Button onClick={save} disabled={saving}>
-          <Check className="mr-2 h-4 w-4" /> {saving ? "Saving…" : "Save changes"}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  );
-}
-
-function AssignTaskDialog({ onCreated }: { onCreated: () => void }) {
-  const { user } = useAuth();
-  const { workspace } = useWorkspace();
-  const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
-  const [submitting, setSubmitting] = React.useState(false);
-  const [aiLoading, setAiLoading] = React.useState(false);
-  const [form, setForm] = React.useState({
-    title: "",
-    description: "",
-    assigned_to: "",
-    priority: "medium",
-    task_type: "one_time",
-    due_date: todayISO(),
-  });
-
-  async function suggestDescription() {
-    if (!form.title.trim()) {
-      toast.error("Enter a task title first");
-      return;
-    }
-    setAiLoading(true);
-    const assignee = employees.find((e) => e.id === form.assigned_to);
-    const dept = assignee?.department ?? "general";
-    try {
-      const resp = await fetch("/api/ai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "task-description",
-          context: { title: form.title.trim(), department: dept },
-        }),
-      });
-      if (!resp.ok) throw new Error(await resp.text());
-      const data = (await resp.json()) as { result?: string; error?: string };
-      if (data.error) throw new Error(data.error);
-      setForm((prev) => ({ ...prev, description: data.result?.trim() ?? "" }));
-    } catch (err) {
-      toast.error(`AI failed: ${(err as Error).message}`);
-    } finally {
-      setAiLoading(false);
-    }
-  }
-
-  React.useEffect(() => {
-    void supabase
-      .from("profiles")
-      .select("id, full_name, email, department")
-      .eq("is_active", true)
-      .order("full_name")
-      .then(({ data }) => setEmployees((data ?? []) as ProfileMini[]));
-  }, []);
-
-  async function submit() {
-    if (!form.title.trim()) {
-      toast.error("Title is required");
-      return;
-    }
-    if (!form.assigned_to) {
-      toast.error("Pick an assignee");
-      return;
-    }
-    setSubmitting(true);
-    const { data, error } = await supabase
-      .from("tasks")
-      .insert({
-        title: form.title.trim(),
-        description: form.description.trim() || null,
-        assigned_to: form.assigned_to,
-        assigned_by: user?.id ?? null,
-        priority: form.priority as TaskRow["priority"],
-        task_type: form.task_type as TaskRow["task_type"],
-        due_date: form.due_date,
-        workspace_id: workspace.id,
-      })
-      .select("id")
-      .single();
+      .eq("id", task.id);
     if (error) {
       toast.error(error.message);
-      setSubmitting(false);
+      setSaving(false);
       return;
     }
-    await supabase.from("notifications").insert({
-      user_id: form.assigned_to,
-      type: "task_assigned",
-      title: "📋 New task assigned",
-      message: form.title.trim(),
-      related_task_id: data.id,
+    await supabase.from("task_updates").insert({
+      task_id: task.id,
+      updated_by: user?.id,
+      workspace_id: workspaceId,
+      old_status: task.status,
+      new_status: newStatus,
+      old_progress: task.progress_percent,
+      new_progress: newProgress,
+      note: note.trim() || null,
     });
-    toast.success("Task assigned");
-    setSubmitting(false);
-    onCreated();
+    toast.success(
+      newStatus === "completed" ? "Task marked complete!" : "Progress saved"
+    );
+    setNote("");
+    setSaving(false);
+    onRefresh();
+  }
+
+  async function saveProgress() {
+    await updateStatus("in_progress", progress);
+  }
+
+  async function markInProgress() {
+    await updateStatus("in_progress", task.progress_percent);
+  }
+
+  async function markComplete() {
+    await updateStatus("completed", 100);
   }
 
   return (
-    <DialogContent className="max-w-lg">
-      <DialogHeader>
-        <DialogTitle>Assign New Task</DialogTitle>
-      </DialogHeader>
-      <div className="space-y-3">
-        <div>
-          <Label>Title</Label>
-          <Input
-            value={form.title}
-            onChange={(e) => setForm({ ...form, title: e.target.value })}
-            placeholder="What needs to be done?"
-          />
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-1.5">
-            <Label>Description</Label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-6 gap-1 px-2 text-xs text-muted-foreground hover:text-primary"
-              onClick={suggestDescription}
-              disabled={aiLoading}
-            >
-              <Sparkles className="h-3 w-3" />
-              {aiLoading ? "Writing…" : "AI suggest"}
-            </Button>
-          </div>
-          <Textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            placeholder="Add context, links, expectations…"
-            rows={3}
-          />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label>Assignee</Label>
-            <Select
-              value={form.assigned_to}
-              onValueChange={(v) => setForm({ ...form, assigned_to: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pick employee" />
-              </SelectTrigger>
-              <SelectContent>
-                {employees.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>
-                    {e.full_name ?? e.email}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Due date</Label>
-            <Input
-              type="date"
-              value={form.due_date}
-              onChange={(e) => setForm({ ...form, due_date: e.target.value })}
-            />
-          </div>
-          <div>
-            <Label>Priority</Label>
-            <Select
-              value={form.priority}
-              onValueChange={(v) => setForm({ ...form, priority: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="urgent">Urgent</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Type</Label>
-            <Select
-              value={form.task_type}
-              onValueChange={(v) => setForm({ ...form, task_type: v })}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="one_time">One-time</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3 p-5 border-b border-border shrink-0">
+        <h2 className="text-base font-semibold leading-snug flex-1 min-w-0">
+          {task.title}
+        </h2>
+        <button
+          onClick={onClose}
+          className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+        >
+          <X className="h-4 w-4" />
+        </button>
       </div>
-      <DialogFooter>
-        <Button onClick={submit} disabled={submitting}>
-          <Plus className="mr-2 h-4 w-4" /> {submitting ? "Assigning…" : "Assign Task"}
-        </Button>
-      </DialogFooter>
-    </DialogContent>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        {/* Warning block */}
+        {task.has_warning && task.warning_message && (
+          <div className="rounded-lg border-l-4 border-amber-500 bg-amber-500/10 p-3">
+            <div className="flex items-center gap-1.5 text-amber-400 text-xs font-semibold uppercase tracking-wide mb-1">
+              <AlertTriangle className="h-3.5 w-3.5" /> Warning
+            </div>
+            <p className="text-sm text-amber-300/90">{task.warning_message}</p>
+          </div>
+        )}
+
+        {/* Task info */}
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${PRIORITY_BADGE[task.priority]}`}
+            >
+              {task.priority}
+            </span>
+            <span
+              className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_BADGE[isOverdue ? "overdue" : task.status]}`}
+            >
+              {(isOverdue ? "overdue" : task.status).replace("_", " ")}
+            </span>
+          </div>
+
+          <div className="space-y-1.5 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <Calendar className="h-3.5 w-3.5 shrink-0" />
+              <span className={dueLabel.className}>{dueLabel.text}</span>
+              <span className="text-muted-foreground/50">({task.due_date})</span>
+            </div>
+            <div className="text-muted-foreground capitalize">
+              Type:{" "}
+              <span className="text-foreground">
+                {task.task_type.replace("_", " ")}
+              </span>
+            </div>
+            {isManager && assignee && (
+              <div className="text-muted-foreground">
+                Assigned to:{" "}
+                <span className="text-foreground">
+                  {assignee.full_name ?? assignee.email}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {task.description && (
+            <p className="text-sm text-muted-foreground leading-relaxed pt-1">
+              {task.description}
+            </p>
+          )}
+        </div>
+
+        <Separator />
+
+        {/* Status controls */}
+        {canEdit && (
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Update Status
+            </p>
+
+            {task.status === "todo" && (
+              <Button
+                size="sm"
+                className="w-full"
+                onClick={markInProgress}
+                disabled={saving}
+              >
+                Mark In Progress
+              </Button>
+            )}
+
+            {task.status === "in_progress" && (
+              <div className="space-y-3">
+                <div>
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                    <Label className="text-xs">Progress</Label>
+                    <span className="font-medium">{progress}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={100}
+                    value={progress}
+                    onChange={(e) => setProgress(+e.target.value)}
+                    className="w-full accent-primary"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Note (optional)</Label>
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    placeholder="Add a progress note…"
+                    rows={2}
+                    className="mt-1.5 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="flex-1"
+                    onClick={saveProgress}
+                    disabled={saving}
+                  >
+                    Save Progress
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    onClick={markComplete}
+                    disabled={saving}
+                  >
+                    <Check className="mr-1.5 h-3.5 w-3.5" /> Complete
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {(task.status === "overdue" || isOverdue) &&
+              task.status !== "completed" &&
+              task.status !== "in_progress" && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="w-full"
+                  onClick={markInProgress}
+                  disabled={saving}
+                >
+                  Start Working on This
+                </Button>
+              )}
+
+            {task.status === "completed" && (
+              <div className="flex items-center gap-2 rounded-md bg-green-500/10 border border-green-500/20 p-3 text-sm text-green-400">
+                <Check className="h-4 w-4 shrink-0" />
+                <span>
+                  Completed{" "}
+                  {task.completed_at
+                    ? new Date(task.completed_at).toLocaleDateString(undefined, {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
+                    : ""}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* KPI block */}
+        {kpi && (
+          <>
+            <Separator />
+            <div className="space-y-1.5">
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                KPI Contribution
+              </p>
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-0.5">
+                <p className="font-medium text-foreground">
+                  📊 {kpi.title}
+                </p>
+                {kpi.department && (
+                  <p className="text-xs text-muted-foreground">
+                    {kpi.department}
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">
+                  Target:{" "}
+                  <span className="text-foreground">
+                    {kpi.target_value ?? "—"} {kpi.unit ?? ""}
+                  </span>{" "}
+                  <span className="capitalize">({kpi.period})</span>
+                </p>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

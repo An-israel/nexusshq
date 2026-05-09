@@ -13,7 +13,7 @@ import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { setEmployeeActiveFn } from "@/lib/admin.functions";
-import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck } from "lucide-react";
+import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck, ClipboardList } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -36,6 +36,7 @@ interface MemberRow {
 }
 
 function TeamPage() {
+  const { workspaceSlug } = Route.useParams();
   const { isAdmin, isManager } = useAuth();
   const { workspace } = useWorkspace();
   const [loading, setLoading] = useState(true);
@@ -160,6 +161,13 @@ function TeamPage() {
               className="text-xs"
             >
               {showInactive ? "Hide deactivated" : "Show deactivated"}
+            </Button>
+          )}
+          {isManager && (
+            <Button variant="outline" size="sm" asChild className="text-xs">
+              <Link to="/$workspaceSlug/tasks/assign" params={{ workspaceSlug }}>
+                <ClipboardList className="mr-1.5 h-3.5 w-3.5" /> Assign Task
+              </Link>
             </Button>
           )}
           {isManager && <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} isAdmin={isAdmin} />}

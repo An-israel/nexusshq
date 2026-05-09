@@ -52,6 +52,7 @@ import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/pub
 import { Route as ApiPublicCronBurnoutDetectionRouteImport } from './routes/api/public/cron/burnout-detection'
 import { Route as ApiPublicCronAutoClockOutRouteImport } from './routes/api/public/cron/auto-clock-out'
 import { Route as AppWorkspaceSlugTeamUserIdRouteImport } from './routes/_app.$workspaceSlug.team.$userId'
+import { Route as AppWorkspaceSlugTasksAssignRouteImport } from './routes/_app.$workspaceSlug.tasks.assign'
 import { Route as AppWorkspaceSlugTasksTaskIdRouteImport } from './routes/_app.$workspaceSlug.tasks.$taskId'
 import { Route as AppWorkspaceSlugMessagesActivityRouteImport } from './routes/_app.$workspaceSlug.messages.activity'
 import { Route as AppWorkspaceSlugMessagesDmConversationIdRouteImport } from './routes/_app.$workspaceSlug.messages.dm.$conversationId'
@@ -294,6 +295,12 @@ const AppWorkspaceSlugTeamUserIdRoute =
     path: '/$userId',
     getParentRoute: () => AppWorkspaceSlugTeamRoute,
   } as any)
+const AppWorkspaceSlugTasksAssignRoute =
+  AppWorkspaceSlugTasksAssignRouteImport.update({
+    id: '/assign',
+    path: '/assign',
+    getParentRoute: () => AppWorkspaceSlugTasksRoute,
+  } as any)
 const AppWorkspaceSlugTasksTaskIdRoute =
   AppWorkspaceSlugTasksTaskIdRouteImport.update({
     id: '/$taskId',
@@ -354,6 +361,7 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
+  '/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
@@ -402,6 +410,7 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
+  '/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
@@ -452,6 +461,7 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/_app/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
+  '/_app/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/_app/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
@@ -502,6 +512,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/team-board'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/tasks/$taskId'
+    | '/$workspaceSlug/tasks/assign'
     | '/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/burnout-detection'
@@ -550,6 +561,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/team-board'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/tasks/$taskId'
+    | '/$workspaceSlug/tasks/assign'
     | '/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/burnout-detection'
@@ -599,6 +611,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/team-board'
     | '/_app/$workspaceSlug/messages/activity'
     | '/_app/$workspaceSlug/tasks/$taskId'
+    | '/_app/$workspaceSlug/tasks/assign'
     | '/_app/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/burnout-detection'
@@ -937,6 +950,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugTeamUserIdRouteImport
       parentRoute: typeof AppWorkspaceSlugTeamRoute
     }
+    '/_app/$workspaceSlug/tasks/assign': {
+      id: '/_app/$workspaceSlug/tasks/assign'
+      path: '/assign'
+      fullPath: '/$workspaceSlug/tasks/assign'
+      preLoaderRoute: typeof AppWorkspaceSlugTasksAssignRouteImport
+      parentRoute: typeof AppWorkspaceSlugTasksRoute
+    }
     '/_app/$workspaceSlug/tasks/$taskId': {
       id: '/_app/$workspaceSlug/tasks/$taskId'
       path: '/$taskId'
@@ -991,10 +1011,12 @@ const AppWorkspaceSlugMessagesRouteWithChildren =
 
 interface AppWorkspaceSlugTasksRouteChildren {
   AppWorkspaceSlugTasksTaskIdRoute: typeof AppWorkspaceSlugTasksTaskIdRoute
+  AppWorkspaceSlugTasksAssignRoute: typeof AppWorkspaceSlugTasksAssignRoute
 }
 
 const AppWorkspaceSlugTasksRouteChildren: AppWorkspaceSlugTasksRouteChildren = {
   AppWorkspaceSlugTasksTaskIdRoute: AppWorkspaceSlugTasksTaskIdRoute,
+  AppWorkspaceSlugTasksAssignRoute: AppWorkspaceSlugTasksAssignRoute,
 }
 
 const AppWorkspaceSlugTasksRouteWithChildren =
