@@ -172,6 +172,25 @@ Start with "Hi team,". End with "Have a great week ahead!"`,
       };
     }
 
+    // ── Feature 6: burnout / flight-risk team analysis ───────────────────────
+    case "burnout-analysis": {
+      const employees = ctx.employees as unknown[];
+      return {
+        systemPrompt: base,
+        userPrompt: `You are an HR analytics AI. Analyze the following 30-day employee data and identify burnout/flight risk signals.
+
+For each employee, return a JSON array (no other text) in this format:
+[{"userId":"...","name":"...","risk":"high|medium|low","summary":"one sentence","signals":["signal 1","signal 2"]}]
+
+Risk levels: "high" = multiple concerning signals, "medium" = 1-2 signals, "low" = healthy patterns.
+Signals to watch: >4 absences, >6 late arrivals, declining task completion, >2 overdue tasks, >2 leave requests.
+
+Employee data (30 days):
+${JSON.stringify(employees, null, 2)}`,
+        maxTokens: 2048,
+      };
+    }
+
     default:
       return { systemPrompt: base, userPrompt: null as unknown as string, maxTokens: 256 };
   }
