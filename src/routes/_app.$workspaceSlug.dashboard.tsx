@@ -246,9 +246,9 @@ function DashboardPage() {
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 py-4 md:px-6 md:py-6">
       <div>
-        <h1 className="text-2xl font-bold">
+        <h1 className="text-lg font-semibold md:text-2xl md:font-bold">
           {greeting}, {firstName}. Here's your day.
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -311,7 +311,7 @@ function DashboardPage() {
               </div>
             </div>
             <Link to="/$workspaceSlug/attendance" params={{ workspaceSlug: workspace.slug }}>
-              <Button size="sm">Clock In</Button>
+              <Button className="w-full h-13 rounded-xl text-base font-semibold md:w-auto">Clock In</Button>
             </Link>
           </div>
         )}
@@ -512,7 +512,7 @@ function TaskRow({ t }: { t: Task }) {
     <Link
       to="/$workspaceSlug/tasks/$taskId"
       params={{ workspaceSlug: workspace.slug, taskId: t.id }}
-      className="flex items-center gap-3 rounded-lg border border-border bg-background/40 p-3 hover:border-primary/40"
+      className="flex w-full min-h-[56px] items-center gap-3 rounded-lg border border-border bg-background/40 p-3 hover:border-primary/40"
     >
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{t.title}</p>

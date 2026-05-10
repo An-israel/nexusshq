@@ -469,11 +469,11 @@ export function MessageInput({
           disabled={disabled || sending}
           rows={1}
           className={cn(
-            "w-full bg-transparent outline-none resize-none text-sm text-white",
+            "w-full bg-transparent outline-none resize-none text-base text-white",
             "placeholder:text-[#6B7280] px-3 py-2 leading-relaxed",
             "disabled:opacity-50"
           )}
-          style={{ minHeight: "36px", maxHeight: "160px" }}
+          style={{ minHeight: "36px", maxHeight: "160px", fontSize: "16px" }}
           aria-label={placeholder}
         />
 

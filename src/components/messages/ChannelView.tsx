@@ -1,10 +1,11 @@
 import * as React from "react";
 import { format, isToday, isYesterday, isSameDay } from "date-fns";
-import { Hash, Lock, Megaphone, Pin, Search, Settings, Users, ChevronDown, ArrowDown } from "lucide-react";
+import { Hash, Lock, Megaphone, Pin, Search, Settings, Users, ChevronDown, ArrowDown, ArrowLeft, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useMessagingCtx } from "@/routes/_app.$workspaceSlug.messages";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +48,7 @@ export function ChannelView({
   workspaceMembers,
   presence,
 }: ChannelViewProps) {
+  const { onMobileBack } = useMessagingCtx();
   const [activeThread, setActiveThread] = React.useState<Message | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
   const [newMessagesBanner, setNewMessagesBanner] = React.useState(0);
@@ -166,17 +168,29 @@ export function ChannelView({
     <div className="flex h-full overflow-hidden">
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex shrink-0 items-center gap-3 border-b border-[#2A2A2A] bg-[#0F0F0F] px-5 py-3">
-          <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex h-13 shrink-0 items-center border-b border-[#2A2A2A] bg-[#0F0F0F] px-3">
+          {/* Mobile back button */}
+          <button
+            onClick={onMobileBack}
+            className="mr-1 flex h-11 w-11 items-center justify-center rounded-lg text-[#9CA3AF] hover:text-white md:hidden"
+            aria-label="Back to channels"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+
+          {/* Channel icon + name */}
+          <div className="flex flex-1 min-w-0 items-center gap-2">
             <span className="text-[#9CA3AF]">{channelIcon(channel.type)}</span>
             <span className="truncate font-semibold text-white">{channel.name}</span>
             {channel.description && (
               <>
-                <span className="text-[#4B5563]">·</span>
-                <span className="truncate text-sm text-[#6B7280]">{channel.description}</span>
+                <span className="text-[#4B5563] hidden sm:inline">·</span>
+                <span className="truncate text-sm text-[#6B7280] hidden sm:inline">{channel.description}</span>
               </>
             )}
           </div>
+
+          {/* Action buttons */}
           <div className="flex shrink-0 items-center gap-1">
             <button
               onClick={() => setMembersOpen(true)}

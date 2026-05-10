@@ -468,7 +468,7 @@ function Step1({
             placeholder="Acme Corp"
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
-            className="bg-input"
+            className="bg-input text-base md:text-sm"
           />
         </div>
 
@@ -482,7 +482,7 @@ function Step1({
             placeholder="Jane Doe"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            className="bg-input"
+            className="bg-input text-base md:text-sm"
           />
         </div>
 
@@ -496,7 +496,7 @@ function Step1({
             placeholder="jane@acme.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-input"
+            className="bg-input text-base md:text-sm"
           />
         </div>
 
@@ -511,7 +511,7 @@ function Step1({
             placeholder="At least 8 characters"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="bg-input"
+            className="bg-input text-base md:text-sm"
           />
           {password.length > 0 && password.length < 8 && (
             <p className="text-xs text-destructive">Must be at least 8 characters</p>

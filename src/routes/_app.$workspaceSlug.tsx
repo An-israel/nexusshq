@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_app/$workspaceSlug")({
   beforeLoad: async ({ params }) => {
@@ -63,13 +64,104 @@ function WorkspaceRoot() {
   );
 }
 
+function MobileClockDisplay() {
+  const { user } = useAuth();
+  const [now, setNow] = React.useState(() => new Date());
+  const [today, setToday] = React.useState<{ id: string; clock_in: string | null; clock_out: string | null } | null>(null);
+  const [busy, setBusy] = React.useState(false);
+
+  React.useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(t);
+  }, []);
+
+  const load = React.useCallback(async () => {
+    if (!user) return;
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const { data } = await supabase.from("attendance").select("id, clock_in, clock_out").eq("user_id", user.id).eq("date", todayStr).maybeSingle();
+    setToday(data ?? null);
+  }, [user]);
+
+  React.useEffect(() => { void load(); }, [load]);
+
+  const clockedIn = !!today?.clock_in && !today?.clock_out;
+  const done = !!today?.clock_in && !!today?.clock_out;
+
+  const timeStr = now.toLocaleTimeString("en-NG", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Africa/Lagos" });
+
+  let elapsed = "";
+  if (clockedIn && today?.clock_in) {
+    const ms = now.getTime() - new Date(today.clock_in).getTime();
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    elapsed = `${h}h ${m}m`;
+  }
+
+  async function clockIn() {
+    if (!user) return;
+    setBusy(true);
+    const nowD = new Date();
+    const todayStr = nowD.toISOString().slice(0, 10);
+    await supabase.from("attendance").upsert({ user_id: user.id, date: todayStr, clock_in: nowD.toISOString(), status: nowD.getHours() >= 9 ? "late" : "present" }, { onConflict: "user_id,date" });
+    if (navigator.vibrate) navigator.vibrate(50);
+    await load();
+    setBusy(false);
+  }
+
+  async function clockOut() {
+    if (!user || !today?.clock_in || !today?.id) return;
+    setBusy(true);
+    const nowD = new Date();
+    const minutes = Math.round((nowD.getTime() - new Date(today.clock_in).getTime()) / 60000);
+    await supabase.from("attendance").update({ clock_out: nowD.toISOString(), total_minutes: minutes }).eq("id", today.id);
+    if (navigator.vibrate) navigator.vibrate(50);
+    await load();
+    setBusy(false);
+  }
+
+  return (
+    <div className="flex w-full items-center">
+      {/* Large time display */}
+      <div className="flex-1">
+        <p className="text-lg font-bold tabular-nums">{timeStr} <span className="text-xs font-normal text-muted-foreground">WAT</span></p>
+      </div>
+      {/* Clock in/out */}
+      <div className="flex flex-col items-end gap-0.5">
+        {clockedIn && elapsed && (
+          <span className="text-[10px] text-muted-foreground">{elapsed}</span>
+        )}
+        {done ? (
+          <span className="text-xs text-muted-foreground">Done for today</span>
+        ) : clockedIn ? (
+          <button
+            onClick={clockOut}
+            disabled={busy}
+            className="rounded-full bg-red-500 px-4 py-1.5 text-xs font-semibold text-white active:scale-95 transition-transform"
+          >
+            Clock Out
+          </button>
+        ) : (
+          <button
+            onClick={clockIn}
+            disabled={busy}
+            className="rounded-full bg-blue-600 px-4 py-1.5 text-xs font-semibold text-white active:scale-95 transition-transform"
+          >
+            Clock In
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function WorkspaceShell() {
   const { workspaceSlug } = Route.useParams();
   const { workspace, loading, setWorkspaceData } = useWorkspace();
-  const { user, role } = useAuth();
+  const { user, role, profile } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const isMessages = useRouterState({ select: (s) => s.location.pathname.includes("/messages") });
+  const isDashboard = useRouterState({ select: (s) => s.location.pathname.endsWith("/dashboard") });
 
   React.useEffect(() => {
     if (!user) return;
@@ -199,27 +291,60 @@ function WorkspaceShell() {
 
       <div className="flex min-w-0 flex-1 flex-col">
         {/* Topbar */}
-        <header className="flex h-14 shrink-0 items-center justify-between border-b border-border bg-background/80 px-4 backdrop-blur md:h-16 md:px-6">
-          <div className="flex items-center gap-2 md:hidden">
-            {workspace.logo_url ? (
-              <img src={workspace.logo_url} alt={workspace.name} className="h-7 w-7 rounded-lg object-cover" />
-            ) : (
-              <div
-                className="flex h-7 w-7 items-center justify-center rounded-lg text-white text-xs font-bold"
-                style={{ backgroundColor: workspace.primary_color }}
+        <header className={cn(
+          "shrink-0 border-b border-border bg-background/80 backdrop-blur",
+          isMessages
+            ? "hidden md:flex md:h-16 md:items-center md:justify-between md:px-6"
+            : "flex flex-col md:flex-row md:h-16 md:items-center md:justify-between md:px-6"
+        )}>
+          {/* ROW 1 — always visible on mobile (44px), full row on desktop */}
+          <div className="flex h-11 items-center justify-between px-4 md:h-auto md:flex-1 md:px-0">
+            {/* Left: workspace avatar + name */}
+            <div className="flex items-center gap-2">
+              {workspace.logo_url ? (
+                <img src={workspace.logo_url} alt={workspace.name} className="h-9 w-9 rounded-xl object-cover" />
+              ) : (
+                <div
+                  className="flex h-9 w-9 items-center justify-center rounded-xl text-white text-sm font-bold"
+                  style={{ backgroundColor: workspace.primary_color ?? "#6366f1" }}
+                >
+                  {workspace.name.slice(0, 1).toUpperCase()}
+                </div>
+              )}
+              <span className="text-sm font-semibold truncate max-w-[140px] md:hidden">{workspace.name}</span>
+              {/* Desktop: show role · workspace */}
+              <span className="hidden md:block text-xs uppercase tracking-wider text-muted-foreground">
+                {role ? role.charAt(0).toUpperCase() + role.slice(1) : ""} · {workspace.name}
+              </span>
+            </div>
+
+            {/* Right: notification bell + profile avatar */}
+            <div className="flex items-center gap-2">
+              <NotificationBell />
+              {/* Profile avatar — links to profile page, mobile only */}
+              <a
+                href={`/${workspaceSlug}/profile`}
+                className="flex md:hidden h-8 w-8 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary"
+                aria-label="Profile"
               >
-                {workspace.name.slice(0, 1).toUpperCase()}
+                {(profile?.full_name ?? profile?.email ?? "?").slice(0, 1).toUpperCase()}
+              </a>
+              {/* Desktop: show clock widget */}
+              <div className="hidden md:block">
+                <ClockWidget />
               </div>
-            )}
-            <span className="text-sm font-semibold truncate max-w-[160px]">{workspace.name}</span>
+            </div>
           </div>
-          <div className="hidden text-xs uppercase tracking-wider text-muted-foreground md:block">
-            {role ? role.charAt(0).toUpperCase() + role.slice(1) : ""} · {workspace.name}
-          </div>
-          <div className="flex items-center gap-2">
-            <NotificationBell />
-            <ClockWidget />
-          </div>
+
+          {/* ROW 2 — only visible on mobile AND only on dashboard route (48px) */}
+          {isDashboard && (
+            <div className="flex h-12 items-center justify-between border-t border-border/40 px-4 md:hidden">
+              {/* Large clock in center */}
+              <div className="flex-1">
+                <MobileClockDisplay />
+              </div>
+            </div>
+          )}
         </header>
 
         <main className={isMessages ? "flex min-h-0 flex-1 flex-col overflow-hidden" : "flex-1 overflow-y-auto p-4 pb-20 md:p-6 md:pb-6"}>

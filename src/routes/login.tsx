@@ -103,7 +103,7 @@ function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"
-              className="bg-input"
+              className="bg-input text-base md:text-sm"
             />
           </div>
           <div className="space-y-2">
@@ -117,7 +117,7 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="bg-input pr-10"
+                className="bg-input pr-10 text-base md:text-sm"
               />
               <button
                 type="button"

@@ -140,6 +140,7 @@ export function InviteEmployeeDialog({
                       value={form.full_name}
                       onChange={(e) => setForm({ ...form, full_name: e.target.value })}
                       placeholder="Jane Doe"
+                      className="text-base md:text-sm"
                     />
                   </div>
                   <div>
@@ -149,6 +150,7 @@ export function InviteEmployeeDialog({
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
                       placeholder="jane@company.com"
+                      className="text-base md:text-sm"
                     />
                   </div>
                   <div>
@@ -157,6 +159,7 @@ export function InviteEmployeeDialog({
                       value={form.job_title}
                       onChange={(e) => setForm({ ...form, job_title: e.target.value })}
                       placeholder="Designer"
+                      className="text-base md:text-sm"
                     />
                   </div>
                   <div>
@@ -165,6 +168,7 @@ export function InviteEmployeeDialog({
                       value={form.phone}
                       onChange={(e) => setForm({ ...form, phone: e.target.value })}
                       placeholder="+234…"
+                      className="text-base md:text-sm"
                     />
                   </div>
                   <div>

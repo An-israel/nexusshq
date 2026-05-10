@@ -1,9 +1,10 @@
 import * as React from "react";
 import { format, isToday, isYesterday, isSameDay } from "date-fns";
-import { ChevronDown, ArrowDown, UserPlus } from "lucide-react";
+import { ChevronDown, ArrowDown, UserPlus, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useMessagingCtx } from "@/routes/_app.$workspaceSlug.messages";
 import { useMessages } from "@/lib/messaging/use-messages";
 import { useReactions } from "@/lib/messaging/use-reactions";
 import { MessageItem } from "@/components/messages/MessageItem";
@@ -93,6 +94,7 @@ export function DmView({
   workspaceMembers,
   presence,
 }: DmViewProps) {
+  const { onMobileBack } = useMessagingCtx();
   const [activeThread, setActiveThread] = React.useState<Message | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
   const [newMessagesBanner, setNewMessagesBanner] = React.useState(0);
@@ -204,7 +206,16 @@ export function DmView({
     <div className="flex h-full overflow-hidden">
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex shrink-0 items-center gap-3 border-b border-[#2A2A2A] bg-[#0F0F0F] px-5 py-3">
+        <div className="flex shrink-0 items-center gap-3 border-b border-[#2A2A2A] bg-[#0F0F0F] px-3 py-3">
+          {/* Mobile back button */}
+          <button
+            onClick={onMobileBack}
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-[#9CA3AF] hover:text-white md:hidden"
+            aria-label="Back to messages"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+
           {isDirect ? (
             <div className="relative shrink-0">
               <Avatar profile={otherProfile} size={10} />

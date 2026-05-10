@@ -21,6 +21,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -157,12 +161,26 @@ function ProgressRing({
   );
 }
 
+// ─── useIsMobile ──────────────────────────────────────────────────────────────
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function TasksPage() {
   const { user, isManager } = useAuth();
   const { workspace } = useWorkspace();
   const { workspaceSlug } = Route.useParams();
+  const isMobile = useIsMobile();
 
   const [tasks, setTasks] = React.useState<TaskRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>(
@@ -279,7 +297,7 @@ function TasksPage() {
       {/* ── Left column: list ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+        <div className="flex items-center justify-between px-4 md:px-6 pt-4 md:pt-6 pb-4 shrink-0">
           <div>
             <h1 className="text-2xl font-bold">
               {isManager ? "All Tasks" : "My Tasks"}
@@ -303,7 +321,7 @@ function TasksPage() {
         </div>
 
         {/* Summary bar */}
-        <div className="px-6 pb-4 shrink-0">
+        <div className="px-4 md:px-6 pb-4 shrink-0">
           <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
             {/* Ring */}
             <div className="relative shrink-0 flex items-center justify-center">
@@ -340,23 +358,25 @@ function TasksPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="px-6 pb-3 shrink-0">
+        <div className="px-4 md:px-6 pb-3 shrink-0">
           <Tabs
             value={filter}
             onValueChange={(v) => setFilter(v as FilterTab)}
           >
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="daily">Daily</TabsTrigger>
-              <TabsTrigger value="weekly">Weekly</TabsTrigger>
-              <TabsTrigger value="overdue">Overdue</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-            </TabsList>
+            <div className="flex overflow-x-auto gap-2 pb-1 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none">
+              <TabsList className="flex-nowrap">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="daily">Daily</TabsTrigger>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                <TabsTrigger value="overdue">Overdue</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+              </TabsList>
+            </div>
           </Tabs>
         </div>
 
         {/* Task list */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="flex-1 overflow-y-auto px-4 md:px-6 pb-6 w-full">
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
@@ -392,9 +412,9 @@ function TasksPage() {
         </div>
       </div>
 
-      {/* ── Right column: detail panel ── */}
-      {selectedTask && (
-        <div className="w-96 shrink-0 border-l border-border overflow-y-auto">
+      {/* ── Right column: detail panel (desktop only) ── */}
+      {selectedTask && !isMobile && (
+        <div className="hidden md:block w-96 shrink-0 border-l border-border overflow-y-auto">
           <TaskDetailPanel
             task={selectedTask}
             assignee={profiles[selectedTask.assigned_to]}
@@ -405,6 +425,26 @@ function TasksPage() {
             onRefresh={load}
           />
         </div>
+      )}
+
+      {/* ── Mobile bottom sheet ── */}
+      {isMobile && (
+        <Sheet open={!!selectedTask} onOpenChange={(open) => { if (!open) setSelectedTaskId(null); }}>
+          <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl pb-safe p-0">
+            <div className="mx-auto mt-3 mb-2 h-1 w-9 rounded-full bg-muted" />
+            {selectedTask && (
+              <TaskDetailPanel
+                task={selectedTask}
+                assignee={profiles[selectedTask.assigned_to]}
+                isManager={isManager}
+                user={user}
+                workspaceId={workspace.id}
+                onClose={() => setSelectedTaskId(null)}
+                onRefresh={load}
+              />
+            )}
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );
@@ -610,7 +650,7 @@ function TaskCard({
             <div className="shrink-0 ml-1" onClick={(e) => e.stopPropagation()}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                  <button className="rounded p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                     <MoreVertical className="h-4 w-4" />
                   </button>
                 </DropdownMenuTrigger>
@@ -746,7 +786,7 @@ function AddWarningDialog({
               onChange={(e) => setInput(e.target.value)}
               placeholder="Describe the issue or expectation…"
               rows={3}
-              className="mt-1.5"
+              className="mt-1.5 text-base md:text-sm"
             />
           </div>
         </div>
@@ -840,7 +880,7 @@ function FlagEmployeeDialog({
               onChange={(e) => setReason(e.target.value)}
               placeholder="Describe the reason for flagging…"
               rows={3}
-              className="mt-1.5"
+              className="mt-1.5 text-base md:text-sm"
             />
           </div>
           <div>
@@ -1088,7 +1128,7 @@ function TaskDetailPanel({
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Add a progress note…"
                     rows={2}
-                    className="mt-1.5 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="mt-1.5 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   />
                 </div>
                 <div className="flex gap-2">
