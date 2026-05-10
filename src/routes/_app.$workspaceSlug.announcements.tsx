@@ -101,7 +101,7 @@ function AnnouncementsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overscroll-contain">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Announcements</h1>
@@ -117,11 +117,13 @@ function AnnouncementsPage() {
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : items.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
-          No announcements yet.
-        </Card>
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <Megaphone className="h-12 w-12 text-muted-foreground/30" />
+          <p className="text-sm font-medium text-muted-foreground">No announcements yet</p>
+          {isManager && <p className="text-xs text-muted-foreground">Create the first announcement for your team.</p>}
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-3 overscroll-contain">
           {items.map((a) => {
             const author = a.author_id ? authors[a.author_id] : null;
             return (

@@ -129,7 +129,7 @@ function NotificationsPage() {
   const unreadCount = notifs.filter((n) => !n.is_read).length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overscroll-contain">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Notifications</h1>
@@ -159,11 +159,13 @@ function NotificationsPage() {
       {loading ? (
         <Skeleton className="h-40 w-full" />
       ) : filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          Nothing here.
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <Bell className="h-12 w-12 text-muted-foreground/30" />
+          <p className="text-sm font-medium text-muted-foreground">All caught up</p>
+          <p className="text-xs text-muted-foreground">No new notifications</p>
         </div>
       ) : (
-        <ul className="divide-y divide-border rounded-2xl border border-border bg-card">
+        <ul className="divide-y divide-border rounded-2xl border border-border bg-card overscroll-contain">
           {filtered.map((n) => {
             const Icon = iconFor(n.type);
             return (
