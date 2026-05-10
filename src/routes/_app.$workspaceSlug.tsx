@@ -9,6 +9,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/$workspaceSlug")({
   beforeLoad: async ({ params }) => {
@@ -64,8 +65,19 @@ function WorkspaceRoot() {
   );
 }
 
+function haversineDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371000; // metres
+  const φ1 = (lat1 * Math.PI) / 180;
+  const φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lng2 - lng1) * Math.PI) / 180;
+  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 function MobileClockDisplay() {
   const { user } = useAuth();
+  const { workspace } = useWorkspace();
   const [now, setNow] = React.useState(() => new Date());
   const [today, setToday] = React.useState<{ id: string; clock_in: string | null; clock_out: string | null } | null>(null);
   const [busy, setBusy] = React.useState(false);
@@ -100,9 +112,35 @@ function MobileClockDisplay() {
   async function clockIn() {
     if (!user) return;
     setBusy(true);
+
+    // GPS verification
+    if (workspace?.enforce_gps_clockin && workspace.office_lat && workspace.office_lng) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 10000, maximumAge: 60000 });
+        });
+        const dist = haversineDistance(
+          pos.coords.latitude, pos.coords.longitude,
+          Number(workspace.office_lat), Number(workspace.office_lng)
+        );
+        if (dist > (workspace.clock_in_radius_m ?? 500)) {
+          toast.error(`You are ${Math.round(dist)}m from the office. Clock-in requires you to be within ${workspace.clock_in_radius_m ?? 500}m.`);
+          setBusy(false);
+          return;
+        }
+      } catch {
+        toast.error("Could not get your location. Please allow location access to clock in.");
+        setBusy(false);
+        return;
+      }
+    }
+
     const nowD = new Date();
     const todayStr = nowD.toISOString().slice(0, 10);
-    await supabase.from("attendance").upsert({ user_id: user.id, date: todayStr, clock_in: nowD.toISOString(), status: nowD.getHours() >= 9 ? "late" : "present" }, { onConflict: "user_id,date" });
+    await supabase.from("attendance").upsert(
+      { user_id: user.id, date: todayStr, clock_in: nowD.toISOString(), status: nowD.getHours() >= 9 ? "late" : "present" },
+      { onConflict: "user_id,date" }
+    );
     if (navigator.vibrate) navigator.vibrate(50);
     await load();
     setBusy(false);

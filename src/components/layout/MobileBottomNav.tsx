@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, MessageSquare, Bell, Menu, Clock, Users,
   CalendarOff, Flag, BarChart3, Megaphone, Star, Wallet, BookOpen,
   GitBranch, ClipboardList, FolderUp, Kanban, RefreshCw, Briefcase,
-  Target, Sparkles, Settings, LogOut,
+  Target, Sparkles, Settings, LogOut, Heart, FileText,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -36,8 +36,10 @@ const ALL_NAV: NavItem[] = [
   { slug: "reviews",         label: "Reviews",        icon: Star,            roles: ["admin", "manager", "employee"] },
   { slug: "payslips",        label: "Payslips",       icon: Wallet,          roles: ["admin", "manager", "employee"] },
   { slug: "announcements",   label: "Announcements",  icon: Megaphone,       roles: ["admin", "manager", "employee"] },
+  { slug: "kudos",           label: "Recognition",    icon: Heart,           roles: ["admin", "manager", "employee"] },
   { slug: "messages",        label: "Messages",       icon: MessageSquare,   roles: ["admin", "manager", "employee"] },
   { slug: "handbook",        label: "Handbook",       icon: BookOpen,        roles: ["admin", "manager", "employee"] },
+  { slug: "documents",       label: "Documents",      icon: FileText,        roles: ["admin", "manager", "employee"] },
   { slug: "org-chart",       label: "Org Chart",      icon: GitBranch,       roles: ["admin", "manager", "employee"] },
   { slug: "okrs",            label: "Goals & OKRs",   icon: Flag,            roles: ["admin", "manager", "employee"] },
   { slug: "notifications",   label: "Notifications",  icon: Bell,            roles: ["admin", "manager", "employee"] },

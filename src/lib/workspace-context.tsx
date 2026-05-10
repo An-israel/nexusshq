@@ -11,6 +11,11 @@ export interface Workspace {
   is_active: boolean;
   trial_ends_at: string | null;
   created_at: string;
+  // GPS clock-in fields (added via migration)
+  office_lat: number | null;
+  office_lng: number | null;
+  clock_in_radius_m: number | null;
+  enforce_gps_clockin: boolean;
 }
 
 export type WorkspaceRole = "owner" | "admin" | "manager" | "employee";

@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { CalendarOff, CheckCircle2, XCircle, Clock, Plus } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
+import { sendWhatsAppFn } from "@/lib/notifications.functions";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/leave")({
   component: LeavePage,
@@ -348,6 +349,25 @@ function RequestList({
       toast.error(error.message);
       setSaving(false);
       return;
+    }
+
+    // Send WhatsApp notification (fire and forget — don't await in UI)
+    if (req) {
+      if (action === "approved") {
+        void sendWhatsAppFn({
+          data: {
+            userId: req.user_id,
+            message: `Hi, your leave request (${req.start_date} to ${req.end_date}) has been approved. — NexusHQ`,
+          },
+        }).catch(() => {});
+      } else {
+        void sendWhatsAppFn({
+          data: {
+            userId: req.user_id,
+            message: `Hi, your leave request (${req.start_date} to ${req.end_date}) has been declined. Please contact your manager for details. — NexusHQ`,
+          },
+        }).catch(() => {});
+      }
     }
 
     // Update balance if approved
