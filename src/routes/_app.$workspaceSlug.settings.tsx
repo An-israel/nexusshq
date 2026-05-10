@@ -16,7 +16,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
-import { Save, UserCog, Shield, Users as UsersIcon, ToggleRight } from "lucide-react";
+import { Save, UserCog, Shield, Users as UsersIcon, ToggleRight, MapPin } from "lucide-react";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { Switch } from "@/components/ui/switch";
 import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
@@ -51,6 +51,118 @@ export const Route = createFileRoute("/_app/$workspaceSlug/settings")({
   component: SettingsPage,
 });
 
+function OfficeLocationSettings() {
+  const { workspace } = useWorkspace();
+  const [form, setForm] = React.useState({
+    office_lat: String(workspace?.office_lat ?? ""),
+    office_lng: String(workspace?.office_lng ?? ""),
+    clock_in_radius_m: String(workspace?.clock_in_radius_m ?? 500),
+    enforce_gps_clockin: workspace?.enforce_gps_clockin ?? false,
+  });
+  const [saving, setSaving] = React.useState(false);
+  const [detecting, setDetecting] = React.useState(false);
+
+  async function save() {
+    setSaving(true);
+    const { error } = await supabase
+      .from("workspaces")
+      .update({
+        office_lat: form.office_lat ? Number(form.office_lat) : null,
+        office_lng: form.office_lng ? Number(form.office_lng) : null,
+        clock_in_radius_m: Number(form.clock_in_radius_m) || 500,
+        enforce_gps_clockin: form.enforce_gps_clockin,
+      })
+      .eq("id", workspace!.id);
+    if (error) toast.error(error.message);
+    else toast.success("Office location saved");
+    setSaving(false);
+  }
+
+  function detectLocation() {
+    setDetecting(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setForm(f => ({
+          ...f,
+          office_lat: pos.coords.latitude.toFixed(7),
+          office_lng: pos.coords.longitude.toFixed(7),
+        }));
+        toast.success("Location detected");
+        setDetecting(false);
+      },
+      () => {
+        toast.error("Could not detect location");
+        setDetecting(false);
+      }
+    );
+  }
+
+  return (
+    <Card className="p-6 space-y-4 max-w-2xl">
+      <div>
+        <h3 className="font-semibold">Office Location</h3>
+        <p className="text-sm text-muted-foreground">
+          Enable GPS-verified clock-in so employees must be at the office to clock in.
+        </p>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-medium">Enforce GPS clock-in</p>
+          <p className="text-xs text-muted-foreground">Employees must be within the set radius to clock in</p>
+        </div>
+        <Switch
+          checked={form.enforce_gps_clockin}
+          onCheckedChange={v => setForm(f => ({ ...f, enforce_gps_clockin: v }))}
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <Label>Latitude</Label>
+          <Input
+            className="text-base md:text-sm font-mono"
+            placeholder="6.5244"
+            value={form.office_lat}
+            onChange={e => setForm(f => ({ ...f, office_lat: e.target.value }))}
+          />
+        </div>
+        <div>
+          <Label>Longitude</Label>
+          <Input
+            className="text-base md:text-sm font-mono"
+            placeholder="3.3792"
+            value={form.office_lng}
+            onChange={e => setForm(f => ({ ...f, office_lng: e.target.value }))}
+          />
+        </div>
+        <div className="col-span-2">
+          <Label>Required radius (metres)</Label>
+          <Input
+            type="number"
+            className="text-base md:text-sm"
+            min={50}
+            max={5000}
+            value={form.clock_in_radius_m}
+            onChange={e => setForm(f => ({ ...f, clock_in_radius_m: e.target.value }))}
+          />
+        </div>
+      </div>
+
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={detectLocation} disabled={detecting}>
+          <MapPin className="mr-2 h-4 w-4" />
+          {detecting ? "Detecting…" : "Detect current location"}
+        </Button>
+        <Button onClick={save} disabled={saving}>
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? "Saving…" : "Save"}
+        </Button>
+      </div>
+    </Card>
+  );
+}
+
 type Dept = (typeof DEPARTMENTS)[number];
 
 interface ProfileRow {
@@ -64,6 +176,7 @@ interface ProfileRow {
   base_salary: number | null;
   is_active: boolean;
   avatar_url: string | null;
+  whatsapp_opt_in: boolean;
 }
 
 interface RoleRow { user_id: string; role: "admin" | "manager" | "employee"; }
@@ -84,6 +197,7 @@ function SettingsPage() {
           {isAdmin && <TabsTrigger value="team"><UsersIcon className="mr-2 h-4 w-4" /> Team</TabsTrigger>}
           {isAdmin && <TabsTrigger value="roles"><Shield className="mr-2 h-4 w-4" /> Roles</TabsTrigger>}
           {isAdmin && <TabsTrigger value="features"><ToggleRight className="mr-2 h-4 w-4" /> Features</TabsTrigger>}
+          {isAdmin && <TabsTrigger value="location"><MapPin className="mr-2 h-4 w-4" /> Office</TabsTrigger>}
         </TabsList>
         <TabsContent value="profile" className="mt-4">
           {profile
@@ -113,6 +227,11 @@ function SettingsPage() {
             <FeatureErrorBoundary>
               <FeatureToggles />
             </FeatureErrorBoundary>
+          </TabsContent>
+        )}
+        {isAdmin && (
+          <TabsContent value="location" className="mt-4">
+            <OfficeLocationSettings />
           </TabsContent>
         )}
       </Tabs>
@@ -181,6 +300,7 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
         department: form.department,
         job_title: form.job_title,
         phone: form.phone,
+        whatsapp_opt_in: form.whatsapp_opt_in,
       })
       .eq("id", form.id);
     if (error) toast.error(error.message);
@@ -220,6 +340,16 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
         <div>
           <Label>Phone</Label>
           <Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+        </div>
+        <div className="col-span-2 flex items-center justify-between rounded-xl bg-muted/30 p-3">
+          <div>
+            <p className="text-sm font-medium">WhatsApp notifications</p>
+            <p className="text-xs text-muted-foreground">Receive leave approvals, task assignments and alerts via SMS/WhatsApp</p>
+          </div>
+          <Switch
+            checked={form.whatsapp_opt_in ?? false}
+            onCheckedChange={v => setForm(f => ({ ...f, whatsapp_opt_in: v }))}
+          />
         </div>
         <div className="col-span-2">
           <Label>Department</Label>

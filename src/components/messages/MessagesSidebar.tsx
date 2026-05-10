@@ -193,7 +193,7 @@ export function MessagesSidebar({
   }
 
   return (
-    <div className="bg-[#111111] w-64 flex flex-col h-full overflow-hidden select-none">
+    <div className="bg-[#111111] w-full flex flex-col h-full overflow-hidden select-none">
       <div className="p-3 pb-2">
         <button
           type="button"

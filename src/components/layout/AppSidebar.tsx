@@ -5,6 +5,7 @@ import {
   LogOut, ChevronLeft, ChevronRight, Star, Wallet, FolderUp, Kanban,
   Megaphone, MessageSquare, GitBranch, BookOpen, ClipboardList, RefreshCw,
   Briefcase, Sparkles, CalendarOff, Flag, BarChart3, UserCircle, CreditCard,
+  Heart, FileText, Brain,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
@@ -30,8 +31,10 @@ const NAV: NavItem[] = [
   { slug: "reviews",         label: "Reviews",         icon: Star,            roles: ["admin", "manager", "employee"], flagKey: "reviews" },
   { slug: "payslips",        label: "Payslips",        icon: Wallet,          roles: ["admin", "manager", "employee"], flagKey: "payslips" },
   { slug: "announcements",   label: "Announcements",   icon: Megaphone,       roles: ["admin", "manager", "employee"], flagKey: "announcements" },
+  { slug: "kudos",           label: "Recognition",     icon: Heart,           roles: ["admin", "manager", "employee"] },
   { slug: "messages",        label: "Messages",        icon: MessageSquare,   roles: ["admin", "manager", "employee"], flagKey: "messages" },
   { slug: "handbook",        label: "Handbook",        icon: BookOpen,        roles: ["admin", "manager", "employee"], flagKey: "handbook" },
+  { slug: "documents",       label: "Documents",       icon: FileText,        roles: ["admin", "manager", "employee"] },
   { slug: "org-chart",       label: "Org Chart",       icon: GitBranch,       roles: ["admin", "manager", "employee"], flagKey: "org-chart" },
   { slug: "okrs",            label: "Goals & OKRs",    icon: Flag,            roles: ["admin", "manager", "employee"], flagKey: "okrs" },
   { slug: "notifications",   label: "Notifications",   icon: Bell,            roles: ["admin", "manager", "employee"] },
@@ -42,6 +45,7 @@ const NAV: NavItem[] = [
   { slug: "client-projects", label: "Client Projects", icon: Briefcase,       roles: ["admin", "manager"], flagKey: "client-projects" },
   { slug: "reports",         label: "Reports",         icon: BarChart3,       roles: ["admin", "manager"], flagKey: "reports" },
   { slug: "ai-tasks",        label: "AI Tasks",        icon: Sparkles,        roles: ["admin", "manager"], flagKey: "ai-tasks" },
+  { slug: "burnout",         label: "Wellbeing",       icon: Brain,           roles: ["admin", "manager"] },
   { slug: "kpis",            label: "KPIs",            icon: Target,          roles: ["admin"], flagKey: "kpis" },
   { slug: "billing",         label: "Billing",         icon: CreditCard,      roles: ["admin"] },
   { slug: "profile",         label: "Profile",         icon: UserCircle,      roles: ["admin", "manager", "employee"] },

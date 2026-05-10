@@ -82,7 +82,7 @@ function JoinPage() {
             onChange={(e) => setCode(e.target.value)}
             placeholder="Paste token from link, or enter 6-char passcode"
             autoFocus={!token}
-            className="font-mono"
+            className="font-mono text-base md:text-sm"
           />
           {token ? (
             <p className="text-xs text-green-600 dark:text-green-400">
@@ -105,7 +105,7 @@ function JoinPage() {
               minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="bg-input pr-10"
+              className="bg-input pr-10 text-base md:text-sm"
             />
             <button
               type="button"
@@ -126,7 +126,7 @@ function JoinPage() {
             minLength={8}
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
-            className="bg-input"
+            className="bg-input text-base md:text-sm"
           />
         </div>
 

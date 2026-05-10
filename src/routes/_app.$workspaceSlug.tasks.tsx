@@ -21,6 +21,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Sheet,
+  SheetContent,
+} from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -49,6 +53,8 @@ import {
   Check,
   Flag,
 } from "lucide-react";
+import { SwipeableRow } from "@/components/ui/swipeable-row";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/tasks")({
   component: TasksPage,
@@ -157,12 +163,26 @@ function ProgressRing({
   );
 }
 
+// ─── useIsMobile ──────────────────────────────────────────────────────────────
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = React.useState(false);
+  React.useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function TasksPage() {
   const { user, isManager } = useAuth();
   const { workspace } = useWorkspace();
   const { workspaceSlug } = Route.useParams();
+  const isMobile = useIsMobile();
 
   const [tasks, setTasks] = React.useState<TaskRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>(
@@ -279,7 +299,7 @@ function TasksPage() {
       {/* ── Left column: list ── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 shrink-0">
+        <div className="flex items-center justify-between px-4 md:px-6 pt-4 md:pt-6 pb-4 shrink-0">
           <div>
             <h1 className="text-2xl font-bold">
               {isManager ? "All Tasks" : "My Tasks"}
@@ -303,7 +323,7 @@ function TasksPage() {
         </div>
 
         {/* Summary bar */}
-        <div className="px-6 pb-4 shrink-0">
+        <div className="px-4 md:px-6 pb-4 shrink-0">
           <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
             {/* Ring */}
             <div className="relative shrink-0 flex items-center justify-center">
@@ -340,34 +360,44 @@ function TasksPage() {
         </div>
 
         {/* Filter tabs */}
-        <div className="px-6 pb-3 shrink-0">
+        <div className="px-4 md:px-6 pb-3 shrink-0">
           <Tabs
             value={filter}
             onValueChange={(v) => setFilter(v as FilterTab)}
           >
-            <TabsList>
-              <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="daily">Daily</TabsTrigger>
-              <TabsTrigger value="weekly">Weekly</TabsTrigger>
-              <TabsTrigger value="overdue">Overdue</TabsTrigger>
-              <TabsTrigger value="completed">Completed</TabsTrigger>
-            </TabsList>
+            <div className="flex overflow-x-auto gap-2 pb-1 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none">
+              <TabsList className="flex-nowrap">
+                <TabsTrigger value="all">All</TabsTrigger>
+                <TabsTrigger value="daily">Daily</TabsTrigger>
+                <TabsTrigger value="weekly">Weekly</TabsTrigger>
+                <TabsTrigger value="overdue">Overdue</TabsTrigger>
+                <TabsTrigger value="completed">Completed</TabsTrigger>
+              </TabsList>
+            </div>
           </Tabs>
         </div>
 
         {/* Task list */}
-        <div className="flex-1 overflow-y-auto px-6 pb-6">
+        <div className="flex-1 overflow-y-auto overscroll-contain px-4 md:px-6 pb-6 w-full">
           {loading ? (
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div
-                  key={i}
-                  className="h-24 rounded-lg border border-border bg-card animate-pulse"
-                />
+            <div className="space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border">
+                  <Skeleton className="h-5 w-5 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <Skeleton className="h-4 w-3/4 rounded" />
+                    <Skeleton className="h-3 w-1/2 rounded" />
+                  </div>
+                  <Skeleton className="h-6 w-16 rounded-full shrink-0" />
+                </div>
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <EmptyState isManager={isManager} />
+            <div className="flex flex-col items-center gap-3 py-16 text-center">
+              <CheckSquare className="h-12 w-12 text-muted-foreground/30" />
+              <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
+              <p className="text-xs text-muted-foreground">Tasks assigned to you will appear here.</p>
+            </div>
           ) : (
             <div className="space-y-3">
               {filtered.map((t) => (
@@ -377,6 +407,7 @@ function TasksPage() {
                   assignee={profiles[t.assigned_to]}
                   isManager={isManager}
                   isSelected={selectedTaskId === t.id}
+                  isMobile={isMobile}
                   onSelect={() =>
                     setSelectedTaskId((prev) =>
                       prev === t.id ? null : t.id
@@ -385,6 +416,38 @@ function TasksPage() {
                   onRefresh={load}
                   workspaceId={workspace.id}
                   userId={user?.id ?? ""}
+                  onComplete={
+                    t.status !== "completed"
+                      ? async () => {
+                          const { error } = await supabase
+                            .from("tasks")
+                            .update({
+                              status: "completed",
+                              progress_percent: 100,
+                              completed_at: new Date().toISOString(),
+                            })
+                            .eq("id", t.id);
+                          if (error) {
+                            toast.error(error.message);
+                            return;
+                          }
+                          toast.success("Task marked complete!");
+                          void load();
+                        }
+                      : undefined
+                  }
+                  onDelete={async () => {
+                    const { error } = await supabase
+                      .from("tasks")
+                      .delete()
+                      .eq("id", t.id);
+                    if (error) {
+                      toast.error(error.message);
+                      return;
+                    }
+                    toast.success("Task deleted");
+                    void load();
+                  }}
                 />
               ))}
             </div>
@@ -392,9 +455,9 @@ function TasksPage() {
         </div>
       </div>
 
-      {/* ── Right column: detail panel ── */}
-      {selectedTask && (
-        <div className="w-96 shrink-0 border-l border-border overflow-y-auto">
+      {/* ── Right column: detail panel (desktop only) ── */}
+      {selectedTask && !isMobile && (
+        <div className="hidden md:block w-96 shrink-0 border-l border-border overflow-y-auto">
           <TaskDetailPanel
             task={selectedTask}
             assignee={profiles[selectedTask.assigned_to]}
@@ -405,6 +468,26 @@ function TasksPage() {
             onRefresh={load}
           />
         </div>
+      )}
+
+      {/* ── Mobile bottom sheet ── */}
+      {isMobile && (
+        <Sheet open={!!selectedTask} onOpenChange={(open) => { if (!open) setSelectedTaskId(null); }}>
+          <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl pb-safe p-0">
+            <div className="mx-auto mt-3 mb-2 h-1 w-9 rounded-full bg-muted" />
+            {selectedTask && (
+              <TaskDetailPanel
+                task={selectedTask}
+                assignee={profiles[selectedTask.assigned_to]}
+                isManager={isManager}
+                user={user}
+                workspaceId={workspace.id}
+                onClose={() => setSelectedTaskId(null)}
+                onRefresh={load}
+              />
+            )}
+          </SheetContent>
+        </Sheet>
       )}
     </div>
   );
@@ -431,26 +514,6 @@ function StatChip({
   );
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
-
-function EmptyState({ isManager }: { isManager: boolean }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
-      <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mb-4">
-        <CheckSquare className="h-7 w-7 text-muted-foreground" />
-      </div>
-      <p className="text-sm font-medium text-muted-foreground">
-        No tasks to show
-      </p>
-      <p className="text-xs text-muted-foreground/60 mt-1">
-        {isManager
-          ? "Assign tasks from the Assign Task page"
-          : "Check back when tasks are assigned to you"}
-      </p>
-    </div>
-  );
-}
-
 // ─── Task Card ────────────────────────────────────────────────────────────────
 
 function TaskCard({
@@ -458,19 +521,25 @@ function TaskCard({
   assignee,
   isManager,
   isSelected,
+  isMobile,
   onSelect,
   onRefresh,
   workspaceId,
   userId,
+  onComplete,
+  onDelete,
 }: {
   task: TaskRow;
   assignee?: ProfileMini;
   isManager: boolean;
   isSelected: boolean;
+  isMobile?: boolean;
   onSelect: () => void;
   onRefresh: () => void;
   workspaceId: string;
   userId: string;
+  onComplete?: () => void;
+  onDelete?: () => void;
 }) {
   const today = todayISO();
   const isOverdue =
@@ -524,8 +593,7 @@ function TaskCard({
     onRefresh();
   }
 
-  return (
-    <>
+  const cardContent = (
       <div
         className={`relative rounded-lg border bg-card p-4 cursor-pointer transition-colors hover:border-primary/40
           ${borderAccent}
@@ -610,7 +678,7 @@ function TaskCard({
             <div className="shrink-0 ml-1" onClick={(e) => e.stopPropagation()}>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="rounded p-1.5 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                  <button className="rounded p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
                     <MoreVertical className="h-4 w-4" />
                   </button>
                 </DropdownMenuTrigger>
@@ -655,6 +723,20 @@ function TaskCard({
           )}
         </div>
       </div>
+  );
+
+  return (
+    <>
+      {isMobile ? (
+        <SwipeableRow
+          onComplete={onComplete}
+          onDelete={onDelete}
+        >
+          {cardContent}
+        </SwipeableRow>
+      ) : (
+        cardContent
+      )}
 
       {/* Add Warning Dialog */}
       <AddWarningDialog
@@ -746,7 +828,7 @@ function AddWarningDialog({
               onChange={(e) => setInput(e.target.value)}
               placeholder="Describe the issue or expectation…"
               rows={3}
-              className="mt-1.5"
+              className="mt-1.5 text-base md:text-sm"
             />
           </div>
         </div>
@@ -840,7 +922,7 @@ function FlagEmployeeDialog({
               onChange={(e) => setReason(e.target.value)}
               placeholder="Describe the reason for flagging…"
               rows={3}
-              className="mt-1.5"
+              className="mt-1.5 text-base md:text-sm"
             />
           </div>
           <div>
@@ -1088,7 +1170,7 @@ function TaskDetailPanel({
                     onChange={(e) => setNote(e.target.value)}
                     placeholder="Add a progress note…"
                     rows={2}
-                    className="mt-1.5 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                    className="mt-1.5 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-base md:text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   />
                 </div>
                 <div className="flex gap-2">

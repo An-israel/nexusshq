@@ -17,6 +17,8 @@ import { DEPARTMENTS, deptLabel, todayISO } from "@/lib/nexus";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, AlertCircle, XCircle, Clock as ClockIcon, Download } from "lucide-react";
 import { useRealtime } from "@/lib/use-realtime";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/attendance")({
   component: AttendancePage,
@@ -96,6 +98,7 @@ function AttendancePage() {
   const [rows, setRows] = React.useState<AttendanceRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
+  const [selectedDay, setSelectedDay] = React.useState<{ iso: string; row: AttendanceRow | null } | null>(null);
 
   React.useEffect(() => {
     if (!isManager) return;
@@ -209,7 +212,7 @@ function AttendancePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 overscroll-contain">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
@@ -345,8 +348,49 @@ function AttendancePage() {
             Next →
           </button>
         </div>
-        <CalendarGrid month={calendarMonth} rows={rows} />
+        <CalendarGrid month={calendarMonth} rows={rows} onDayClick={setSelectedDay} />
       </Card>
+
+      <Sheet open={!!selectedDay} onOpenChange={(o) => !o && setSelectedDay(null)}>
+        <SheetContent side="bottom" className="rounded-t-[20px] p-0 pb-safe">
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="h-1 w-9 rounded-full bg-muted-foreground/30" />
+          </div>
+          <SheetHeader className="px-4 pt-2 pb-3 border-b border-border">
+            <SheetTitle className="text-base">{selectedDay?.iso}</SheetTitle>
+          </SheetHeader>
+          <div className="px-4 py-4 space-y-3">
+            {selectedDay?.row ? (() => {
+              const r = selectedDay.row;
+              const s = STATUS_STYLE[r.status];
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
+                    <span className={`font-medium ${s.text} capitalize`}>{s.label}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="rounded-xl bg-muted/40 p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Clock in</p>
+                      <p className="mt-1 text-sm font-semibold tabular-nums">{fmtTime(r.clock_in)}</p>
+                    </div>
+                    <div className="rounded-xl bg-muted/40 p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Clock out</p>
+                      <p className="mt-1 text-sm font-semibold tabular-nums">{fmtTime(r.clock_out)}</p>
+                    </div>
+                    <div className="rounded-xl bg-muted/40 p-3 text-center">
+                      <p className="text-xs text-muted-foreground">Duration</p>
+                      <p className="mt-1 text-sm font-semibold tabular-nums">{fmtDuration(r.total_minutes)}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })() : (
+              <p className="text-sm text-muted-foreground text-center py-4">No record for this day.</p>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Daily log */}
       <Card className="p-4">
@@ -381,9 +425,23 @@ function AttendancePage() {
           </div>
         </div>
         {loading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-2 w-2 rounded-full" />
+                  <Skeleton className="h-4 w-24 rounded" />
+                  <Skeleton className="h-4 w-14 rounded" />
+                </div>
+                <Skeleton className="h-4 w-32 rounded" />
+              </div>
+            ))}
+          </div>
         ) : filteredRows.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No attendance records match this filter.</p>
+          <div className="flex flex-col items-center gap-2 py-10 text-center">
+            <ClockIcon className="h-10 w-10 text-muted-foreground/30" />
+            <p className="text-sm text-muted-foreground">No attendance records match this filter.</p>
+          </div>
         ) : (
           <div className="divide-y divide-border">
             {[...filteredRows].reverse().map((r) => {
@@ -430,7 +488,11 @@ function StatCard({
   );
 }
 
-function CalendarGrid({ month, rows }: { month: Date; rows: AttendanceRow[] }) {
+function CalendarGrid({ month, rows, onDayClick }: {
+  month: Date;
+  rows: AttendanceRow[];
+  onDayClick: (day: { iso: string; row: AttendanceRow | null }) => void;
+}) {
   const today = todayISO();
   const map = React.useMemo(() => {
     const m: Record<string, AttendanceRow> = {};
@@ -483,20 +545,23 @@ function CalendarGrid({ month, rows }: { month: Date; rows: AttendanceRow[] }) {
             textCol = "text-muted-foreground";
           }
           return (
-            <div
+            <button
               key={i}
-              className={`aspect-square rounded border flex flex-col items-center justify-center text-xs ${bg} ${
+              type="button"
+              onClick={() => onDayClick({ iso: c.iso, row: rec ?? null })}
+              className={`aspect-square min-h-[44px] rounded border flex flex-col items-center justify-center text-xs transition-colors active:scale-95 ${bg} ${
                 isToday ? "ring-2 ring-primary" : ""
-              }`}
+              } ${!isFuture ? "cursor-pointer hover:opacity-80" : "cursor-default"}`}
               title={rec ? `${c.iso} — ${STATUS_STYLE[rec.status].label}` : c.iso}
+              disabled={isFuture}
             >
               <span className={`font-medium ${textCol}`}>{c.day}</span>
               {rec && (
-                <span className={`text-[9px] ${textCol} opacity-80`}>
+                <span className={`text-[9px] ${textCol} opacity-80 hidden sm:block`}>
                   {fmtTime(rec.clock_in)}
                 </span>
               )}
-            </div>
+            </button>
           );
         })}
       </div>

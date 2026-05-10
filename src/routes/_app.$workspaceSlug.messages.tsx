@@ -12,6 +12,7 @@ import { NewDmModal } from "@/components/messages/NewDmModal";
 import { QuickSwitcher } from "@/components/messages/QuickSwitcher";
 import { SearchModal } from "@/components/messages/SearchModal";
 import { usePushNotifications } from "@/lib/messaging/use-push-notifications";
+import { cn } from "@/lib/utils";
 import type { MsgProfile, UserPresence } from "@/lib/messaging/types";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/messages")({
@@ -22,6 +23,7 @@ interface MessagingCtxValue {
   workspaceMembers: MsgProfile[];
   presence: Record<string, UserPresence>;
   updateMyPresence: ReturnType<typeof usePresence>["updateMyPresence"];
+  onMobileBack: () => void;
 }
 
 export const MessagingCtx = React.createContext<MessagingCtxValue | null>(null);
@@ -45,6 +47,7 @@ function MessagesLayout() {
   const { conversations, startDm, refetch: refetchDms } = useDmConversations(workspaceId, currentUserId);
   const { presence, updateMyPresence } = usePresence(workspaceId);
 
+  const [mobileShowSidebar, setMobileShowSidebar] = React.useState(true);
   const [workspaceMembers, setWorkspaceMembers] = React.useState<MsgProfile[]>([]);
   const [createChannelOpen, setCreateChannelOpen] = React.useState(false);
   const [newDmOpen, setNewDmOpen] = React.useState(false);
@@ -84,10 +87,12 @@ function MessagesLayout() {
 
   function goToChannel(id: string) {
     navigate({ to: `/${workspaceSlug}/messages/channel/${id}` as any });
+    setMobileShowSidebar(false);
   }
 
   function goToDm(id: string) {
     navigate({ to: `/${workspaceSlug}/messages/dm/${id}` as any });
+    setMobileShowSidebar(false);
   }
 
   function goToActivity() {
@@ -101,21 +106,37 @@ function MessagesLayout() {
     if (joinedChannels.length > 0 && pathname.endsWith("/messages")) {
       autoRedirected.current = true;
       const general = joinedChannels.find((c) => c.name === "general") ?? joinedChannels[0];
-      goToChannel(general.id);
+      navigate({ to: `/${workspaceSlug}/messages/channel/${general.id}` as any });
+      setMobileShowSidebar(false);
     }
   }, [joinedChannels, pathname]);
 
   usePushNotifications(currentUserId, workspaceSlug);
 
   const ctxValue = React.useMemo<MessagingCtxValue>(
-    () => ({ workspaceMembers, presence, updateMyPresence }),
+    () => ({
+      workspaceMembers,
+      presence,
+      updateMyPresence,
+      onMobileBack: () => setMobileShowSidebar(true),
+    }),
     [workspaceMembers, presence, updateMyPresence]
   );
 
   return (
     <MessagingCtx.Provider value={ctxValue}>
-      <div className="flex h-full overflow-hidden bg-[#0F0F0F]">
-        <div className="w-64 shrink-0">
+      <div className="relative flex h-full overflow-hidden bg-[#0F0F0F]">
+        {/* Sidebar panel: full-width on mobile, fixed 256px on desktop */}
+        <div
+          className={cn(
+            // Desktop: static positioning, 256px wide
+            "md:relative md:w-64 md:shrink-0 md:translate-x-0",
+            // Mobile: absolute, full screen, slides
+            "absolute inset-0 w-full z-10",
+            "transition-transform duration-[250ms] ease-in-out",
+            mobileShowSidebar ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+          )}
+        >
           <MessagesSidebar
             workspaceSlug={workspaceSlug}
             workspaceName={workspace?.name ?? ""}
@@ -138,7 +159,17 @@ function MessagesLayout() {
           />
         </div>
 
-        <div className="flex-1 overflow-hidden">
+        {/* Content panel: full-width on mobile, flex-1 on desktop */}
+        <div
+          className={cn(
+            // Desktop: static, fills remaining space
+            "md:relative md:flex-1 md:translate-x-0",
+            // Mobile: absolute, full screen, starts off-screen to the right
+            "absolute inset-0 w-full",
+            "transition-transform duration-[250ms] ease-in-out",
+            mobileShowSidebar ? "translate-x-full md:translate-x-0" : "translate-x-0",
+          )}
+        >
           <Outlet />
         </div>
       </div>

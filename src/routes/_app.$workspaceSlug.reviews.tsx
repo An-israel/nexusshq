@@ -230,9 +230,30 @@ function ReviewsPage() {
       </Sheet>
 
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <div className="grid gap-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="rounded-xl border border-border bg-card p-5 space-y-4">
+              <div className="flex items-start justify-between">
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-48 rounded" />
+                  <Skeleton className="h-3 w-32 rounded" />
+                </div>
+                <Skeleton className="h-8 w-12 rounded" />
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {Array.from({ length: 4 }).map((_, j) => (
+                  <Skeleton key={j} className="h-[88px] md:h-10 w-full rounded-xl md:rounded" />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : reviews.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">No reviews yet.</Card>
+        <div className="flex flex-col items-center gap-3 py-16 text-center">
+          <Star className="h-12 w-12 text-muted-foreground/30" />
+          <p className="text-sm text-muted-foreground">No performance reviews yet.</p>
+          {isManager && <p className="text-xs text-muted-foreground">Create the first review using the button above.</p>}
+        </div>
       ) : (
         <div className="grid gap-3">
           {reviews.map((r) => {
@@ -268,10 +289,10 @@ function ReviewsPage() {
                 </div>
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  <ScoreBar label="Productivity" value={r.productivity_score} />
-                  <ScoreBar label="Quality" value={r.quality_score} />
-                  <ScoreBar label="Attendance" value={r.attendance_score} />
-                  <ScoreBar label="Collaboration" value={r.collaboration_score} />
+                  <ScoreDisplay label="Productivity" value={r.productivity_score} />
+                  <ScoreDisplay label="Quality" value={r.quality_score} />
+                  <ScoreDisplay label="Attendance" value={r.attendance_score} />
+                  <ScoreDisplay label="Collaboration" value={r.collaboration_score} />
                 </div>
 
                 {(r.strengths || r.areas_to_improve || r.manager_notes) && (
@@ -337,15 +358,41 @@ function ReviewsPage() {
   );
 }
 
-function ScoreBar({ label, value }: { label: string; value: number }) {
+function ScoreDisplay({ label, value, color = "hsl(var(--primary))" }: { label: string; value: number; color?: string }) {
+  const r = 36;
+  const circ = 2 * Math.PI * r;
+  const dash = (value / 100) * circ;
+
   return (
-    <div>
-      <div className="flex items-center justify-between text-xs mb-1">
-        <span className="text-muted-foreground">{label}</span>
-        <span className="tabular-nums font-medium">{value}</span>
+    <div className="flex flex-col items-center gap-1">
+      {/* Mobile: SVG ring */}
+      <div className="md:hidden flex flex-col items-center gap-1">
+        <svg width="88" height="88" viewBox="0 0 88 88">
+          <circle cx="44" cy="44" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="7" />
+          <circle
+            cx="44" cy="44" r={r} fill="none"
+            stroke={color} strokeWidth="7"
+            strokeDasharray={`${dash} ${circ}`}
+            strokeLinecap="round"
+            transform="rotate(-90 44 44)"
+          />
+          <text x="44" y="44" textAnchor="middle" dominantBaseline="central"
+            fontSize="16" fontWeight="700" fill="currentColor"
+          >
+            {value}
+          </text>
+        </svg>
+        <span className="text-[11px] text-muted-foreground text-center leading-tight">{label}</span>
       </div>
-      <div className="h-1.5 rounded bg-muted overflow-hidden">
-        <div className="h-full bg-primary" style={{ width: `${value}%` }} />
+      {/* Desktop: bar */}
+      <div className="hidden md:block w-full">
+        <div className="flex items-center justify-between text-xs mb-1">
+          <span className="text-muted-foreground">{label}</span>
+          <span className="tabular-nums font-medium">{value}</span>
+        </div>
+        <div className="h-1.5 rounded bg-muted overflow-hidden">
+          <div className="h-full bg-primary" style={{ width: `${value}%` }} />
+        </div>
       </div>
     </div>
   );
@@ -455,11 +502,11 @@ function CreateReviewDialog({ workspaceId, onCreated }: { workspaceId: string; o
           </div>
           <div>
             <Label>Period start</Label>
-            <Input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} />
+            <Input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} className="text-base md:text-sm" />
           </div>
           <div>
             <Label>Period end</Label>
-            <Input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} />
+            <Input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} className="text-base md:text-sm" />
           </div>
         </div>
 
@@ -475,15 +522,15 @@ function CreateReviewDialog({ workspaceId, onCreated }: { workspaceId: string; o
 
         <div>
           <Label>Strengths</Label>
-          <Textarea rows={2} value={form.strengths} onChange={(e) => setForm({ ...form, strengths: e.target.value })} />
+          <Textarea rows={2} value={form.strengths} onChange={(e) => setForm({ ...form, strengths: e.target.value })} className="text-base md:text-sm" />
         </div>
         <div>
           <Label>Areas to improve</Label>
-          <Textarea rows={2} value={form.areas_to_improve} onChange={(e) => setForm({ ...form, areas_to_improve: e.target.value })} />
+          <Textarea rows={2} value={form.areas_to_improve} onChange={(e) => setForm({ ...form, areas_to_improve: e.target.value })} className="text-base md:text-sm" />
         </div>
         <div>
           <Label>Manager notes</Label>
-          <Textarea rows={2} value={form.manager_notes} onChange={(e) => setForm({ ...form, manager_notes: e.target.value })} />
+          <Textarea rows={2} value={form.manager_notes} onChange={(e) => setForm({ ...form, manager_notes: e.target.value })} className="text-base md:text-sm" />
         </div>
       </div>
       <DialogFooter>
