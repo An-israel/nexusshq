@@ -72,9 +72,8 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
 
       const { data } = await supabase
         .from("workspace_members")
-        .select("user_id, profiles(id, full_name, email, avatar_url, department, job_title)")
-        .eq("workspace_id", workspaceId)
-        .eq("is_active", true);
+        .select("user_id, profiles(id, full_name, email, avatar_url, department, job_title, is_active)")
+        .eq("workspace_id", workspaceId);
 
       if (cancelled || !data) { setSearching(false); return; }
 
@@ -84,7 +83,7 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
         .map((row) =>
           Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as MsgProfile | null)
         )
-        .filter((p): p is MsgProfile => !!p)
+        .filter((p): p is MsgProfile & { is_active?: boolean } => !!p && p.is_active !== false)
         .filter(
           (p) =>
             p.full_name?.toLowerCase().includes(lowerQ) ||
