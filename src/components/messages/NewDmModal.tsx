@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { MsgProfile } from "@/lib/messaging/types";
 
 function hashColor(id: string): string {
@@ -156,9 +157,9 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
     try {
       const id = await startDm(selected.map((p) => p.id));
       onStarted(id);
-      onClose();
-    } catch {
-      // silently fail
+    } catch (err) {
+      const msg = (err as Error)?.message ?? "Failed to open conversation";
+      toast.error(msg);
     } finally {
       setStarting(false);
     }

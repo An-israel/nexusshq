@@ -58,12 +58,13 @@ function MessagesLayout() {
     if (!workspaceId) return;
     supabase
       .from("workspace_members")
-      .select("user_id, profiles(id, full_name, email, avatar_url, department, job_title)")
+      .select("user_id, profiles(id, full_name, email, avatar_url, department, job_title, is_active)")
       .eq("workspace_id", workspaceId)
-      .eq("is_active", true)
       .then(({ data }) => {
         setWorkspaceMembers(
-          (data ?? []).map((m: any) => m.profiles).filter(Boolean)
+          (data ?? [])
+            .map((m: any) => Array.isArray(m.profiles) ? m.profiles[0] : m.profiles)
+            .filter((p: any) => p && p.is_active !== false) as MsgProfile[]
         );
       });
   }, [workspaceId]);
@@ -194,7 +195,6 @@ function MessagesLayout() {
         startDm={startDm}
         onStarted={(conversationId) => {
           setNewDmOpen(false);
-          refetchDms();
           goToDm(conversationId);
         }}
       />
