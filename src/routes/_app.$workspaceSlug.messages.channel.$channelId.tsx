@@ -30,24 +30,27 @@ function ChannelViewPage() {
     setLoading(true);
     setChannel(null);
 
-    supabase
-      .from("channels")
-      .select("*")
-      .eq("id", channelId)
-      .single()
-      .then(({ data, error }) => {
-        if (!error && data) {
-          setChannel({
-            ...data,
-            type: data.type as "public" | "private" | "announcement",
-            unread_count: 0,
-            mention_count: 0,
-            member_count: 0,
-            is_member: true,
-          });
-        }
-        setLoading(false);
-      });
+    void (async () => {
+      const [{ data, error }, { count }] = await Promise.all([
+        supabase.from("channels").select("*").eq("id", channelId).single(),
+        supabase
+          .from("channel_members")
+          .select("id", { count: "exact", head: true })
+          .eq("channel_id", channelId),
+      ]);
+
+      if (!error && data) {
+        setChannel({
+          ...data,
+          type: data.type as "public" | "private" | "announcement",
+          unread_count: 0,
+          mention_count: 0,
+          member_count: count ?? 0,
+          is_member: true,
+        });
+      }
+      setLoading(false);
+    })();
   }, [channelId, workspaceId]);
 
   if (loading || !channel || !workspaceId || !currentUserId) {
