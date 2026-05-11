@@ -56,16 +56,30 @@ function MessagesLayout() {
 
   React.useEffect(() => {
     if (!workspaceId) return;
-    supabase
-      .from("workspace_members")
-      .select("user_id, profiles(id, full_name, email, avatar_url, department, job_title)")
-      .eq("workspace_id", workspaceId)
-      .eq("is_active", true)
-      .then(({ data }) => {
-        setWorkspaceMembers(
-          (data ?? []).map((m: any) => m.profiles).filter(Boolean)
-        );
-      });
+
+    void (async () => {
+      const { data: membershipRows } = await supabase
+        .from("workspace_members")
+        .select("user_id")
+        .eq("workspace_id", workspaceId)
+        .eq("is_active", true);
+
+      const userIds = Array.from(
+        new Set((membershipRows ?? []).map((row) => row.user_id))
+      );
+
+      if (userIds.length === 0) {
+        setWorkspaceMembers([]);
+        return;
+      }
+
+      const { data: profileRows } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url, department, job_title")
+        .in("id", userIds);
+
+      setWorkspaceMembers((profileRows ?? []) as MsgProfile[]);
+    })();
   }, [workspaceId]);
 
   React.useEffect(() => {

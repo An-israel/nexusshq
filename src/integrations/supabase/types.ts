@@ -143,6 +143,112 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_members: {
+        Row: {
+          channel_id: string
+          id: string
+          is_muted: boolean
+          joined_at: string
+          last_read_at: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          channel_id: string
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          last_read_at?: string
+          role?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          channel_id?: string
+          id?: string
+          is_muted?: boolean
+          joined_at?: string
+          last_read_at?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_members_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channels: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_archived: boolean
+          is_default: boolean
+          name: string
+          type: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name: string
+          type?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_archived?: boolean
+          is_default?: boolean
+          name?: string
+          type?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channels_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_portal_views: {
         Row: {
           id: string
@@ -464,6 +570,90 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_conversations: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          last_message_at: string
+          name: string | null
+          type: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_message_at?: string
+          name?: string | null
+          type?: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          last_message_at?: string
+          name?: string | null
+          type?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_conversations_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_conversations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_members: {
+        Row: {
+          conversation_id: string
+          id: string
+          is_muted: boolean
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          id?: string
+          is_muted?: boolean
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          id?: string
+          is_muted?: boolean
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_members_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "dm_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -1011,6 +1201,53 @@ export type Database = {
           },
         ]
       }
+      message_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size_bytes: number
+          file_type: string
+          google_drive_file_id: string | null
+          google_drive_view_url: string | null
+          id: string
+          message_id: string
+          storage_path: string | null
+          thumbnail_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size_bytes?: number
+          file_type?: string
+          google_drive_file_id?: string | null
+          google_drive_view_url?: string | null
+          id?: string
+          message_id: string
+          storage_path?: string | null
+          thumbnail_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size_bytes?: number
+          file_type?: string
+          google_drive_file_id?: string | null
+          google_drive_view_url?: string | null
+          id?: string
+          message_id?: string
+          storage_path?: string | null
+          thumbnail_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_attachments_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_group_members: {
         Row: {
           group_id: string
@@ -1092,6 +1329,148 @@ export type Database = {
           },
           {
             foreignKeyName: "message_groups_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      message_reactions: {
+        Row: {
+          created_at: string
+          emoji: string
+          id: string
+          message_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji: string
+          id?: string
+          message_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          id?: string
+          message_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "message_reactions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          body: string
+          body_html: string | null
+          channel_id: string | null
+          conversation_id: string | null
+          created_at: string
+          edited_at: string | null
+          has_attachment: boolean
+          id: string
+          is_deleted: boolean
+          is_edited: boolean
+          parent_message_id: string | null
+          pinned: boolean
+          pinned_by: string | null
+          sender_id: string
+          thread_last_reply_at: string | null
+          thread_reply_count: number
+          workspace_id: string
+        }
+        Insert: {
+          body: string
+          body_html?: string | null
+          channel_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          edited_at?: string | null
+          has_attachment?: boolean
+          id?: string
+          is_deleted?: boolean
+          is_edited?: boolean
+          parent_message_id?: string | null
+          pinned?: boolean
+          pinned_by?: string | null
+          sender_id: string
+          thread_last_reply_at?: string | null
+          thread_reply_count?: number
+          workspace_id: string
+        }
+        Update: {
+          body?: string
+          body_html?: string | null
+          channel_id?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          edited_at?: string | null
+          has_attachment?: boolean
+          id?: string
+          is_deleted?: boolean
+          is_edited?: boolean
+          parent_message_id?: string | null
+          pinned?: boolean
+          pinned_by?: string | null
+          sender_id?: string
+          thread_last_reply_at?: string | null
+          thread_reply_count?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "dm_conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_parent_message_id_fkey"
+            columns: ["parent_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_pinned_by_fkey"
+            columns: ["pinned_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -1785,6 +2164,48 @@ export type Database = {
           },
         ]
       }
+      user_presence: {
+        Row: {
+          last_seen_at: string
+          status: string
+          status_emoji: string | null
+          status_text: string | null
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          last_seen_at?: string
+          status?: string
+          status_emoji?: string | null
+          status_text?: string | null
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          last_seen_at?: string
+          status?: string
+          status_emoji?: string | null
+          status_text?: string | null
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_presence_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_presence_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1907,6 +2328,65 @@ export type Database = {
           },
         ]
       }
+      workspace_invitations: {
+        Row: {
+          created_at: string
+          department: Database["public"]["Enums"]["department_type"]
+          email: string
+          expires_at: string
+          full_name: string
+          id: string
+          invited_by: string | null
+          job_title: string | null
+          passcode: string
+          phone: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          token: string
+          used_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          department?: Database["public"]["Enums"]["department_type"]
+          email: string
+          expires_at?: string
+          full_name: string
+          id?: string
+          invited_by?: string | null
+          job_title?: string | null
+          passcode: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          department?: Database["public"]["Enums"]["department_type"]
+          email?: string
+          expires_at?: string
+          full_name?: string
+          id?: string
+          invited_by?: string | null
+          job_title?: string | null
+          passcode?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          token?: string
+          used_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_invitations_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_members: {
         Row: {
           created_at: string
@@ -1999,6 +2479,7 @@ export type Database = {
         Returns: number
       }
       ensure_skryve_seed: { Args: never; Returns: string }
+      get_my_workspace_ids: { Args: never; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
