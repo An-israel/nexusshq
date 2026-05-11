@@ -1,10 +1,11 @@
 import * as React from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { useMessagingCtx } from "@/routes/_app.$workspaceSlug.messages";
 import { DmView } from "@/components/messages/DmView";
+import { toast } from "sonner";
 import type { DmConversationWithMeta, DmMember, MsgProfile } from "@/lib/messaging/types";
 
 export const Route = createFileRoute(
@@ -17,18 +18,21 @@ function DmViewPage() {
   const { conversationId, workspaceSlug } = Route.useParams();
   const { user } = useAuth();
   const { workspace } = useWorkspace();
-  const { workspaceMembers, presence } = useMessagingCtx();
+  const { workspaceMembers, presence, onMobileBack } = useMessagingCtx();
+  const navigate = useNavigate();
 
   const workspaceId = workspace?.id ?? null;
   const currentUserId = user?.id ?? null;
 
   const [conversation, setConversation] = React.useState<DmConversationWithMeta | null>(null);
   const [loading, setLoading] = React.useState(true);
+  const [loadError, setLoadError] = React.useState(false);
 
   React.useEffect(() => {
     if (!workspaceId || !conversationId) return;
     setLoading(true);
     setConversation(null);
+    setLoadError(false);
 
     async function load() {
       const [convRes, membersRes] = await Promise.all([
@@ -44,6 +48,8 @@ function DmViewPage() {
       ]);
 
       if (convRes.error || !convRes.data) {
+        console.error("DmViewPage: failed to load conversation", convRes.error?.message);
+        setLoadError(true);
         setLoading(false);
         return;
       }
@@ -97,6 +103,24 @@ function DmViewPage() {
 
     load();
   }, [conversationId, workspaceId]);
+
+  if (loadError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-sm text-muted-foreground">Couldn't open this conversation.</p>
+        <button
+          type="button"
+          onClick={() => {
+            onMobileBack();
+            navigate({ to: `/${workspaceSlug}/messages` as any });
+          }}
+          className="text-sm text-primary underline"
+        >
+          Go back
+        </button>
+      </div>
+    );
+  }
 
   if (loading || !conversation || !workspaceId || !currentUserId) {
     return (

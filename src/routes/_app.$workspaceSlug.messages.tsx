@@ -61,8 +61,7 @@ function MessagesLayout() {
       const { data: membershipRows } = await supabase
         .from("workspace_members")
         .select("user_id")
-        .eq("workspace_id", workspaceId)
-        .eq("is_active", true);
+        .eq("workspace_id", workspaceId);
 
       const userIds = Array.from(
         new Set((membershipRows ?? []).map((row) => row.user_id))
@@ -76,7 +75,8 @@ function MessagesLayout() {
       const { data: profileRows } = await supabase
         .from("profiles")
         .select("id, full_name, email, avatar_url, department, job_title")
-        .in("id", userIds);
+        .in("id", userIds)
+        .eq("is_active", true);
 
       setWorkspaceMembers((profileRows ?? []) as MsgProfile[]);
     })();
@@ -208,7 +208,6 @@ function MessagesLayout() {
         startDm={startDm}
         onStarted={(conversationId) => {
           setNewDmOpen(false);
-          refetchDms();
           goToDm(conversationId);
         }}
       />
