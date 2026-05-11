@@ -41,8 +41,14 @@ export const Route = createFileRoute("/api/ai")({
         });
 
         if (!resp.ok) {
-          const err = await resp.text();
-          return Response.json({ error: err }, { status: 502 });
+          const errText = await resp.text();
+          let errMsg = errText;
+          try {
+            const parsed = JSON.parse(errText) as { error?: { message?: string }; message?: string };
+            errMsg = parsed.error?.message ?? parsed.message ?? errText;
+          } catch { /* leave as raw text */ }
+          if (resp.status === 401) errMsg = "Invalid Anthropic API key. Please update ANTHROPIC_API_KEY in your server environment variables.";
+          return Response.json({ error: errMsg }, { status: 502 });
         }
 
         const data = (await resp.json()) as {

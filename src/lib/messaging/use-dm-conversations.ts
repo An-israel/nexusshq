@@ -55,7 +55,12 @@ export function useDmConversations(
         .select("conversation_id")
         .eq("user_id", userId);
 
-      if (myMembershipsRes.error) throw myMembershipsRes.error;
+      // Treat RLS/permission errors as empty — user has no conversations yet
+      if (myMembershipsRes.error) {
+        console.warn("dm_members query:", myMembershipsRes.error.message);
+        setConversations([]);
+        return;
+      }
 
       const convIds = (myMembershipsRes.data ?? []).map(
         (r: { conversation_id: string }) => r.conversation_id
@@ -80,8 +85,16 @@ export function useDmConversations(
           .in("conversation_id", convIds),
       ]);
 
-      if (convsRes.error) throw convsRes.error;
-      if (allMembersRes.error) throw allMembersRes.error;
+      if (convsRes.error) {
+        console.warn("dm_conversations query:", convsRes.error.message);
+        setConversations([]);
+        return;
+      }
+      if (allMembersRes.error) {
+        console.warn("dm_members all query:", allMembersRes.error.message);
+        setConversations([]);
+        return;
+      }
 
       const rawConvs = (convsRes.data ?? []) as RawConversation[];
       const allMembers = (allMembersRes.data ?? []) as RawDmMember[];
@@ -89,12 +102,12 @@ export function useDmConversations(
       const memberUserIds = Array.from(
         new Set(allMembers.map((m) => m.user_id))
       );
-      const profilesRes = await supabase
-        .from("profiles")
-        .select("id,full_name,email,avatar_url,department,job_title")
-        .in("id", memberUserIds);
-
-      if (profilesRes.error) throw profilesRes.error;
+      const profilesRes = memberUserIds.length
+        ? await supabase
+            .from("profiles")
+            .select("id,full_name,email,avatar_url,department,job_title")
+            .in("id", memberUserIds)
+        : { data: [], error: null };
 
       const profileMap = new Map<string, MsgProfile>();
       for (const p of profilesRes.data ?? []) {
@@ -123,6 +136,7 @@ export function useDmConversations(
           ? readTimes.reduce((a, b) => (a < b ? a : b))
           : new Date().toISOString();
 
+      // Filter messages by conversation_id only — avoids workspace_id RLS issues
       const messagesRes = await supabase
         .from("messages")
         .select("conversation_id,created_at,sender_id")
@@ -130,8 +144,6 @@ export function useDmConversations(
         .gt("created_at", oldestReadAt)
         .eq("is_deleted", false)
         .is("parent_message_id", null);
-
-      if (messagesRes.error) throw messagesRes.error;
 
       const rawMessages = (messagesRes.data ?? []) as RawMessage[];
       const messagesByConv = new Map<string, RawMessage[]>();
@@ -171,7 +183,11 @@ export function useDmConversations(
       setConversations(result);
     } catch (err) {
       console.error("useDmConversations fetch error:", err);
-      toast.error("Failed to load conversations");
+      // Only show toast for unexpected errors, not RLS/permission ones
+      const msg = (err as Error).message ?? "";
+      if (!msg.includes("permission") && !msg.includes("policy") && !msg.includes("RLS")) {
+        toast.error("Failed to load conversations");
+      }
     } finally {
       setLoading(false);
     }

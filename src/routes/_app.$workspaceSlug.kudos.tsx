@@ -53,6 +53,8 @@ function KudosPage() {
   const [emoji, setEmoji] = React.useState("⭐");
   const [sending, setSending] = React.useState(false);
 
+  const [migrationPending, setMigrationPending] = React.useState(false);
+
   const load = React.useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -61,7 +63,16 @@ function KudosPage() {
       .eq("workspace_id", workspace.id)
       .order("created_at", { ascending: false })
       .limit(50);
-    if (error) { toast.error(error.message); setLoading(false); return; }
+    if (error) {
+      if (error.message.includes("schema cache") || error.message.includes("does not exist") || error.code === "42P01") {
+        setMigrationPending(true);
+      } else {
+        toast.error(error.message);
+      }
+      setLoading(false);
+      return;
+    }
+    setMigrationPending(false);
     const rows = (data ?? []) as KudosRow[];
     setKudos(rows);
 
@@ -141,6 +152,20 @@ function KudosPage() {
           <Heart className="mr-2 h-4 w-4" /> Send Kudos
         </Button>
       </div>
+
+      {/* Migration pending banner */}
+      {migrationPending && (
+        <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 space-y-2">
+          <p className="text-sm font-semibold text-warning">Database migration required</p>
+          <p className="text-xs text-muted-foreground">
+            The Recognition feature needs a database table that hasn't been created yet.
+            Please run the migration in your Supabase SQL editor:
+          </p>
+          <p className="text-xs font-mono bg-muted rounded p-2 break-all">
+            supabase/migrations/20260514000000_kudos_documents_gps_whatsapp.sql
+          </p>
+        </div>
+      )}
 
       {/* Send Kudos Dialog */}
       <Dialog open={sendOpen} onOpenChange={setSendOpen}>
