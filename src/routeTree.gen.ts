@@ -36,11 +36,14 @@ import { Route as AppWorkspaceSlugOkrsRouteImport } from './routes/_app.$workspa
 import { Route as AppWorkspaceSlugNotificationsRouteImport } from './routes/_app.$workspaceSlug.notifications'
 import { Route as AppWorkspaceSlugMessagesRouteImport } from './routes/_app.$workspaceSlug.messages'
 import { Route as AppWorkspaceSlugLeaveRouteImport } from './routes/_app.$workspaceSlug.leave'
+import { Route as AppWorkspaceSlugKudosRouteImport } from './routes/_app.$workspaceSlug.kudos'
 import { Route as AppWorkspaceSlugKpisRouteImport } from './routes/_app.$workspaceSlug.kpis'
 import { Route as AppWorkspaceSlugHandbookRouteImport } from './routes/_app.$workspaceSlug.handbook'
+import { Route as AppWorkspaceSlugDocumentsRouteImport } from './routes/_app.$workspaceSlug.documents'
 import { Route as AppWorkspaceSlugDeliverablesRouteImport } from './routes/_app.$workspaceSlug.deliverables'
 import { Route as AppWorkspaceSlugDashboardRouteImport } from './routes/_app.$workspaceSlug.dashboard'
 import { Route as AppWorkspaceSlugClientProjectsRouteImport } from './routes/_app.$workspaceSlug.client-projects'
+import { Route as AppWorkspaceSlugBurnoutRouteImport } from './routes/_app.$workspaceSlug.burnout'
 import { Route as AppWorkspaceSlugBillingRouteImport } from './routes/_app.$workspaceSlug.billing'
 import { Route as AppWorkspaceSlugAttendanceRouteImport } from './routes/_app.$workspaceSlug.attendance'
 import { Route as AppWorkspaceSlugAnnouncementsRouteImport } from './routes/_app.$workspaceSlug.announcements'
@@ -204,6 +207,11 @@ const AppWorkspaceSlugLeaveRoute = AppWorkspaceSlugLeaveRouteImport.update({
   path: '/leave',
   getParentRoute: () => AppWorkspaceSlugRoute,
 } as any)
+const AppWorkspaceSlugKudosRoute = AppWorkspaceSlugKudosRouteImport.update({
+  id: '/kudos',
+  path: '/kudos',
+  getParentRoute: () => AppWorkspaceSlugRoute,
+} as any)
 const AppWorkspaceSlugKpisRoute = AppWorkspaceSlugKpisRouteImport.update({
   id: '/kpis',
   path: '/kpis',
@@ -213,6 +221,12 @@ const AppWorkspaceSlugHandbookRoute =
   AppWorkspaceSlugHandbookRouteImport.update({
     id: '/handbook',
     path: '/handbook',
+    getParentRoute: () => AppWorkspaceSlugRoute,
+  } as any)
+const AppWorkspaceSlugDocumentsRoute =
+  AppWorkspaceSlugDocumentsRouteImport.update({
+    id: '/documents',
+    path: '/documents',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
 const AppWorkspaceSlugDeliverablesRoute =
@@ -233,6 +247,11 @@ const AppWorkspaceSlugClientProjectsRoute =
     path: '/client-projects',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
+const AppWorkspaceSlugBurnoutRoute = AppWorkspaceSlugBurnoutRouteImport.update({
+  id: '/burnout',
+  path: '/burnout',
+  getParentRoute: () => AppWorkspaceSlugRoute,
+} as any)
 const AppWorkspaceSlugBillingRoute = AppWorkspaceSlugBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -359,11 +378,14 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
+  '/$workspaceSlug/burnout': typeof AppWorkspaceSlugBurnoutRoute
   '/$workspaceSlug/client-projects': typeof AppWorkspaceSlugClientProjectsRoute
   '/$workspaceSlug/dashboard': typeof AppWorkspaceSlugDashboardRoute
   '/$workspaceSlug/deliverables': typeof AppWorkspaceSlugDeliverablesRoute
+  '/$workspaceSlug/documents': typeof AppWorkspaceSlugDocumentsRoute
   '/$workspaceSlug/handbook': typeof AppWorkspaceSlugHandbookRoute
   '/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
+  '/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
   '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
@@ -411,11 +433,14 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
+  '/$workspaceSlug/burnout': typeof AppWorkspaceSlugBurnoutRoute
   '/$workspaceSlug/client-projects': typeof AppWorkspaceSlugClientProjectsRoute
   '/$workspaceSlug/dashboard': typeof AppWorkspaceSlugDashboardRoute
   '/$workspaceSlug/deliverables': typeof AppWorkspaceSlugDeliverablesRoute
+  '/$workspaceSlug/documents': typeof AppWorkspaceSlugDocumentsRoute
   '/$workspaceSlug/handbook': typeof AppWorkspaceSlugHandbookRoute
   '/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
+  '/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
   '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
@@ -465,11 +490,14 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/_app/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/_app/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
+  '/_app/$workspaceSlug/burnout': typeof AppWorkspaceSlugBurnoutRoute
   '/_app/$workspaceSlug/client-projects': typeof AppWorkspaceSlugClientProjectsRoute
   '/_app/$workspaceSlug/dashboard': typeof AppWorkspaceSlugDashboardRoute
   '/_app/$workspaceSlug/deliverables': typeof AppWorkspaceSlugDeliverablesRoute
+  '/_app/$workspaceSlug/documents': typeof AppWorkspaceSlugDocumentsRoute
   '/_app/$workspaceSlug/handbook': typeof AppWorkspaceSlugHandbookRoute
   '/_app/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
+  '/_app/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/_app/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
   '/_app/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/_app/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
@@ -519,11 +547,14 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
     | '/$workspaceSlug/billing'
+    | '/$workspaceSlug/burnout'
     | '/$workspaceSlug/client-projects'
     | '/$workspaceSlug/dashboard'
     | '/$workspaceSlug/deliverables'
+    | '/$workspaceSlug/documents'
     | '/$workspaceSlug/handbook'
     | '/$workspaceSlug/kpis'
+    | '/$workspaceSlug/kudos'
     | '/$workspaceSlug/leave'
     | '/$workspaceSlug/messages'
     | '/$workspaceSlug/notifications'
@@ -571,11 +602,14 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
     | '/$workspaceSlug/billing'
+    | '/$workspaceSlug/burnout'
     | '/$workspaceSlug/client-projects'
     | '/$workspaceSlug/dashboard'
     | '/$workspaceSlug/deliverables'
+    | '/$workspaceSlug/documents'
     | '/$workspaceSlug/handbook'
     | '/$workspaceSlug/kpis'
+    | '/$workspaceSlug/kudos'
     | '/$workspaceSlug/leave'
     | '/$workspaceSlug/messages'
     | '/$workspaceSlug/notifications'
@@ -624,11 +658,14 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/announcements'
     | '/_app/$workspaceSlug/attendance'
     | '/_app/$workspaceSlug/billing'
+    | '/_app/$workspaceSlug/burnout'
     | '/_app/$workspaceSlug/client-projects'
     | '/_app/$workspaceSlug/dashboard'
     | '/_app/$workspaceSlug/deliverables'
+    | '/_app/$workspaceSlug/documents'
     | '/_app/$workspaceSlug/handbook'
     | '/_app/$workspaceSlug/kpis'
+    | '/_app/$workspaceSlug/kudos'
     | '/_app/$workspaceSlug/leave'
     | '/_app/$workspaceSlug/messages'
     | '/_app/$workspaceSlug/notifications'
@@ -875,6 +912,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugLeaveRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
+    '/_app/$workspaceSlug/kudos': {
+      id: '/_app/$workspaceSlug/kudos'
+      path: '/kudos'
+      fullPath: '/$workspaceSlug/kudos'
+      preLoaderRoute: typeof AppWorkspaceSlugKudosRouteImport
+      parentRoute: typeof AppWorkspaceSlugRoute
+    }
     '/_app/$workspaceSlug/kpis': {
       id: '/_app/$workspaceSlug/kpis'
       path: '/kpis'
@@ -887,6 +931,13 @@ declare module '@tanstack/react-router' {
       path: '/handbook'
       fullPath: '/$workspaceSlug/handbook'
       preLoaderRoute: typeof AppWorkspaceSlugHandbookRouteImport
+      parentRoute: typeof AppWorkspaceSlugRoute
+    }
+    '/_app/$workspaceSlug/documents': {
+      id: '/_app/$workspaceSlug/documents'
+      path: '/documents'
+      fullPath: '/$workspaceSlug/documents'
+      preLoaderRoute: typeof AppWorkspaceSlugDocumentsRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
     '/_app/$workspaceSlug/deliverables': {
@@ -908,6 +959,13 @@ declare module '@tanstack/react-router' {
       path: '/client-projects'
       fullPath: '/$workspaceSlug/client-projects'
       preLoaderRoute: typeof AppWorkspaceSlugClientProjectsRouteImport
+      parentRoute: typeof AppWorkspaceSlugRoute
+    }
+    '/_app/$workspaceSlug/burnout': {
+      id: '/_app/$workspaceSlug/burnout'
+      path: '/burnout'
+      fullPath: '/$workspaceSlug/burnout'
+      preLoaderRoute: typeof AppWorkspaceSlugBurnoutRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
     '/_app/$workspaceSlug/billing': {
@@ -1098,11 +1156,14 @@ interface AppWorkspaceSlugRouteChildren {
   AppWorkspaceSlugAnnouncementsRoute: typeof AppWorkspaceSlugAnnouncementsRoute
   AppWorkspaceSlugAttendanceRoute: typeof AppWorkspaceSlugAttendanceRoute
   AppWorkspaceSlugBillingRoute: typeof AppWorkspaceSlugBillingRoute
+  AppWorkspaceSlugBurnoutRoute: typeof AppWorkspaceSlugBurnoutRoute
   AppWorkspaceSlugClientProjectsRoute: typeof AppWorkspaceSlugClientProjectsRoute
   AppWorkspaceSlugDashboardRoute: typeof AppWorkspaceSlugDashboardRoute
   AppWorkspaceSlugDeliverablesRoute: typeof AppWorkspaceSlugDeliverablesRoute
+  AppWorkspaceSlugDocumentsRoute: typeof AppWorkspaceSlugDocumentsRoute
   AppWorkspaceSlugHandbookRoute: typeof AppWorkspaceSlugHandbookRoute
   AppWorkspaceSlugKpisRoute: typeof AppWorkspaceSlugKpisRoute
+  AppWorkspaceSlugKudosRoute: typeof AppWorkspaceSlugKudosRoute
   AppWorkspaceSlugLeaveRoute: typeof AppWorkspaceSlugLeaveRoute
   AppWorkspaceSlugMessagesRoute: typeof AppWorkspaceSlugMessagesRouteWithChildren
   AppWorkspaceSlugNotificationsRoute: typeof AppWorkspaceSlugNotificationsRoute
@@ -1126,11 +1187,14 @@ const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
   AppWorkspaceSlugAnnouncementsRoute: AppWorkspaceSlugAnnouncementsRoute,
   AppWorkspaceSlugAttendanceRoute: AppWorkspaceSlugAttendanceRoute,
   AppWorkspaceSlugBillingRoute: AppWorkspaceSlugBillingRoute,
+  AppWorkspaceSlugBurnoutRoute: AppWorkspaceSlugBurnoutRoute,
   AppWorkspaceSlugClientProjectsRoute: AppWorkspaceSlugClientProjectsRoute,
   AppWorkspaceSlugDashboardRoute: AppWorkspaceSlugDashboardRoute,
   AppWorkspaceSlugDeliverablesRoute: AppWorkspaceSlugDeliverablesRoute,
+  AppWorkspaceSlugDocumentsRoute: AppWorkspaceSlugDocumentsRoute,
   AppWorkspaceSlugHandbookRoute: AppWorkspaceSlugHandbookRoute,
   AppWorkspaceSlugKpisRoute: AppWorkspaceSlugKpisRoute,
+  AppWorkspaceSlugKudosRoute: AppWorkspaceSlugKudosRoute,
   AppWorkspaceSlugLeaveRoute: AppWorkspaceSlugLeaveRoute,
   AppWorkspaceSlugMessagesRoute: AppWorkspaceSlugMessagesRouteWithChildren,
   AppWorkspaceSlugNotificationsRoute: AppWorkspaceSlugNotificationsRoute,
@@ -1186,3 +1250,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
