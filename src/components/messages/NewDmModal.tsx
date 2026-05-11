@@ -70,25 +70,43 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
       const selectedIds = new Set(selected.map((s) => s.id));
       selectedIds.add(currentUserId);
 
-      const { data } = await supabase
+      // First try workspace_members join; fall back to profiles directly if empty
+      const { data: wmData } = await supabase
         .from("workspace_members")
         .select("user_id, profiles(id, full_name, email, avatar_url, department, job_title, is_active)")
         .eq("workspace_id", workspaceId);
 
-      if (cancelled || !data) { setSearching(false); return; }
+      if (cancelled) { setSearching(false); return; }
 
       const lowerQ = q.toLowerCase();
-      const profiles: MsgProfile[] = data
-        .filter((row) => !selectedIds.has(row.user_id))
-        .map((row) =>
-          Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as MsgProfile | null)
-        )
-        .filter((p): p is MsgProfile & { is_active?: boolean } => !!p && p.is_active !== false)
-        .filter(
-          (p) =>
-            p.full_name?.toLowerCase().includes(lowerQ) ||
-            p.email?.toLowerCase().includes(lowerQ)
-        );
+      let profiles: MsgProfile[] = [];
+
+      if (wmData && wmData.length > 0) {
+        profiles = wmData
+          .filter((row) => !selectedIds.has(row.user_id))
+          .map((row) =>
+            Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as MsgProfile | null)
+          )
+          .filter((p): p is MsgProfile & { is_active?: boolean } => !!p && p.is_active !== false)
+          .filter(
+            (p) =>
+              p.full_name?.toLowerCase().includes(lowerQ) ||
+              p.email?.toLowerCase().includes(lowerQ)
+          );
+      }
+
+      // Fallback: workspace_members empty or user not enrolled — query profiles directly
+      if (profiles.length === 0) {
+        const { data: profData } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, avatar_url, department, job_title")
+          .eq("is_active", true)
+          .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
+          .limit(20);
+        if (cancelled) { setSearching(false); return; }
+        profiles = (profData ?? [])
+          .filter((p) => !selectedIds.has(p.id)) as unknown as MsgProfile[];
+      }
 
       setResults(profiles);
       setSearching(false);
