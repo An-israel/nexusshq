@@ -658,6 +658,62 @@ export type Database = {
           },
         ]
       }
+      documents: {
+        Row: {
+          created_at: string
+          doc_type: string
+          file_size_bytes: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          requires_signature: boolean
+          signature_text: string | null
+          signed_at: string | null
+          title: string
+          uploaded_by: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          doc_type?: string
+          file_size_bytes?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          requires_signature?: boolean
+          signature_text?: string | null
+          signed_at?: string | null
+          title: string
+          uploaded_by: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          doc_type?: string
+          file_size_bytes?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          requires_signature?: boolean
+          signature_text?: string | null
+          signed_at?: string | null
+          title?: string
+          uploaded_by?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -1045,6 +1101,44 @@ export type Database = {
           },
           {
             foreignKeyName: "kpis_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kudos: {
+        Row: {
+          created_at: string
+          emoji: string
+          from_user_id: string
+          id: string
+          message: string
+          to_user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string
+          from_user_id: string
+          id?: string
+          message: string
+          to_user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          emoji?: string
+          from_user_id?: string
+          id?: string
+          message?: string
+          to_user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kudos_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -1733,6 +1827,7 @@ export type Database = {
           job_title: string | null
           phone: string | null
           reports_to: string | null
+          whatsapp_opt_in: boolean
           workspace_id: string | null
         }
         Insert: {
@@ -1748,6 +1843,7 @@ export type Database = {
           job_title?: string | null
           phone?: string | null
           reports_to?: string | null
+          whatsapp_opt_in?: boolean
           workspace_id?: string | null
         }
         Update: {
@@ -1763,6 +1859,7 @@ export type Database = {
           job_title?: string | null
           phone?: string | null
           reports_to?: string | null
+          whatsapp_opt_in?: boolean
           workspace_id?: string | null
         }
         Relationships: [
@@ -2424,11 +2521,15 @@ export type Database = {
       }
       workspaces: {
         Row: {
+          clock_in_radius_m: number
           created_at: string
+          enforce_gps_clockin: boolean
           id: string
           is_active: boolean
           logo_url: string | null
           name: string
+          office_lat: number | null
+          office_lng: number | null
           plan: Database["public"]["Enums"]["workspace_plan"]
           plan_seats: number | null
           primary_color: string
@@ -2436,11 +2537,15 @@ export type Database = {
           trial_ends_at: string | null
         }
         Insert: {
+          clock_in_radius_m?: number
           created_at?: string
+          enforce_gps_clockin?: boolean
           id?: string
           is_active?: boolean
           logo_url?: string | null
           name: string
+          office_lat?: number | null
+          office_lng?: number | null
           plan?: Database["public"]["Enums"]["workspace_plan"]
           plan_seats?: number | null
           primary_color?: string
@@ -2448,11 +2553,15 @@ export type Database = {
           trial_ends_at?: string | null
         }
         Update: {
+          clock_in_radius_m?: number
           created_at?: string
+          enforce_gps_clockin?: boolean
           id?: string
           is_active?: boolean
           logo_url?: string | null
           name?: string
+          office_lat?: number | null
+          office_lng?: number | null
           plan?: Database["public"]["Enums"]["workspace_plan"]
           plan_seats?: number | null
           primary_color?: string
