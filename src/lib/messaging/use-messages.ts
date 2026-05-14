@@ -346,12 +346,26 @@ export function useMessages(params: {
         if (parentMessageId)
           insertPayload["parent_message_id"] = parentMessageId;
 
-        const { data: msgData, error: msgErr } = await supabase
-          .from("messages")
-          .insert(insertPayload as never)
-          .select()
-          .single();
-        if (msgErr) throw msgErr;
+        // Retry with exponential backoff on transient errors (network blips,
+        // 5xx). Workspace-scoped RLS still applies — a true permission denial
+        // is not retried (PostgREST returns 4xx with code starting "42" or
+        // "PGRST"). This prevents silent cross-workspace exposure.
+        let msgData: unknown = null;
+        let lastErr: { message?: string; code?: string } | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const res = await supabase
+            .from("messages")
+            .insert(insertPayload as never)
+            .select()
+            .single();
+          if (!res.error) { msgData = res.data; lastErr = null; break; }
+          lastErr = res.error;
+          const code = res.error.code ?? "";
+          const isPermOrValidation = code.startsWith("42") || code.startsWith("PGRST") || code === "23514";
+          if (isPermOrValidation) break;
+          await new Promise((r) => setTimeout(r, 250 * Math.pow(2, attempt)));
+        }
+        if (lastErr) throw lastErr;
 
         const insertedMsg = msgData as unknown as RawMessage;
 
