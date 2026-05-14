@@ -146,7 +146,7 @@ export function ThreadPanel({
 
       const { data: msgData, error: msgErr } = await supabase
         .from("messages")
-        .insert(insertPayload)
+        .insert(insertPayload as never)
         .select()
         .single();
 
