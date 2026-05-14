@@ -2665,6 +2665,10 @@ export type Database = {
         Args: { p_user_id: string; p_year: number }
         Returns: undefined
       }
+      is_dm_conversation_member: {
+        Args: { _conversation_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_group_member: {
         Args: { p_group_id: string; p_user_id: string }
         Returns: boolean
