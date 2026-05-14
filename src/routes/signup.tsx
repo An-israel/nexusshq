@@ -26,6 +26,16 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/signup")({
+  head: () => ({
+    meta: [
+      { title: "Sign Up — Start Your Free Nexus HQ Workspace" },
+      { name: "description", content: "Create your Nexus HQ workspace in minutes and start a 7-day free trial — no credit card required." },
+      { property: "og:title", content: "Sign Up — Start Your Free Nexus HQ Workspace" },
+      { property: "og:description", content: "Create a workspace and start a 7-day free trial — no credit card required." },
+      { property: "og:url", content: "https://nexus.skryveai.com/signup" },
+    ],
+    links: [{ rel: "canonical", href: "https://nexus.skryveai.com/signup" }],
+  }),
   component: SignupPage,
 });
 
