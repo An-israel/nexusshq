@@ -348,7 +348,7 @@ export function useMessages(params: {
 
         const { data: msgData, error: msgErr } = await supabase
           .from("messages")
-          .insert(insertPayload)
+          .insert(insertPayload as never)
           .select()
           .single();
         if (msgErr) throw msgErr;
