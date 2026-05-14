@@ -260,40 +260,33 @@ function StandupsPage() {
           </Card>
         )
       ) : (
-        <TeamView
-          standups={teamStandups}
-          profiles={profiles}
-          loading={loading}
-          currentUserId={user?.id ?? ""}
-          isManager={isManager}
-        />
+        loading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : teamStandups.length === 0 ? (
+          <Card className="p-8 text-center text-sm text-muted-foreground">
+            No standups submitted yet.
+          </Card>
+        ) : (
+          <FolderBrowser
+            standups={teamStandups}
+            profiles={profiles}
+            currentUserId={user?.id ?? ""}
+            isManager={isManager}
+            showAuthor
+          />
+        )
       )}
 
       {view === "mine" && historyStandups.length > 0 && (
-        <div className="mt-8 max-w-lg space-y-3">
-          <h2 className="text-sm font-semibold text-muted-foreground">Past 7 days</h2>
-          {historyStandups.map((s) => (
-            <Card key={s.id} className="p-4 space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{new Date(s.date).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</span>
-                <span className="text-xs text-muted-foreground">{timeAgo(s.submitted_at)}</span>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Yesterday</p>
-                <p className="whitespace-pre-wrap">{s.yesterday}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Today</p>
-                <p className="whitespace-pre-wrap">{s.today}</p>
-              </div>
-              {s.blockers && (
-                <div className="rounded bg-warning/10 border border-warning/20 p-2 text-xs">
-                  <p className="font-medium text-warning mb-0.5">Blockers</p>
-                  <p className="whitespace-pre-wrap">{s.blockers}</p>
-                </div>
-              )}
-            </Card>
-          ))}
+        <div className="mt-8 space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">Archive</h2>
+          <FolderBrowser
+            standups={historyStandups}
+            profiles={profiles}
+            currentUserId={user?.id ?? ""}
+            isManager={isManager}
+            showAuthor={false}
+          />
         </div>
       )}
     </div>
