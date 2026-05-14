@@ -90,7 +90,7 @@ function MobileClockDisplay() {
   const load = React.useCallback(async () => {
     if (!user) return;
     const todayStr = new Date().toISOString().slice(0, 10);
-    const { data } = await supabase.from("attendance").select("id, clock_in, clock_out").eq("user_id", currentUser.id).eq("date", todayStr).maybeSingle();
+    const { data } = await supabase.from("attendance").select("id, clock_in, clock_out").eq("user_id", user!.id).eq("date", todayStr).maybeSingle();
     setToday(data ?? null);
   }, [user]);
 
@@ -138,7 +138,7 @@ function MobileClockDisplay() {
     const nowD = new Date();
     const todayStr = nowD.toISOString().slice(0, 10);
     await supabase.from("attendance").upsert(
-      { user_id: currentUser.id, date: todayStr, clock_in: nowD.toISOString(), status: nowD.getHours() >= 9 ? "late" : "present" },
+      { user_id: user!.id, date: todayStr, clock_in: nowD.toISOString(), status: nowD.getHours() >= 9 ? "late" : "present" },
       { onConflict: "user_id,date" }
     );
     if (navigator.vibrate) navigator.vibrate(50);
@@ -219,7 +219,7 @@ function WorkspaceShell() {
       // user_roles and synthesise a workspace so the shell renders correctly.
       if (wsError || !ws) {
         const { data: ur } = await supabase
-          .from("user_roles").select("role").eq("user_id", currentUser.id).maybeSingle();
+          .from("user_roles").select("role").eq("user_id", user!.id).maybeSingle();
         if (!active) return;
         if (ur) {
           const syntheticWs = {
@@ -241,7 +241,7 @@ function WorkspaceShell() {
         .from("workspace_members")
         .select("role")
         .eq("workspace_id", ws.id)
-        .eq("user_id", currentUser.id)
+        .eq("user_id", user!.id)
         .maybeSingle();
 
       if (!active) return;
@@ -251,7 +251,7 @@ function WorkspaceShell() {
         resolvedRole = mem.role;
       } else {
         const { data: ur } = await supabase
-          .from("user_roles").select("role").eq("user_id", currentUser.id).maybeSingle();
+          .from("user_roles").select("role").eq("user_id", user!.id).maybeSingle();
         if (!active) return;
         resolvedRole = ur?.role ?? "employee";
       }
