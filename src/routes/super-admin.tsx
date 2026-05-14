@@ -284,6 +284,17 @@ function WorkspaceDetailSheet({
 
   React.useEffect(() => { void load(); }, [load]);
 
+  // Realtime: auto-refresh members + invites when they change
+  React.useEffect(() => {
+    if (!ws) return;
+    const ch = supabase
+      .channel(`ws-detail-${ws.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "workspace_invites", filter: `workspace_id=eq.${ws.id}` }, () => void load())
+      .on("postgres_changes", { event: "*", schema: "public", table: "workspace_members", filter: `workspace_id=eq.${ws.id}` }, () => void load())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [ws, load]);
+
   if (!ws) return null;
 
   async function changeRole(m: MemberRow, role: MemberRow["role"]) {
@@ -431,23 +442,39 @@ function WorkspaceDetailSheet({
             </Button>
           </form>
 
-          {invites.filter(i => !i.accepted_at).length > 0 && (
+          {invites.length > 0 && (
             <div className="mt-4 space-y-2">
-              <p className="text-xs font-medium text-muted-foreground">Pending invites</p>
-              {invites.filter(i => !i.accepted_at).map((inv) => (
-                <div key={inv.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{inv.email}</p>
-                    <p className="text-muted-foreground">{inv.role} · expires {fmtDate(inv.expires_at)}</p>
+              <p className="text-xs font-medium text-muted-foreground">Invites</p>
+              {invites.map((inv) => {
+                const now = Date.now();
+                const isUsed = !!inv.accepted_at;
+                const isExpired = !isUsed && new Date(inv.expires_at).getTime() < now;
+                const status: "used" | "expired" | "pending" = isUsed ? "used" : isExpired ? "expired" : "pending";
+                const statusClass =
+                  status === "used"
+                    ? "bg-success/15 text-success border-success/30"
+                    : status === "expired"
+                      ? "bg-destructive/15 text-destructive border-destructive/30"
+                      : "bg-warning/15 text-warning border-warning/30";
+                const disabled = isUsed || isExpired;
+                return (
+                  <div key={inv.id} className={`flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs ${disabled ? "opacity-60" : ""}`}>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium truncate">{inv.email}</p>
+                      <p className="text-muted-foreground">
+                        {inv.role} · {isUsed ? `accepted ${fmtDate(inv.accepted_at)}` : isExpired ? `expired ${fmtDate(inv.expires_at)}` : `expires ${fmtDate(inv.expires_at)}`}
+                      </p>
+                    </div>
+                    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${statusClass}`}>{status}</span>
+                    <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => copyInviteUrl(inv)} disabled={disabled}>
+                      Copy link
+                    </Button>
+                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive" onClick={() => void revokeInvite(inv)} disabled={isUsed}>
+                      {isExpired ? "Delete" : "Revoke"}
+                    </Button>
                   </div>
-                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => copyInviteUrl(inv)}>
-                    Copy link
-                  </Button>
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive" onClick={() => void revokeInvite(inv)}>
-                    Revoke
-                  </Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
