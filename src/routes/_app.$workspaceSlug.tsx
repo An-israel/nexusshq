@@ -30,7 +30,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug")({
       const { data: legacyRole } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", session.currentUser.id)
+        .eq("user_id", session.user.id)
         .maybeSingle();
       if (legacyRole) return; // legacy user — let them through
       throw redirect({ to: "/login" });
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug")({
       .from("workspace_members")
       .select("id")
       .eq("workspace_id", workspace.id)
-      .eq("user_id", session.currentUser.id)
+      .eq("user_id", session.user.id)
       .maybeSingle();
 
     if (!membership) {
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug")({
       const { data: legacyRole } = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", session.currentUser.id)
+        .eq("user_id", session.user.id)
         .maybeSingle();
       if (!legacyRole) throw redirect({ to: "/" });
       // Has legacy role — let them through
