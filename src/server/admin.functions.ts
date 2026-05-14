@@ -43,7 +43,7 @@ export const inviteEmployeeFn = createServerFn({ method: "POST" })
     if (data.role === "admin") {
       await assertCallerIsAdmin(context.userId, context.supabase);
     }
-    return inviteEmployee(data);
+    return inviteEmployee(data as never);
   });
 
 export const setEmployeeActiveFn = createServerFn({ method: "POST" })
