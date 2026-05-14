@@ -653,17 +653,27 @@ function WorkspacesTab() {
             {loading ? "Loading…" : `${workspaces.length} workspace${workspaces.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void load()}
-          disabled={loading}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="gap-2 bg-purple-600 hover:bg-purple-500 text-white"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Building2 className="h-4 w-4" /> Create workspace
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void load()}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
+      <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={() => void load()} />
 
       {loading ? (
         <TableSkeleton rows={5} cols={7} />
