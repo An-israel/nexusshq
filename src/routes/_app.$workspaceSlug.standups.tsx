@@ -336,41 +336,248 @@ function SubmittedView({ standup, onEdit }: { standup: Standup; onEdit: () => vo
   );
 }
 
-function TeamView({
+// ---- Folder browser: Week → Day → Standups ----
+
+function isoWeekKey(d: Date): { key: string; year: number; week: number; start: Date; end: Date } {
+  // ISO week calculation
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7;
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  const year = date.getUTCFullYear();
+  // Compute Monday of the week
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const jan4Day = jan4.getUTCDay() || 7;
+  const mondayWeek1 = new Date(jan4);
+  mondayWeek1.setUTCDate(jan4.getUTCDate() - (jan4Day - 1));
+  const start = new Date(mondayWeek1);
+  start.setUTCDate(mondayWeek1.getUTCDate() + (week - 1) * 7);
+  const end = new Date(start);
+  end.setUTCDate(start.getUTCDate() + 6);
+  return { key: `${year}-W${String(week).padStart(2, "0")}`, year, week, start, end };
+}
+
+function fmtDateRange(start: Date, end: Date): string {
+  const sameMonth = start.getUTCMonth() === end.getUTCMonth();
+  const fmtDay = (d: Date) => d.getUTCDate();
+  const fmtMonth = (d: Date) => d.toLocaleDateString(undefined, { month: "short", timeZone: "UTC" });
+  if (sameMonth) return `${fmtMonth(start)} ${fmtDay(start)}–${fmtDay(end)}, ${start.getUTCFullYear()}`;
+  return `${fmtMonth(start)} ${fmtDay(start)} – ${fmtMonth(end)} ${fmtDay(end)}, ${end.getUTCFullYear()}`;
+}
+
+function FolderBrowser({
   standups,
   profiles,
-  loading,
   currentUserId,
   isManager,
+  showAuthor,
 }: {
   standups: Standup[];
   profiles: Record<string, Profile>;
-  loading: boolean;
   currentUserId: string;
   isManager: boolean;
+  showAuthor: boolean;
 }) {
-  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
-  if (standups.length === 0) {
-    return (
-      <Card className="p-8 text-center text-sm text-muted-foreground">
-        No standups submitted yet today.
-      </Card>
-    );
-  }
+  const [selectedWeek, setSelectedWeek] = React.useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = React.useState<string | null>(null);
+
+  // Group by week
+  const weeks = React.useMemo(() => {
+    const map = new Map<string, { meta: ReturnType<typeof isoWeekKey>; items: Standup[] }>();
+    for (const s of standups) {
+      const d = new Date(s.date + "T00:00:00Z");
+      const meta = isoWeekKey(d);
+      const entry = map.get(meta.key) ?? { meta, items: [] };
+      entry.items.push(s);
+      map.set(meta.key, entry);
+    }
+    return Array.from(map.values()).sort((a, b) => (a.meta.key < b.meta.key ? 1 : -1));
+  }, [standups]);
+
+  const currentWeek = selectedWeek ? weeks.find((w) => w.meta.key === selectedWeek) : null;
+
+  // Group selected week by day
+  const days = React.useMemo(() => {
+    if (!currentWeek) return [];
+    const map = new Map<string, Standup[]>();
+    for (const s of currentWeek.items) {
+      const arr = map.get(s.date) ?? [];
+      arr.push(s);
+      map.set(s.date, arr);
+    }
+    return Array.from(map.entries())
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([date, items]) => ({ date, items }));
+  }, [currentWeek]);
+
+  const dayItems = selectedDay && currentWeek
+    ? currentWeek.items.filter((s) => s.date === selectedDay)
+    : [];
+
+  // Breadcrumbs
+  const Crumb = (
+    <div className="flex items-center gap-2 text-sm">
+      <button
+        onClick={() => { setSelectedWeek(null); setSelectedDay(null); }}
+        className={`hover:text-foreground transition-colors ${selectedWeek ? "text-muted-foreground" : "font-semibold"}`}
+      >
+        All weeks
+      </button>
+      {selectedWeek && currentWeek && (
+        <>
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          <button
+            onClick={() => setSelectedDay(null)}
+            className={`hover:text-foreground transition-colors ${selectedDay ? "text-muted-foreground" : "font-semibold"}`}
+          >
+            {fmtDateRange(currentWeek.meta.start, currentWeek.meta.end)}
+          </button>
+        </>
+      )}
+      {selectedDay && (
+        <>
+          <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="font-semibold">
+            {new Date(selectedDay + "T00:00:00Z").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" })}
+          </span>
+        </>
+      )}
+    </div>
+  );
+
   return (
-    <div className="grid gap-4 md:grid-cols-2">
-      {standups.map((s) => {
-        const profile = profiles[s.user_id];
-        return (
-          <StandupCard
-            key={s.id}
-            standup={s}
-            profile={profile}
-            currentUserId={currentUserId}
-            canComment={isManager}
-          />
-        );
-      })}
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        {Crumb}
+        {(selectedWeek || selectedDay) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (selectedDay) setSelectedDay(null);
+              else setSelectedWeek(null);
+            }}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back
+          </Button>
+        )}
+      </div>
+
+      {!selectedWeek && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {weeks.map((w) => (
+            <button
+              key={w.meta.key}
+              onClick={() => setSelectedWeek(w.meta.key)}
+              className="group text-left"
+            >
+              <Card className="p-4 hover:border-primary/50 hover:shadow-sm transition-all">
+                <div className="flex items-start gap-3">
+                  <div className="rounded-lg bg-primary/10 p-2 text-primary group-hover:bg-primary/15 transition-colors">
+                    <Folder className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm">Week {w.meta.week}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {fmtDateRange(w.meta.start, w.meta.end)}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {w.items.length} {w.items.length === 1 ? "entry" : "entries"}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {selectedWeek && !selectedDay && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {days.map(({ date, items }) => {
+            const d = new Date(date + "T00:00:00Z");
+            return (
+              <button
+                key={date}
+                onClick={() => setSelectedDay(date)}
+                className="group text-left"
+              >
+                <Card className="p-4 hover:border-primary/50 hover:shadow-sm transition-all">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-lg bg-accent p-2 text-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                      <FolderOpen className="h-5 w-5" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm">
+                        {d.toLocaleDateString(undefined, { weekday: "long", timeZone: "UTC" })}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {items.length} {items.length === 1 ? "entry" : "entries"}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {selectedDay && (
+        showAuthor ? (
+          <div className="grid gap-4 md:grid-cols-2">
+            {dayItems.map((s) => (
+              <StandupCard
+                key={s.id}
+                standup={s}
+                profile={profiles[s.user_id]}
+                currentUserId={currentUserId}
+                canComment={isManager}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {dayItems.map((s) => (
+              <Card key={s.id} className="p-4 space-y-2 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">
+                    {new Date(s.date + "T00:00:00Z").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" })}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{timeAgo(s.submitted_at)}</span>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Yesterday</p>
+                  <p className="whitespace-pre-wrap">{s.yesterday}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Today</p>
+                  <p className="whitespace-pre-wrap">{s.today}</p>
+                </div>
+                {s.blockers && (
+                  <div className="rounded bg-warning/10 border border-warning/20 p-2 text-xs">
+                    <p className="font-medium text-warning mb-0.5">Blockers</p>
+                    <p className="whitespace-pre-wrap">{s.blockers}</p>
+                  </div>
+                )}
+                {s.screenshot_url && (
+                  <a href={s.screenshot_url} target="_blank" rel="noopener noreferrer">
+                    <img
+                      src={s.screenshot_url}
+                      alt="Screenshot"
+                      className="rounded border border-border max-h-40 object-cover hover:opacity-90 transition-opacity"
+                    />
+                  </a>
+                )}
+              </Card>
+            ))}
+          </div>
+        )
+      )}
     </div>
   );
 }
