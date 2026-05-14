@@ -203,6 +203,7 @@ function WorkspaceShell() {
 
   React.useEffect(() => {
     if (!user) return;
+    const currentUser = user;
     let active = true;
 
     async function load() {
