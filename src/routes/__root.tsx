@@ -33,8 +33,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Nexus HQ — Internal Team Management" },
-      { name: "description", content: "Premium internal ops platform for SkryveAI." },
+      { title: "Nexus HQ — Unified Workspace for Team Operations" },
+      { name: "description", content: "Nexus HQ is the all-in-one workspace for team operations — attendance, tasks, standups, OKRs, KPIs and AI-powered insights for modern teams." },
+      { name: "robots", content: "index,follow" },
+      { property: "og:site_name", content: "Nexus HQ" },
       { name: "theme-color", content: "#0F0F0F" },
       { property: "og:title", content: "Nexus HQ — Internal Team Management" },
       { name: "twitter:title", content: "Nexus HQ — Internal Team Management" },
