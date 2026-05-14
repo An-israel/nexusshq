@@ -56,6 +56,7 @@ function KudosPage() {
   const [migrationPending, setMigrationPending] = React.useState(false);
 
   const load = React.useCallback(async () => {
+    if (!workspace?.id) return;
     setLoading(true);
     const { data, error } = await supabase
       .from("kudos")
@@ -89,15 +90,27 @@ function KudosPage() {
 
   React.useEffect(() => { void load(); }, [load]);
 
-  // Load team members for "Send Kudos" recipient picker
+  // Load team members for "Send Kudos" recipient picker — SCOPED to current workspace
   React.useEffect(() => {
-    void supabase
-      .from("profiles")
-      .select("id, full_name, email, avatar_url")
-      .eq("is_active", true)
-      .order("full_name")
-      .then(({ data }) => setTeamMembers((data ?? []).filter(p => p.id !== user?.id) as ProfileMini[]));
-  }, [user?.id]);
+    if (!workspace?.id) return;
+    void (async () => {
+      const { data: members, error: memErr } = await supabase
+        .from("workspace_members")
+        .select("user_id")
+        .eq("workspace_id", workspace.id)
+        .eq("is_active", true);
+      if (memErr) { console.error("Recognition: load members failed", memErr); return; }
+      const ids = (members ?? []).map((m) => m.user_id).filter((id) => id !== user?.id);
+      if (!ids.length) { setTeamMembers([]); return; }
+      const { data: profs, error: profErr } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .in("id", ids)
+        .order("full_name");
+      if (profErr) { console.error("Recognition: load profiles failed", profErr); return; }
+      setTeamMembers((profs ?? []) as ProfileMini[]);
+    })();
+  }, [workspace?.id, user?.id]);
 
   async function sendKudos() {
     if (!toUserId) return toast.error("Pick a teammate");
