@@ -18,6 +18,9 @@ interface AttendanceRow {
 
 // 9:00 local — anything later is "late"
 const LATE_AFTER_HOUR = 9;
+// Hard cutoff: cannot clock in after 9:15 local
+const CUTOFF_HOUR = 9;
+const CUTOFF_MINUTE = 15;
 
 export function ClockWidget() {
   const { user } = useAuth();
