@@ -112,7 +112,9 @@ function RootComponent() {
 
   return (
     <AuthProvider>
-      <Outlet />
+      <main id="main">
+        <Outlet />
+      </main>
       <Toaster theme="dark" position="top-right" />
     </AuthProvider>
   );
