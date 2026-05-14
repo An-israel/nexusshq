@@ -112,7 +112,7 @@ export function ActivityFeed({
       return;
     }
 
-    const rows = (data ?? []) as Notification[];
+    const rows = (data ?? []) as unknown as Notification[];
     const senderIds = Array.from(new Set(rows.map((n) => n.sender_id).filter((id): id is string => !!id)));
 
     let senderMap: Record<string, Notification["sender"]> = {};
