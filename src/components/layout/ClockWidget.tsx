@@ -80,8 +80,15 @@ export function ClockWidget() {
 
   async function clockIn() {
     if (!user) return;
-    setBusy(true);
     const nowD = new Date();
+    const pastCutoff =
+      nowD.getHours() > CUTOFF_HOUR ||
+      (nowD.getHours() === CUTOFF_HOUR && nowD.getMinutes() >= CUTOFF_MINUTE);
+    if (pastCutoff) {
+      toast.error("Clock-in closed at 9:15 AM. You're marked absent — contact your manager.");
+      return;
+    }
+    setBusy(true);
     const status: AttendanceRow["status"] = nowD.getHours() >= LATE_AFTER_HOUR ? "late" : "present";
     const { error } = await supabase.from("attendance").upsert(
       {
