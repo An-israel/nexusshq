@@ -2640,6 +2640,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_dm_members: {
+        Args: {
+          _actor_user_id: string
+          _conversation_id: string
+          _target_user_id: string
+        }
+        Returns: boolean
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]
