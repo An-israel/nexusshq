@@ -2,7 +2,40 @@ import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Zap, ArrowRight, HelpCircle, Users, Headphones, Star } from "lucide-react";
 
+const FAQ_DATA = [
+  { q: "Is there a free trial?", a: "Yes — every plan includes a 7-day free trial with no credit card required. You get full access to all features during the trial." },
+  { q: "What happens after the trial ends?", a: "You'll be prompted to choose a plan. Your data is safe — nothing is deleted. You can also contact us to extend the trial." },
+  { q: "Do all plans include the same features?", a: "Yes. Every plan includes all features. The only differences are the number of seats and the level of support you receive." },
+  { q: "How does the 30% annual discount work?", a: "Choose annual billing and pay upfront for 12 months at 30% off the monthly rate. You can switch back to monthly at renewal." },
+  { q: "What if my team grows beyond the seat limit?", a: "We'll notify you when you're close. You can upgrade to the next plan at any time — existing data is never lost." },
+  { q: "What does 'dedicated account manager' mean?", a: "Unlimited plan customers get a named contact at Nexus HQ for onboarding, training, and ongoing support via phone or WhatsApp." },
+];
+
 export const Route = createFileRoute("/pricing")({
+  head: () => ({
+    meta: [
+      { title: "Pricing — Nexus HQ Plans for Every Team Size" },
+      { name: "description", content: "Transparent Nexus HQ pricing: Basic, Enterprise and Unlimited plans with a 7-day free trial and 30% annual discount." },
+      { property: "og:title", content: "Pricing — Nexus HQ Plans for Every Team Size" },
+      { property: "og:description", content: "Transparent plans with a 7-day free trial and 30% annual discount." },
+      { property: "og:url", content: "https://nexus.skryveai.com/pricing" },
+    ],
+    links: [{ rel: "canonical", href: "https://nexus.skryveai.com/pricing" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQ_DATA.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }),
+      },
+    ],
+  }),
   component: PricingPage,
 });
 
@@ -75,32 +108,7 @@ const ALL_FEATURES = [
   "In-app notifications",
 ];
 
-const FAQ = [
-  {
-    q: "Is there a free trial?",
-    a: "Yes — every plan includes a 7-day free trial with no credit card required. You get full access to all features during the trial.",
-  },
-  {
-    q: "What happens after the trial ends?",
-    a: "You'll be prompted to choose a plan. Your data is safe — nothing is deleted. You can also contact us to extend the trial.",
-  },
-  {
-    q: "Do all plans include the same features?",
-    a: "Yes. Every plan includes all features. The only differences are the number of seats and the level of support you receive.",
-  },
-  {
-    q: "How does the 30% annual discount work?",
-    a: "Choose annual billing and pay upfront for 12 months at 30% off the monthly rate. You can switch back to monthly at renewal.",
-  },
-  {
-    q: "What if my team grows beyond the seat limit?",
-    a: "We'll notify you when you're close. You can upgrade to the next plan at any time — existing data is never lost.",
-  },
-  {
-    q: "What does 'dedicated account manager' mean?",
-    a: "Unlimited plan customers get a named contact at Nexus HQ for onboarding, training, and ongoing support via phone or WhatsApp.",
-  },
-];
+const FAQ = FAQ_DATA;
 
 function fmt(n: number): string {
   return "₦" + n.toLocaleString("en-NG");

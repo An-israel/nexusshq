@@ -10,6 +10,16 @@ const TIMEOUT_SENTINEL = Symbol("timeout");
 const DOWNLOAD_URL = "https://github.com/An-israel/nexusshq/releases/latest";
 
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Nexus HQ — All-in-One Workspace for Team Operations" },
+      { name: "description", content: "Run attendance, tasks, standups, OKRs, KPIs and AI insights from one workspace built for modern teams." },
+      { property: "og:title", content: "Nexus HQ — All-in-One Workspace for Team Operations" },
+      { property: "og:description", content: "Attendance, tasks, standups, OKRs, KPIs and AI insights — unified for modern teams." },
+      { property: "og:url", content: "https://nexus.skryveai.com/" },
+    ],
+    links: [{ rel: "canonical", href: "https://nexus.skryveai.com/" }],
+  }),
   beforeLoad: async () => {
     const result = await Promise.race([
       supabase.auth.getSession(),
