@@ -223,20 +223,133 @@ function ConfirmDialog({
   );
 }
 
-// ── Workspace detail sheet ───────────────────────────────────────────────────
+// ── Workspace detail sheet (with members + invites) ────────────────────────
+
+interface MemberRow {
+  id: string;
+  user_id: string;
+  role: "owner" | "admin" | "manager" | "employee";
+  is_active: boolean;
+  profiles?: { full_name: string | null; email: string | null } | null;
+}
+
+interface InviteRow {
+  id: string;
+  email: string;
+  role: "owner" | "admin" | "manager" | "employee";
+  token: string;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+}
 
 function WorkspaceDetailSheet({
   ws,
   onClose,
+  onChanged,
 }: {
   ws: WorkspaceRow | null;
   onClose: () => void;
+  onChanged?: () => void;
 }) {
+  const [members, setMembers] = React.useState<MemberRow[]>([]);
+  const [invites, setInvites] = React.useState<InviteRow[]>([]);
+  const [loading, setLoading] = React.useState(false);
+
+  const [inviteEmail, setInviteEmail] = React.useState("");
+  const [inviteRole, setInviteRole] = React.useState<"employee" | "manager" | "admin" | "owner">("employee");
+  const [creatingInvite, setCreatingInvite] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    if (!ws) return;
+    setLoading(true);
+    try {
+      const { data: mem } = await supabase
+        .from("workspace_members")
+        .select("id, user_id, role, is_active, profiles(full_name, email)")
+        .eq("workspace_id", ws.id);
+      setMembers((mem ?? []) as unknown as MemberRow[]);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: inv } = await (supabase as any)
+        .from("workspace_invites")
+        .select("*")
+        .eq("workspace_id", ws.id)
+        .order("created_at", { ascending: false });
+      setInvites((inv ?? []) as InviteRow[]);
+    } finally {
+      setLoading(false);
+    }
+  }, [ws]);
+
+  React.useEffect(() => { void load(); }, [load]);
+
   if (!ws) return null;
+
+  async function changeRole(m: MemberRow, role: MemberRow["role"]) {
+    const { error } = await supabase.from("workspace_members").update({ role }).eq("id", m.id);
+    if (error) return toast.error(error.message);
+    toast.success("Role updated");
+    void load();
+  }
+
+  async function toggleMemberActive(m: MemberRow) {
+    const { error } = await supabase.from("workspace_members").update({ is_active: !m.is_active }).eq("id", m.id);
+    if (error) return toast.error(error.message);
+    toast.success(m.is_active ? "Member deactivated" : "Member reactivated");
+    void load();
+  }
+
+  async function removeMember(m: MemberRow) {
+    if (!confirm(`Remove ${m.profiles?.email ?? "this member"} from ${ws!.name}?`)) return;
+    const { error } = await supabase.from("workspace_members").delete().eq("id", m.id);
+    if (error) return toast.error(error.message);
+    toast.success("Member removed");
+    void load();
+    onChanged?.();
+  }
+
+  async function createInvite(e: React.FormEvent) {
+    e.preventDefault();
+    if (!inviteEmail.trim()) return;
+    setCreatingInvite(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from("workspace_invites").insert({
+        workspace_id: ws!.id,
+        email: inviteEmail.trim().toLowerCase(),
+        role: inviteRole,
+        invited_by: user?.id ?? null,
+      });
+      if (error) throw error;
+      setInviteEmail("");
+      toast.success("Invite created");
+      void load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create invite");
+    } finally {
+      setCreatingInvite(false);
+    }
+  }
+
+  async function revokeInvite(inv: InviteRow) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase as any).from("workspace_invites").delete().eq("id", inv.id);
+    if (error) return toast.error(error.message);
+    toast.success("Invite revoked");
+    void load();
+  }
+
+  function copyInviteUrl(inv: InviteRow) {
+    const url = `${window.location.origin}/accept-invite?token=${inv.token}`;
+    void navigator.clipboard.writeText(url);
+    toast.success("Invite URL copied");
+  }
 
   return (
     <Sheet open={!!ws} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent className="overflow-y-auto" side="right">
+      <SheetContent className="overflow-y-auto sm:max-w-2xl" side="right">
         <SheetHeader className="mb-6">
           <SheetTitle className="flex items-center gap-2">
             <Building2 className="h-5 w-5 text-purple-400" />
@@ -247,16 +360,96 @@ function WorkspaceDetailSheet({
 
         <div className="space-y-4 text-sm">
           <InfoRow label="Workspace ID" value={ws.id} mono />
-          <InfoRow label="Slug" value={ws.slug} />
           <InfoRow label="Plan" value={ws.plan} />
-          <InfoRow label="Seats" value={ws.plan_seats != null ? String(ws.plan_seats) : "Unlimited"} />
-          <InfoRow label="Members" value={String(ws.member_count ?? 0)} />
-          <InfoRow label="Status">
-            <StatusBadge ws={ws} />
-          </InfoRow>
+          <InfoRow label="Members" value={String(members.length)} />
+          <InfoRow label="Status"><StatusBadge ws={ws} /></InfoRow>
           <InfoRow label="Created" value={fmtDate(ws.created_at)} />
           <InfoRow label="Trial ends" value={fmtDate(ws.trial_ends_at)} />
-          <InfoRow label="Active" value={ws.is_active ? "Yes" : "No"} />
+        </div>
+
+        {/* Members */}
+        <div className="mt-8">
+          <h3 className="mb-3 text-sm font-semibold flex items-center gap-2"><Users className="h-4 w-4" /> Members</h3>
+          {loading ? (
+            <div className="text-xs text-muted-foreground">Loading…</div>
+          ) : members.length === 0 ? (
+            <div className="text-xs text-muted-foreground">No members yet.</div>
+          ) : (
+            <div className="space-y-2">
+              {members.map((m) => (
+                <div key={m.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{m.profiles?.full_name || m.profiles?.email || m.user_id}</p>
+                    {m.profiles?.email && <p className="text-muted-foreground truncate">{m.profiles.email}</p>}
+                  </div>
+                  <select
+                    value={m.role}
+                    onChange={(e) => void changeRole(m, e.target.value as MemberRow["role"])}
+                    className="bg-input border border-border rounded px-2 py-1 text-xs"
+                  >
+                    <option value="owner">Owner</option>
+                    <option value="admin">Admin</option>
+                    <option value="manager">Manager</option>
+                    <option value="employee">Employee</option>
+                  </select>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => void toggleMemberActive(m)}>
+                    {m.is_active ? "Disable" : "Enable"}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive" onClick={() => void removeMember(m)}>
+                    Remove
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Invites */}
+        <div className="mt-8">
+          <h3 className="mb-3 text-sm font-semibold">Invite a user</h3>
+          <form onSubmit={createInvite} className="flex flex-col sm:flex-row gap-2">
+            <input
+              type="email"
+              required
+              placeholder="user@email.com"
+              value={inviteEmail}
+              onChange={(e) => setInviteEmail(e.target.value)}
+              className="flex-1 bg-input border border-border rounded px-3 py-2 text-sm"
+            />
+            <select
+              value={inviteRole}
+              onChange={(e) => setInviteRole(e.target.value as typeof inviteRole)}
+              className="bg-input border border-border rounded px-2 py-2 text-sm"
+            >
+              <option value="employee">Employee</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
+              <option value="owner">Owner</option>
+            </select>
+            <Button type="submit" size="sm" disabled={creatingInvite}>
+              {creatingInvite ? "…" : "Invite"}
+            </Button>
+          </form>
+
+          {invites.filter(i => !i.accepted_at).length > 0 && (
+            <div className="mt-4 space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Pending invites</p>
+              {invites.filter(i => !i.accepted_at).map((inv) => (
+                <div key={inv.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{inv.email}</p>
+                    <p className="text-muted-foreground">{inv.role} · expires {fmtDate(inv.expires_at)}</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => copyInviteUrl(inv)}>
+                    Copy link
+                  </Button>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive" onClick={() => void revokeInvite(inv)}>
+                    Revoke
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
@@ -382,6 +575,9 @@ function WorkspacesTab() {
   // Extend trial dialog
   const [extendTarget, setExtendTarget] = React.useState<WorkspaceRow | null>(null);
 
+  // Create workspace dialog
+  const [createOpen, setCreateOpen] = React.useState(false);
+
   const load = React.useCallback(async () => {
     setLoading(true);
     try {
@@ -460,17 +656,27 @@ function WorkspacesTab() {
             {loading ? "Loading…" : `${workspaces.length} workspace${workspaces.length !== 1 ? "s" : ""}`}
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => void load()}
-          disabled={loading}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            size="sm"
+            className="gap-2 bg-purple-600 hover:bg-purple-500 text-white"
+            onClick={() => setCreateOpen(true)}
+          >
+            <Building2 className="h-4 w-4" /> Create workspace
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => void load()}
+            disabled={loading}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
+      <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={() => void load()} />
 
       {loading ? (
         <TableSkeleton rows={5} cols={7} />
@@ -749,7 +955,82 @@ function PlansTab() {
   );
 }
 
-// ── Skeleton helper ──────────────────────────────────────────────────────────
+// ── Create workspace dialog ──────────────────────────────────────────────────
+
+function CreateWorkspaceDialog({
+  open, onOpenChange, onCreated,
+}: { open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void }) {
+  const [name, setName] = React.useState("");
+  const [slug, setSlug] = React.useState("");
+  const [plan, setPlan] = React.useState<"starter" | "growth" | "business" | "enterprise">("business");
+  const [ownerEmail, setOwnerEmail] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!slug && name) {
+      setSlug(name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 30));
+    }
+  }, [name, slug]);
+
+  async function submit() {
+    if (!name.trim() || !slug.trim()) return toast.error("Name and slug required");
+    setBusy(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).rpc("super_admin_create_workspace", {
+        _name: name.trim(),
+        _slug: slug.trim().toLowerCase(),
+        _plan: plan,
+        _owner_email: ownerEmail.trim() || null,
+      });
+      if (error) throw error;
+      toast.success("Workspace created");
+      setName(""); setSlug(""); setOwnerEmail("");
+      onOpenChange(false);
+      onCreated();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create workspace");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create new workspace</DialogTitle>
+          <DialogDescription>Provision a workspace and optionally assign an owner by email.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium">Company name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-medium">Slug</label>
+            <input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm font-mono" />
+          </div>
+          <div>
+            <label className="text-xs font-medium">Plan</label>
+            <select value={plan} onChange={(e) => setPlan(e.target.value as typeof plan)} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm">
+              <option value="starter">Starter</option>
+              <option value="growth">Growth</option>
+              <option value="business">Business</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium">Owner email (optional)</label>
+            <input type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="user must already exist" className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
+          <Button onClick={() => void submit()} disabled={busy}>{busy ? "Creating…" : "Create"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function TableSkeleton({ rows, cols }: { rows: number; cols: number }) {
   return (
