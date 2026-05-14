@@ -271,14 +271,17 @@ function SignupPage() {
 
       if (wsError) throw wsError;
 
-      // 3. Create profile
+      // 3. Upsert profile (handle_new_user trigger may have already created it)
       const { error: profileError } = await supabase
         .from("profiles")
-        .insert({
-          id: user.id,
-          full_name: fullName.trim(),
-          email: email.trim().toLowerCase(),
-        });
+        .upsert(
+          {
+            id: user.id,
+            full_name: fullName.trim(),
+            email: email.trim().toLowerCase(),
+          },
+          { onConflict: "id" },
+        );
 
       if (profileError) throw profileError;
 
