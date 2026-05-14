@@ -295,6 +295,14 @@ function WorkspaceDetailSheet({
     return () => { supabase.removeChannel(ch); };
   }, [ws, load]);
 
+  // Periodic refetch fallback (every 30s) so invite status stays accurate
+  // even if a realtime event is missed (offline, dropped socket, expiry tick).
+  React.useEffect(() => {
+    if (!ws) return;
+    const t = setInterval(() => void load(), 30000);
+    return () => clearInterval(t);
+  }, [ws, load]);
+
   if (!ws) return null;
 
   async function changeRole(m: MemberRow, role: MemberRow["role"]) {
