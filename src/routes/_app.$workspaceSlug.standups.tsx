@@ -161,9 +161,9 @@ function StandupsPage() {
     void load();
   }
 
-  const deadline = "09:30";
+  const deadline = "10:00";
   const now = new Date();
-  const past = now.getHours() > 9 || (now.getHours() === 9 && now.getMinutes() >= 30);
+  const past = now.getHours() >= 10;
 
   return (
     <div className="space-y-6">

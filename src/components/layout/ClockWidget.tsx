@@ -18,6 +18,9 @@ interface AttendanceRow {
 
 // 9:00 local — anything later is "late"
 const LATE_AFTER_HOUR = 9;
+// Hard cutoff: cannot clock in after 9:15 local
+const CUTOFF_HOUR = 9;
+const CUTOFF_MINUTE = 15;
 
 export function ClockWidget() {
   const { user } = useAuth();
@@ -77,8 +80,15 @@ export function ClockWidget() {
 
   async function clockIn() {
     if (!user) return;
-    setBusy(true);
     const nowD = new Date();
+    const pastCutoff =
+      nowD.getHours() > CUTOFF_HOUR ||
+      (nowD.getHours() === CUTOFF_HOUR && nowD.getMinutes() >= CUTOFF_MINUTE);
+    if (pastCutoff) {
+      toast.error("Clock-in closed at 9:15 AM. You're marked absent — contact your manager.");
+      return;
+    }
+    setBusy(true);
     const status: AttendanceRow["status"] = nowD.getHours() >= LATE_AFTER_HOUR ? "late" : "present";
     const { error } = await supabase.from("attendance").upsert(
       {
@@ -132,11 +142,22 @@ export function ClockWidget() {
           <span className="text-xs text-success border-l border-border pl-2">{elapsed}</span>
         )}
       </div>
-      {!done && !clockedIn && (
-        <Button size="sm" onClick={clockIn} disabled={busy}>
-          <LogIn className="mr-1.5 h-3.5 w-3.5" /> Clock In
-        </Button>
-      )}
+      {!done && !clockedIn && (() => {
+        const pastCutoff =
+          now.getHours() > CUTOFF_HOUR ||
+          (now.getHours() === CUTOFF_HOUR && now.getMinutes() >= CUTOFF_MINUTE);
+        return (
+          <Button
+            size="sm"
+            onClick={clockIn}
+            disabled={busy || pastCutoff}
+            title={pastCutoff ? "Clock-in closed at 9:15 AM" : undefined}
+          >
+            <LogIn className="mr-1.5 h-3.5 w-3.5" />
+            {pastCutoff ? "Clock-in closed" : "Clock In"}
+          </Button>
+        );
+      })()}
       {clockedIn && (
         <Button size="sm" variant="outline" onClick={clockOut} disabled={busy}>
           <LogOut className="mr-1.5 h-3.5 w-3.5" /> Clock Out
