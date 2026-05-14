@@ -56,7 +56,11 @@ function CreateWorkspacePage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       navigate({ to: `/${ws.slug}/dashboard` as any });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create workspace");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const e = err as any;
+      const msg = e?.message || e?.error_description || e?.hint || e?.details || "Failed to create workspace";
+      console.error("create-workspace failed:", e);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
