@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { CheckCircle2, AlertCircle, Clock, ImageIcon, MessageSquare, Send, Trash2 } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, ImageIcon, MessageSquare, Send, Trash2, Folder, FolderOpen, ChevronRight, ArrowLeft } from "lucide-react";
 import { todayISO, initialsOf, timeAgo } from "@/lib/nexus";
 import { useRealtime } from "@/lib/use-realtime";
 
