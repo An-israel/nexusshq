@@ -197,6 +197,7 @@ export interface RedeemInvitationInput {
 
 export async function redeemInvitation(input: RedeemInvitationInput): Promise<{
   workspaceSlug: string;
+  email: string;
 }> {
   const adminClient = requireAdminClient();
   const key = input.tokenOrPasscode.trim();
