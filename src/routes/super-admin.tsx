@@ -646,7 +646,8 @@ function PlansTab() {
 
   const load = React.useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data, error } = await (supabase as any)
       .from("plans")
       .select("*")
       .order("price_ngn", { ascending: true, nullsFirst: true });
@@ -663,7 +664,8 @@ function PlansTab() {
   async function initDefaultPlans() {
     setInitializing(true);
     try {
-      const { error } = await supabase.from("plans").upsert(DEFAULT_PLANS, { onConflict: "name" });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).from("plans").upsert(DEFAULT_PLANS, { onConflict: "name" });
       if (error) throw error;
       toast.success("Default plans initialized");
       void load();
