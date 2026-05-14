@@ -955,7 +955,82 @@ function PlansTab() {
   );
 }
 
-// ── Skeleton helper ──────────────────────────────────────────────────────────
+// ── Create workspace dialog ──────────────────────────────────────────────────
+
+function CreateWorkspaceDialog({
+  open, onOpenChange, onCreated,
+}: { open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void }) {
+  const [name, setName] = React.useState("");
+  const [slug, setSlug] = React.useState("");
+  const [plan, setPlan] = React.useState<"starter" | "growth" | "business" | "enterprise">("business");
+  const [ownerEmail, setOwnerEmail] = React.useState("");
+  const [busy, setBusy] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!slug && name) {
+      setSlug(name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 30));
+    }
+  }, [name, slug]);
+
+  async function submit() {
+    if (!name.trim() || !slug.trim()) return toast.error("Name and slug required");
+    setBusy(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { error } = await (supabase as any).rpc("super_admin_create_workspace", {
+        _name: name.trim(),
+        _slug: slug.trim().toLowerCase(),
+        _plan: plan,
+        _owner_email: ownerEmail.trim() || null,
+      });
+      if (error) throw error;
+      toast.success("Workspace created");
+      setName(""); setSlug(""); setOwnerEmail("");
+      onOpenChange(false);
+      onCreated();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to create workspace");
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create new workspace</DialogTitle>
+          <DialogDescription>Provision a workspace and optionally assign an owner by email.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs font-medium">Company name</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm" />
+          </div>
+          <div>
+            <label className="text-xs font-medium">Slug</label>
+            <input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm font-mono" />
+          </div>
+          <div>
+            <label className="text-xs font-medium">Plan</label>
+            <select value={plan} onChange={(e) => setPlan(e.target.value as typeof plan)} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm">
+              <option value="starter">Starter</option>
+              <option value="growth">Growth</option>
+              <option value="business">Business</option>
+              <option value="enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium">Owner email (optional)</label>
+            <input type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="user must already exist" className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
+          <Button onClick={() => void submit()} disabled={busy}>{busy ? "Creating…" : "Create"}</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function TableSkeleton({ rows, cols }: { rows: number; cols: number }) {
   return (
