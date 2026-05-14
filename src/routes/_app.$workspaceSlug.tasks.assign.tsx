@@ -235,12 +235,12 @@ function AssignTaskPage() {
         <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">You're receiving this because you're a member of your workspace on Nexus HQ.</div>
       </div>`;
 
-      await supabase
-        .rpc("enqueue_email", {
+      try {
+        await supabase.rpc("enqueue_email", {
           queue_name: "transactional_emails",
           payload: { to: assignee.email, subject: `New Task Assigned — ${taskTitle}`, html },
-        })
-        .catch(() => {}); // non-fatal
+        } as never);
+      } catch { /* non-fatal */ }
     }
 
     toast.success("Task assigned successfully");

@@ -877,13 +877,13 @@ function FlagEmployeeDialog({
     }
     setSaving(true);
     const { error } = await supabase.from("flags").insert({
-      flagged_user_id: task.assigned_to,
+      flagged_user_id: task.assigned_to!,
       flagged_by: userId,
       reason: reason.trim(),
       severity,
       workspace_id: workspaceId,
       is_resolved: false,
-    });
+    } as never);
     if (error) {
       toast.error(error.message);
       setSaving(false);

@@ -86,7 +86,7 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
         profiles = wmData
           .filter((row) => !selectedIds.has(row.user_id))
           .map((row) =>
-            Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as MsgProfile | null)
+            Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as unknown as MsgProfile | null)
           )
           .filter((p): p is MsgProfile & { is_active?: boolean } => !!p && p.is_active !== false)
           .filter(

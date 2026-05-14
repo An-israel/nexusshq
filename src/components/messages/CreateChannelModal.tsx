@@ -79,7 +79,7 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
         .filter((row) => row.user_id !== userId)
         .map((row) => ({
           user_id: row.user_id,
-          profile: Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as MsgProfile | null),
+          profile: Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as unknown as MsgProfile | null),
         }));
       setAllMembers(parsed);
     }

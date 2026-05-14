@@ -79,7 +79,7 @@ function WorkspaceProvider({ children }: WorkspaceProviderProps): React.JSX.Elem
 
   const value = React.useMemo<WorkspaceContextValue>(
     () => ({
-      workspace,
+      workspace: workspace as Workspace,
       workspaceRole,
       isOwner,
       isWorkspaceAdmin,

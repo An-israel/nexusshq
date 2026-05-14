@@ -161,7 +161,7 @@ export function ChannelMembersPanel({
 
         if (wsMembers) {
           const results: WorkspaceMemberCandidate[] = [];
-          for (const wm of wsMembers as Array<{ user_id: string; profiles: { full_name: string | null; avatar_url: string | null; job_title: string | null } | null }>) {
+          for (const wm of wsMembers as unknown as Array<{ user_id: string; profiles: { full_name: string | null; avatar_url: string | null; job_title: string | null } | null }>) {
             if (existingIds.includes(wm.user_id)) continue;
             const prof = wm.profiles;
             const name = prof?.full_name ?? "";
