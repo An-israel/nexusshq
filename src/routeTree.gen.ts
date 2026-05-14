@@ -48,7 +48,6 @@ import { Route as AppWorkspaceSlugBurnoutRouteImport } from './routes/_app.$work
 import { Route as AppWorkspaceSlugBillingRouteImport } from './routes/_app.$workspaceSlug.billing'
 import { Route as AppWorkspaceSlugAttendanceRouteImport } from './routes/_app.$workspaceSlug.attendance'
 import { Route as AppWorkspaceSlugAnnouncementsRouteImport } from './routes/_app.$workspaceSlug.announcements'
-import { Route as AppWorkspaceSlugAiTasksRouteImport } from './routes/_app.$workspaceSlug.ai-tasks'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -275,11 +274,6 @@ const AppWorkspaceSlugAnnouncementsRoute =
     path: '/announcements',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
-const AppWorkspaceSlugAiTasksRoute = AppWorkspaceSlugAiTasksRouteImport.update({
-  id: '/ai-tasks',
-  path: '/ai-tasks',
-  getParentRoute: () => AppWorkspaceSlugRoute,
-} as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -381,7 +375,6 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
   '/track/$token': typeof TrackTokenRoute
-  '/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -437,7 +430,6 @@ export interface FileRoutesByTo {
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
   '/track/$token': typeof TrackTokenRoute
-  '/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -495,7 +487,6 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
   '/track/$token': typeof TrackTokenRoute
-  '/_app/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/_app/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/_app/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -553,7 +544,6 @@ export interface FileRouteTypes {
     | '/$workspaceSlug'
     | '/api/ai'
     | '/track/$token'
-    | '/$workspaceSlug/ai-tasks'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
     | '/$workspaceSlug/billing'
@@ -609,7 +599,6 @@ export interface FileRouteTypes {
     | '/$workspaceSlug'
     | '/api/ai'
     | '/track/$token'
-    | '/$workspaceSlug/ai-tasks'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
     | '/$workspaceSlug/billing'
@@ -666,7 +655,6 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug'
     | '/api/ai'
     | '/track/$token'
-    | '/_app/$workspaceSlug/ai-tasks'
     | '/_app/$workspaceSlug/announcements'
     | '/_app/$workspaceSlug/attendance'
     | '/_app/$workspaceSlug/billing'
@@ -1009,13 +997,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugAnnouncementsRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
-    '/_app/$workspaceSlug/ai-tasks': {
-      id: '/_app/$workspaceSlug/ai-tasks'
-      path: '/ai-tasks'
-      fullPath: '/$workspaceSlug/ai-tasks'
-      preLoaderRoute: typeof AppWorkspaceSlugAiTasksRouteImport
-      parentRoute: typeof AppWorkspaceSlugRoute
-    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -1172,7 +1153,6 @@ const AppWorkspaceSlugTeamRouteWithChildren =
   AppWorkspaceSlugTeamRoute._addFileChildren(AppWorkspaceSlugTeamRouteChildren)
 
 interface AppWorkspaceSlugRouteChildren {
-  AppWorkspaceSlugAiTasksRoute: typeof AppWorkspaceSlugAiTasksRoute
   AppWorkspaceSlugAnnouncementsRoute: typeof AppWorkspaceSlugAnnouncementsRoute
   AppWorkspaceSlugAttendanceRoute: typeof AppWorkspaceSlugAttendanceRoute
   AppWorkspaceSlugBillingRoute: typeof AppWorkspaceSlugBillingRoute
@@ -1203,7 +1183,6 @@ interface AppWorkspaceSlugRouteChildren {
 }
 
 const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
-  AppWorkspaceSlugAiTasksRoute: AppWorkspaceSlugAiTasksRoute,
   AppWorkspaceSlugAnnouncementsRoute: AppWorkspaceSlugAnnouncementsRoute,
   AppWorkspaceSlugAttendanceRoute: AppWorkspaceSlugAttendanceRoute,
   AppWorkspaceSlugBillingRoute: AppWorkspaceSlugBillingRoute,

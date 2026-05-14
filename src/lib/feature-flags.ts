@@ -28,7 +28,6 @@ export const TOGGLEABLE_PAGES: PageFlag[] = [
   { key: "kpis", label: "KPIs", defaultEnabled: true },
   { key: "okrs", label: "Goals & OKRs", defaultEnabled: true },
   { key: "reports", label: "Reports", defaultEnabled: true },
-  { key: "ai-tasks", label: "AI Tasks", defaultEnabled: true },
 ];
 
 export type FlagsMap = Record<string, boolean>;
