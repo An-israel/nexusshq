@@ -142,11 +142,22 @@ export function ClockWidget() {
           <span className="text-xs text-success border-l border-border pl-2">{elapsed}</span>
         )}
       </div>
-      {!done && !clockedIn && (
-        <Button size="sm" onClick={clockIn} disabled={busy}>
-          <LogIn className="mr-1.5 h-3.5 w-3.5" /> Clock In
-        </Button>
-      )}
+      {!done && !clockedIn && (() => {
+        const pastCutoff =
+          now.getHours() > CUTOFF_HOUR ||
+          (now.getHours() === CUTOFF_HOUR && now.getMinutes() >= CUTOFF_MINUTE);
+        return (
+          <Button
+            size="sm"
+            onClick={clockIn}
+            disabled={busy || pastCutoff}
+            title={pastCutoff ? "Clock-in closed at 9:15 AM" : undefined}
+          >
+            <LogIn className="mr-1.5 h-3.5 w-3.5" />
+            {pastCutoff ? "Clock-in closed" : "Clock In"}
+          </Button>
+        );
+      })()}
       {clockedIn && (
         <Button size="sm" variant="outline" onClick={clockOut} disabled={busy}>
           <LogOut className="mr-1.5 h-3.5 w-3.5" /> Clock Out
