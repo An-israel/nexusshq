@@ -18,7 +18,23 @@ export const Route = createFileRoute("/")({
       ),
     ]);
     if (result !== TIMEOUT_SENTINEL && result.data.session) {
-      throw redirect({ to: "/dashboard" });
+      const userId = result.data.session.user.id;
+      // Find any workspace the user belongs to
+      const { data: mem } = await supabase
+        .from("workspace_members")
+        .select("workspaces(slug)")
+        .eq("user_id", userId)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const slug = (mem as any)?.workspaces?.slug;
+      if (slug) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        throw redirect({ to: `/${slug}/dashboard` as any });
+      }
+      // No workspace yet — let them create one
+      throw redirect({ to: "/create-workspace" });
     }
   },
   component: LandingPage,
