@@ -102,7 +102,7 @@ export function ActivityFeed({
       .select("*")
       .eq("user_id", currentUserId)
       .eq("workspace_id", workspaceId)
-      .in("type", ["mention", "direct_message", "group_message", "reaction"])
+      .in("type", ["mention", "direct_message", "group_message", "reaction"] as never)
       .order("created_at", { ascending: false })
       .limit(50);
 
