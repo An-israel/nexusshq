@@ -62,7 +62,7 @@ export function useFeatureFlags(
         const { data } = await supabase
           .from("feature_flags")
           .select("key, enabled")
-          .eq("workspace_id", workspaceId);
+          .eq("workspace_id", workspaceId!);
         if (!active) return;
         const next = buildDefaults();
         for (const row of data ?? []) next[row.key] = row.enabled;
