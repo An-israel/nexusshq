@@ -109,7 +109,7 @@ function OnboardingPage() {
         expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       }));
 
-      const { error } = await supabase.from("workspace_invites").insert(inserts);
+      const { error } = await (supabase.from("workspace_invites" as never) as any).insert(inserts);
       if (error) throw error;
 
       setSentCount(raw.length);
