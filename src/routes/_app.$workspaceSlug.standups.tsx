@@ -66,7 +66,7 @@ function StandupsPage() {
     if (!user || !workspace?.id) return;
     setLoading(true);
     const isoToday = todayISO();
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+    const archiveSince = new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)
       .toISOString()
       .slice(0, 10);
 
@@ -85,7 +85,7 @@ function StandupsPage() {
           .eq("user_id", user.id)
           .eq("workspace_id", workspace.id)
           .lt("date", isoToday)
-          .gte("date", sevenDaysAgo)
+          .gte("date", archiveSince)
           .order("date", { ascending: false }),
       ]);
       setTodayStandup((today as Standup) ?? null);
@@ -96,7 +96,8 @@ function StandupsPage() {
           .from("standups")
           .select("*")
           .eq("workspace_id", workspace.id)
-          .gte("date", sevenDaysAgo)
+          .gte("date", archiveSince)
+          .order("date", { ascending: false })
           .order("submitted_at", { ascending: false }),
         supabase.from("profiles").select("id, full_name, email").eq("is_active", true),
       ]);
