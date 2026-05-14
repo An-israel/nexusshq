@@ -56,6 +56,7 @@ function KudosPage() {
   const [migrationPending, setMigrationPending] = React.useState(false);
 
   const load = React.useCallback(async () => {
+    if (!workspace?.id) return;
     setLoading(true);
     const { data, error } = await supabase
       .from("kudos")
