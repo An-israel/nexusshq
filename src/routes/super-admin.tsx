@@ -575,6 +575,9 @@ function WorkspacesTab() {
   // Extend trial dialog
   const [extendTarget, setExtendTarget] = React.useState<WorkspaceRow | null>(null);
 
+  // Create workspace dialog
+  const [createOpen, setCreateOpen] = React.useState(false);
+
   const load = React.useCallback(async () => {
     setLoading(true);
     try {
