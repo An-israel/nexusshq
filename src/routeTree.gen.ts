@@ -14,6 +14,7 @@ import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as CreateWorkspaceRouteImport } from './routes/create-workspace'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -87,6 +88,11 @@ const LoginRoute = LoginRouteImport.update({
 const JoinRoute = JoinRouteImport.update({
   id: '/join',
   path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreateWorkspaceRoute = CreateWorkspaceRouteImport.update({
+  id: '/create-workspace',
+  path: '/create-workspace',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptInviteRoute = AcceptInviteRouteImport.update({
@@ -366,6 +372,7 @@ const AppWorkspaceSlugMessagesChannelChannelIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
@@ -421,6 +428,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
@@ -478,6 +486,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
+  '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
@@ -535,6 +544,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invite'
+    | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
@@ -590,6 +600,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invite'
+    | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
@@ -646,6 +657,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/accept-invite'
+    | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
@@ -703,6 +715,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
+  CreateWorkspaceRoute: typeof CreateWorkspaceRoute
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
@@ -756,6 +769,13 @@ declare module '@tanstack/react-router' {
       path: '/join'
       fullPath: '/join'
       preLoaderRoute: typeof JoinRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/create-workspace': {
+      id: '/create-workspace'
+      path: '/create-workspace'
+      fullPath: '/create-workspace'
+      preLoaderRoute: typeof CreateWorkspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accept-invite': {
@@ -1230,6 +1250,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
+  CreateWorkspaceRoute: CreateWorkspaceRoute,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
