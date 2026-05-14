@@ -73,27 +73,7 @@ function buildPrompt(
   const base = "You are an AI assistant for Nexus HQ, an internal team management platform. Be concise, practical, and action-oriented.";
 
   switch (action) {
-    // ── Feature 1: weekly task suggestions ──────────────────────────────────
-    case "generate-tasks": {
-      const dept = ctx.department as string;
-      const focus = (ctx.focus as string) ?? "";
-      const existingTasks = (ctx.existingTasks as string[]) ?? [];
-      const existing = existingTasks.length
-        ? `Current open tasks:\n${existingTasks.map((t) => `- ${t}`).join("\n")}`
-        : "No open tasks yet.";
-      return {
-        systemPrompt: base,
-        userPrompt: `Generate 5 concrete, actionable weekly tasks for the ${dept} department.${focus ? ` Focus area: ${focus}.` : ""}
-
-${existing}
-
-Return ONLY a JSON array with this shape (no markdown, no explanation):
-[{"title":"...", "description":"...", "priority":"low|medium|high|urgent", "task_type":"daily|one_time|weekly"}]`,
-        maxTokens: 800,
-      };
-    }
-
-    // ── Feature 2: performance insights ─────────────────────────────────────
+    // ── Feature 1: performance insights ─────────────────────────────────────
     case "performance-insights": {
       const name = ctx.name as string;
       const scores = ctx.scores as Record<string, number>;
@@ -117,7 +97,7 @@ Respond in plain text, no markdown headings.`,
       };
     }
 
-    // ── Feature 3: burnout risk for a single employee ────────────────────────
+    // ── Feature 2: burnout risk for a single employee ────────────────────────
     case "burnout-risk": {
       const name = ctx.name as string;
       const overtimeMinutes = ctx.overtimeMinutes as number;
@@ -138,7 +118,7 @@ Return ONLY a JSON object (no markdown):
       };
     }
 
-    // ── Feature 4: task description helper ──────────────────────────────────
+    // ── Feature 3: task description helper ──────────────────────────────────
     case "task-description": {
       const title = ctx.title as string;
       const dept = ctx.department as string;
@@ -153,7 +133,7 @@ Write the description only. No bullet points, no headers.`,
       };
     }
 
-    // ── Feature 5: weekly summary (for email body) ───────────────────────────
+    // ── Feature 4: weekly summary (for email body) ───────────────────────────
     case "weekly-summary": {
       const stats = ctx.stats as {
         totalTasks: number;
@@ -178,7 +158,7 @@ Start with "Hi team,". End with "Have a great week ahead!"`,
       };
     }
 
-    // ── Feature 6: burnout / flight-risk team analysis ───────────────────────
+    // ── Feature 5: burnout / flight-risk team analysis ───────────────────────
     case "burnout-analysis": {
       const employees = ctx.employees as unknown[];
       return {
