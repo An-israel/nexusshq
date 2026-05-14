@@ -84,6 +84,70 @@ try {
   const { data: memList } = await cA.from("workspace_members").select("workspace_id");
   if ((memList ?? []).some(m => m.workspace_id === wsB.id)) fail("User A can see workspace B members"); else ok("Membership isolation");
 
+  // 5. Direct messages — A cannot insert into B's workspace, cannot read B's DMs
+  await admin.from("direct_messages").insert({
+    workspace_id: wsB.id, from_id: userB.id, to_id: userB.id, body: "secret-b-dm",
+  });
+  const { data: dmListA } = await cA.from("direct_messages").select("body, workspace_id");
+  if ((dmListA ?? []).some(d => d.workspace_id === wsB.id)) fail("User A can read workspace B DMs"); else ok("DM read isolation");
+  const { error: dmInsErr } = await cA.from("direct_messages").insert({
+    workspace_id: wsB.id, from_id: userA.id, to_id: userB.id, body: "leak-dm",
+  });
+  if (!dmInsErr) fail("User A could insert DM into workspace B"); else ok("DM cross-tenant insert blocked");
+
+  // 6. Group messages — seed in B, ensure A cannot read or write
+  const { data: grpB } = await admin.from("message_groups").insert({
+    workspace_id: wsB.id, name: "grp-b", created_by: userB.id,
+  }).select().single();
+  await admin.from("message_group_members").insert({ group_id: grpB.id, user_id: userB.id, workspace_id: wsB.id });
+  await admin.from("group_messages").insert({
+    workspace_id: wsB.id, group_id: grpB.id, from_id: userB.id, body: "secret-grp",
+  });
+  const { data: grpListA } = await cA.from("group_messages").select("id, workspace_id");
+  if ((grpListA ?? []).some(g => g.workspace_id === wsB.id)) fail("User A can read workspace B group messages"); else ok("Group message read isolation");
+  const { error: grpInsErr } = await cA.from("group_messages").insert({
+    workspace_id: wsB.id, group_id: grpB.id, from_id: userA.id, body: "leak-grp",
+  });
+  if (!grpInsErr) fail("User A could insert group message into workspace B"); else ok("Group message cross-tenant insert blocked");
+
+  // 7. Standups — A should not see B's standups; A should not be able to write into B
+  const today = new Date().toISOString().slice(0, 10);
+  await admin.from("standups").insert({
+    user_id: userB.id, workspace_id: wsB.id, date: today,
+    yesterday: "b-yesterday", today: "b-today",
+  });
+  const { data: stListA } = await cA.from("standups").select("id, workspace_id");
+  if ((stListA ?? []).some(s => s.workspace_id === wsB.id)) fail("User A can read workspace B standups"); else ok("Standup read isolation");
+  const { error: stInsErr } = await cA.from("standups").insert({
+    user_id: userB.id, workspace_id: wsB.id, date: today,
+    yesterday: "leak", today: "leak",
+  });
+  if (!stInsErr) fail("User A could insert standup for user B"); else ok("Standup cross-user insert blocked");
+
+  // 8. Workspace invites — A should not see B's invites or create one for B
+  await admin.from("workspace_invites").insert({
+    workspace_id: wsB.id, email: `target-${stamp}@example.test`,
+    role: "employee", token: `tok-b-${stamp}`, invited_by: userB.id,
+    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  });
+  const { data: invListA } = await cA.from("workspace_invites").select("id, workspace_id");
+  if ((invListA ?? []).some(i => i.workspace_id === wsB.id)) fail("User A can read workspace B invites"); else ok("Invite read isolation");
+  const { error: invInsErr } = await cA.from("workspace_invites").insert({
+    workspace_id: wsB.id, email: `leak-${stamp}@example.test`,
+    role: "employee", token: `tok-leak-${stamp}`, invited_by: userA.id,
+    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  });
+  if (!invInsErr) fail("User A could create invite into workspace B"); else ok("Invite cross-tenant insert blocked");
+
+  // 9. Standups history (positive) — user B sees their own latest entry in their workspace
+  const { data: stOwn } = await cB.from("standups")
+    .select("id, today, workspace_id")
+    .eq("workspace_id", wsB.id)
+    .order("date", { ascending: false })
+    .limit(1);
+  if (!stOwn?.length || stOwn[0].today !== "b-today") fail("User B cannot read their own latest standup");
+  else ok("Standups history (Mine) returns latest entry for current workspace");
+
 } catch (e) {
   fail("Setup error: " + (e.message || e));
 } finally {
