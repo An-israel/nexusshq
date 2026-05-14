@@ -50,6 +50,7 @@ function StandupsPage() {
   const { workspace } = useWorkspace();
   const [view, setView] = React.useState<"mine" | "team">(isManager ? "team" : "mine");
   const [todayStandup, setTodayStandup] = React.useState<Standup | null>(null);
+  const [historyStandups, setHistoryStandups] = React.useState<Standup[]>([]);
   const [teamStandups, setTeamStandups] = React.useState<Standup[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, Profile>>({});
   const [loading, setLoading] = React.useState(true);
@@ -62,27 +63,41 @@ function StandupsPage() {
   const [submitting, setSubmitting] = React.useState(false);
 
   const load = React.useCallback(async () => {
-    if (!user) return;
+    if (!user || !workspace?.id) return;
     setLoading(true);
     const isoToday = todayISO();
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
 
     if (view === "mine") {
-      const { data } = await supabase
-        .from("standups")
-        .select("*")
-        .eq("user_id", user.id)
-        .eq("date", isoToday)
-        .eq("workspace_id", workspace.id)
-        .maybeSingle();
-      setTodayStandup((data as Standup) ?? null);
+      const [{ data: today }, { data: history }] = await Promise.all([
+        supabase
+          .from("standups")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("date", isoToday)
+          .eq("workspace_id", workspace.id)
+          .maybeSingle(),
+        supabase
+          .from("standups")
+          .select("*")
+          .eq("user_id", user.id)
+          .eq("workspace_id", workspace.id)
+          .lt("date", isoToday)
+          .gte("date", sevenDaysAgo)
+          .order("date", { ascending: false }),
+      ]);
+      setTodayStandup((today as Standup) ?? null);
+      setHistoryStandups((history ?? []) as Standup[]);
     } else {
       const [{ data: standupData }, { data: profData }] = await Promise.all([
         supabase
           .from("standups")
           .select("*")
-          .eq("date", isoToday)
           .eq("workspace_id", workspace.id)
-          .order("submitted_at", { ascending: true }),
+          .gte("date", sevenDaysAgo)
+          .order("submitted_at", { ascending: false }),
         supabase.from("profiles").select("id, full_name, email").eq("is_active", true),
       ]);
       setTeamStandups((standupData ?? []) as Standup[]);
@@ -91,7 +106,7 @@ function StandupsPage() {
       setProfiles(map);
     }
     setLoading(false);
-  }, [user, view]);
+  }, [user, view, workspace?.id]);
 
   React.useEffect(() => { void load(); }, [load]);
 
@@ -129,13 +144,14 @@ function StandupsPage() {
     const { error } = await supabase.from("standups").upsert(
       {
         user_id: user!.id,
+        workspace_id: workspace?.id,
         date: isoToday,
         yesterday: yesterday.trim(),
         today: today.trim(),
         blockers: blockers.trim() || null,
         screenshot_url: urlData.publicUrl,
         submitted_at: new Date().toISOString(),
-      },
+      } as never,
       { onConflict: "user_id,date" },
     );
     setSubmitting(false);
@@ -250,6 +266,34 @@ function StandupsPage() {
           currentUserId={user?.id ?? ""}
           isManager={isManager}
         />
+      )}
+
+      {view === "mine" && historyStandups.length > 0 && (
+        <div className="mt-8 max-w-lg space-y-3">
+          <h2 className="text-sm font-semibold text-muted-foreground">Past 7 days</h2>
+          {historyStandups.map((s) => (
+            <Card key={s.id} className="p-4 space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium">{new Date(s.date).toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}</span>
+                <span className="text-xs text-muted-foreground">{timeAgo(s.submitted_at)}</span>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Yesterday</p>
+                <p className="whitespace-pre-wrap">{s.yesterday}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Today</p>
+                <p className="whitespace-pre-wrap">{s.today}</p>
+              </div>
+              {s.blockers && (
+                <div className="rounded bg-warning/10 border border-warning/20 p-2 text-xs">
+                  <p className="font-medium text-warning mb-0.5">Blockers</p>
+                  <p className="whitespace-pre-wrap">{s.blockers}</p>
+                </div>
+              )}
+            </Card>
+          ))}
+        </div>
       )}
     </div>
   );
