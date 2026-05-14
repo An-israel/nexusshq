@@ -136,7 +136,7 @@ export function SearchModal({
           setResults([]);
           return;
         }
-        setResults((data ?? []) as SearchResult[]);
+        setResults((data ?? []) as unknown as SearchResult[]);
       });
 
     return () => {
