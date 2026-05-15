@@ -69,6 +69,7 @@ export type Database = {
           created_at: string
           date: string
           id: string
+          overtime_minutes: number
           status: Database["public"]["Enums"]["attendance_status"]
           total_minutes: number | null
           user_id: string
@@ -80,6 +81,7 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
+          overtime_minutes?: number
           status?: Database["public"]["Enums"]["attendance_status"]
           total_minutes?: number | null
           user_id: string
@@ -91,6 +93,7 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
+          overtime_minutes?: number
           status?: Database["public"]["Enums"]["attendance_status"]
           total_minutes?: number | null
           user_id?: string
