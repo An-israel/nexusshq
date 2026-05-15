@@ -504,8 +504,10 @@ export function MessagesSidebar({
                   <button
                     key={opt.status}
                     type="button"
+                    disabled={savingStatus}
+                    onClick={() => { void handleSetStatus(opt.status); setStatusPopoverOpen(false); }}
                     className={cn(
-                      "flex items-center gap-2.5 px-2 py-2 rounded-md text-sm transition-colors w-full text-left",
+                      "flex items-center gap-2.5 px-2 py-2 rounded-md text-sm transition-colors w-full text-left disabled:opacity-50",
                       isActive
                         ? "bg-[#2A2A2A] text-white"
                         : "text-[#9CA3AF] hover:bg-[#1E1E1E] hover:text-white"
@@ -526,6 +528,7 @@ export function MessagesSidebar({
                   type="text"
                   value={customStatusText}
                   onChange={(e) => setCustomStatusText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") void handleSaveCustomStatus(); }}
                   placeholder="What's your status?"
                   maxLength={100}
                   className={cn(
@@ -534,6 +537,14 @@ export function MessagesSidebar({
                     "focus:ring-1 focus:ring-[#3B3B3B] transition-colors"
                   )}
                 />
+                <button
+                  type="button"
+                  onClick={() => void handleSaveCustomStatus()}
+                  disabled={savingStatus}
+                  className="mt-2 w-full bg-white text-[#111111] text-xs font-medium rounded-md py-1.5 hover:bg-[#E5E7EB] disabled:opacity-50"
+                >
+                  Save status
+                </button>
               </div>
             </div>
           </PopoverContent>
