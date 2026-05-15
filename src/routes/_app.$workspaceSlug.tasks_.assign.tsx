@@ -89,7 +89,7 @@ function AssignTaskPage() {
       const [membersResult, kpisResult] = await Promise.all([
         supabase
           .from("workspace_members")
-          .select("user_id, role, profiles(id, full_name, email, department, job_title)")
+          .select("user_id, role")
           .eq("workspace_id", workspace.id)
           .eq("is_active", true),
         supabase
@@ -98,17 +98,23 @@ function AssignTaskPage() {
           .eq("workspace_id", workspace.id),
       ]);
 
-      if (membersResult.data) {
+      if (membersResult.data && membersResult.data.length > 0) {
+        const userIds = membersResult.data.map((m) => m.user_id);
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, department, job_title")
+          .in("id", userIds);
+        const profileMap = new Map((profilesData ?? []).map((p) => [p.id, p]));
         const mapped: MemberRow[] = membersResult.data.flatMap((m) => {
-          const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
+          const p = profileMap.get(m.user_id);
           if (!p) return [];
           return [
             {
-              id: (p as { id: string }).id,
-              full_name: (p as { full_name: string | null }).full_name,
-              email: (p as { email: string | null }).email,
-              department: (p as { department: string | null }).department,
-              job_title: (p as { job_title: string | null }).job_title,
+              id: p.id,
+              full_name: p.full_name,
+              email: p.email,
+              department: p.department,
+              job_title: p.job_title,
               role: m.role,
             },
           ];
