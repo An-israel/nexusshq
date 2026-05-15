@@ -479,6 +479,7 @@ export function useMessages(params: {
         toast.error("Failed to pin message");
         return;
       }
+      toast.success(pinned ? "Message pinned" : "Message unpinned");
       setMessages((prev) =>
         prev.map((m) =>
           m.id === id

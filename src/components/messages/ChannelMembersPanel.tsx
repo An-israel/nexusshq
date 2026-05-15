@@ -152,29 +152,44 @@ export function ChannelMembersPanel({
     const timeout = setTimeout(async () => {
       setSearchLoading(true);
       try {
-        const existingIds = members.map((m) => m.user_id);
+        const existingIds = new Set(members.map((m) => m.user_id));
 
         const { data: wsMembers } = await supabase
           .from("workspace_members")
-          .select("user_id, profiles(full_name, avatar_url, job_title)")
-          .eq("workspace_id", channel.workspace_id);
+          .select("user_id")
+          .eq("workspace_id", channel.workspace_id)
+          .eq("is_active", true);
 
-        if (wsMembers) {
-          const results: WorkspaceMemberCandidate[] = [];
-          for (const wm of wsMembers as unknown as Array<{ user_id: string; profiles: { full_name: string | null; avatar_url: string | null; job_title: string | null } | null }>) {
-            if (existingIds.includes(wm.user_id)) continue;
-            const prof = wm.profiles;
-            const name = prof?.full_name ?? "";
-            if (!name.toLowerCase().includes(searchQuery.toLowerCase())) continue;
-            results.push({
-              user_id: wm.user_id,
-              full_name: prof?.full_name ?? null,
-              avatar_url: prof?.avatar_url ?? null,
-              job_title: prof?.job_title ?? null,
-            });
-          }
-          setCandidates(results.slice(0, 10));
+        const candidateIds = (wsMembers ?? [])
+          .map((m) => m.user_id)
+          .filter((id) => !existingIds.has(id));
+
+        if (candidateIds.length === 0) {
+          setCandidates([]);
+          return;
         }
+
+        const q = searchQuery.toLowerCase();
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url, job_title, email")
+          .in("id", candidateIds)
+          .or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`)
+          .limit(10);
+
+        setCandidates(
+          ((profs ?? []) as Array<{ id: string; full_name: string | null; avatar_url: string | null; job_title: string | null; email: string | null }>)
+            .filter((p) =>
+              (p.full_name ?? "").toLowerCase().includes(q) ||
+              (p.email ?? "").toLowerCase().includes(q)
+            )
+            .map((p) => ({
+              user_id: p.id,
+              full_name: p.full_name,
+              avatar_url: p.avatar_url,
+              job_title: p.job_title,
+            }))
+        );
       } catch (err) {
         console.error("Failed to search workspace members", err);
       } finally {
