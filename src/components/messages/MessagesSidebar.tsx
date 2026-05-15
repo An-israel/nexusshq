@@ -260,8 +260,8 @@ export function MessagesSidebar({
       </div>
 
       <div className="px-1 py-1">
-        <a
-          href={`/${workspaceSlug}/dashboard`}
+        <Link
+          to={`/${workspaceSlug}/dashboard` as string}
           className={cn(
             "flex items-center gap-2.5 h-8 px-2 rounded-md mx-1 cursor-pointer",
             "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm"
@@ -269,7 +269,7 @@ export function MessagesSidebar({
         >
           <Home className="w-4 h-4 shrink-0" />
           <span>Home</span>
-        </a>
+        </Link>
 
         <button
           type="button"
