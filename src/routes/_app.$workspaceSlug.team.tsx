@@ -388,6 +388,18 @@ function MemberCard({
               }
             />
           )}
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-destructive hover:text-destructive"
+              onClick={removeFromWorkspace}
+              disabled={removing}
+              title="Remove from workspace (terminate employment)"
+            >
+              <Trash2 className="mr-1.5 h-3 w-3" /> Remove
+            </Button>
+          )}
         </div>
       )}
     </div>
