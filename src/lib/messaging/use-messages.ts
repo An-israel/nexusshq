@@ -414,6 +414,17 @@ export function useMessages(params: {
             prev.map((m) => (m.id === optimisticId ? real : m))
           );
         }
+
+        // Fire-and-forget: in-app notifications for @mentions in channel messages.
+        if (channelId && body.includes("@")) {
+          void notifyMentions({
+            workspaceId,
+            channelId,
+            messageId: insertedMsg.id,
+            senderId: user.id,
+            body,
+          });
+        }
       } catch (err) {
         console.error("sendMessage error:", err);
         toast.error("Failed to send message");
