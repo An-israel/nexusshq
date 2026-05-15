@@ -196,6 +196,10 @@ function MobileClockDisplay() {
 function WorkspaceShell() {
   const { workspaceSlug } = Route.useParams();
   const { workspace, loading, setWorkspaceData } = useWorkspace();
+
+  React.useEffect(() => {
+    if (workspaceSlug) setLastWorkspaceSlug(workspaceSlug);
+  }, [workspaceSlug]);
   const { user, role, profile } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
