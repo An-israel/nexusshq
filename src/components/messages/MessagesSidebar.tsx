@@ -146,6 +146,7 @@ interface Props {
   onOpenCreateChannel: () => void;
   onOpenNewDm: () => void;
   onOpenSearch: () => void;
+  updateMyPresence: ReturnType<typeof usePresence>["updateMyPresence"];
 }
 
 export function MessagesSidebar({
