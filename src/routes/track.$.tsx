@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Circle, Clock, ExternalLink } from "lucide-react";
 
-export const Route = createFileRoute("/track/$token")({
+export const Route = createFileRoute("/track/$")({
   component: PublicTracker,
 });
 
