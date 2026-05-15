@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Zap } from "lucide-react";
+import { Plus, Zap } from "lucide-react";
 
 export const Route = createFileRoute("/create-workspace")({
   beforeLoad: async () => {
@@ -24,16 +24,49 @@ function CreateWorkspacePage() {
   const [name, setName] = React.useState("");
   const [slug, setSlug] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
+  const [checkingSlug, setCheckingSlug] = React.useState(false);
+  const [slugAvailable, setSlugAvailable] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     const cleaned = name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 30);
     setSlug(cleaned);
   }, [name]);
 
+  React.useEffect(() => {
+    if (!slug || !isValidSlug(slug)) {
+      setCheckingSlug(false);
+      setSlugAvailable(null);
+      return;
+    }
+
+    setCheckingSlug(true);
+    setSlugAvailable(null);
+
+    const timer = setTimeout(async () => {
+      const { data, error } = await supabase
+        .from("workspaces")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      setCheckingSlug(false);
+      if (error) {
+        setSlugAvailable(null);
+        return;
+      }
+
+      setSlugAvailable(data === null);
+    }, 350);
+
+    return () => clearTimeout(timer);
+  }, [slug]);
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return toast.error("Company name is required");
     if (!isValidSlug(slug)) return toast.error("Workspace URL must be 3-30 chars, lowercase letters, numbers, hyphens");
+    if (checkingSlug) return toast.error("Still checking workspace URL — please wait a moment");
+    if (slugAvailable === false) return toast.error("That workspace URL is already taken");
 
     setSubmitting(true);
     try {
@@ -82,9 +115,12 @@ function CreateWorkspacePage() {
       <div className="flex flex-1 items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold">Create your workspace</h1>
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
+              <Plus className="h-5 w-5" />
+            </div>
+            <h1 className="text-2xl font-bold">Create another workspace</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              You don't belong to any workspace yet. Create one to get started.
+              Use the same account across multiple companies or teams and switch between them anytime.
             </p>
           </div>
           <form onSubmit={onSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-xl">
@@ -98,9 +134,26 @@ function CreateWorkspacePage() {
                 <span className="text-muted-foreground">nexushq.app/</span>
                 <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required className="bg-input flex-1" />
               </div>
+              <p className="text-xs text-muted-foreground">
+                {checkingSlug
+                  ? "Checking availability…"
+                  : slugAvailable === false
+                    ? "This workspace URL is already in use."
+                    : slugAvailable === true
+                      ? "This workspace URL is available."
+                      : "Choose a unique workspace URL for this team."}
+              </p>
             </div>
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? "Creating…" : "Create workspace"}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => navigate({ to: "/workspaces" })}
+            >
+              View my workspaces
             </Button>
           </form>
         </div>
