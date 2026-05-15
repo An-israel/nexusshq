@@ -118,6 +118,7 @@ function NotificationsPage() {
 
   useEffect(() => {
     load();
+    loadPrefs();
     if (!user) return;
     const ch = supabase
       .channel(`notifications:${user.id}`)
@@ -173,10 +174,46 @@ function NotificationsPage() {
             {unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up."}
           </p>
         </div>
-        <Button variant="outline" onClick={markAllRead} disabled={unreadCount === 0}>
-          Mark all as read
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowSettings((v) => !v)}>
+            <SettingsIcon className="mr-2 h-4 w-4" /> Settings
+          </Button>
+          <Button variant="outline" onClick={markAllRead} disabled={unreadCount === 0}>
+            Mark all as read
+          </Button>
+        </div>
       </div>
+
+      {showSettings && (
+        <Card className="p-4 space-y-3">
+          <h2 className="font-semibold text-sm">Notification preferences</h2>
+          <p className="text-xs text-muted-foreground">
+            Control which messaging events create notifications for you in this workspace.
+          </p>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">@mention notifications</p>
+              <p className="text-xs text-muted-foreground">Get notified when someone @mentions you in a channel.</p>
+            </div>
+            <Switch
+              checked={prefs.mentions_enabled}
+              disabled={prefsLoading}
+              onCheckedChange={(v) => updatePref("mentions_enabled", v)}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">Pinned message notifications</p>
+              <p className="text-xs text-muted-foreground">Get notified when a message is pinned or unpinned.</p>
+            </div>
+            <Switch
+              checked={prefs.pins_enabled}
+              disabled={prefsLoading}
+              onCheckedChange={(v) => updatePref("pins_enabled", v)}
+            />
+          </div>
+        </Card>
+      )}
 
       <div className="flex gap-1 rounded-lg border border-border bg-card p-1">
         {TABS.map((t) => (
