@@ -32,6 +32,7 @@ interface AttendanceRow {
   clock_out: string | null;
   status: "present" | "late" | "absent" | "half_day";
   total_minutes: number | null;
+  overtime_minutes: number | null;
 }
 
 interface ProfileMini {
