@@ -110,92 +110,180 @@ const TESTIMONIALS = [
 
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/30">
       {/* ── Nav ──────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
-              <Zap className="h-4 w-4" />
+            <div className="relative flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-sm shadow-primary/30">
+              <Zap className="h-3.5 w-3.5" />
             </div>
-            <span className="text-lg font-bold tracking-tight">Nexus HQ</span>
+            <span className="text-[15px] font-semibold tracking-tight">Nexus HQ</span>
+            <span className="ml-2 hidden rounded-full border border-border/60 bg-card/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
+              v1.0
+            </span>
           </div>
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <Link to="/" className="hover:text-foreground transition-colors">Features</Link>
+          <nav className="hidden items-center gap-7 text-[13px] text-muted-foreground md:flex">
+            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
+            <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
             <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Link
               to="/login"
-              className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="hidden rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-block"
             >
               Sign in
             </Link>
             <Link
               to="/signup"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+              className="group inline-flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 text-[13px] font-medium text-background transition-all hover:bg-foreground/90"
             >
               Get started
+              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
             </Link>
           </div>
         </div>
       </header>
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <section className="relative overflow-hidden py-24 sm:py-32">
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-[600px] w-[600px] rounded-full bg-primary/5 blur-3xl" />
+      <section className="relative overflow-hidden">
+        {/* Dot grid background */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.18]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.35) 1px, transparent 0)",
+            backgroundSize: "28px 28px",
+            maskImage: "radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 75%)",
+            WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 75%)",
+          }}
+        />
+        {/* Aurora glow */}
+        <div className="pointer-events-none absolute left-1/2 top-0 -translate-x-1/2">
+          <div className="h-[500px] w-[900px] rounded-full bg-primary/10 blur-[120px]" />
         </div>
-        <div className="relative mx-auto max-w-4xl px-6 text-center">
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-medium text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-            Built for growing teams · AI-powered
-          </div>
-          <h1 className="mb-6 text-5xl font-extrabold leading-tight tracking-tight sm:text-6xl lg:text-7xl">
-            Your entire team
+
+        <div className="relative mx-auto max-w-5xl px-6 pb-24 pt-24 text-center sm:pt-32">
+          <a
+            href="#features"
+            className="group mb-8 inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/40 px-3 py-1 text-[12px] font-medium text-muted-foreground backdrop-blur transition-colors hover:border-border hover:text-foreground"
+          >
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-primary" />
+            </span>
+            Now with AI burnout detection
+            <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+          </a>
+
+          <h1 className="mx-auto max-w-4xl text-[44px] font-semibold leading-[1.05] tracking-[-0.03em] sm:text-6xl lg:text-[72px]">
+            The operating system
             <br />
-            <span className="text-primary">runs from here</span>
+            <span className="bg-gradient-to-b from-foreground to-foreground/60 bg-clip-text text-transparent">
+              for modern teams
+            </span>
           </h1>
-          <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground leading-relaxed">
-            Nexus HQ replaces your scattered HR tools with one unified workspace — attendance, tasks, messaging, KPIs, leave, and AI insights all in one place.
+          <p className="mx-auto mt-7 max-w-xl text-[15px] leading-relaxed text-muted-foreground sm:text-base">
+            Attendance, tasks, messaging, OKRs, KPIs and AI insights — engineered into one workspace
+            so your team stops switching tabs and starts shipping.
           </p>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+
+          <div className="mt-10 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
             <Link
               to="/signup"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="group inline-flex items-center gap-1.5 rounded-lg bg-foreground px-5 py-2.5 text-[14px] font-medium text-background shadow-lg shadow-foreground/10 transition-all hover:bg-foreground/90"
             >
-              Start free trial <ArrowRight className="h-4 w-4" />
+              Start free trial
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-7 py-3.5 text-sm font-semibold transition-colors hover:bg-accent"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-card/40 px-5 py-2.5 text-[14px] font-medium text-foreground backdrop-blur transition-colors hover:border-border hover:bg-card"
             >
-              Sign in to workspace
+              Sign in
             </Link>
           </div>
-          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Monitor className="h-4 w-4 shrink-0" />
-            <span>Also available as a desktop app —</span>
+
+          <div className="mt-7 flex items-center justify-center gap-2 text-[12px] text-muted-foreground">
+            <Monitor className="h-3.5 w-3.5 shrink-0" />
+            <span>Native desktop app for Windows —</span>
             <a
               href={DOWNLOAD_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+              className="inline-flex items-center gap-1 font-medium text-foreground hover:text-primary"
             >
-              <Download className="h-3.5 w-3.5" /> Download for Windows
+              <Download className="h-3 w-3" /> Download
             </a>
+          </div>
+
+          {/* App preview mockup */}
+          <div className="relative mx-auto mt-20 max-w-5xl">
+            <div className="absolute -inset-x-8 -inset-y-4 rounded-[28px] bg-gradient-to-b from-primary/20 via-primary/5 to-transparent blur-2xl" />
+            <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-card/60 shadow-2xl shadow-black/40 backdrop-blur">
+              {/* Faux window chrome */}
+              <div className="flex items-center gap-1.5 border-b border-border/40 bg-card/80 px-4 py-2.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
+                <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
+                <span className="ml-3 text-[11px] font-mono text-muted-foreground">nexus.app/dashboard</span>
+              </div>
+              {/* Faux dashboard */}
+              <div className="grid grid-cols-12 gap-3 p-4">
+                <div className="col-span-3 space-y-2">
+                  {["Dashboard","Tasks","Attendance","Messages","Reports","Team"].map((it, i) => (
+                    <div key={it} className={`rounded-md px-2.5 py-1.5 text-[11px] ${i === 0 ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}>
+                      {it}
+                    </div>
+                  ))}
+                </div>
+                <div className="col-span-9 space-y-3">
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { l: "Present today", v: "24" },
+                      { l: "Tasks due", v: "12" },
+                      { l: "Overtime (wk)", v: "8.5h" },
+                    ].map((s) => (
+                      <div key={s.l} className="rounded-lg border border-border/50 bg-background/40 p-3">
+                        <p className="text-[10px] text-muted-foreground">{s.l}</p>
+                        <p className="mt-1 text-base font-semibold tabular-nums">{s.v}</p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="rounded-lg border border-border/50 bg-background/40 p-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[11px] font-medium">Activity</p>
+                      <p className="text-[10px] text-muted-foreground">Live</p>
+                    </div>
+                    <div className="mt-2.5 flex h-20 items-end gap-1">
+                      {[40,55,30,72,48,90,65,80,52,68,75,88].map((h, i) => (
+                        <div
+                          key={i}
+                          className="flex-1 rounded-sm bg-gradient-to-t from-primary/70 to-primary/30"
+                          style={{ height: `${h}%` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* ── Stats ────────────────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-12">
+      {/* ── Logos / trust ────────────────────────────────────────────────── */}
+      <section className="border-t border-border/40 py-10">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
+          <p className="mb-6 text-center text-[11px] font-medium uppercase tracking-[0.2em] text-muted-foreground/70">
+            Built for teams that ship
+          </p>
+          <div className="grid grid-cols-2 gap-x-6 gap-y-4 md:grid-cols-4">
             {STATS.map(({ value, label }) => (
-              <div key={label} className="text-center">
-                <p className="text-3xl font-extrabold text-primary">{value}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{label}</p>
+              <div key={label} className="border-l border-border/50 pl-4">
+                <p className="text-2xl font-semibold tracking-tight">{value}</p>
+                <p className="mt-0.5 text-[12px] text-muted-foreground">{label}</p>
               </div>
             ))}
           </div>
@@ -203,25 +291,26 @@ function LandingPage() {
       </section>
 
       {/* ── Features ─────────────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-24" id="features">
+      <section className="border-t border-border/40 py-28" id="features">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Everything your team needs</h2>
-            <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-              12 purpose-built modules that replace a dozen separate apps — and they all talk to each other.
-            </p>
+          <div className="mb-14 max-w-2xl">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Platform</p>
+            <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
+              One workspace.
+              <span className="text-muted-foreground"> Twelve modules. Zero context switching.</span>
+            </h2>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/40 sm:grid-cols-2 lg:grid-cols-3">
             {FEATURES.map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="rounded-2xl border border-border bg-card p-6 transition-all hover:border-primary/40 hover:shadow-sm hover:-translate-y-0.5"
+                className="group relative bg-background p-6 transition-colors hover:bg-card/40"
               >
-                <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary">
-                  <Icon className="h-5 w-5" />
+                <div className="mb-4 inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-card/60 text-primary transition-colors group-hover:border-primary/40">
+                  <Icon className="h-4 w-4" />
                 </div>
-                <h3 className="mb-2 font-semibold">{title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                <h3 className="mb-1.5 text-[14px] font-semibold tracking-tight">{title}</h3>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">{desc}</p>
               </div>
             ))}
           </div>
@@ -229,20 +318,28 @@ function LandingPage() {
       </section>
 
       {/* ── How it works ─────────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-24 bg-card/30">
+      <section className="border-t border-border/40 py-28" id="workflow">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Up and running in minutes</h2>
-            <p className="mt-3 text-muted-foreground">Three steps and your whole team is inside.</p>
+          <div className="mb-14 max-w-2xl">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Workflow</p>
+            <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
+              Live in minutes.
+              <span className="text-muted-foreground"> Not weeks.</span>
+            </h2>
           </div>
-          <div className="grid gap-8 md:grid-cols-3">
-            {HOW_IT_WORKS.map(({ step, title, desc }) => (
-              <div key={step} className="relative flex flex-col items-start">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-xl font-extrabold text-primary">
-                  {step}
+          <div className="grid gap-6 md:grid-cols-3">
+            {HOW_IT_WORKS.map(({ step, title, desc }, i) => (
+              <div
+                key={step}
+                className="relative rounded-xl border border-border/60 bg-card/40 p-6 backdrop-blur"
+              >
+                <div className="mb-5 flex items-center justify-between">
+                  <span className="font-mono text-[11px] text-muted-foreground">{step}</span>
+                  <span className="h-px flex-1 mx-3 bg-gradient-to-r from-border/60 to-transparent" />
+                  <span className="text-[11px] text-muted-foreground">{i === HOW_IT_WORKS.length - 1 ? "Done" : "Next →"}</span>
                 </div>
-                <h3 className="mb-2 font-semibold text-lg">{title}</h3>
-                <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
+                <h3 className="mb-1.5 text-[15px] font-semibold tracking-tight">{title}</h3>
+                <p className="text-[13px] leading-relaxed text-muted-foreground">{desc}</p>
               </div>
             ))}
           </div>
@@ -250,25 +347,29 @@ function LandingPage() {
       </section>
 
       {/* ── Testimonials ─────────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-24">
+      <section className="border-t border-border/40 py-28">
         <div className="mx-auto max-w-6xl px-6">
-          <div className="mb-14 text-center">
-            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">Loved by teams</h2>
-            <div className="mt-2 flex items-center justify-center gap-0.5">
-              {[1,2,3,4,5].map((n) => <Star key={n} className="h-4 w-4 fill-warning text-warning" />)}
-            </div>
+          <div className="mb-14 max-w-2xl">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Customers</p>
+            <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
+              Teams that switched.
+              <span className="text-muted-foreground"> Never looked back.</span>
+            </h2>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/40 md:grid-cols-3">
             {TESTIMONIALS.map(({ quote, name, role }) => (
-              <div key={name} className="rounded-2xl border border-border bg-card p-6">
-                <p className="mb-5 text-sm leading-relaxed text-muted-foreground">"{quote}"</p>
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-sm font-bold text-primary">
+              <div key={name} className="bg-background p-7">
+                <div className="mb-4 flex gap-0.5">
+                  {[1,2,3,4,5].map((n) => <Star key={n} className="h-3 w-3 fill-warning text-warning" />)}
+                </div>
+                <p className="mb-6 text-[14px] leading-relaxed text-foreground/90">"{quote}"</p>
+                <div className="flex items-center gap-3 border-t border-border/40 pt-4">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-primary/30 to-primary/10 text-[12px] font-semibold text-primary">
                     {name[0]}
                   </div>
                   <div>
-                    <p className="text-sm font-semibold">{name}</p>
-                    <p className="text-xs text-muted-foreground">{role}</p>
+                    <p className="text-[13px] font-medium">{name}</p>
+                    <p className="text-[11px] text-muted-foreground">{role}</p>
                   </div>
                 </div>
               </div>
@@ -278,84 +379,109 @@ function LandingPage() {
       </section>
 
       {/* ── Pricing teaser ───────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-20 bg-card/30">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2 className="mb-3 text-3xl font-bold tracking-tight sm:text-4xl">Simple, transparent pricing</h2>
-          <p className="mb-8 text-muted-foreground">
-            Start free with up to 10 users. Scale as your team grows — no surprise fees.
-          </p>
-          <div className="mb-8 grid gap-4 sm:grid-cols-3 text-left">
+      <section className="border-t border-border/40 py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mb-12 max-w-2xl">
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Pricing</p>
+            <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
+              Fair pricing.
+              <span className="text-muted-foreground"> No surprises.</span>
+            </h2>
+          </div>
+          <div className="mb-8 grid gap-3 sm:grid-cols-3">
             {[
               { tier: "Starter", price: "Free", users: "Up to 10 users", highlight: false },
-              { tier: "Growth", price: "$49 /mo", users: "Up to 100 users", highlight: true },
+              { tier: "Growth", price: "$49", suffix: "/mo", users: "Up to 100 users", highlight: true },
               { tier: "Enterprise", price: "Custom", users: "Unlimited users", highlight: false },
-            ].map(({ tier, price, users, highlight }) => (
+            ].map(({ tier, price, suffix, users, highlight }) => (
               <div
                 key={tier}
-                className={`rounded-2xl border p-5 ${highlight ? "border-primary bg-primary/5" : "border-border bg-card"}`}
+                className={`rounded-xl border p-5 transition-colors ${
+                  highlight
+                    ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] to-transparent"
+                    : "border-border/60 bg-card/30"
+                }`}
               >
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{tier}</p>
-                <p className={`mt-1 text-2xl font-extrabold ${highlight ? "text-primary" : ""}`}>{price}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{users}</p>
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{tier}</p>
+                  {highlight && (
+                    <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                      Popular
+                    </span>
+                  )}
+                </div>
+                <p className="mt-3 flex items-baseline gap-1">
+                  <span className="text-2xl font-semibold tracking-tight">{price}</span>
+                  {suffix && <span className="text-[12px] text-muted-foreground">{suffix}</span>}
+                </p>
+                <p className="mt-1 text-[12px] text-muted-foreground">{users}</p>
               </div>
             ))}
           </div>
           <Link
             to="/pricing"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-primary"
           >
-            See full pricing <ChevronRight className="h-4 w-4" />
+            See full pricing <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </section>
 
       {/* ── Desktop app ──────────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-16">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="flex flex-col items-center gap-6 rounded-2xl border border-border bg-card p-8 text-center sm:flex-row sm:text-left">
-            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              <Monitor className="h-8 w-8" />
+      <section className="border-t border-border/40 py-20">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card/80 to-card/30 p-8">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full bg-primary/10 blur-3xl" />
+            <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background/40 text-primary">
+                <Monitor className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-[16px] font-semibold tracking-tight">Native desktop app for Windows</h3>
+                <p className="mt-1 text-[13px] text-muted-foreground">
+                  Lives in your system tray. Launches faster than your browser. No tabs to lose.
+                </p>
+              </div>
+              <a
+                href={DOWNLOAD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border/70 bg-background/40 px-4 py-2 text-[13px] font-medium text-foreground transition-colors hover:bg-background/80"
+              >
+                <Download className="h-3.5 w-3.5" /> Download .exe
+              </a>
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold">Desktop App for Windows</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Install Nexus HQ as a native Windows app. Lives in your system tray, works offline-friendly — no browser needed.
-              </p>
-            </div>
-            <a
-              href={DOWNLOAD_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              <Download className="h-4 w-4" /> Download .exe
-            </a>
           </div>
         </div>
       </section>
 
       {/* ── Final CTA ────────────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-24 relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-[400px] w-[400px] rounded-full bg-primary/5 blur-3xl" />
+      <section className="relative overflow-hidden border-t border-border/40 py-28">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="h-[400px] w-[800px] rounded-full bg-primary/10 blur-[120px]" />
         </div>
         <div className="relative mx-auto max-w-2xl px-6 text-center">
-          <h2 className="mb-4 text-3xl font-bold tracking-tight sm:text-4xl">
-            Ready to bring order to your team?
+          <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[44px] sm:leading-[1.05]">
+            Stop juggling tabs.
+            <br />
+            <span className="bg-gradient-to-b from-foreground to-foreground/50 bg-clip-text text-transparent">
+              Start shipping.
+            </span>
           </h2>
-          <p className="mb-8 text-muted-foreground leading-relaxed">
-            Get your workspace live in minutes. Invite your team, assign roles, and start running operations from one place.
+          <p className="mx-auto mt-5 max-w-md text-[14px] leading-relaxed text-muted-foreground">
+            Spin up your workspace in under 2 minutes. Free for teams up to 10.
           </p>
-          <div className="flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <div className="mt-9 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
             <Link
               to="/signup"
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-8 py-3.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+              className="group inline-flex items-center gap-1.5 rounded-lg bg-foreground px-6 py-2.5 text-[14px] font-medium text-background shadow-lg shadow-foreground/10 transition-all hover:bg-foreground/90"
             >
-              Get started free <ArrowRight className="h-4 w-4" />
+              Get started free
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
             <Link
               to="/login"
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-8 py-3.5 text-sm font-semibold transition-colors hover:bg-accent"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-card/40 px-6 py-2.5 text-[14px] font-medium text-foreground backdrop-blur transition-colors hover:bg-card"
             >
               Sign in
             </Link>
@@ -368,19 +494,19 @@ function LandingPage() {
         <div className="mx-auto max-w-6xl px-6">
           <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
             <div className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 text-primary">
-                <Zap className="h-3.5 w-3.5" />
+              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
+                <Zap className="h-3 w-3" />
               </div>
-              <span className="font-bold">Nexus HQ</span>
+              <span className="text-[13px] font-semibold tracking-tight">Nexus HQ</span>
             </div>
-            <nav className="flex items-center gap-6 text-sm text-muted-foreground">
+            <nav className="flex items-center gap-6 text-[12px] text-muted-foreground">
               <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
               <Link to="/login" className="hover:text-foreground transition-colors">Sign in</Link>
               <a href={DOWNLOAD_URL} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
                 Download
               </a>
             </nav>
-            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Nexus HQ. All rights reserved.</p>
+            <p className="text-[11px] text-muted-foreground">© {new Date().getFullYear()} Nexus HQ</p>
           </div>
         </div>
       </footer>
