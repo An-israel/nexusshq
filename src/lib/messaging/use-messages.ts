@@ -492,6 +492,7 @@ export function useMessages(params: {
         return;
       }
       toast.success(pinned ? "Message pinned" : "Message unpinned");
+      const target = messages.find((m) => m.id === id);
       setMessages((prev) =>
         prev.map((m) =>
           m.id === id
@@ -499,8 +500,19 @@ export function useMessages(params: {
             : m
         )
       );
+      if (workspaceId && user && target) {
+        void notifyPinChange({
+          workspaceId,
+          channelId: channelId ?? null,
+          conversationId: conversationId ?? null,
+          messageId: id,
+          actorId: user.id,
+          pinned,
+          body: target.body,
+        });
+      }
     },
-    []
+    [workspaceId, channelId, conversationId, messages]
   );
 
   return {
