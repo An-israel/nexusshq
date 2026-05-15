@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, Users, Target, Clock, Bell, Settings,
   LogOut, ChevronLeft, ChevronRight, Star, Wallet, FolderUp, Kanban,
   Megaphone, MessageSquare, GitBranch, BookOpen, ClipboardList, RefreshCw,
-  Briefcase, CalendarOff, Flag, BarChart3, UserCircle, CreditCard,
+  Briefcase, CalendarOff, Flag, BarChart3, UserCircle, CreditCard, Building2,
   Heart, FileText, Brain,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
@@ -147,6 +147,16 @@ export function AppSidebar({
 
       {/* User card */}
       <div className="border-t border-border p-2">
+        {!collapsed && (
+          <Button
+            variant="outline"
+            className="mb-2 w-full justify-start"
+            onClick={() => navigate({ to: "/workspaces" })}
+          >
+            <Building2 className="h-4 w-4" />
+            Switch workspace
+          </Button>
+        )}
         <div
           className={cn(
             "flex items-center gap-2 rounded-lg p-2",

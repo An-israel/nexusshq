@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, MessageSquare, Bell, Menu, Clock, Users,
   CalendarOff, Flag, BarChart3, Megaphone, Star, Wallet, BookOpen,
   GitBranch, ClipboardList, FolderUp, Kanban, RefreshCw, Briefcase,
-  Target, Settings, LogOut, Heart, FileText,
+  Target, Settings, LogOut, Heart, FileText, Building2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -153,6 +153,16 @@ export function MobileBottomNav({ workspaceSlug }: { workspaceSlug: string }) {
 
           {/* Sign out */}
           <div className="border-t border-[#2A2A2A] px-4 py-3">
+            <button
+              onClick={() => {
+                setMoreOpen(false);
+                navigate({ to: "/workspaces" });
+              }}
+              className="mb-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white hover:bg-[#1E1E1E] transition-colors"
+            >
+              <Building2 className="h-5 w-5" />
+              Switch workspace
+            </button>
             <button
               onClick={async () => {
                 setMoreOpen(false);

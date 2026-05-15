@@ -151,12 +151,15 @@ function SignupPage() {
         .select("workspace_id, workspaces(slug)")
         .eq("user_id", session.user.id)
         .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
+        .limit(2);
+      if ((data ?? []).length > 1) {
+        navigate({ to: "/workspaces" });
+        return;
+      }
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const slug = (data as any)?.workspaces?.slug;
+      const slug = (data?.[0] as any)?.workspaces?.slug;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      navigate({ to: slug ? `/${slug}/dashboard` as any : "/" });
+      navigate({ to: slug ? `/${slug}/dashboard` as any : "/create-workspace" });
     })();
   }, [session, navigate]);
 

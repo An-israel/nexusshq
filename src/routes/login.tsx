@@ -23,17 +23,20 @@ export const Route = createFileRoute("/login")({
 });
 
 async function resolveWorkspace(userId: string): Promise<string | null> {
-  // Try workspace_members first (post-migration path)
-  const { data } = await supabase
+  const { data: memberships } = await supabase
     .from("workspace_members")
     .select("workspace_id, workspaces(slug)")
     .eq("user_id", userId)
     .eq("is_active", true)
-    .limit(1)
-    .maybeSingle();
-  if (data) {
+    .limit(2);
+
+  if ((memberships ?? []).length > 1) {
+    return "__multi__";
+  }
+
+  if (memberships?.[0]) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any).workspaces?.slug ?? null;
+    return (memberships[0] as any).workspaces?.slug ?? null;
   }
 
   // Fall back: check legacy user_roles — existing team members before migration
@@ -68,6 +71,10 @@ function LoginPage() {
   useEffect(() => {
     if (!session || !user) return;
     void resolveWorkspace(user.id).then((slug) => {
+      if (slug === "__multi__") {
+        navigate({ to: "/workspaces" });
+        return;
+      }
       if (slug) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         navigate({ to: `/${slug}/dashboard` as any });
