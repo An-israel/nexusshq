@@ -12,8 +12,8 @@ import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { setEmployeeActiveFn } from "@/lib/admin.functions";
-import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck, ClipboardList } from "lucide-react";
+import { setEmployeeActiveFn, removeWorkspaceMemberFn } from "@/lib/admin.functions";
+import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck, ClipboardList, Trash2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
