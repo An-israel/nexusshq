@@ -19,7 +19,7 @@ import { Route as CreateWorkspaceRouteImport } from './routes/create-workspace'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TrackTokenRouteImport } from './routes/track.$token'
+import { Route as TrackSplatRouteImport } from './routes/track.$'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
 import { Route as AppWorkspaceSlugTeamBoardRouteImport } from './routes/_app.$workspaceSlug.team-board'
@@ -114,9 +114,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TrackTokenRoute = TrackTokenRouteImport.update({
-  id: '/track/$token',
-  path: '/track/$token',
+const TrackSplatRoute = TrackSplatRouteImport.update({
+  id: '/track/$',
+  path: '/track/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiRoute = ApiAiRouteImport.update({
@@ -381,7 +381,7 @@ export interface FileRoutesByFullPath {
   '/super-admin': typeof SuperAdminRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
-  '/track/$token': typeof TrackTokenRoute
+  '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -437,7 +437,7 @@ export interface FileRoutesByTo {
   '/super-admin': typeof SuperAdminRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
-  '/track/$token': typeof TrackTokenRoute
+  '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -495,7 +495,7 @@ export interface FileRoutesById {
   '/super-admin': typeof SuperAdminRoute
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
-  '/track/$token': typeof TrackTokenRoute
+  '/track/$': typeof TrackSplatRoute
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/_app/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/_app/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -553,7 +553,7 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/$workspaceSlug'
     | '/api/ai'
-    | '/track/$token'
+    | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
     | '/$workspaceSlug/billing'
@@ -609,7 +609,7 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/$workspaceSlug'
     | '/api/ai'
-    | '/track/$token'
+    | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
     | '/$workspaceSlug/billing'
@@ -666,7 +666,7 @@ export interface FileRouteTypes {
     | '/super-admin'
     | '/_app/$workspaceSlug'
     | '/api/ai'
-    | '/track/$token'
+    | '/track/$'
     | '/_app/$workspaceSlug/announcements'
     | '/_app/$workspaceSlug/attendance'
     | '/_app/$workspaceSlug/billing'
@@ -723,7 +723,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRoute
   ApiAiRoute: typeof ApiAiRoute
-  TrackTokenRoute: typeof TrackTokenRoute
+  TrackSplatRoute: typeof TrackSplatRoute
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
   ApiPublicCronBurnoutDetectionRoute: typeof ApiPublicCronBurnoutDetectionRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
@@ -807,11 +807,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/track/$token': {
-      id: '/track/$token'
-      path: '/track/$token'
-      fullPath: '/track/$token'
-      preLoaderRoute: typeof TrackTokenRouteImport
+    '/track/$': {
+      id: '/track/$'
+      path: '/track/$'
+      fullPath: '/track/$'
+      preLoaderRoute: typeof TrackSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ai': {
@@ -1246,7 +1246,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRoute,
   ApiAiRoute: ApiAiRoute,
-  TrackTokenRoute: TrackTokenRoute,
+  TrackSplatRoute: TrackSplatRoute,
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
   ApiPublicCronBurnoutDetectionRoute: ApiPublicCronBurnoutDetectionRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
