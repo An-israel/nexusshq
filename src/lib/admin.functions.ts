@@ -60,6 +60,20 @@ export const setEmployeeActiveFn = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const removeWorkspaceMemberFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z.object({
+      workspaceId: z.string().uuid(),
+      userId: z.string().uuid(),
+    }).parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    // RPC enforces owner/admin check via SECURITY DEFINER; this is just defense in depth.
+    await removeWorkspaceMember(data.workspaceId, data.userId, context.supabase);
+    return { ok: true };
+  });
+
 export const setEmployeeRoleFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
