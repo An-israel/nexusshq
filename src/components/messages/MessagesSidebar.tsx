@@ -168,9 +168,11 @@ export function MessagesSidebar({
   onOpenCreateChannel,
   onOpenNewDm,
   onOpenSearch,
+  updateMyPresence,
 }: Props) {
   const [statusPopoverOpen, setStatusPopoverOpen] = React.useState(false);
   const [customStatusText, setCustomStatusText] = React.useState("");
+  const [savingStatus, setSavingStatus] = React.useState(false);
 
   const joinedChannels = React.useMemo(
     () => channels.filter((c) => c.is_member && !c.is_archived),
