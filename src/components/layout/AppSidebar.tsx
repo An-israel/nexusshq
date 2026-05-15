@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, Users, Target, Clock, Bell, Settings,
   LogOut, ChevronLeft, ChevronRight, Star, Wallet, FolderUp, Kanban,
   Megaphone, MessageSquare, GitBranch, BookOpen, ClipboardList, RefreshCw,
-  Briefcase, CalendarOff, Flag, BarChart3, UserCircle, CreditCard,
+  Briefcase, CalendarOff, Flag, BarChart3, UserCircle, CreditCard, Building2,
   Heart, FileText, Brain,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
