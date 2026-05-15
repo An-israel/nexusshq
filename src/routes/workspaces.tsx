@@ -20,11 +20,11 @@ type WorkspaceMembership = {
   is_active: boolean;
   workspaces:
     | {
-    id: string;
-    name: string;
-    slug: string;
-    plan: "starter" | "growth" | "business" | "enterprise";
-    is_active: boolean;
+        id: string;
+        name: string;
+        slug: string;
+        plan: "starter" | "growth" | "business" | "enterprise";
+        is_active: boolean;
       }
     | Array<{
         id: string;
@@ -60,6 +60,7 @@ function WorkspacesPage() {
     void (async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) {
+        setLoading(false);
         navigate({ to: "/login" });
         return;
       }
