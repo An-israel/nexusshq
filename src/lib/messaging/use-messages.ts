@@ -1,6 +1,7 @@
 import React from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyMentions, notifyPinChange } from "./notify";
 import type {
   Message,
   MsgProfile,
@@ -414,6 +415,17 @@ export function useMessages(params: {
             prev.map((m) => (m.id === optimisticId ? real : m))
           );
         }
+
+        // Fire-and-forget: in-app notifications for @mentions in channel messages.
+        if (channelId && body.includes("@")) {
+          void notifyMentions({
+            workspaceId,
+            channelId,
+            messageId: insertedMsg.id,
+            senderId: user.id,
+            body,
+          });
+        }
       } catch (err) {
         console.error("sendMessage error:", err);
         toast.error("Failed to send message");
@@ -480,6 +492,7 @@ export function useMessages(params: {
         return;
       }
       toast.success(pinned ? "Message pinned" : "Message unpinned");
+      const target = messages.find((m) => m.id === id);
       setMessages((prev) =>
         prev.map((m) =>
           m.id === id
@@ -487,8 +500,19 @@ export function useMessages(params: {
             : m
         )
       );
+      if (workspaceId && user && target) {
+        void notifyPinChange({
+          workspaceId,
+          channelId: channelId ?? null,
+          conversationId: conversationId ?? null,
+          messageId: id,
+          actorId: user.id,
+          pinned,
+          body: target.body,
+        });
+      }
     },
-    []
+    [workspaceId, channelId, conversationId, messages]
   );
 
   return {

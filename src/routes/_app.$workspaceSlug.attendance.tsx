@@ -32,6 +32,7 @@ interface AttendanceRow {
   clock_out: string | null;
   status: "present" | "late" | "absent" | "half_day";
   total_minutes: number | null;
+  overtime_minutes: number | null;
 }
 
 interface ProfileMini {
@@ -60,11 +61,12 @@ const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string; labe
     dot: "bg-destructive",
     label: "Absent",
   },
+  // Legacy: kept for safe rendering of any historic half_day rows; no longer surfaced in UI.
   half_day: {
-    bg: "bg-primary/15",
-    text: "text-primary",
-    dot: "bg-primary",
-    label: "Half day",
+    bg: "bg-success/15",
+    text: "text-success",
+    dot: "bg-success",
+    label: "Present",
   },
 };
 
@@ -185,17 +187,26 @@ function AttendancePage() {
     const late = rows.filter((r) => r.status === "late").length;
     const absent = rows.filter((r) => r.status === "absent").length;
     const totalMins = rows.reduce((sum, r) => sum + (r.total_minutes ?? 0), 0);
-    return { present, late, absent, totalMins, count: rows.length };
+    const overtimeMins = rows.reduce((sum, r) => sum + (r.overtime_minutes ?? 0), 0);
+    return { present, late, absent, totalMins, overtimeMins, count: rows.length };
   }, [rows]);
+
+  function fmtHours(mins: number): string {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}h ${m}m`;
+  }
 
   function exportCsv() {
     if (filteredRows.length === 0) return;
-    const header = ["Date", "Status", "Clock in", "Clock out", "Total minutes"];
+    const header = ["Date", "Status", "Clock in", "Clock out", "Total hours", "Overtime hours"];
     const lines = [header.join(",")];
     for (const r of filteredRows) {
-      const inT = r.clock_in ? new Date(r.clock_in).toISOString() : "";
-      const outT = r.clock_out ? new Date(r.clock_out).toISOString() : "";
-      lines.push([r.date, r.status, inT, outT, r.total_minutes ?? ""].join(","));
+      const inT = r.clock_in ? new Date(r.clock_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      const outT = r.clock_out ? new Date(r.clock_out).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      const totalH = ((r.total_minutes ?? 0) / 60).toFixed(2);
+      const otH = ((r.overtime_minutes ?? 0) / 60).toFixed(2);
+      lines.push([r.date, r.status, inT, outT, totalH, otH].join(","));
     }
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -306,7 +317,7 @@ function AttendancePage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4 text-success" />}
           label="Present"
@@ -325,7 +336,12 @@ function AttendancePage() {
         <StatCard
           icon={<ClockIcon className="h-4 w-4 text-primary" />}
           label="Total hours"
-          value={`${Math.floor(stats.totalMins / 60)}h`}
+          value={fmtHours(stats.totalMins)}
+        />
+        <StatCard
+          icon={<ClockIcon className="h-4 w-4 text-warning" />}
+          label="Overtime"
+          value={fmtHours(stats.overtimeMins)}
         />
       </div>
 
@@ -398,7 +414,7 @@ function AttendancePage() {
           <h2 className="font-semibold">Daily log</h2>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex gap-1 rounded-lg border border-border bg-background/40 p-1">
-              {(["all", "present", "late", "absent", "half_day"] as const).map((s) => (
+              {(["all", "present", "late", "absent"] as const).map((s) => (
                 <button
                   key={s}
                   type="button"
