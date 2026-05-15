@@ -68,20 +68,25 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
   React.useEffect(() => {
     if (!open || type !== "private" || allMembers.length > 0) return;
     async function loadMembers() {
-      const { data } = await supabase
+      const { data: rows } = await supabase
         .from("workspace_members")
-        .select("user_id, profiles(id, full_name, email, avatar_url, department, job_title)")
+        .select("user_id")
         .eq("workspace_id", workspaceId)
         .eq("is_active", true);
 
-      if (!data) return;
-      const parsed: WorkspaceMember[] = data
-        .filter((row) => row.user_id !== userId)
-        .map((row) => ({
-          user_id: row.user_id,
-          profile: Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as unknown as MsgProfile | null),
-        }));
-      setAllMembers(parsed);
+      if (!rows) return;
+      const userIds = rows.map((r) => r.user_id).filter((id) => id !== userId);
+      if (userIds.length === 0) { setAllMembers([]); return; }
+
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url, department, job_title")
+        .in("id", userIds);
+
+      const profMap = new Map<string, MsgProfile>();
+      for (const p of (profs ?? []) as MsgProfile[]) profMap.set(p.id, p);
+
+      setAllMembers(userIds.map((uid) => ({ user_id: uid, profile: profMap.get(uid) ?? null })));
     }
     loadMembers();
   }, [open, type, workspaceId, userId, allMembers.length]);
