@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { getLastWorkspaceSlug } from "@/lib/last-workspace";
 import {
   Clock, CheckSquare, MessageSquare, BarChart3, Users, Shield,
   ArrowRight, Zap, Monitor, Download, Star, Sparkles, Briefcase,
