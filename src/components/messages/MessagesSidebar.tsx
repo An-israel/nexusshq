@@ -181,6 +181,29 @@ export function MessagesSidebar({
 
   const myPresence = presence[currentUserId];
 
+  React.useEffect(() => {
+    setCustomStatusText(myPresence?.status_text ?? "");
+  }, [myPresence?.status_text, statusPopoverOpen]);
+
+  async function handleSetStatus(status: UserPresence["status"]) {
+    setSavingStatus(true);
+    try {
+      await updateMyPresence(status, myPresence?.status_emoji ?? undefined, myPresence?.status_text ?? undefined);
+    } finally {
+      setSavingStatus(false);
+    }
+  }
+
+  async function handleSaveCustomStatus() {
+    setSavingStatus(true);
+    try {
+      await updateMyPresence(myPresence?.status ?? "active", undefined, customStatusText.trim() || undefined);
+      setStatusPopoverOpen(false);
+    } finally {
+      setSavingStatus(false);
+    }
+  }
+
   const myProfile = React.useMemo<MsgProfile | null>(() => {
     for (const conv of conversations) {
       const me = conv.members.find((m) => m.user_id === currentUserId);
