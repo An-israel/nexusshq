@@ -7,6 +7,7 @@ import {
   createInvitation,
   inviteEmployee,
   redeemInvitation,
+  removeWorkspaceMember,
   resolveFlag,
   setEmployeeActive,
   setEmployeeRole,
