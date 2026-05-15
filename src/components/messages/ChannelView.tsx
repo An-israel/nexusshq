@@ -51,6 +51,8 @@ export function ChannelView({
   presence,
 }: ChannelViewProps) {
   const { onMobileBack } = useMessagingCtx();
+  const { workspace } = useWorkspace();
+  const navigate = useNavigate();
   const [activeThread, setActiveThread] = React.useState<Message | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
   const [newMessagesBanner, setNewMessagesBanner] = React.useState(0);
