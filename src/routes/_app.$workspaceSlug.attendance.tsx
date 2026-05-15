@@ -310,7 +310,7 @@ function AttendancePage() {
       )}
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <StatCard
           icon={<CheckCircle2 className="h-4 w-4 text-success" />}
           label="Present"
@@ -329,7 +329,12 @@ function AttendancePage() {
         <StatCard
           icon={<ClockIcon className="h-4 w-4 text-primary" />}
           label="Total hours"
-          value={`${Math.floor(stats.totalMins / 60)}h`}
+          value={fmtHours(stats.totalMins)}
+        />
+        <StatCard
+          icon={<ClockIcon className="h-4 w-4 text-warning" />}
+          label="Overtime"
+          value={fmtHours(stats.overtimeMins)}
         />
       </div>
 
