@@ -180,17 +180,26 @@ function AttendancePage() {
     const late = rows.filter((r) => r.status === "late").length;
     const absent = rows.filter((r) => r.status === "absent").length;
     const totalMins = rows.reduce((sum, r) => sum + (r.total_minutes ?? 0), 0);
-    return { present, late, absent, totalMins, count: rows.length };
+    const overtimeMins = rows.reduce((sum, r) => sum + (r.overtime_minutes ?? 0), 0);
+    return { present, late, absent, totalMins, overtimeMins, count: rows.length };
   }, [rows]);
+
+  function fmtHours(mins: number): string {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${h}h ${m}m`;
+  }
 
   function exportCsv() {
     if (filteredRows.length === 0) return;
-    const header = ["Date", "Status", "Clock in", "Clock out", "Total minutes"];
+    const header = ["Date", "Status", "Clock in", "Clock out", "Total hours", "Overtime hours"];
     const lines = [header.join(",")];
     for (const r of filteredRows) {
-      const inT = r.clock_in ? new Date(r.clock_in).toISOString() : "";
-      const outT = r.clock_out ? new Date(r.clock_out).toISOString() : "";
-      lines.push([r.date, r.status, inT, outT, r.total_minutes ?? ""].join(","));
+      const inT = r.clock_in ? new Date(r.clock_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      const outT = r.clock_out ? new Date(r.clock_out).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      const totalH = ((r.total_minutes ?? 0) / 60).toFixed(2);
+      const otH = ((r.overtime_minutes ?? 0) / 60).toFixed(2);
+      lines.push([r.date, r.status, inT, outT, totalH, otH].join(","));
     }
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
