@@ -61,6 +61,13 @@ const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string; labe
     dot: "bg-destructive",
     label: "Absent",
   },
+  // Legacy: kept for safe rendering of any historic half_day rows; no longer surfaced in UI.
+  half_day: {
+    bg: "bg-success/15",
+    text: "text-success",
+    dot: "bg-success",
+    label: "Present",
+  },
 };
 
 function fmtTime(iso: string | null): string {
