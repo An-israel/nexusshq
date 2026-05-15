@@ -276,7 +276,10 @@ function MemberCard({
   onActivationChanged: () => void;
 }) {
   const setActive = useServerFn(setEmployeeActiveFn);
+  const removeMember = useServerFn(removeWorkspaceMemberFn);
+  const { workspace } = useWorkspace();
   const [toggling, setToggling] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   async function toggleActive() {
     setToggling(true);
@@ -288,6 +291,21 @@ function MemberCard({
       toast.error(err instanceof Error ? err.message : "Failed to update account");
     } finally {
       setToggling(false);
+    }
+  }
+
+  async function removeFromWorkspace() {
+    const name = m.profile.full_name ?? m.profile.email ?? "this employee";
+    if (!confirm(`Remove ${name} from this workspace? They will lose access immediately.`)) return;
+    setRemoving(true);
+    try {
+      await removeMember({ data: { workspaceId: workspace.id, userId: m.profile.id } });
+      toast.success(`${name} removed from workspace`);
+      onActivationChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to remove employee");
+    } finally {
+      setRemoving(false);
     }
   }
 
