@@ -28,7 +28,7 @@ import { toast } from "sonner";
 import { PRIORITY_BADGE, STATUS_BADGE, todayISO, timeAgo } from "@/lib/nexus";
 import { AlertTriangle, ArrowLeft, Trash2, Save } from "lucide-react";
 
-export const Route = createFileRoute("/_app/$workspaceSlug/tasks/$taskId")({
+export const Route = createFileRoute("/_app/$workspaceSlug/tasks_/$taskId")({
   component: TaskDetailPage,
 });
 
