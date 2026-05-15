@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Hash,
   Lock,
@@ -22,6 +23,7 @@ import type {
   MsgProfile,
   UserPresence,
 } from "@/lib/messaging/types";
+import type { usePresence } from "@/lib/messaging/use-presence";
 
 function hashColor(id: string): string {
   let hash = 0;
