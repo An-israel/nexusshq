@@ -1,5 +1,6 @@
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { getLastWorkspaceSlug } from "@/lib/last-workspace";
 import {
   Clock, CheckSquare, MessageSquare, BarChart3, Users, Shield,
   ArrowRight, Zap, Monitor, Download, Star, Sparkles, Briefcase,
@@ -33,18 +34,24 @@ export const Route = createFileRoute("/")({
         .from("workspace_members")
         .select("workspaces(slug)")
         .eq("user_id", userId)
-        .eq("is_active", true)
-        .limit(2);
+        .eq("is_active", true);
 
-      if ((memberships ?? []).length > 1) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const slugs = (memberships ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
+
+      if (slugs.length > 1) {
+        // Prefer the user's last selected workspace if it's still valid.
+        const last = getLastWorkspaceSlug();
+        if (last && slugs.includes(last)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          throw redirect({ to: `/${last}/dashboard` as any });
+        }
         throw redirect({ to: "/workspaces" });
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const slug = (memberships?.[0] as any)?.workspaces?.slug;
-      if (slug) {
+      if (slugs.length === 1) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        throw redirect({ to: `/${slug}/dashboard` as any });
+        throw redirect({ to: `/${slugs[0]}/dashboard` as any });
       }
       // No workspace yet — let them create one
       throw redirect({ to: "/create-workspace" });

@@ -117,6 +117,18 @@ export async function setEmployeeActive(
   if (error) throw new Error(error.message);
 }
 
+export async function removeWorkspaceMember(
+  workspaceId: string,
+  userId: string,
+  callerClient: DbClient,
+) {
+  const { error } = await callerClient.rpc("remove_workspace_member", {
+    _workspace_id: workspaceId,
+    _user_id: userId,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export async function setEmployeeRole(
   userId: string,
   role: AppRole,

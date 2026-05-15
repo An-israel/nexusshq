@@ -9,6 +9,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { cn } from "@/lib/utils";
+import { setLastWorkspaceSlug } from "@/lib/last-workspace";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/$workspaceSlug")({
@@ -195,6 +196,10 @@ function MobileClockDisplay() {
 function WorkspaceShell() {
   const { workspaceSlug } = Route.useParams();
   const { workspace, loading, setWorkspaceData } = useWorkspace();
+
+  React.useEffect(() => {
+    if (workspaceSlug) setLastWorkspaceSlug(workspaceSlug);
+  }, [workspaceSlug]);
   const { user, role, profile } = useAuth();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);

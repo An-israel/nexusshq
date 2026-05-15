@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { getLastWorkspaceSlug } from "@/lib/last-workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -150,14 +151,20 @@ function SignupPage() {
         .from("workspace_members")
         .select("workspace_id, workspaces(slug)")
         .eq("user_id", session.user.id)
-        .eq("is_active", true)
-        .limit(2);
-      if ((data ?? []).length > 1) {
+        .eq("is_active", true);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const slugs = (data ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
+      if (slugs.length > 1) {
+        const last = getLastWorkspaceSlug();
+        if (last && slugs.includes(last)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          navigate({ to: `/${last}/dashboard` as any });
+          return;
+        }
         navigate({ to: "/workspaces" });
         return;
       }
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const slug = (data?.[0] as any)?.workspaces?.slug;
+      const slug = slugs[0];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       navigate({ to: slug ? `/${slug}/dashboard` as any : "/create-workspace" });
     })();

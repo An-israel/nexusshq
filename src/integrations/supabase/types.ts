@@ -2747,6 +2747,10 @@ export type Database = {
           workspace_id: string
         }[]
       }
+      remove_workspace_member: {
+        Args: { _user_id: string; _workspace_id: string }
+        Returns: undefined
+      }
       super_admin_create_workspace: {
         Args: {
           _name: string
