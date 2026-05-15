@@ -58,6 +58,16 @@ export async function notifyMentions({
     }
     if (matched.length === 0) return;
 
+    // Filter out recipients who disabled mention notifications
+    const { data: prefs } = await supabase
+      .from("notification_preferences")
+      .select("user_id, mentions_enabled")
+      .eq("workspace_id", workspaceId)
+      .in("user_id", matched.map((m) => m.id));
+    const disabled = new Set((prefs ?? []).filter((p) => !p.mentions_enabled).map((p) => p.user_id));
+    const finalMatched = matched.filter((m) => !disabled.has(m.id));
+    if (finalMatched.length === 0) return;
+
     const { data: senderProfile } = await supabase
       .from("profiles")
       .select("full_name, email")
@@ -75,7 +85,7 @@ export async function notifyMentions({
     const preview = body.length > 140 ? body.slice(0, 140) + "…" : body;
 
     await supabase.from("notifications").insert(
-      matched.map((m) => ({
+      finalMatched.map((m) => ({
         user_id: m.id,
         workspace_id: workspaceId,
         type: "mention" as const,
@@ -133,6 +143,16 @@ export async function notifyPinChange({
       recipients = (members ?? []).map((m) => m.user_id).filter((id) => id !== actorId);
       location = "your DM";
     }
+    if (recipients.length === 0) return;
+
+    // Filter out recipients who disabled pin notifications
+    const { data: prefs } = await supabase
+      .from("notification_preferences")
+      .select("user_id, pins_enabled")
+      .eq("workspace_id", workspaceId)
+      .in("user_id", recipients);
+    const disabled = new Set((prefs ?? []).filter((p) => !p.pins_enabled).map((p) => p.user_id));
+    recipients = recipients.filter((id) => !disabled.has(id));
     if (recipients.length === 0) return;
 
     const { data: actorProfile } = await supabase
