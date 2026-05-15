@@ -18,14 +18,36 @@ type WorkspaceMembership = {
   id: string;
   role: "owner" | "admin" | "manager" | "employee";
   is_active: boolean;
-  workspaces: {
+  workspaces:
+    | {
     id: string;
     name: string;
     slug: string;
     plan: "starter" | "growth" | "business" | "enterprise";
     is_active: boolean;
-  } | null;
+      }
+    | Array<{
+        id: string;
+        name: string;
+        slug: string;
+        plan: "starter" | "growth" | "business" | "enterprise";
+        is_active: boolean;
+      }>
+    | null;
 };
+
+function firstWorkspace(
+  value: WorkspaceMembership["workspaces"],
+): {
+  id: string;
+  name: string;
+  slug: string;
+  plan: "starter" | "growth" | "business" | "enterprise";
+  is_active: boolean;
+} | null {
+  if (!value) return null;
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
 
 function WorkspacesPage() {
   const navigate = useNavigate();
@@ -110,13 +132,18 @@ function WorkspacesPage() {
 
             <div className="grid gap-4 sm:grid-cols-2">
               {memberships
-                .filter((membership) => membership.workspaces)
+                .map((membership) => ({
+                  membership,
+                  workspace: firstWorkspace(membership.workspaces),
+                }))
+                .filter((entry) => entry.workspace)
                 .map((membership) => {
-                  const workspace = membership.workspaces!;
+                  const workspace = membership.workspace!;
+                  const entry = membership.membership;
 
                   return (
                     <Link
-                      key={membership.id}
+                      key={entry.id}
                       // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       to={`/${workspace.slug}/dashboard` as any}
                       className="group block"
@@ -129,7 +156,7 @@ function WorkspacesPage() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <h2 className="text-lg font-semibold">{workspace.name}</h2>
-                              <Badge variant="secondary" className="capitalize">{membership.role}</Badge>
+                              <Badge variant="secondary" className="capitalize">{entry.role}</Badge>
                             </div>
                             <p className="text-sm text-muted-foreground">nexus.skryveai.com/{workspace.slug}</p>
                           </div>
