@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "@tanstack/react-router";
 import { useMessagingCtx } from "@/routes/_app.$workspaceSlug.messages";
+import { useWorkspace } from "@/lib/workspace-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
