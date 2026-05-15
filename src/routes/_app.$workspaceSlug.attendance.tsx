@@ -188,7 +188,24 @@ function AttendancePage() {
     const absent = rows.filter((r) => r.status === "absent").length;
     const totalMins = rows.reduce((sum, r) => sum + (r.total_minutes ?? 0), 0);
     const overtimeMins = rows.reduce((sum, r) => sum + (r.overtime_minutes ?? 0), 0);
-    return { present, late, absent, totalMins, overtimeMins, count: rows.length };
+
+    // Weekly overtime: current ISO week (Mon–Sun) intersected with rows
+    const now = new Date();
+    const day = (now.getDay() + 6) % 7; // 0=Mon
+    const weekStart = new Date(now); weekStart.setDate(now.getDate() - day); weekStart.setHours(0,0,0,0);
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+    const toIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    const weekStartISO = toIso(weekStart);
+    const monthStartISO = toIso(monthStart);
+    const today = todayISO();
+    const weeklyOT = rows
+      .filter((r) => r.date >= weekStartISO && r.date <= today)
+      .reduce((s, r) => s + (r.overtime_minutes ?? 0), 0);
+    const monthlyOT = rows
+      .filter((r) => r.date >= monthStartISO && r.date <= today)
+      .reduce((s, r) => s + (r.overtime_minutes ?? 0), 0);
+
+    return { present, late, absent, totalMins, overtimeMins, weeklyOT, monthlyOT, count: rows.length };
   }, [rows]);
 
   function fmtHours(mins: number): string {
@@ -199,14 +216,25 @@ function AttendancePage() {
 
   function exportCsv() {
     if (filteredRows.length === 0) return;
-    const header = ["Date", "Status", "Clock in", "Clock out", "Total hours", "Overtime hours"];
+    const header = [
+      "Date",
+      "Status",
+      "Clock in (local)",
+      "Clock out (local)",
+      "Clock in (ISO)",
+      "Clock out (ISO)",
+      "Total hours",
+      "Overtime hours",
+    ];
     const lines = [header.join(",")];
     for (const r of filteredRows) {
       const inT = r.clock_in ? new Date(r.clock_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
       const outT = r.clock_out ? new Date(r.clock_out).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      const inIso = r.clock_in ?? "";
+      const outIso = r.clock_out ?? "";
       const totalH = ((r.total_minutes ?? 0) / 60).toFixed(2);
       const otH = ((r.overtime_minutes ?? 0) / 60).toFixed(2);
-      lines.push([r.date, r.status, inT, outT, totalH, otH].join(","));
+      lines.push([r.date, r.status, inT, outT, inIso, outIso, totalH, otH].join(","));
     }
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
