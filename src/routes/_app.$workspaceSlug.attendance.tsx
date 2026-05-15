@@ -368,8 +368,22 @@ function AttendancePage() {
         />
         <StatCard
           icon={<ClockIcon className="h-4 w-4 text-warning" />}
-          label="Overtime"
+          label="Overtime (range)"
           value={fmtHours(stats.overtimeMins)}
+        />
+      </div>
+
+      {/* Overtime summary cards */}
+      <div className="grid grid-cols-2 gap-3">
+        <StatCard
+          icon={<ClockIcon className="h-4 w-4 text-warning" />}
+          label="Overtime this week"
+          value={fmtHours(stats.weeklyOT)}
+        />
+        <StatCard
+          icon={<ClockIcon className="h-4 w-4 text-warning" />}
+          label="Overtime this month"
+          value={fmtHours(stats.monthlyOT)}
         />
       </div>
 
