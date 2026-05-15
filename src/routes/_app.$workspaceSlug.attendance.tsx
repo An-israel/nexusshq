@@ -61,12 +61,6 @@ const STATUS_STYLE: Record<string, { bg: string; text: string; dot: string; labe
     dot: "bg-destructive",
     label: "Absent",
   },
-  half_day: {
-    bg: "bg-primary/15",
-    text: "text-primary",
-    dot: "bg-primary",
-    label: "Half day",
-  },
 };
 
 function fmtTime(iso: string | null): string {
