@@ -5,7 +5,9 @@ import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock as ClockIcon, Target } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
+import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock as ClockIcon, Target, Settings as SettingsIcon } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -64,6 +66,40 @@ function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [tab, setTab] = useState("all");
+  const [showSettings, setShowSettings] = useState(false);
+  const [prefs, setPrefs] = useState({ mentions_enabled: true, pins_enabled: true });
+  const [prefsLoading, setPrefsLoading] = useState(false);
+
+  const loadPrefs = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("notification_preferences")
+      .select("mentions_enabled, pins_enabled")
+      .eq("user_id", user.id)
+      .eq("workspace_id", workspace.id)
+      .maybeSingle();
+    if (data) setPrefs({ mentions_enabled: data.mentions_enabled, pins_enabled: data.pins_enabled });
+  };
+
+  const updatePref = async (key: "mentions_enabled" | "pins_enabled", value: boolean) => {
+    if (!user) return;
+    const next = { ...prefs, [key]: value };
+    setPrefs(next);
+    setPrefsLoading(true);
+    const { error } = await supabase
+      .from("notification_preferences")
+      .upsert(
+        { user_id: user.id, workspace_id: workspace.id, ...next, updated_at: new Date().toISOString() },
+        { onConflict: "user_id,workspace_id" },
+      );
+    setPrefsLoading(false);
+    if (error) {
+      toast.error("Failed to save preference");
+      setPrefs(prefs);
+    } else {
+      toast.success("Preference saved");
+    }
+  };
 
   const load = async () => {
     if (!user) return;
