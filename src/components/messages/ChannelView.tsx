@@ -163,8 +163,11 @@ export function ChannelView({
       .eq("user_id", currentUserId);
     if (error) {
       toast.error("Failed to leave channel");
-    } else {
-      toast.success(`Left #${channel.name}`);
+      return;
+    }
+    toast.success(`Left #${channel.name}`);
+    if (workspace?.slug) {
+      navigate({ to: `/${workspace.slug}/messages` as string });
     }
   }
 
