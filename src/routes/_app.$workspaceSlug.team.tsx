@@ -56,11 +56,17 @@ function TeamPage() {
       setLoading(true);
       const today = todayISO();
 
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("full_name");
-      const profiles = (profilesData as Profile[]) ?? [];
+      // Scope to current workspace members only
+      const { data: memberRows } = await supabase
+        .from("workspace_members")
+        .select("user_id, profiles:user_id(*)")
+        .eq("workspace_id", workspace.id)
+        .eq("is_active", true);
+      const profiles = ((memberRows ?? [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((r: any) => r.profiles)
+        .filter(Boolean) as Profile[])
+        .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""));
 
       const userIds = profiles.map((p) => p.id);
       const [tasksRes, attRes, flagsRes, overdueRes, completedTodayRes, rolesRes] = await Promise.all([
