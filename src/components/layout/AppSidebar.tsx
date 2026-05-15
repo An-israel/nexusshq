@@ -147,6 +147,16 @@ export function AppSidebar({
 
       {/* User card */}
       <div className="border-t border-border p-2">
+        {!collapsed && (
+          <Button
+            variant="outline"
+            className="mb-2 w-full justify-start"
+            onClick={() => navigate({ to: "/workspaces" })}
+          >
+            <Building2 className="h-4 w-4" />
+            Switch workspace
+          </Button>
+        )}
         <div
           className={cn(
             "flex items-center gap-2 rounded-lg p-2",
