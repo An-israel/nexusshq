@@ -9,6 +9,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { cn } from "@/lib/utils";
+import { setLastWorkspaceSlug } from "@/lib/last-workspace";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/$workspaceSlug")({
