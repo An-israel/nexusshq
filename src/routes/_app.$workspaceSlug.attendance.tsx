@@ -407,7 +407,7 @@ function AttendancePage() {
           <h2 className="font-semibold">Daily log</h2>
           <div className="flex items-center gap-2 flex-wrap">
             <div className="flex gap-1 rounded-lg border border-border bg-background/40 p-1">
-              {(["all", "present", "late", "absent", "half_day"] as const).map((s) => (
+              {(["all", "present", "late", "absent"] as const).map((s) => (
                 <button
                   key={s}
                   type="button"
