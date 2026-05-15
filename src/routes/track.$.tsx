@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Circle, Clock, ExternalLink } from "lucide-react";
 
-export const Route = createFileRoute("/track/$token")({
+export const Route = createFileRoute("/track/$")({
   component: PublicTracker,
 });
 
@@ -38,7 +38,8 @@ const STATUS_LABEL: Record<string, { text: string; cls: string }> = {
 };
 
 function PublicTracker() {
-  const { token } = Route.useParams();
+  const { _splat } = Route.useParams();
+  const token = _splat ?? "";
   const [project, setProject] = React.useState<ClientProject | null>(null);
   const [tasks, setTasks] = React.useState<ProjectTask[]>([]);
   const [loading, setLoading] = React.useState(true);
