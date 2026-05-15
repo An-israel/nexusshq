@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { todayISO, initialsOf } from "@/lib/nexus";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 
-export const Route = createFileRoute("/_app/$workspaceSlug/tasks/assign")({
+export const Route = createFileRoute("/_app/$workspaceSlug/tasks_/assign")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: AssignTaskPage,
 });
