@@ -28,17 +28,19 @@ async function resolveWorkspace(userId: string): Promise<string | null> {
     .from("workspace_members")
     .select("workspace_id, workspaces(slug)")
     .eq("user_id", userId)
-    .eq("is_active", true)
-    .limit(2);
+    .eq("is_active", true);
 
-  if ((memberships ?? []).length > 1) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const slugs = (memberships ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
+
+  if (slugs.length > 1) {
+    // Prefer the user's last selected workspace if still valid.
+    const last = getLastWorkspaceSlug();
+    if (last && slugs.includes(last)) return last;
     return "__multi__";
   }
 
-  if (memberships?.[0]) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (memberships[0] as any).workspaces?.slug ?? null;
-  }
+  if (slugs.length === 1) return slugs[0];
 
   // Fall back: check legacy user_roles — existing team members before migration
   const { data: legacyRole } = await supabase
@@ -48,7 +50,6 @@ async function resolveWorkspace(userId: string): Promise<string | null> {
     .maybeSingle();
   if (!legacyRole) return null;
 
-  // Has a legacy role — try to find any active workspace, default to "skryve"
   const { data: ws } = await supabase
     .from("workspaces")
     .select("slug")
