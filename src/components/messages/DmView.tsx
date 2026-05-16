@@ -62,12 +62,12 @@ function Avatar({ profile, size = 8 }: { profile: MsgProfile | undefined; size?:
 
 function PresenceDot({ status }: { status: UserPresence["status"] | undefined }) {
   const color =
-    status === "active" ? "bg-green-500" :
-    status === "away" ? "bg-yellow-500" :
-    status === "dnd" ? "bg-red-500" :
-    "bg-gray-500";
+    status === "active" ? "bg-success" :
+    status === "away" ? "bg-warning" :
+    status === "dnd" ? "bg-destructive" :
+    "bg-muted-foreground/60";
   return (
-    <span className={cn("inline-block h-2.5 w-2.5 rounded-full ring-2 ring-[#0F0F0F]", color)} />
+    <span className={cn("inline-block h-2.5 w-2.5 rounded-full ring-2 ring-background", color)} />
   );
 }
 
