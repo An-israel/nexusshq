@@ -1,11 +1,12 @@
 import * as React from "react";
-import { createFileRoute, useNavigate, redirect, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Plus, Zap } from "lucide-react";
+import { Plus } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/create-workspace")({
   beforeLoad: async () => {
@@ -103,12 +104,7 @@ function CreateWorkspacePage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="border-b border-border/50 bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
-              <Zap className="h-4 w-4" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">Nexus HQ</span>
-          </Link>
+          <BrandMark size="md" />
         </div>
       </header>
 
