@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, ChevronRight, Plus } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/workspaces")({
   beforeLoad: async () => {
@@ -91,15 +92,7 @@ function WorkspacesPage() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50 bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-              <Building2 className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-base font-semibold">Your workspaces</p>
-              <p className="text-xs text-muted-foreground">Open any team or create a new one.</p>
-            </div>
-          </Link>
+          <BrandMark size="md" />
 
           <Button onClick={() => navigate({ to: "/create-workspace" })}>
             <Plus className="h-4 w-4" />

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 import { getLastWorkspaceSlug } from "@/lib/last-workspace";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -100,10 +101,8 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <span className="text-xl font-bold">N</span>
-          </div>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <BrandMark size="lg" showWordmark={false} className="mb-4" />
           <h1 className="text-2xl font-bold tracking-tight">Nexus HQ</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to your workspace</p>
         </div>

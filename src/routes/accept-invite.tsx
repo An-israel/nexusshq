@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { BrandMark } from "@/components/BrandMark";
 
 interface InviteSearch {
   token?: string;
@@ -136,9 +137,10 @@ function AcceptInvitePage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
+        <div className="mb-8 flex flex-col items-center text-center">
+          <BrandMark size="lg" className="mb-5" />
           <h1 className="text-2xl font-bold tracking-tight">
             {token ? "Join workspace" : "Set your password"}
           </h1>
