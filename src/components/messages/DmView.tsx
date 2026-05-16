@@ -65,7 +65,7 @@ function PresenceDot({ status }: { status: UserPresence["status"] | undefined })
     status === "active" ? "bg-success" :
     status === "away" ? "bg-warning" :
     status === "dnd" ? "bg-destructive" :
-    "bg-muted-foreground/60";
+    "bg-muted-foreground";
   return (
     <span className={cn("inline-block h-2.5 w-2.5 rounded-full ring-2 ring-background", color)} />
   );
