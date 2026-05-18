@@ -154,7 +154,7 @@ export function SearchModal({
 
       if (cancelled) return;
       setResults(
-        (msgs ?? []).map((m) => ({ ...m, profiles: profileMap[m.sender_id] ?? null })) as SearchResult[]
+        (msgs ?? []).map((m) => ({ ...m, profiles: m.sender_id ? profileMap[m.sender_id] ?? null : null })) as SearchResult[]
       );
       setLoading(false);
     })();
