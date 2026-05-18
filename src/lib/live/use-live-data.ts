@@ -406,6 +406,28 @@ export function useLiveData(workspaceId: string | null): {
       }
     }
 
+    // Collect user_ids from attendance + task updates not yet in profileMap,
+    // then fetch their profiles directly (covers legacy users not in workspace_members).
+    {
+      const missingIds = new Set<string>();
+      attendanceResult.data?.forEach((r) => {
+        if (!profileMapRef.current.has(r.user_id)) missingIds.add(r.user_id);
+      });
+      updatesResult.data?.forEach((r) => {
+        if (r.updated_by && !profileMapRef.current.has(r.updated_by)) missingIds.add(r.updated_by);
+      });
+      deliverablesResult.data?.forEach((r) => {
+        if (!profileMapRef.current.has(r.user_id)) missingIds.add(r.user_id);
+      });
+      if (missingIds.size > 0) {
+        const { data: extraProfiles } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, department, job_title, avatar_url")
+          .in("id", Array.from(missingIds));
+        extraProfiles?.forEach((p) => profileMapRef.current.set(p.id, p as RawProfile));
+      }
+    }
+
     presenceMapRef.current.clear();
     if (presenceResult.data) {
       for (const row of presenceResult.data) {
