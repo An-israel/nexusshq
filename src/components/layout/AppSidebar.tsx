@@ -5,7 +5,7 @@ import {
   LogOut, ChevronLeft, ChevronRight, Star, Wallet, FolderUp, Kanban,
   Megaphone, MessageSquare, GitBranch, BookOpen, ClipboardList, RefreshCw,
   Briefcase, Sparkles, CalendarOff, Flag, BarChart3, UserCircle, CreditCard,
-  Heart, FileText, Brain, Zap,
+  Heart, FileText, Brain, Zap, Radio,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
@@ -44,6 +44,7 @@ const NAV: NavItem[] = [
   { slug: "team-board",      label: "Task Board",      icon: Kanban,          roles: ["admin", "manager"], flagKey: "team-board" },
   { slug: "recurring-tasks", label: "Recurring Tasks", icon: RefreshCw,       roles: ["admin", "manager"], flagKey: "recurring-tasks" },
   { slug: "client-projects", label: "Client Projects", icon: Briefcase,       roles: ["admin", "manager"], flagKey: "client-projects" },
+  { slug: "live",            label: "Live",            icon: Radio,           roles: ["admin", "manager"] },
   { slug: "reports",         label: "Reports",         icon: BarChart3,       roles: ["admin", "manager"], flagKey: "reports" },
   { slug: "ai-tasks",        label: "AI Tasks",        icon: Sparkles,        roles: ["admin", "manager"], flagKey: "ai-tasks" },
   { slug: "burnout",         label: "Wellbeing",       icon: Brain,           roles: ["admin", "manager"] },

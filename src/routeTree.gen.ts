@@ -35,6 +35,7 @@ import { Route as AppWorkspaceSlugOnboardingRouteImport } from './routes/_app.$w
 import { Route as AppWorkspaceSlugOkrsRouteImport } from './routes/_app.$workspaceSlug.okrs'
 import { Route as AppWorkspaceSlugNotificationsRouteImport } from './routes/_app.$workspaceSlug.notifications'
 import { Route as AppWorkspaceSlugMessagesRouteImport } from './routes/_app.$workspaceSlug.messages'
+import { Route as AppWorkspaceSlugLiveRouteImport } from './routes/_app.$workspaceSlug.live'
 import { Route as AppWorkspaceSlugLeaveRouteImport } from './routes/_app.$workspaceSlug.leave'
 import { Route as AppWorkspaceSlugKudosRouteImport } from './routes/_app.$workspaceSlug.kudos'
 import { Route as AppWorkspaceSlugKpisRouteImport } from './routes/_app.$workspaceSlug.kpis'
@@ -203,6 +204,11 @@ const AppWorkspaceSlugMessagesRoute =
     path: '/messages',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
+const AppWorkspaceSlugLiveRoute = AppWorkspaceSlugLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => AppWorkspaceSlugRoute,
+} as any)
 const AppWorkspaceSlugLeaveRoute = AppWorkspaceSlugLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -394,6 +400,7 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
+  '/$workspaceSlug/live': typeof AppWorkspaceSlugLiveRoute
   '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
@@ -450,6 +457,7 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
+  '/$workspaceSlug/live': typeof AppWorkspaceSlugLiveRoute
   '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
@@ -508,6 +516,7 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/_app/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/_app/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
+  '/_app/$workspaceSlug/live': typeof AppWorkspaceSlugLiveRoute
   '/_app/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/_app/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/_app/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
@@ -566,6 +575,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/kpis'
     | '/$workspaceSlug/kudos'
     | '/$workspaceSlug/leave'
+    | '/$workspaceSlug/live'
     | '/$workspaceSlug/messages'
     | '/$workspaceSlug/notifications'
     | '/$workspaceSlug/okrs'
@@ -622,6 +632,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/kpis'
     | '/$workspaceSlug/kudos'
     | '/$workspaceSlug/leave'
+    | '/$workspaceSlug/live'
     | '/$workspaceSlug/messages'
     | '/$workspaceSlug/notifications'
     | '/$workspaceSlug/okrs'
@@ -679,6 +690,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/kpis'
     | '/_app/$workspaceSlug/kudos'
     | '/_app/$workspaceSlug/leave'
+    | '/_app/$workspaceSlug/live'
     | '/_app/$workspaceSlug/messages'
     | '/_app/$workspaceSlug/notifications'
     | '/_app/$workspaceSlug/okrs'
@@ -916,6 +928,13 @@ declare module '@tanstack/react-router' {
       path: '/messages'
       fullPath: '/$workspaceSlug/messages'
       preLoaderRoute: typeof AppWorkspaceSlugMessagesRouteImport
+      parentRoute: typeof AppWorkspaceSlugRoute
+    }
+    '/_app/$workspaceSlug/live': {
+      id: '/_app/$workspaceSlug/live'
+      path: '/live'
+      fullPath: '/$workspaceSlug/live'
+      preLoaderRoute: typeof AppWorkspaceSlugLiveRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
     '/_app/$workspaceSlug/leave': {
@@ -1200,6 +1219,7 @@ interface AppWorkspaceSlugRouteChildren {
   AppWorkspaceSlugKpisRoute: typeof AppWorkspaceSlugKpisRoute
   AppWorkspaceSlugKudosRoute: typeof AppWorkspaceSlugKudosRoute
   AppWorkspaceSlugLeaveRoute: typeof AppWorkspaceSlugLeaveRoute
+  AppWorkspaceSlugLiveRoute: typeof AppWorkspaceSlugLiveRoute
   AppWorkspaceSlugMessagesRoute: typeof AppWorkspaceSlugMessagesRouteWithChildren
   AppWorkspaceSlugNotificationsRoute: typeof AppWorkspaceSlugNotificationsRoute
   AppWorkspaceSlugOkrsRoute: typeof AppWorkspaceSlugOkrsRoute
@@ -1231,6 +1251,7 @@ const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
   AppWorkspaceSlugKpisRoute: AppWorkspaceSlugKpisRoute,
   AppWorkspaceSlugKudosRoute: AppWorkspaceSlugKudosRoute,
   AppWorkspaceSlugLeaveRoute: AppWorkspaceSlugLeaveRoute,
+  AppWorkspaceSlugLiveRoute: AppWorkspaceSlugLiveRoute,
   AppWorkspaceSlugMessagesRoute: AppWorkspaceSlugMessagesRouteWithChildren,
   AppWorkspaceSlugNotificationsRoute: AppWorkspaceSlugNotificationsRoute,
   AppWorkspaceSlugOkrsRoute: AppWorkspaceSlugOkrsRoute,
