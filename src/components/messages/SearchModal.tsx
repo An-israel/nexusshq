@@ -138,7 +138,9 @@ export function SearchModal({
         return;
       }
 
-      const senderIds = Array.from(new Set((msgs ?? []).map((m) => m.sender_id)));
+      const senderIds = Array.from(
+        new Set((msgs ?? []).map((m) => m.sender_id).filter((id): id is string => !!id))
+      );
       let profileMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
       if (senderIds.length) {
         const { data: profs } = await supabase
@@ -152,7 +154,7 @@ export function SearchModal({
 
       if (cancelled) return;
       setResults(
-        (msgs ?? []).map((m) => ({ ...m, profiles: profileMap[m.sender_id] ?? null })) as SearchResult[]
+        (msgs ?? []).map((m) => ({ ...m, profiles: m.sender_id ? profileMap[m.sender_id] ?? null : null })) as SearchResult[]
       );
       setLoading(false);
     })();
