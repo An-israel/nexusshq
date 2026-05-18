@@ -8,6 +8,7 @@ import { AppSidebar } from "@/components/layout/AppSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { GlobalCommandPalette, openCommandPalette } from "@/components/layout/GlobalCommandPalette";
 import { cn } from "@/lib/utils";
 import { setLastWorkspaceSlug } from "@/lib/last-workspace";
 import { toast } from "sonner";
@@ -362,8 +363,17 @@ function WorkspaceShell() {
               </span>
             </div>
 
-            {/* Right: notification bell + profile avatar */}
+            {/* Right: search + notification bell + profile avatar */}
             <div className="flex items-center gap-2">
+              <button
+                onClick={openCommandPalette}
+                className="flex items-center gap-1.5 rounded-md border border-border bg-muted/40 px-2.5 py-1.5 text-xs text-muted-foreground hover:bg-muted transition-colors"
+                aria-label="Search (Ctrl+K)"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <span className="hidden md:inline">Search</span>
+                <kbd className="hidden md:inline text-[10px] font-mono opacity-60">⌘K</kbd>
+              </button>
               <NotificationBell />
               {/* Profile avatar — links to profile page, mobile only */}
               <a
@@ -397,6 +407,7 @@ function WorkspaceShell() {
       </div>
 
       <MobileBottomNav workspaceSlug={workspaceSlug} />
+      <GlobalCommandPalette workspaceSlug={workspaceSlug} />
     </div>
   );
 }
