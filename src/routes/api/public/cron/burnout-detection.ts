@@ -44,7 +44,10 @@ export const Route = createFileRoute("/api/public/cron/burnout-detection")({
           let lateDays = 0;
 
           for (const a of rows) {
-            if (!a.clock_out) { missedClockOuts++; continue; }
+            if (!a.clock_out) {
+              missedClockOuts++;
+              continue;
+            }
             const mins = a.total_minutes ?? 0;
             if (mins > WORK_MINUTES) overtimeMinutes += mins - WORK_MINUTES;
             // Late = clock-in after 09:30 WAT (= 08:30 UTC)

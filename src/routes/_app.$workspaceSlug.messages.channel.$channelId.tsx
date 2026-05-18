@@ -7,9 +7,7 @@ import { useMessagingCtx } from "@/routes/_app.$workspaceSlug.messages";
 import { ChannelView } from "@/components/messages/ChannelView";
 import type { ChannelWithMeta } from "@/lib/messaging/types";
 
-export const Route = createFileRoute(
-  "/_app/$workspaceSlug/messages/channel/$channelId"
-)({
+export const Route = createFileRoute("/_app/$workspaceSlug/messages/channel/$channelId")({
   component: ChannelViewPage,
 });
 

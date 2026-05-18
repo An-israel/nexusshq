@@ -40,9 +40,7 @@ function buildDefaults(): FlagsMap {
 
 let instanceCounter = 0;
 
-export function useFeatureFlags(
-  workspaceId: string | null,
-): { flags: FlagsMap; loading: boolean } {
+export function useFeatureFlags(workspaceId: string | null): { flags: FlagsMap; loading: boolean } {
   const [flags, setFlags] = React.useState<FlagsMap>(buildDefaults);
   const [loading, setLoading] = React.useState<boolean>(workspaceId !== null);
   const channelName = React.useRef(`feature_flags_${++instanceCounter}`);
@@ -109,17 +107,15 @@ export async function setFeatureFlag(
   workspaceId: string,
   userId?: string,
 ): Promise<void> {
-  const { error } = await supabase
-    .from("feature_flags")
-    .upsert(
-      {
-        key,
-        enabled,
-        workspace_id: workspaceId,
-        updated_by: userId ?? null,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "key,workspace_id" },
-    );
+  const { error } = await supabase.from("feature_flags").upsert(
+    {
+      key,
+      enabled,
+      workspace_id: workspaceId,
+      updated_by: userId ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "key,workspace_id" },
+  );
   if (error) throw error;
 }

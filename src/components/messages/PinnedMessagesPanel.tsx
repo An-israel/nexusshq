@@ -120,7 +120,7 @@ export function PinnedMessagesPanel({
     <div
       className={cn(
         "fixed right-0 top-0 h-full w-80 bg-[#111111] border-l border-[#2A2A2A] z-30 flex flex-col transition-transform duration-200",
-        open ? "translate-x-0" : "translate-x-full"
+        open ? "translate-x-0" : "translate-x-full",
       )}
     >
       {/* Header */}

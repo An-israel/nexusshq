@@ -10,7 +10,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { CheckCircle2, AlertCircle, Clock, ImageIcon, MessageSquare, Send, Trash2, Folder, FolderOpen, ChevronRight, ArrowLeft } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Clock,
+  ImageIcon,
+  MessageSquare,
+  Send,
+  Trash2,
+  Folder,
+  FolderOpen,
+  ChevronRight,
+  ArrowLeft,
+} from "lucide-react";
 import { todayISO, initialsOf, timeAgo } from "@/lib/nexus";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -103,13 +115,17 @@ function StandupsPage() {
       ]);
       setTeamStandups((standupData ?? []) as Standup[]);
       const map: Record<string, Profile> = {};
-      (profData ?? []).forEach((p) => { map[p.id] = p as Profile; });
+      (profData ?? []).forEach((p) => {
+        map[p.id] = p as Profile;
+      });
       setProfiles(map);
     }
     setLoading(false);
   }, [user, view, workspace?.id]);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   useRealtime({
     table: "standups",
@@ -138,7 +154,11 @@ function StandupsPage() {
     const { error: upErr } = await supabase.storage
       .from("standup-screenshots")
       .upload(path, screenshot, { upsert: true, contentType: screenshot.type });
-    if (upErr) { toast.error(upErr.message); setSubmitting(false); return; }
+    if (upErr) {
+      toast.error(upErr.message);
+      setSubmitting(false);
+      return;
+    }
     const { data: urlData } = supabase.storage.from("standup-screenshots").getPublicUrl(path);
 
     const isoToday = todayISO();
@@ -156,7 +176,10 @@ function StandupsPage() {
       { onConflict: "user_id,date" },
     );
     setSubmitting(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Standup submitted!");
     setScreenshot(null);
     void load();
@@ -189,13 +212,16 @@ function StandupsPage() {
         loading ? (
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : todayStandup ? (
-          <SubmittedView standup={todayStandup} onEdit={() => {
-            setYesterday(todayStandup.yesterday);
-            setToday(todayStandup.today);
-            setBlockers(todayStandup.blockers ?? "");
-            setScreenshot(null);
-            setTodayStandup(null);
-          }} />
+          <SubmittedView
+            standup={todayStandup}
+            onEdit={() => {
+              setYesterday(todayStandup.yesterday);
+              setToday(todayStandup.today);
+              setBlockers(todayStandup.blockers ?? "");
+              setScreenshot(null);
+              setTodayStandup(null);
+            }}
+          />
         ) : (
           <Card className="p-6 max-w-lg space-y-5">
             {past && (
@@ -259,22 +285,20 @@ function StandupsPage() {
             </Button>
           </Card>
         )
+      ) : loading ? (
+        <p className="text-sm text-muted-foreground">Loading…</p>
+      ) : teamStandups.length === 0 ? (
+        <Card className="p-8 text-center text-sm text-muted-foreground">
+          No standups submitted yet.
+        </Card>
       ) : (
-        loading ? (
-          <p className="text-sm text-muted-foreground">Loading…</p>
-        ) : teamStandups.length === 0 ? (
-          <Card className="p-8 text-center text-sm text-muted-foreground">
-            No standups submitted yet.
-          </Card>
-        ) : (
-          <FolderBrowser
-            standups={teamStandups}
-            profiles={profiles}
-            currentUserId={user?.id ?? ""}
-            isManager={isManager}
-            showAuthor
-          />
-        )
+        <FolderBrowser
+          standups={teamStandups}
+          profiles={profiles}
+          currentUserId={user?.id ?? ""}
+          isManager={isManager}
+          showAuthor
+        />
       )}
 
       {view === "mine" && historyStandups.length > 0 && (
@@ -303,11 +327,15 @@ function SubmittedView({ standup, onEdit }: { standup: Standup; onEdit: () => vo
       </div>
       <div className="space-y-3 text-sm">
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Yesterday</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            Yesterday
+          </p>
           <p className="whitespace-pre-wrap">{standup.yesterday}</p>
         </div>
         <div>
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Today</p>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+            Today
+          </p>
           <p className="whitespace-pre-wrap">{standup.today}</p>
         </div>
         {standup.blockers && (
@@ -320,7 +348,9 @@ function SubmittedView({ standup, onEdit }: { standup: Standup; onEdit: () => vo
         )}
         {standup.screenshot_url && (
           <div>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">Screenshot</p>
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+              Screenshot
+            </p>
             <a href={standup.screenshot_url} target="_blank" rel="noopener noreferrer">
               <img
                 src={standup.screenshot_url}
@@ -331,7 +361,9 @@ function SubmittedView({ standup, onEdit }: { standup: Standup; onEdit: () => vo
           </div>
         )}
       </div>
-      <Button variant="outline" size="sm" onClick={onEdit}>Edit submission</Button>
+      <Button variant="outline" size="sm" onClick={onEdit}>
+        Edit submission
+      </Button>
     </Card>
   );
 }
@@ -344,7 +376,7 @@ function isoWeekKey(d: Date): { key: string; year: number; week: number; start: 
   const dayNum = date.getUTCDay() || 7;
   date.setUTCDate(date.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
-  const week = Math.ceil((((date.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  const week = Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   const year = date.getUTCFullYear();
   // Compute Monday of the week
   const jan4 = new Date(Date.UTC(year, 0, 4));
@@ -361,8 +393,10 @@ function isoWeekKey(d: Date): { key: string; year: number; week: number; start: 
 function fmtDateRange(start: Date, end: Date): string {
   const sameMonth = start.getUTCMonth() === end.getUTCMonth();
   const fmtDay = (d: Date) => d.getUTCDate();
-  const fmtMonth = (d: Date) => d.toLocaleDateString(undefined, { month: "short", timeZone: "UTC" });
-  if (sameMonth) return `${fmtMonth(start)} ${fmtDay(start)}–${fmtDay(end)}, ${start.getUTCFullYear()}`;
+  const fmtMonth = (d: Date) =>
+    d.toLocaleDateString(undefined, { month: "short", timeZone: "UTC" });
+  if (sameMonth)
+    return `${fmtMonth(start)} ${fmtDay(start)}–${fmtDay(end)}, ${start.getUTCFullYear()}`;
   return `${fmtMonth(start)} ${fmtDay(start)} – ${fmtMonth(end)} ${fmtDay(end)}, ${end.getUTCFullYear()}`;
 }
 
@@ -411,15 +445,17 @@ function FolderBrowser({
       .map(([date, items]) => ({ date, items }));
   }, [currentWeek]);
 
-  const dayItems = selectedDay && currentWeek
-    ? currentWeek.items.filter((s) => s.date === selectedDay)
-    : [];
+  const dayItems =
+    selectedDay && currentWeek ? currentWeek.items.filter((s) => s.date === selectedDay) : [];
 
   // Breadcrumbs
   const Crumb = (
     <div className="flex items-center gap-2 text-sm">
       <button
-        onClick={() => { setSelectedWeek(null); setSelectedDay(null); }}
+        onClick={() => {
+          setSelectedWeek(null);
+          setSelectedDay(null);
+        }}
         className={`hover:text-foreground transition-colors ${selectedWeek ? "text-muted-foreground" : "font-semibold"}`}
       >
         All weeks
@@ -439,7 +475,12 @@ function FolderBrowser({
         <>
           <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="font-semibold">
-            {new Date(selectedDay + "T00:00:00Z").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" })}
+            {new Date(selectedDay + "T00:00:00Z").toLocaleDateString(undefined, {
+              weekday: "long",
+              month: "short",
+              day: "numeric",
+              timeZone: "UTC",
+            })}
           </span>
         </>
       )}
@@ -498,11 +539,7 @@ function FolderBrowser({
           {days.map(({ date, items }) => {
             const d = new Date(date + "T00:00:00Z");
             return (
-              <button
-                key={date}
-                onClick={() => setSelectedDay(date)}
-                className="group text-left"
-              >
+              <button key={date} onClick={() => setSelectedDay(date)} className="group text-left">
                 <Card className="p-4 hover:border-primary/50 hover:shadow-sm transition-all">
                   <div className="flex items-start gap-3">
                     <div className="rounded-lg bg-accent p-2 text-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
@@ -513,7 +550,12 @@ function FolderBrowser({
                         {d.toLocaleDateString(undefined, { weekday: "long", timeZone: "UTC" })}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" })}
+                        {d.toLocaleDateString(undefined, {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                          timeZone: "UTC",
+                        })}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">
                         {items.length} {items.length === 1 ? "entry" : "entries"}
@@ -527,8 +569,8 @@ function FolderBrowser({
         </div>
       )}
 
-      {selectedDay && (
-        showAuthor ? (
+      {selectedDay &&
+        (showAuthor ? (
           <div className="grid gap-4 md:grid-cols-2">
             {dayItems.map((s) => (
               <StandupCard
@@ -546,16 +588,25 @@ function FolderBrowser({
               <Card key={s.id} className="p-4 space-y-2 text-sm">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">
-                    {new Date(s.date + "T00:00:00Z").toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" })}
+                    {new Date(s.date + "T00:00:00Z").toLocaleDateString(undefined, {
+                      weekday: "long",
+                      month: "short",
+                      day: "numeric",
+                      timeZone: "UTC",
+                    })}
                   </span>
                   <span className="text-xs text-muted-foreground">{timeAgo(s.submitted_at)}</span>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Yesterday</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
+                    Yesterday
+                  </p>
                   <p className="whitespace-pre-wrap">{s.yesterday}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Today</p>
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
+                    Today
+                  </p>
                   <p className="whitespace-pre-wrap">{s.today}</p>
                 </div>
                 {s.blockers && (
@@ -576,8 +627,7 @@ function FolderBrowser({
               </Card>
             ))}
           </div>
-        )
-      )}
+        ))}
     </div>
   );
 }
@@ -610,9 +660,13 @@ function StandupCard({
     const ids = Array.from(new Set(rows.map((c) => c.user_id)));
     if (ids.length) {
       const { data: profs } = await supabase
-        .from("profiles").select("id, full_name, email").in("id", ids);
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", ids);
       const map: Record<string, Profile> = {};
-      (profs ?? []).forEach((p) => { map[p.id] = p as Profile; });
+      (profs ?? []).forEach((p) => {
+        map[p.id] = p as Profile;
+      });
       setCommentProfiles(map);
     }
   }, [standup.id]);
@@ -630,7 +684,10 @@ function StandupCard({
       body: commentText.trim(),
     });
     setPosting(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     setCommentText("");
     void loadComments();
   }
@@ -653,7 +710,9 @@ function StandupCard({
       </div>
       <div className="text-xs space-y-2">
         <div>
-          <p className="font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Yesterday</p>
+          <p className="font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
+            Yesterday
+          </p>
           <p className="whitespace-pre-wrap">{standup.yesterday}</p>
         </div>
         <div>
@@ -670,7 +729,9 @@ function StandupCard({
         )}
         {standup.screenshot_url && (
           <div>
-            <p className="font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Screenshot</p>
+            <p className="font-medium text-muted-foreground uppercase tracking-wide mb-0.5">
+              Screenshot
+            </p>
             <a href={standup.screenshot_url} target="_blank" rel="noopener noreferrer">
               <img
                 src={standup.screenshot_url}
@@ -688,7 +749,9 @@ function StandupCard({
         className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
       >
         <MessageSquare className="h-3.5 w-3.5" />
-        {comments.length > 0 ? `${comments.length} comment${comments.length !== 1 ? "s" : ""}` : "Add comment"}
+        {comments.length > 0
+          ? `${comments.length} comment${comments.length !== 1 ? "s" : ""}`
+          : "Add comment"}
         {!showComments && comments.length === 0 && canComment && " ›"}
       </button>
 
@@ -722,7 +785,12 @@ function StandupCard({
               <input
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void postComment(); } }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    void postComment();
+                  }
+                }}
                 placeholder="Leave a comment…"
                 className="flex-1 rounded-md border border-border bg-background px-3 py-1.5 text-xs outline-none focus:ring-1 focus:ring-primary"
               />

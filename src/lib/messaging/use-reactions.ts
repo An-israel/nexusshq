@@ -4,11 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 export function useReactions(currentUserId: string | null): {
   addReaction: (messageId: string, emoji: string) => Promise<void>;
   removeReaction: (messageId: string, emoji: string) => Promise<void>;
-  toggleReaction: (
-    messageId: string,
-    emoji: string,
-    hasMyReaction: boolean
-  ) => Promise<void>;
+  toggleReaction: (messageId: string, emoji: string, hasMyReaction: boolean) => Promise<void>;
 } {
   const addReaction = React.useCallback(
     async (messageId: string, emoji: string) => {
@@ -22,7 +18,7 @@ export function useReactions(currentUserId: string | null): {
         console.error("addReaction error:", error);
       }
     },
-    [currentUserId]
+    [currentUserId],
   );
 
   const removeReaction = React.useCallback(
@@ -38,7 +34,7 @@ export function useReactions(currentUserId: string | null): {
         console.error("removeReaction error:", error);
       }
     },
-    [currentUserId]
+    [currentUserId],
   );
 
   const toggleReaction = React.useCallback(
@@ -49,7 +45,7 @@ export function useReactions(currentUserId: string | null): {
         await addReaction(messageId, emoji);
       }
     },
-    [addReaction, removeReaction]
+    [addReaction, removeReaction],
   );
 
   return { addReaction, removeReaction, toggleReaction };

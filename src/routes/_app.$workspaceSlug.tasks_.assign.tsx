@@ -246,7 +246,9 @@ function AssignTaskPage() {
           queue_name: "transactional_emails",
           payload: { to: assignee.email, subject: `New Task Assigned — ${taskTitle}`, html },
         } as never);
-      } catch { /* non-fatal */ }
+      } catch {
+        /* non-fatal */
+      }
     }
 
     toast.success("Task assigned successfully");
@@ -577,12 +579,7 @@ function AssignTaskPage() {
           <Separator />
 
           {/* ── Submit ── */}
-          <Button
-            className="w-full"
-            size="lg"
-            disabled={submitting}
-            onClick={() => void submit()}
-          >
+          <Button className="w-full" size="lg" disabled={submitting} onClick={() => void submit()}>
             {submitting ? "Assigning…" : "Assign Task →"}
           </Button>
         </Card>

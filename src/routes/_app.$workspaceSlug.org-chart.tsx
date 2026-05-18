@@ -37,7 +37,10 @@ function OrgChartPage() {
   React.useEffect(() => {
     setLoading(true);
     void Promise.all([
-      supabase.from("profiles").select("id, full_name, email, department, job_title, reports_to").eq("is_active", true),
+      supabase
+        .from("profiles")
+        .select("id, full_name, email, department, job_title, reports_to")
+        .eq("is_active", true),
       supabase.from("user_roles").select("user_id, role"),
     ]).then(([profileRes, roleRes]) => {
       const roleMap: Record<string, string> = {};
@@ -58,7 +61,7 @@ function OrgChartPage() {
   }, []);
 
   const filtered = React.useMemo(
-    () => deptFilter === "all" ? people : people.filter((p) => p.department === deptFilter),
+    () => (deptFilter === "all" ? people : people.filter((p) => p.department === deptFilter)),
     [people, deptFilter],
   );
 
@@ -83,7 +86,11 @@ function OrgChartPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All departments</SelectItem>
-            {depts.map((d) => <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>)}
+            {depts.map((d) => (
+              <SelectItem key={d} value={d}>
+                {deptLabel(d)}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
@@ -119,9 +126,7 @@ interface TreeNode {
 function buildTree(filtered: OrgProfile[], all: OrgProfile[]): TreeNode[] {
   const filteredIds = new Set(filtered.map((p) => p.id));
   // Roots = people whose manager is not in the filtered set (or has no manager)
-  const roots = filtered.filter(
-    (p) => !p.reports_to || !filteredIds.has(p.reports_to),
-  );
+  const roots = filtered.filter((p) => !p.reports_to || !filteredIds.has(p.reports_to));
 
   function buildChildren(parentId: string): TreeNode[] {
     return filtered
@@ -179,7 +184,9 @@ function PersonCard({ person }: { person: OrgProfile }) {
         )}
       </div>
       {person.role && (
-        <span className={`text-[9px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${ROLE_COLOR[person.role] ?? ""}`}>
+        <span
+          className={`text-[9px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${ROLE_COLOR[person.role] ?? ""}`}
+        >
           {person.role}
         </span>
       )}

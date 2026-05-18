@@ -14,17 +14,8 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { EmojiPicker } from "@/components/messages/EmojiPicker";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Message, MsgProfile, UserPresence } from "@/lib/messaging/types";
 
 interface MessageItemProps {
@@ -153,24 +144,26 @@ function renderBody(body: string): React.ReactNode {
           </pre>
         );
       case "bold":
-        return <strong key={i} className="font-bold">{token.value}</strong>;
+        return (
+          <strong key={i} className="font-bold">
+            {token.value}
+          </strong>
+        );
       case "italic":
-        return <em key={i} className="italic">{token.value}</em>;
+        return (
+          <em key={i} className="italic">
+            {token.value}
+          </em>
+        );
       case "code":
         return (
-          <code
-            key={i}
-            className="bg-[#2A2A2A] rounded px-1 font-mono text-sm text-[#E5E7EB]"
-          >
+          <code key={i} className="bg-[#2A2A2A] rounded px-1 font-mono text-sm text-[#E5E7EB]">
             {token.value}
           </code>
         );
       case "mention":
         return (
-          <span
-            key={i}
-            className="bg-primary/20 text-primary rounded px-1 font-medium"
-          >
+          <span key={i} className="bg-primary/20 text-primary rounded px-1 font-medium">
             {token.value}
           </span>
         );
@@ -199,10 +192,7 @@ interface ReactionGroup {
   hasMyReaction: boolean;
 }
 
-function groupReactions(
-  reactions: Message["reactions"],
-  currentUserId: string
-): ReactionGroup[] {
+function groupReactions(reactions: Message["reactions"], currentUserId: string): ReactionGroup[] {
   const map = new Map<string, ReactionGroup>();
   for (const r of reactions ?? []) {
     const existing = map.get(r.emoji) ?? {
@@ -219,11 +209,7 @@ function groupReactions(
   return Array.from(map.values());
 }
 
-function AttachmentRow({
-  attachments,
-}: {
-  attachments: Message["attachments"];
-}) {
+function AttachmentRow({ attachments }: { attachments: Message["attachments"] }) {
   if (!attachments || attachments.length === 0) return null;
 
   return (
@@ -238,11 +224,7 @@ function AttachmentRow({
               className="rounded-lg overflow-hidden border border-[#2A2A2A] max-w-xs"
             >
               {src ? (
-                <img
-                  src={src}
-                  alt={att.file_name}
-                  className="max-h-64 object-contain"
-                />
+                <img src={src} alt={att.file_name} className="max-h-64 object-contain" />
               ) : (
                 <div className="flex items-center gap-2 px-3 py-2 text-sm text-[#9CA3AF]">
                   <FileText className="w-4 h-4" />
@@ -259,8 +241,7 @@ function AttachmentRow({
           "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
         const IconEl = isPdf || isDoc ? FileText : File;
         const openUrl =
-          att.google_drive_view_url ??
-          (att.storage_path ? att.storage_path : undefined);
+          att.google_drive_view_url ?? (att.storage_path ? att.storage_path : undefined);
 
         return (
           <div
@@ -269,12 +250,8 @@ function AttachmentRow({
           >
             <IconEl className="w-4 h-4 text-[#9CA3AF] shrink-0" />
             <div className="flex flex-col min-w-0">
-              <span className="text-white truncate max-w-[180px]">
-                {att.file_name}
-              </span>
-              <span className="text-[#6B7280] text-xs">
-                {formatBytes(att.file_size_bytes)}
-              </span>
+              <span className="text-white truncate max-w-[180px]">{att.file_name}</span>
+              <span className="text-[#6B7280] text-xs">{formatBytes(att.file_size_bytes)}</span>
             </div>
             {openUrl && (
               <a
@@ -293,13 +270,7 @@ function AttachmentRow({
   );
 }
 
-function ThreadPreview({
-  message,
-  onReply,
-}: {
-  message: Message;
-  onReply: (m: Message) => void;
-}) {
+function ThreadPreview({ message, onReply }: { message: Message; onReply: (m: Message) => void }) {
   if (message.thread_reply_count === 0) return null;
 
   const lastReply = message.thread_last_reply_at
@@ -314,12 +285,9 @@ function ThreadPreview({
       aria-label={`View ${message.thread_reply_count} thread replies`}
     >
       <span className="font-medium">
-        {message.thread_reply_count}{" "}
-        {message.thread_reply_count === 1 ? "reply" : "replies"}
+        {message.thread_reply_count} {message.thread_reply_count === 1 ? "reply" : "replies"}
       </span>
-      {lastReply && (
-        <span className="text-[#9CA3AF]">· Last reply {lastReply}</span>
-      )}
+      {lastReply && <span className="text-[#9CA3AF]">· Last reply {lastReply}</span>}
     </button>
   );
 }
@@ -379,7 +347,7 @@ export function MessageItem({
           "group relative flex gap-2 px-4 py-0.5 rounded-lg transition-colors",
           "hover:bg-[#1A1A1A]",
           isContinuation ? "items-start" : "items-start",
-          isHighlighted && "bg-yellow-500/10 animate-pulse"
+          isHighlighted && "bg-yellow-500/10 animate-pulse",
         )}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => {
@@ -417,9 +385,7 @@ export function MessageItem({
         <div className="flex-1 min-w-0">
           {!isContinuation && (
             <div className="flex items-baseline gap-2 flex-wrap mb-0.5">
-              <span className="font-semibold text-sm text-white leading-tight">
-                {displayName}
-              </span>
+              <span className="font-semibold text-sm text-white leading-tight">{displayName}</span>
               {sender?.job_title && (
                 <span className="text-[10px] bg-[#252525] text-[#9CA3AF] rounded px-1.5 py-0.5 leading-none">
                   {sender.job_title}
@@ -437,9 +403,7 @@ export function MessageItem({
           )}
 
           {message.is_deleted ? (
-            <p className="text-sm text-[#6B7280] italic">
-              This message was deleted
-            </p>
+            <p className="text-sm text-[#6B7280] italic">This message was deleted</p>
           ) : editing ? (
             <div className="mt-1">
               <textarea
@@ -474,15 +438,11 @@ export function MessageItem({
           ) : (
             <div className="text-sm text-[#E5E7EB] leading-relaxed break-words">
               {renderBody(message.body)}
-              {message.is_edited && (
-                <span className="text-xs text-[#6B7280] ml-1">(edited)</span>
-              )}
+              {message.is_edited && <span className="text-xs text-[#6B7280] ml-1">(edited)</span>}
             </div>
           )}
 
-          {!message.is_deleted && (
-            <AttachmentRow attachments={message.attachments} />
-          )}
+          {!message.is_deleted && <AttachmentRow attachments={message.attachments} />}
 
           {!message.is_deleted && reactionGroups.length > 0 && (
             <div className="flex flex-wrap items-center gap-1 mt-1">
@@ -491,14 +451,11 @@ export function MessageItem({
                   <TooltipTrigger asChild>
                     <button
                       type="button"
-                      onClick={() =>
-                        onReact(message.id, group.emoji, group.hasMyReaction)
-                      }
+                      onClick={() => onReact(message.id, group.emoji, group.hasMyReaction)}
                       className={cn(
                         "flex items-center gap-1 text-xs rounded-full border px-2 py-0.5 transition-colors",
                         "bg-[#1E1E1E] border-[#2A2A2A] hover:bg-[#252525]",
-                        group.hasMyReaction &&
-                          "border-primary/50 bg-primary/10"
+                        group.hasMyReaction && "border-primary/50 bg-primary/10",
                       )}
                       aria-label={`${group.emoji} reaction, ${group.count} ${group.count === 1 ? "person" : "people"}`}
                     >
@@ -516,14 +473,8 @@ export function MessageItem({
               ))}
               <EmojiPicker
                 onSelect={(emoji) => {
-                  const existing = reactionGroups.find(
-                    (g) => g.emoji === emoji
-                  );
-                  onReact(
-                    message.id,
-                    emoji,
-                    existing?.hasMyReaction ?? false
-                  );
+                  const existing = reactionGroups.find((g) => g.emoji === emoji);
+                  onReact(message.id, emoji, existing?.hasMyReaction ?? false);
                 }}
                 trigger={
                   <button
@@ -538,9 +489,7 @@ export function MessageItem({
             </div>
           )}
 
-          {!message.is_deleted && (
-            <ThreadPreview message={message} onReply={onReply} />
-          )}
+          {!message.is_deleted && <ThreadPreview message={message} onReply={onReply} />}
         </div>
 
         {!message.is_deleted && hovered && (

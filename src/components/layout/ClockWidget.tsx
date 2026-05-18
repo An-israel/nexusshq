@@ -114,7 +114,10 @@ export function ClockWidget() {
     else {
       const h = Math.floor(sessionMins / 60);
       const m = sessionMins % 60;
-      const otNote = sessionOvertime > 0 ? ` · ${Math.floor(sessionOvertime / 60)}h ${sessionOvertime % 60}m overtime` : "";
+      const otNote =
+        sessionOvertime > 0
+          ? ` · ${Math.floor(sessionOvertime / 60)}h ${sessionOvertime % 60}m overtime`
+          : "";
       toast.success(`Clocked out — ${h}h ${m}m${otNote}`);
     }
     await load();
@@ -158,7 +161,8 @@ export function ClockWidget() {
       )}
       {completedSession && !clockedIn && (today.overtime_minutes ?? 0) > 0 && (
         <span className="text-xs text-muted-foreground">
-          OT: {Math.floor((today.overtime_minutes ?? 0) / 60)}h {(today.overtime_minutes ?? 0) % 60}m
+          OT: {Math.floor((today.overtime_minutes ?? 0) / 60)}h {(today.overtime_minutes ?? 0) % 60}
+          m
         </span>
       )}
     </div>

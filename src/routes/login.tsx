@@ -14,9 +14,16 @@ export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
       { title: "Log In — Access Your Nexus HQ Workspace" },
-      { name: "description", content: "Log in to your Nexus HQ workspace to manage attendance, tasks, standups, OKRs and team operations." },
+      {
+        name: "description",
+        content:
+          "Log in to your Nexus HQ workspace to manage attendance, tasks, standups, OKRs and team operations.",
+      },
       { property: "og:title", content: "Log In — Access Your Nexus HQ Workspace" },
-      { property: "og:description", content: "Log in to manage attendance, tasks, standups and team operations." },
+      {
+        property: "og:description",
+        content: "Log in to manage attendance, tasks, standups and team operations.",
+      },
       { property: "og:url", content: "https://nexus.skryveai.com/login" },
     ],
     links: [{ rel: "canonical", href: "https://nexus.skryveai.com/login" }],
@@ -32,7 +39,9 @@ async function resolveWorkspace(userId: string): Promise<string | null> {
     .eq("is_active", true);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const slugs = (memberships ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
+  const slugs = (memberships ?? [])
+    .map((m: any) => m?.workspaces?.slug)
+    .filter(Boolean) as string[];
 
   if (slugs.length > 1) {
     // Prefer the user's last selected workspace if still valid.

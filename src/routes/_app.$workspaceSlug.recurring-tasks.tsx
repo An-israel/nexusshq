@@ -69,18 +69,32 @@ function RecurringTasksPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [tmplRes, empRes] = await Promise.all([
-      supabase.from("recurring_tasks").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false }),
-      supabase.from("profiles").select("id, full_name, email").eq("is_active", true).order("full_name"),
+      supabase
+        .from("recurring_tasks")
+        .select("*")
+        .eq("workspace_id", workspace.id)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .eq("is_active", true)
+        .order("full_name"),
     ]);
     setTemplates((tmplRes.data ?? []) as RecurringTask[]);
     setEmployees((empRes.data ?? []) as Profile[]);
     setLoading(false);
   }, []);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   async function toggle(t: RecurringTask) {
-    await supabase.from("recurring_tasks").update({ is_active: !t.is_active }).eq("id", t.id).eq("workspace_id", workspace.id);
+    await supabase
+      .from("recurring_tasks")
+      .update({ is_active: !t.is_active })
+      .eq("id", t.id)
+      .eq("workspace_id", workspace.id);
     void load();
   }
 
@@ -125,10 +139,18 @@ function RecurringTasksPage() {
     };
     const { error } = await supabase.from("tasks").insert(payload);
 
-    if (error) { toast.error(error.message); setGenerating(null); return; }
+    if (error) {
+      toast.error(error.message);
+      setGenerating(null);
+      return;
+    }
 
     // Update last generated date
-    await supabase.from("recurring_tasks").update({ last_generated_date: today }).eq("id", t.id).eq("workspace_id", workspace.id);
+    await supabase
+      .from("recurring_tasks")
+      .update({ last_generated_date: today })
+      .eq("id", t.id)
+      .eq("workspace_id", workspace.id);
     await supabase.from("notifications").insert({
       user_id: t.assigned_to,
       type: "task_assigned",
@@ -144,7 +166,9 @@ function RecurringTasksPage() {
 
   const empMap = React.useMemo(() => {
     const m: Record<string, Profile> = {};
-    employees.forEach((e) => { m[e.id] = e; });
+    employees.forEach((e) => {
+      m[e.id] = e;
+    });
     return m;
   }, [employees]);
 
@@ -191,7 +215,9 @@ function RecurringTasksPage() {
                       </span>
                     </div>
                     {t.description && (
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{t.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                        {t.description}
+                      </p>
                     )}
                     <p className="text-xs text-muted-foreground mt-1">
                       Assigned to: {emp?.full_name ?? emp?.email ?? "—"}
@@ -206,12 +232,21 @@ function RecurringTasksPage() {
                       disabled={generating === t.id}
                       title="Generate task now"
                     >
-                      <Zap className={`h-3.5 w-3.5 ${generating === t.id ? "animate-pulse" : ""}`} />
+                      <Zap
+                        className={`h-3.5 w-3.5 ${generating === t.id ? "animate-pulse" : ""}`}
+                      />
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => toggle(t)} title={t.is_active ? "Pause" : "Activate"}>
-                      {t.is_active
-                        ? <Pause className="h-3.5 w-3.5" />
-                        : <Play className="h-3.5 w-3.5 text-success" />}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => toggle(t)}
+                      title={t.is_active ? "Pause" : "Activate"}
+                    >
+                      {t.is_active ? (
+                        <Pause className="h-3.5 w-3.5" />
+                      ) : (
+                        <Play className="h-3.5 w-3.5 text-success" />
+                      )}
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => del(t.id)} title="Delete">
                       <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -229,7 +264,10 @@ function RecurringTasksPage() {
           employees={employees}
           createdBy={user?.id ?? ""}
           workspaceId={workspace.id}
-          onSaved={() => { setOpen(false); void load(); }}
+          onSaved={() => {
+            setOpen(false);
+            void load();
+          }}
         />
       </Dialog>
     </div>
@@ -256,7 +294,10 @@ function NewTemplateDialog({
   const [saving, setSaving] = React.useState(false);
 
   async function save() {
-    if (!title.trim() || !assignedTo) { toast.error("Title and assignee are required"); return; }
+    if (!title.trim() || !assignedTo) {
+      toast.error("Title and assignee are required");
+      return;
+    }
     setSaving(true);
     const payload: Database["public"]["Tables"]["recurring_tasks"]["Insert"] = {
       title: title.trim(),
@@ -270,18 +311,28 @@ function NewTemplateDialog({
     };
     const { error } = await supabase.from("recurring_tasks").insert(payload);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Template created");
     onSaved();
   }
 
   return (
     <DialogContent className="max-w-md">
-      <DialogHeader><DialogTitle>New Recurring Task Template</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>New Recurring Task Template</DialogTitle>
+      </DialogHeader>
       <div className="space-y-3">
         <div>
           <Label>Task title</Label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Weekly report submission" autoFocus />
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Weekly report submission"
+            autoFocus
+          />
         </div>
         <div>
           <Label>Description (optional)</Label>
@@ -290,9 +341,15 @@ function NewTemplateDialog({
         <div>
           <Label>Assign to</Label>
           <Select value={assignedTo} onValueChange={setAssignedTo}>
-            <SelectTrigger><SelectValue placeholder="Pick employee" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Pick employee" />
+            </SelectTrigger>
             <SelectContent>
-              {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name ?? e.email}</SelectItem>)}
+              {employees.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.full_name ?? e.email}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -300,16 +357,27 @@ function NewTemplateDialog({
           <div>
             <Label>Priority</Label>
             <Select value={priority} onValueChange={(v) => setPriority(v as TaskPriority)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {PRIORITIES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                {PRIORITIES.map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {p}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label>Repeats</Label>
-            <Select value={recurrence} onValueChange={(v) => setRecurrence(v as "daily" | "weekly")}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={recurrence}
+              onValueChange={(v) => setRecurrence(v as "daily" | "weekly")}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="daily">Daily</SelectItem>
                 <SelectItem value="weekly">Weekly</SelectItem>
@@ -321,16 +389,24 @@ function NewTemplateDialog({
           <div>
             <Label>Day of week</Label>
             <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {DAY_NAMES.map((d, i) => <SelectItem key={i} value={String(i)}>{d}</SelectItem>)}
+                {DAY_NAMES.map((d, i) => (
+                  <SelectItem key={i} value={String(i)}>
+                    {d}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         )}
       </div>
       <DialogFooter>
-        <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Create template"}</Button>
+        <Button onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Create template"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );

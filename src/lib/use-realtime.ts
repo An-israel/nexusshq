@@ -46,9 +46,7 @@ export function useRealtime({
 
   React.useEffect(() => {
     if (!enabled) return;
-    const channelName = `rt:${table}:${filter ?? "all"}:${Math.random()
-      .toString(36)
-      .slice(2, 8)}`;
+    const channelName = `rt:${table}:${filter ?? "all"}:${Math.random().toString(36).slice(2, 8)}`;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let lastPayload: RealtimePostgresChangesPayload<AnyRow> | undefined;
 
@@ -65,9 +63,7 @@ export function useRealtime({
         // Too chatty — back off for 10s
         pausedUntil = now + 10_000;
         recentCalls = [];
-        console.warn(
-          `[useRealtime] Pausing ${table} subscription for 10s (too many updates).`,
-        );
+        console.warn(`[useRealtime] Pausing ${table} subscription for 10s (too many updates).`);
         return;
       }
       cbRef.current(lastPayload);

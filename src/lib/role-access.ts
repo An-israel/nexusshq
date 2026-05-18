@@ -89,7 +89,10 @@ export async function requireAnyRole(allowedRoles: AppRole[]) {
   } = raceResult;
 
   const isTransientAuthError =
-    !!error && /unexpected failure|database error querying schema|please check server logs/i.test(error.message);
+    !!error &&
+    /unexpected failure|database error querying schema|please check server logs/i.test(
+      error.message,
+    );
 
   if (error) {
     logSupabaseClientError({
@@ -127,6 +130,6 @@ export async function requireAnyRole(allowedRoles: AppRole[]) {
   }
 
   if (!roles.some((row) => allowedRoles.includes(row.role))) {
-    throw redirect({ to: "/dashboard" });
+    throw redirect({ to: "/workspaces" });
   }
 }

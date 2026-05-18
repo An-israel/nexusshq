@@ -21,10 +21,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -101,12 +98,8 @@ type FilterTab = "all" | "daily" | "weekly" | "overdue" | "completed";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function dueDateLabel(
-  dateStr: string,
-  status: string
-): { text: string; className: string } {
-  if (status === "completed")
-    return { text: "Completed", className: "text-green-400" };
+function dueDateLabel(dateStr: string, status: string): { text: string; className: string } {
+  if (status === "completed") return { text: "Completed", className: "text-green-400" };
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const due = new Date(dateStr + "T00:00:00");
@@ -116,8 +109,7 @@ function dueDateLabel(
       text: `OVERDUE — ${Math.abs(diff)} day${Math.abs(diff) === 1 ? "" : "s"} ago`,
       className: "text-red-400 font-medium",
     };
-  if (diff === 0)
-    return { text: "Due today", className: "text-amber-400 font-medium" };
+  if (diff === 0) return { text: "Due today", className: "text-amber-400 font-medium" };
   return {
     text: `Due in ${diff} day${diff === 1 ? "" : "s"}`,
     className: "text-muted-foreground",
@@ -126,13 +118,7 @@ function dueDateLabel(
 
 // ─── Summary Ring ─────────────────────────────────────────────────────────────
 
-function ProgressRing({
-  percent,
-  size = 56,
-}: {
-  percent: number;
-  size?: number;
-}) {
+function ProgressRing({ percent, size = 56 }: { percent: number; size?: number }) {
   const r = (size - 8) / 2;
   const circ = 2 * Math.PI * r;
   const offset = circ - (percent / 100) * circ;
@@ -185,14 +171,10 @@ function TasksPage() {
   const isMobile = useIsMobile();
 
   const [tasks, setTasks] = React.useState<TaskRow[]>([]);
-  const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>(
-    {}
-  );
+  const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState<FilterTab>("all");
-  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(
-    null
-  );
+  const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
 
   const load = React.useCallback(async () => {
     if (!user) return;
@@ -233,11 +215,7 @@ function TasksPage() {
 
   useRealtime({
     table: "tasks",
-    filter: isManager
-      ? undefined
-      : user
-        ? `assigned_to=eq.${user.id}`
-        : undefined,
+    filter: isManager ? undefined : user ? `assigned_to=eq.${user.id}` : undefined,
     enabled: !!user,
     onChange: () => void load(),
   });
@@ -248,40 +226,27 @@ function TasksPage() {
 
   // Weekly stats for summary bar
   const weekTasks = React.useMemo(
-    () =>
-      tasks.filter((t) => t.due_date >= weekStart && t.due_date <= weekEnd),
-    [tasks, weekStart, weekEnd]
+    () => tasks.filter((t) => t.due_date >= weekStart && t.due_date <= weekEnd),
+    [tasks, weekStart, weekEnd],
   );
   const weekTotal = weekTasks.length;
-  const weekCompleted = weekTasks.filter(
-    (t) => t.status === "completed"
-  ).length;
-  const weekInProgress = weekTasks.filter(
-    (t) => t.status === "in_progress"
-  ).length;
+  const weekCompleted = weekTasks.filter((t) => t.status === "completed").length;
+  const weekInProgress = weekTasks.filter((t) => t.status === "in_progress").length;
   const weekOverdue = weekTasks.filter(
-    (t) =>
-      t.status === "overdue" ||
-      (t.status !== "completed" && t.due_date < today)
+    (t) => t.status === "overdue" || (t.status !== "completed" && t.due_date < today),
   ).length;
-  const ringPercent = Math.round(
-    (weekCompleted / Math.max(weekTotal, 1)) * 100
-  );
+  const ringPercent = Math.round((weekCompleted / Math.max(weekTotal, 1)) * 100);
 
   // Filtered task list
   const filtered = React.useMemo(() => {
     let list = [...tasks];
     if (filter === "daily") list = list.filter((t) => t.task_type === "daily");
-    else if (filter === "weekly")
-      list = list.filter((t) => t.task_type === "weekly");
+    else if (filter === "weekly") list = list.filter((t) => t.task_type === "weekly");
     else if (filter === "overdue")
       list = list.filter(
-        (t) =>
-          t.status === "overdue" ||
-          (t.status !== "completed" && t.due_date < today)
+        (t) => t.status === "overdue" || (t.status !== "completed" && t.due_date < today),
       );
-    else if (filter === "completed")
-      list = list.filter((t) => t.status === "completed");
+    else if (filter === "completed") list = list.filter((t) => t.status === "completed");
 
     list.sort((a, b) => {
       const pa = PRIORITY_RANK[a.priority] ?? 9;
@@ -301,9 +266,7 @@ function TasksPage() {
         {/* Header */}
         <div className="flex items-center justify-between px-4 md:px-6 pt-4 md:pt-6 pb-4 shrink-0">
           <div>
-            <h1 className="text-2xl font-bold">
-              {isManager ? "All Tasks" : "My Tasks"}
-            </h1>
+            <h1 className="text-2xl font-bold">{isManager ? "All Tasks" : "My Tasks"}</h1>
             <p className="text-sm text-muted-foreground">
               {isManager
                 ? "Assign, track, and warn across the team."
@@ -312,10 +275,7 @@ function TasksPage() {
           </div>
           {isManager && (
             <Button asChild size="sm">
-              <Link
-                to="/$workspaceSlug/tasks/assign"
-                params={{ workspaceSlug }}
-              >
+              <Link to="/$workspaceSlug/tasks/assign" params={{ workspaceSlug }}>
                 <Plus className="mr-1.5 h-4 w-4" /> Assign Task
               </Link>
             </Button>
@@ -328,9 +288,7 @@ function TasksPage() {
             {/* Ring */}
             <div className="relative shrink-0 flex items-center justify-center">
               <ProgressRing percent={ringPercent} size={56} />
-              <span className="absolute text-xs font-semibold text-foreground">
-                {ringPercent}%
-              </span>
+              <span className="absolute text-xs font-semibold text-foreground">{ringPercent}%</span>
             </div>
             <div className="h-10 w-px bg-border mx-1 shrink-0" />
             {/* Chips */}
@@ -361,10 +319,7 @@ function TasksPage() {
 
         {/* Filter tabs */}
         <div className="px-4 md:px-6 pb-3 shrink-0">
-          <Tabs
-            value={filter}
-            onValueChange={(v) => setFilter(v as FilterTab)}
-          >
+          <Tabs value={filter} onValueChange={(v) => setFilter(v as FilterTab)}>
             <div className="flex overflow-x-auto gap-2 pb-1 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-none">
               <TabsList className="flex-nowrap">
                 <TabsTrigger value="all">All</TabsTrigger>
@@ -382,7 +337,10 @@ function TasksPage() {
           {loading ? (
             <div className="space-y-2">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3 p-3 rounded-xl border border-border">
+                <div
+                  key={i}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border"
+                >
                   <Skeleton className="h-5 w-5 rounded-full shrink-0" />
                   <div className="flex-1 space-y-1.5">
                     <Skeleton className="h-4 w-3/4 rounded" />
@@ -396,7 +354,9 @@ function TasksPage() {
             <div className="flex flex-col items-center gap-3 py-16 text-center">
               <CheckSquare className="h-12 w-12 text-muted-foreground/30" />
               <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
-              <p className="text-xs text-muted-foreground">Tasks assigned to you will appear here.</p>
+              <p className="text-xs text-muted-foreground">
+                Tasks assigned to you will appear here.
+              </p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -408,11 +368,7 @@ function TasksPage() {
                   isManager={isManager}
                   isSelected={selectedTaskId === t.id}
                   isMobile={isMobile}
-                  onSelect={() =>
-                    setSelectedTaskId((prev) =>
-                      prev === t.id ? null : t.id
-                    )
-                  }
+                  onSelect={() => setSelectedTaskId((prev) => (prev === t.id ? null : t.id))}
                   onRefresh={load}
                   workspaceId={workspace.id}
                   userId={user?.id ?? ""}
@@ -437,10 +393,7 @@ function TasksPage() {
                       : undefined
                   }
                   onDelete={async () => {
-                    const { error } = await supabase
-                      .from("tasks")
-                      .delete()
-                      .eq("id", t.id);
+                    const { error } = await supabase.from("tasks").delete().eq("id", t.id);
                     if (error) {
                       toast.error(error.message);
                       return;
@@ -472,8 +425,16 @@ function TasksPage() {
 
       {/* ── Mobile bottom sheet ── */}
       {isMobile && (
-        <Sheet open={!!selectedTask} onOpenChange={(open) => { if (!open) setSelectedTaskId(null); }}>
-          <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto rounded-t-2xl pb-safe p-0">
+        <Sheet
+          open={!!selectedTask}
+          onOpenChange={(open) => {
+            if (!open) setSelectedTaskId(null);
+          }}
+        >
+          <SheetContent
+            side="bottom"
+            className="max-h-[92vh] overflow-y-auto rounded-t-2xl pb-safe p-0"
+          >
             <div className="mx-auto mt-3 mb-2 h-1 w-9 rounded-full bg-muted" />
             {selectedTask && (
               <TaskDetailPanel
@@ -542,8 +503,7 @@ function TaskCard({
   onDelete?: () => void;
 }) {
   const today = todayISO();
-  const isOverdue =
-    task.status !== "completed" && task.due_date < today;
+  const isOverdue = task.status !== "completed" && task.due_date < today;
   const dueLabel = dueDateLabel(task.due_date, task.status);
 
   const [warningOpen, setWarningOpen] = React.useState(false);
@@ -559,10 +519,7 @@ function TaskCard({
 
   async function escalateToUrgent(e: React.MouseEvent) {
     e.stopPropagation();
-    const { error } = await supabase
-      .from("tasks")
-      .update({ priority: "urgent" })
-      .eq("id", task.id);
+    const { error } = await supabase.from("tasks").update({ priority: "urgent" }).eq("id", task.id);
     if (error) {
       toast.error(error.message);
       return;
@@ -594,144 +551,133 @@ function TaskCard({
   }
 
   const cardContent = (
-      <div
-        className={`relative rounded-lg border bg-card p-4 cursor-pointer transition-colors hover:border-primary/40
+    <div
+      className={`relative rounded-lg border bg-card p-4 cursor-pointer transition-colors hover:border-primary/40
           ${borderAccent}
           ${task.status === "completed" ? "opacity-60" : ""}
           ${isSelected ? "border-primary" : "border-border"}
         `}
-        onClick={onSelect}
-      >
-        {/* Header row */}
-        <div className="flex items-start gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <h3
-                className={`font-medium truncate ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}
-              >
-                {task.title}
-              </h3>
-              {/* Priority badge */}
-              <span
-                className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${PRIORITY_BADGE[task.priority]}`}
-              >
-                {task.priority}
+      onClick={onSelect}
+    >
+      {/* Header row */}
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h3
+              className={`font-medium truncate ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}
+            >
+              {task.title}
+            </h3>
+            {/* Priority badge */}
+            <span
+              className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${PRIORITY_BADGE[task.priority]}`}
+            >
+              {task.priority}
+            </span>
+            {/* Status badge */}
+            <span
+              className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_BADGE[isOverdue ? "overdue" : task.status]}`}
+            >
+              {(isOverdue ? "overdue" : task.status).replace("_", " ")}
+            </span>
+            {/* Warning badge */}
+            {task.has_warning && (
+              <span className="animate-pulse bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded text-[10px] px-1.5 py-0.5 uppercase inline-flex items-center gap-1">
+                <AlertTriangle className="h-2.5 w-2.5" /> Warning
               </span>
-              {/* Status badge */}
-              <span
-                className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_BADGE[isOverdue ? "overdue" : task.status]}`}
-              >
-                {(isOverdue ? "overdue" : task.status).replace("_", " ")}
-              </span>
-              {/* Warning badge */}
-              {task.has_warning && (
-                <span className="animate-pulse bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded text-[10px] px-1.5 py-0.5 uppercase inline-flex items-center gap-1">
-                  <AlertTriangle className="h-2.5 w-2.5" /> Warning
-                </span>
-              )}
-            </div>
-
-            {/* Description */}
-            {task.description && (
-              <p className="line-clamp-2 text-sm text-muted-foreground mt-1">
-                {task.description}
-              </p>
-            )}
-
-            {/* Meta row */}
-            <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs mt-2">
-              <span
-                className={`inline-flex items-center gap-1 ${dueLabel.className}`}
-              >
-                <Calendar className="h-3 w-3 shrink-0" />
-                {dueLabel.text}
-              </span>
-              <span className="text-muted-foreground capitalize">
-                {task.task_type.replace("_", " ")}
-              </span>
-              {isManager && assignee && (
-                <span className="text-muted-foreground truncate max-w-[120px]">
-                  → {assignee.full_name ?? assignee.email}
-                </span>
-              )}
-            </div>
-
-            {/* Progress bar (in_progress only) */}
-            {task.status === "in_progress" && (
-              <div className="mt-2.5">
-                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                  <span>Progress</span>
-                  <span>{task.progress_percent}%</span>
-                </div>
-                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all duration-300"
-                    style={{ width: `${task.progress_percent}%` }}
-                  />
-                </div>
-              </div>
             )}
           </div>
 
-          {/* Three-dot menu (managers only) */}
-          {isManager && (
-            <div className="shrink-0 ml-1" onClick={(e) => e.stopPropagation()}>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="rounded p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
-                    <MoreVertical className="h-4 w-4" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem
-                    disabled={task.priority === "urgent"}
-                    onSelect={(e) =>
-                      void escalateToUrgent(e as unknown as React.MouseEvent)
-                    }
-                  >
-                    ⚡ Escalate to Urgent
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setWarningOpen(true);
-                    }}
-                  >
-                    ⚠ Add Warning
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={!task.has_warning}
-                    onSelect={(e) =>
-                      void removeWarning(e as unknown as React.MouseEvent)
-                    }
-                  >
-                    Remove Warning
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-red-400 focus:text-red-400"
-                    onSelect={(e) => {
-                      e.preventDefault();
-                      setFlagOpen(true);
-                    }}
-                  >
-                    <Flag className="h-3.5 w-3.5 mr-2" /> Flag Employee
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+          {/* Description */}
+          {task.description && (
+            <p className="line-clamp-2 text-sm text-muted-foreground mt-1">{task.description}</p>
+          )}
+
+          {/* Meta row */}
+          <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-xs mt-2">
+            <span className={`inline-flex items-center gap-1 ${dueLabel.className}`}>
+              <Calendar className="h-3 w-3 shrink-0" />
+              {dueLabel.text}
+            </span>
+            <span className="text-muted-foreground capitalize">
+              {task.task_type.replace("_", " ")}
+            </span>
+            {isManager && assignee && (
+              <span className="text-muted-foreground truncate max-w-[120px]">
+                → {assignee.full_name ?? assignee.email}
+              </span>
+            )}
+          </div>
+
+          {/* Progress bar (in_progress only) */}
+          {task.status === "in_progress" && (
+            <div className="mt-2.5">
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                <span>Progress</span>
+                <span>{task.progress_percent}%</span>
+              </div>
+              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${task.progress_percent}%` }}
+                />
+              </div>
             </div>
           )}
         </div>
+
+        {/* Three-dot menu (managers only) */}
+        {isManager && (
+          <div className="shrink-0 ml-1" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="rounded p-1.5 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:bg-accent hover:text-foreground transition-colors">
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem
+                  disabled={task.priority === "urgent"}
+                  onSelect={(e) => void escalateToUrgent(e as unknown as React.MouseEvent)}
+                >
+                  ⚡ Escalate to Urgent
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setWarningOpen(true);
+                  }}
+                >
+                  ⚠ Add Warning
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={!task.has_warning}
+                  onSelect={(e) => void removeWarning(e as unknown as React.MouseEvent)}
+                >
+                  Remove Warning
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-400 focus:text-red-400"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setFlagOpen(true);
+                  }}
+                >
+                  <Flag className="h-3.5 w-3.5 mr-2" /> Flag Employee
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
       </div>
+    </div>
   );
 
   return (
     <>
       {isMobile ? (
-        <SwipeableRow
-          onComplete={onComplete}
-          onDelete={onDelete}
-        >
+        <SwipeableRow onComplete={onComplete} onDelete={onDelete}>
           {cardContent}
         </SwipeableRow>
       ) : (
@@ -833,11 +779,7 @@ function AddWarningDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={saving}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
           <Button onClick={save} disabled={saving}>
@@ -941,18 +883,10 @@ function FlagEmployeeDialog({
           </div>
         </div>
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={saving}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button
-            variant="destructive"
-            onClick={submit}
-            disabled={saving}
-          >
+          <Button variant="destructive" onClick={submit} disabled={saving}>
             {saving ? "Flagging…" : "Flag Employee"}
           </Button>
         </DialogFooter>
@@ -1004,8 +938,7 @@ function TaskDetailPanel({
       .then(({ data }) => setKpi(data as KpiRow | null));
   }, [task.kpi_id]);
 
-  const canEdit =
-    isManager || (user?.id && task.assigned_to === user.id);
+  const canEdit = isManager || (user?.id && task.assigned_to === user.id);
   const isOverdue = task.status !== "completed" && task.due_date < todayISO();
   const dueLabel = dueDateLabel(task.due_date, task.status);
 
@@ -1017,8 +950,7 @@ function TaskDetailPanel({
       .update({
         status: newStatus,
         progress_percent: newProgress,
-        completed_at:
-          newStatus === "completed" ? new Date().toISOString() : null,
+        completed_at: newStatus === "completed" ? new Date().toISOString() : null,
       })
       .eq("id", task.id);
     if (error) {
@@ -1036,9 +968,7 @@ function TaskDetailPanel({
       new_progress: newProgress,
       note: note.trim() || null,
     });
-    toast.success(
-      newStatus === "completed" ? "Task marked complete!" : "Progress saved"
-    );
+    toast.success(newStatus === "completed" ? "Task marked complete!" : "Progress saved");
     setNote("");
     setSaving(false);
     onRefresh();
@@ -1060,9 +990,7 @@ function TaskDetailPanel({
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex items-start justify-between gap-3 p-5 border-b border-border shrink-0">
-        <h2 className="text-base font-semibold leading-snug flex-1 min-w-0">
-          {task.title}
-        </h2>
+        <h2 className="text-base font-semibold leading-snug flex-1 min-w-0">{task.title}</h2>
         <button
           onClick={onClose}
           className="shrink-0 rounded p-1 text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
@@ -1105,25 +1033,18 @@ function TaskDetailPanel({
               <span className="text-muted-foreground/50">({task.due_date})</span>
             </div>
             <div className="text-muted-foreground capitalize">
-              Type:{" "}
-              <span className="text-foreground">
-                {task.task_type.replace("_", " ")}
-              </span>
+              Type: <span className="text-foreground">{task.task_type.replace("_", " ")}</span>
             </div>
             {isManager && assignee && (
               <div className="text-muted-foreground">
                 Assigned to:{" "}
-                <span className="text-foreground">
-                  {assignee.full_name ?? assignee.email}
-                </span>
+                <span className="text-foreground">{assignee.full_name ?? assignee.email}</span>
               </div>
             )}
           </div>
 
           {task.description && (
-            <p className="text-sm text-muted-foreground leading-relaxed pt-1">
-              {task.description}
-            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed pt-1">{task.description}</p>
           )}
         </div>
 
@@ -1137,12 +1058,7 @@ function TaskDetailPanel({
             </p>
 
             {task.status === "todo" && (
-              <Button
-                size="sm"
-                className="w-full"
-                onClick={markInProgress}
-                disabled={saving}
-              >
+              <Button size="sm" className="w-full" onClick={markInProgress} disabled={saving}>
                 Mark In Progress
               </Button>
             )}
@@ -1183,12 +1099,7 @@ function TaskDetailPanel({
                   >
                     Save Progress
                   </Button>
-                  <Button
-                    size="sm"
-                    className="flex-1"
-                    onClick={markComplete}
-                    disabled={saving}
-                  >
+                  <Button size="sm" className="flex-1" onClick={markComplete} disabled={saving}>
                     <Check className="mr-1.5 h-3.5 w-3.5" /> Complete
                   </Button>
                 </div>
@@ -1236,13 +1147,9 @@ function TaskDetailPanel({
                 KPI Contribution
               </p>
               <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-0.5">
-                <p className="font-medium text-foreground">
-                  📊 {kpi.title}
-                </p>
+                <p className="font-medium text-foreground">📊 {kpi.title}</p>
                 {kpi.department && (
-                  <p className="text-xs text-muted-foreground">
-                    {kpi.department}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{kpi.department}</p>
                 )}
                 <p className="text-xs text-muted-foreground">
                   Target:{" "}

@@ -48,9 +48,7 @@ export function ConfirmDialog({
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
-          {description && (
-            <AlertDialogDescription>{description}</AlertDialogDescription>
-          )}
+          {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={busy}>{cancelLabel}</AlertDialogCancel>
@@ -60,9 +58,7 @@ export function ConfirmDialog({
               void handleConfirm();
             }}
             disabled={busy}
-            className={
-              destructive ? "bg-destructive hover:bg-destructive/90" : undefined
-            }
+            className={destructive ? "bg-destructive hover:bg-destructive/90" : undefined}
           >
             {busy ? "Working…" : confirmLabel}
           </AlertDialogAction>

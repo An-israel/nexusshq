@@ -8,8 +8,7 @@ export const Route = createFileRoute("/api/public/cron/message-email")({
     handlers: {
       POST: async () => {
         const apiKey = process.env.RESEND_API_KEY;
-        const fromEmail =
-          process.env.RESEND_FROM_EMAIL ?? "notifications@nexushq.app";
+        const fromEmail = process.env.RESEND_FROM_EMAIL ?? "notifications@nexushq.app";
 
         if (!apiKey) {
           return Response.json({
@@ -18,9 +17,7 @@ export const Route = createFileRoute("/api/public/cron/message-email")({
           });
         }
 
-        const fiveMinutesAgo = new Date(
-          Date.now() - 5 * 60 * 1000,
-        ).toISOString();
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
         // Find unread message notifications older than 5 min with no email sent yet
         const { data: notifs, error } = await supabaseAdmin

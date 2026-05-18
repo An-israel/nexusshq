@@ -26,7 +26,9 @@ export async function notifyMentions({
   try {
     // Extract candidate mention strings: "@" followed by a name (letters,
     // digits, spaces, hyphens, apostrophes). Greedy until a non-name char.
-    const matches = Array.from(body.matchAll(/@([\p{L}][\p{L}\p{N}'\- ]{0,60}?)(?=$|[^\p{L}\p{N}'\- ])/gu));
+    const matches = Array.from(
+      body.matchAll(/@([\p{L}][\p{L}\p{N}'\- ]{0,60}?)(?=$|[^\p{L}\p{N}'\- ])/gu),
+    );
     const candidates = new Set(matches.map((m) => m[1].trim().toLowerCase()).filter(Boolean));
     if (candidates.size === 0) return;
 
@@ -50,7 +52,12 @@ export async function notifyMentions({
       // Match if any candidate mention starts-with this user's name (handles
       // greedy multi-word matches like "@John Doe says hi").
       for (const c of candidates) {
-        if (c === name || c.startsWith(name + " ") || name.startsWith(c + " ") || c.startsWith(name)) {
+        if (
+          c === name ||
+          c.startsWith(name + " ") ||
+          name.startsWith(c + " ") ||
+          c.startsWith(name)
+        ) {
           matched.push({ id: p.id, name: p.full_name ?? p.email ?? "Someone" });
           break;
         }
@@ -63,8 +70,13 @@ export async function notifyMentions({
       .from("notification_preferences")
       .select("user_id, mentions_enabled")
       .eq("workspace_id", workspaceId)
-      .in("user_id", matched.map((m) => m.id));
-    const disabled = new Set((prefs ?? []).filter((p) => !p.mentions_enabled).map((p) => p.user_id));
+      .in(
+        "user_id",
+        matched.map((m) => m.id),
+      );
+    const disabled = new Set(
+      (prefs ?? []).filter((p) => !p.mentions_enabled).map((p) => p.user_id),
+    );
     const finalMatched = matched.filter((m) => !disabled.has(m.id));
     if (finalMatched.length === 0) return;
 

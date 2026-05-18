@@ -8,9 +8,7 @@ import { DmView } from "@/components/messages/DmView";
 import { toast } from "sonner";
 import type { DmConversationWithMeta, DmMember, MsgProfile } from "@/lib/messaging/types";
 
-export const Route = createFileRoute(
-  "/_app/$workspaceSlug/messages/dm/$conversationId"
-)({
+export const Route = createFileRoute("/_app/$workspaceSlug/messages/dm/$conversationId")({
   component: DmViewPage,
 });
 

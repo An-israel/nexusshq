@@ -8,7 +8,13 @@ export const Route = createFileRoute("/api/ai")({
       POST: async ({ request }) => {
         const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
         if (!apiKey) {
-          return Response.json({ error: "AI features require ANTHROPIC_API_KEY to be set in your environment variables." }, { status: 500 });
+          return Response.json(
+            {
+              error:
+                "AI features require ANTHROPIC_API_KEY to be set in your environment variables.",
+            },
+            { status: 500 },
+          );
         }
 
         let body: { action: string; context?: Record<string, unknown> };
@@ -44,10 +50,17 @@ export const Route = createFileRoute("/api/ai")({
           const errText = await resp.text();
           let errMsg = errText;
           try {
-            const parsed = JSON.parse(errText) as { error?: { message?: string }; message?: string };
+            const parsed = JSON.parse(errText) as {
+              error?: { message?: string };
+              message?: string;
+            };
             errMsg = parsed.error?.message ?? parsed.message ?? errText;
-          } catch { /* leave as raw text */ }
-          if (resp.status === 401) errMsg = "Invalid Anthropic API key. Please update ANTHROPIC_API_KEY in your server environment variables.";
+          } catch {
+            /* leave as raw text */
+          }
+          if (resp.status === 401)
+            errMsg =
+              "Invalid Anthropic API key. Please update ANTHROPIC_API_KEY in your server environment variables.";
           return Response.json({ error: errMsg }, { status: 502 });
         }
 
@@ -70,7 +83,8 @@ function buildPrompt(
   action: string,
   ctx: Record<string, unknown>,
 ): PromptSpec & { userPrompt: string | null } {
-  const base = "You are an AI assistant for Nexus HQ, an internal team management platform. Be concise, practical, and action-oriented.";
+  const base =
+    "You are an AI assistant for Nexus HQ, an internal team management platform. Be concise, practical, and action-oriented.";
 
   switch (action) {
     // ── Feature 1: performance insights ─────────────────────────────────────

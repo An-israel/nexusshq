@@ -81,7 +81,11 @@ function KpisPage() {
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from("kpis").select("*").eq("workspace_id", workspace.id).order("department");
+    const { data, error } = await supabase
+      .from("kpis")
+      .select("*")
+      .eq("workspace_id", workspace.id)
+      .order("department");
     if (error) {
       toast.error("Failed to load KPIs");
       setLoading(false);
@@ -182,15 +186,19 @@ function KpisPage() {
     load();
   };
 
-  const grouped = DEPARTMENTS.map((d) => ({ dept: d, items: kpis.filter((k) => k.department === d) }))
-    .filter((g) => g.items.length > 0);
+  const grouped = DEPARTMENTS.map((d) => ({
+    dept: d,
+    items: kpis.filter((k) => k.department === d),
+  })).filter((g) => g.items.length > 0);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">KPI Management</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Set department targets. Tasks linked to a KPI auto-feed into progress.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Set department targets. Tasks linked to a KPI auto-feed into progress.
+          </p>
         </div>
         <Button onClick={openNew}>
           <Plus className="mr-2 h-4 w-4" /> Add KPI
@@ -209,7 +217,9 @@ function KpisPage() {
             <div key={g.dept} className="rounded-2xl border border-border bg-card">
               <div className="flex items-center justify-between border-b border-border px-5 py-3">
                 <h2 className="text-sm font-semibold">{deptLabel(g.dept)}</h2>
-                <Badge variant="outline">{g.items.length} KPI{g.items.length !== 1 ? "s" : ""}</Badge>
+                <Badge variant="outline">
+                  {g.items.length} KPI{g.items.length !== 1 ? "s" : ""}
+                </Badge>
               </div>
               <div className="divide-y divide-border">
                 {g.items.map((k) => {
@@ -226,7 +236,9 @@ function KpisPage() {
                       </div>
                       <div className="col-span-4 md:col-span-2 text-xs">
                         <p className="text-muted-foreground">Target</p>
-                        <p className="font-medium">{k.target_value} {k.unit}</p>
+                        <p className="font-medium">
+                          {k.target_value} {k.unit}
+                        </p>
                       </div>
                       <div className="col-span-4 md:col-span-2 text-xs">
                         <p className="text-muted-foreground">Period</p>
@@ -276,7 +288,8 @@ function KpisPage() {
           <DialogHeader>
             <DialogTitle>{form.id ? "Edit KPI" : "New KPI"}</DialogTitle>
             <DialogDescription>
-              Define a measurable target for a department. Tasks tagged with this KPI count toward it.
+              Define a measurable target for a department. Tasks tagged with this KPI count toward
+              it.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
@@ -287,10 +300,14 @@ function KpisPage() {
                   value={form.department}
                   onValueChange={(v) => setForm((f) => ({ ...f, department: v as Department }))}
                 >
-                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     {DEPARTMENTS.map((d) => (
-                      <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>
+                      <SelectItem key={d} value={d}>
+                        {deptLabel(d)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -301,7 +318,9 @@ function KpisPage() {
                   value={form.period}
                   onValueChange={(v) => setForm((f) => ({ ...f, period: v as Period }))}
                 >
-                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="weekly">Weekly</SelectItem>
                     <SelectItem value="monthly">Monthly</SelectItem>
@@ -354,8 +373,12 @@ function KpisPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>Cancel</Button>
-            <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save KPI"}</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? "Saving…" : "Save KPI"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -365,7 +388,8 @@ function KpisPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete KPI?</AlertDialogTitle>
             <AlertDialogDescription>
-              "{confirmDelete?.title}" will be removed. Tasks previously linked will be unlinked but not deleted.
+              "{confirmDelete?.title}" will be removed. Tasks previously linked will be unlinked but
+              not deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

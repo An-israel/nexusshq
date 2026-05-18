@@ -29,7 +29,12 @@ function CreateWorkspacePage() {
   const [slugAvailable, setSlugAvailable] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
-    const cleaned = name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 30);
+    const cleaned = name
+      .toLowerCase()
+      .replace(/[^a-z0-9-]+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 30);
     setSlug(cleaned);
   }, [name]);
 
@@ -65,13 +70,16 @@ function CreateWorkspacePage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) return toast.error("Company name is required");
-    if (!isValidSlug(slug)) return toast.error("Workspace URL must be 3-30 chars, lowercase letters, numbers, hyphens");
+    if (!isValidSlug(slug))
+      return toast.error("Workspace URL must be 3-30 chars, lowercase letters, numbers, hyphens");
     if (checkingSlug) return toast.error("Still checking workspace URL — please wait a moment");
     if (slugAvailable === false) return toast.error("That workspace URL is already taken");
 
     setSubmitting(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) throw new Error("Not signed in");
 
       const { data: ws, error: wsErr } = await supabase
@@ -92,7 +100,8 @@ function CreateWorkspacePage() {
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const e = err as any;
-      const msg = e?.message || e?.error_description || e?.hint || e?.details || "Failed to create workspace";
+      const msg =
+        e?.message || e?.error_description || e?.hint || e?.details || "Failed to create workspace";
       console.error("create-workspace failed:", e);
       toast.error(msg);
     } finally {
@@ -116,19 +125,35 @@ function CreateWorkspacePage() {
             </div>
             <h1 className="text-2xl font-bold">Create another workspace</h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Use the same account across multiple companies or teams and switch between them anytime.
+              Use the same account across multiple companies or teams and switch between them
+              anytime.
             </p>
           </div>
-          <form onSubmit={onSubmit} className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-xl">
+          <form
+            onSubmit={onSubmit}
+            className="space-y-5 rounded-2xl border border-border bg-card p-6 shadow-xl"
+          >
             <div className="space-y-2">
               <Label htmlFor="name">Company name</Label>
-              <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required className="bg-input" />
+              <Input
+                id="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="bg-input"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="slug">Workspace URL</Label>
               <div className="flex items-center gap-2 text-sm">
                 <span className="text-muted-foreground">nexushq.app/</span>
-                <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} required className="bg-input flex-1" />
+                <Input
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                  required
+                  className="bg-input flex-1"
+                />
               </div>
               <p className="text-xs text-muted-foreground">
                 {checkingSlug

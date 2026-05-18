@@ -63,10 +63,12 @@ export const setEmployeeActiveFn = createServerFn({ method: "POST" })
 export const removeWorkspaceMemberFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data) =>
-    z.object({
-      workspaceId: z.string().uuid(),
-      userId: z.string().uuid(),
-    }).parse(data),
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        userId: z.string().uuid(),
+      })
+      .parse(data),
   )
   .handler(async ({ data, context }) => {
     // RPC enforces owner/admin check via SECURITY DEFINER; this is just defense in depth.
@@ -111,10 +113,19 @@ export const createInvitationFn = createServerFn({ method: "POST" })
         email: z.string().email(),
         full_name: z.string().min(1),
         job_title: z.string().nullable().optional(),
-        department: z.enum([
-          "management", "customer_success", "growth", "marketing",
-          "design", "video_editing", "operations", "other",
-        ]).nullable().optional(),
+        department: z
+          .enum([
+            "management",
+            "customer_success",
+            "growth",
+            "marketing",
+            "design",
+            "video_editing",
+            "operations",
+            "other",
+          ])
+          .nullable()
+          .optional(),
         phone: z.string().nullable().optional(),
         role: z.enum(["admin", "manager", "employee"]),
       })

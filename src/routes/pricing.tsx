@@ -3,21 +3,46 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Zap, ArrowRight, HelpCircle, Users, Headphones, Star } from "lucide-react";
 
 const FAQ_DATA = [
-  { q: "Is there a free trial?", a: "Yes — every plan includes a 7-day free trial with no credit card required. You get full access to all features during the trial." },
-  { q: "What happens after the trial ends?", a: "You'll be prompted to choose a plan. Your data is safe — nothing is deleted. You can also contact us to extend the trial." },
-  { q: "Do all plans include the same features?", a: "Yes. Every plan includes all features. The only differences are the number of seats and the level of support you receive." },
-  { q: "How does the 30% annual discount work?", a: "Choose annual billing and pay upfront for 12 months at 30% off the monthly rate. You can switch back to monthly at renewal." },
-  { q: "What if my team grows beyond the seat limit?", a: "We'll notify you when you're close. You can upgrade to the next plan at any time — existing data is never lost." },
-  { q: "What does 'dedicated account manager' mean?", a: "Unlimited plan customers get a named contact at Nexus HQ for onboarding, training, and ongoing support via phone or WhatsApp." },
+  {
+    q: "Is there a free trial?",
+    a: "Yes — every plan includes a 7-day free trial with no credit card required. You get full access to all features during the trial.",
+  },
+  {
+    q: "What happens after the trial ends?",
+    a: "You'll be prompted to choose a plan. Your data is safe — nothing is deleted. You can also contact us to extend the trial.",
+  },
+  {
+    q: "Do all plans include the same features?",
+    a: "Yes. Every plan includes all features. The only differences are the number of seats and the level of support you receive.",
+  },
+  {
+    q: "How does the 30% annual discount work?",
+    a: "Choose annual billing and pay upfront for 12 months at 30% off the monthly rate. You can switch back to monthly at renewal.",
+  },
+  {
+    q: "What if my team grows beyond the seat limit?",
+    a: "We'll notify you when you're close. You can upgrade to the next plan at any time — existing data is never lost.",
+  },
+  {
+    q: "What does 'dedicated account manager' mean?",
+    a: "Unlimited plan customers get a named contact at Nexus HQ for onboarding, training, and ongoing support via phone or WhatsApp.",
+  },
 ];
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
       { title: "Pricing — Nexus HQ Plans for Every Team Size" },
-      { name: "description", content: "Transparent Nexus HQ pricing: Basic, Enterprise and Unlimited plans with a 7-day free trial and 30% annual discount." },
+      {
+        name: "description",
+        content:
+          "Transparent Nexus HQ pricing: Basic, Enterprise and Unlimited plans with a 7-day free trial and 30% annual discount.",
+      },
       { property: "og:title", content: "Pricing — Nexus HQ Plans for Every Team Size" },
-      { property: "og:description", content: "Transparent plans with a 7-day free trial and 30% annual discount." },
+      {
+        property: "og:description",
+        content: "Transparent plans with a 7-day free trial and 30% annual discount.",
+      },
       { property: "og:url", content: "https://nexus.skryveai.com/pricing" },
     ],
     links: [{ rel: "canonical", href: "https://nexus.skryveai.com/pricing" }],
@@ -130,8 +155,12 @@ function PricingPage() {
             <span className="text-lg font-bold tracking-tight">Nexus HQ</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <Link to="/" className="transition-colors hover:text-foreground">Features</Link>
-            <Link to="/pricing" className="font-medium text-foreground">Pricing</Link>
+            <Link to="/" className="transition-colors hover:text-foreground">
+              Features
+            </Link>
+            <Link to="/pricing" className="font-medium text-foreground">
+              Pricing
+            </Link>
           </nav>
           <div className="flex items-center gap-3">
             <Link
@@ -228,7 +257,9 @@ function PricingPage() {
                   )}
 
                   <div className="mb-5">
-                    <p className={`text-xs font-semibold uppercase tracking-wider ${plan.colorClass}`}>
+                    <p
+                      className={`text-xs font-semibold uppercase tracking-wider ${plan.colorClass}`}
+                    >
                       {plan.name}
                     </p>
                     <div className="mt-2 flex items-end gap-1">
@@ -288,7 +319,8 @@ function PricingPage() {
           </div>
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
-            Prices in Nigerian Naira (₦). All plans include SSL, automatic backups, and a 7-day free trial.
+            Prices in Nigerian Naira (₦). All plans include SSL, automatic backups, and a 7-day free
+            trial.
           </p>
         </div>
       </section>
@@ -296,7 +328,9 @@ function PricingPage() {
       {/* ── Support comparison ────────────────────────────────────────────── */}
       <section className="border-t border-border/40 bg-card/20 py-20">
         <div className="mx-auto max-w-3xl px-6">
-          <h2 className="mb-2 text-center text-2xl font-bold tracking-tight">What's different between plans?</h2>
+          <h2 className="mb-2 text-center text-2xl font-bold tracking-tight">
+            What's different between plans?
+          </h2>
           <p className="mb-10 text-center text-sm text-muted-foreground">
             Every plan unlocks every feature. The only differences are team size and support.
           </p>
@@ -307,23 +341,55 @@ function PricingPage() {
                   <th className="py-3 pl-5 pr-4 text-left font-medium text-muted-foreground"></th>
                   <th className="px-4 py-3 text-center font-semibold">Basic</th>
                   <th className="px-4 py-3 text-center font-semibold text-primary">Enterprise</th>
-                  <th className="py-3 pl-4 pr-5 text-center font-semibold text-amber-400">Unlimited</th>
+                  <th className="py-3 pl-4 pr-5 text-center font-semibold text-amber-400">
+                    Unlimited
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { label: "Monthly price", basic: "₦15,000", enterprise: "₦25,000", unlimited: "₦45,000" },
-                  { label: "Annual price (per mo)", basic: "₦10,500", enterprise: "₦17,500", unlimited: "₦31,500" },
-                  { label: "Team members", basic: "Up to 7", enterprise: "Up to 15", unlimited: "Unlimited" },
+                  {
+                    label: "Monthly price",
+                    basic: "₦15,000",
+                    enterprise: "₦25,000",
+                    unlimited: "₦45,000",
+                  },
+                  {
+                    label: "Annual price (per mo)",
+                    basic: "₦10,500",
+                    enterprise: "₦17,500",
+                    unlimited: "₦31,500",
+                  },
+                  {
+                    label: "Team members",
+                    basic: "Up to 7",
+                    enterprise: "Up to 15",
+                    unlimited: "Unlimited",
+                  },
                   { label: "All features", basic: "✓", enterprise: "✓", unlimited: "✓" },
-                  { label: "Support", basic: "Email", enterprise: "Priority", unlimited: "Dedicated manager" },
-                  { label: "Free trial", basic: "7 days", enterprise: "7 days", unlimited: "7 days" },
+                  {
+                    label: "Support",
+                    basic: "Email",
+                    enterprise: "Priority",
+                    unlimited: "Dedicated manager",
+                  },
+                  {
+                    label: "Free trial",
+                    basic: "7 days",
+                    enterprise: "7 days",
+                    unlimited: "7 days",
+                  },
                 ].map(({ label, basic, enterprise, unlimited }) => (
-                  <tr key={label} className="border-b border-border/30 transition-colors hover:bg-accent/20">
+                  <tr
+                    key={label}
+                    className="border-b border-border/30 transition-colors hover:bg-accent/20"
+                  >
                     <td className="py-3 pl-5 pr-4 font-medium">{label}</td>
                     <td className="px-4 py-3 text-center text-muted-foreground">{basic}</td>
                     <td className="bg-primary/3 px-4 py-3 text-center">{enterprise}</td>
-                    <td className="py-3 pl-4 pr-5 text-center text-muted-foreground">{unlimited}</td>
+                    <td className="py-3 pl-4 pr-5 text-center text-muted-foreground">
+                      {unlimited}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -335,7 +401,9 @@ function PricingPage() {
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section className="border-t border-border/40 py-20">
         <div className="mx-auto max-w-2xl px-6">
-          <h2 className="mb-10 text-center text-2xl font-bold tracking-tight">Frequently asked questions</h2>
+          <h2 className="mb-10 text-center text-2xl font-bold tracking-tight">
+            Frequently asked questions
+          </h2>
           <div className="space-y-3">
             {FAQ.map(({ q, a }, i) => (
               <div key={i} className="overflow-hidden rounded-xl border border-border bg-card">
@@ -367,7 +435,9 @@ function PricingPage() {
           <div className="h-[300px] w-[300px] rounded-full bg-primary/5 blur-3xl" />
         </div>
         <div className="relative mx-auto max-w-xl px-6 text-center">
-          <h2 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">Try Nexus HQ free for 7 days</h2>
+          <h2 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">
+            Try Nexus HQ free for 7 days
+          </h2>
           <p className="mb-8 text-muted-foreground">
             No credit card required. Full access to every feature. Cancel any time.
           </p>
@@ -391,11 +461,19 @@ function PricingPage() {
               <span className="font-bold">Nexus HQ</span>
             </Link>
             <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link to="/" className="transition-colors hover:text-foreground">Home</Link>
-              <Link to="/pricing" className="transition-colors hover:text-foreground">Pricing</Link>
-              <Link to="/login" className="transition-colors hover:text-foreground">Sign in</Link>
+              <Link to="/" className="transition-colors hover:text-foreground">
+                Home
+              </Link>
+              <Link to="/pricing" className="transition-colors hover:text-foreground">
+                Pricing
+              </Link>
+              <Link to="/login" className="transition-colors hover:text-foreground">
+                Sign in
+              </Link>
             </nav>
-            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} Nexus HQ. All rights reserved.</p>
+            <p className="text-xs text-muted-foreground">
+              © {new Date().getFullYear()} Nexus HQ. All rights reserved.
+            </p>
           </div>
         </div>
       </footer>

@@ -19,26 +19,25 @@ export const Route = createFileRoute("/api/public/cron/weekly-summary-email")({
         const weekEnd = lastSun.toISOString().slice(0, 10);
 
         // ── Gather stats ───────────────────────────────────────────────────
-        const [{ count: total }, { count: completed }, { count: overdue }] =
-          await Promise.all([
-            supabaseAdmin
-              .from("tasks")
-              .select("id", { count: "exact", head: true })
-              .gte("due_date", weekStart)
-              .lte("due_date", weekEnd),
-            supabaseAdmin
-              .from("tasks")
-              .select("id", { count: "exact", head: true })
-              .eq("status", "completed")
-              .gte("due_date", weekStart)
-              .lte("due_date", weekEnd),
-            supabaseAdmin
-              .from("tasks")
-              .select("id", { count: "exact", head: true })
-              .eq("status", "overdue")
-              .gte("due_date", weekStart)
-              .lte("due_date", weekEnd),
-          ]);
+        const [{ count: total }, { count: completed }, { count: overdue }] = await Promise.all([
+          supabaseAdmin
+            .from("tasks")
+            .select("id", { count: "exact", head: true })
+            .gte("due_date", weekStart)
+            .lte("due_date", weekEnd),
+          supabaseAdmin
+            .from("tasks")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "completed")
+            .gte("due_date", weekStart)
+            .lte("due_date", weekEnd),
+          supabaseAdmin
+            .from("tasks")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "overdue")
+            .gte("due_date", weekStart)
+            .lte("due_date", weekEnd),
+        ]);
 
         // Attendance
         const { data: attRows } = await supabaseAdmin
@@ -47,7 +46,9 @@ export const Route = createFileRoute("/api/public/cron/weekly-summary-email")({
           .gte("date", weekStart)
           .lte("date", weekEnd);
 
-        const presentSet = new Set((attRows ?? []).filter((r) => r.clock_out).map((r) => r.user_id));
+        const presentSet = new Set(
+          (attRows ?? []).filter((r) => r.clock_out).map((r) => r.user_id),
+        );
         const presentDays = presentSet.size;
 
         const { count: totalEmployees } = await supabaseAdmin

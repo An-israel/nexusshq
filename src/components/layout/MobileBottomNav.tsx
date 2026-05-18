@@ -1,16 +1,38 @@
 import * as React from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, CheckSquare, MessageSquare, Bell, Menu, Clock, Users,
-  CalendarOff, Flag, BarChart3, Megaphone, Star, Wallet, BookOpen,
-  GitBranch, ClipboardList, FolderUp, Kanban, RefreshCw, Briefcase,
-  Target, Settings, LogOut, Heart, FileText, Building2,
+  LayoutDashboard,
+  CheckSquare,
+  MessageSquare,
+  Bell,
+  Menu,
+  Clock,
+  Users,
+  CalendarOff,
+  Flag,
+  BarChart3,
+  Megaphone,
+  Star,
+  Wallet,
+  BookOpen,
+  GitBranch,
+  ClipboardList,
+  FolderUp,
+  Kanban,
+  RefreshCw,
+  Briefcase,
+  Target,
+  Sparkles,
+  Settings,
+  LogOut,
+  Heart,
+  FileText,
+  Radio,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
-import {
-  Sheet, SheetContent,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 interface NavItem {
   slug: string;
@@ -20,36 +42,97 @@ interface NavItem {
 }
 
 const BOTTOM_NAV: NavItem[] = [
-  { slug: "dashboard",     label: "Home",     icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
-  { slug: "tasks",         label: "Tasks",    icon: CheckSquare,     roles: ["admin", "manager", "employee"] },
-  { slug: "messages",      label: "Messages", icon: MessageSquare,   roles: ["admin", "manager", "employee"] },
-  { slug: "notifications", label: "Alerts",   icon: Bell,            roles: ["admin", "manager", "employee"] },
+  {
+    slug: "dashboard",
+    label: "Home",
+    icon: LayoutDashboard,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "messages",
+    label: "Messages",
+    icon: MessageSquare,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "notifications", label: "Alerts", icon: Bell, roles: ["admin", "manager", "employee"] },
 ];
 
 const ALL_NAV: NavItem[] = [
-  { slug: "dashboard",       label: "Dashboard",      icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
-  { slug: "tasks",           label: "Tasks",          icon: CheckSquare,     roles: ["admin", "manager", "employee"] },
-  { slug: "attendance",      label: "Attendance",     icon: Clock,           roles: ["admin", "manager", "employee"] },
-  { slug: "leave",           label: "Leave",          icon: CalendarOff,     roles: ["admin", "manager", "employee"] },
-  { slug: "standups",        label: "Standups",       icon: ClipboardList,   roles: ["admin", "manager", "employee"] },
-  { slug: "deliverables",    label: "Deliverables",   icon: FolderUp,        roles: ["admin", "manager", "employee"] },
-  { slug: "reviews",         label: "Reviews",        icon: Star,            roles: ["admin", "manager", "employee"] },
-  { slug: "payslips",        label: "Payslips",       icon: Wallet,          roles: ["admin", "manager", "employee"] },
-  { slug: "announcements",   label: "Announcements",  icon: Megaphone,       roles: ["admin", "manager", "employee"] },
-  { slug: "kudos",           label: "Recognition",    icon: Heart,           roles: ["admin", "manager", "employee"] },
-  { slug: "messages",        label: "Messages",       icon: MessageSquare,   roles: ["admin", "manager", "employee"] },
-  { slug: "handbook",        label: "Handbook",       icon: BookOpen,        roles: ["admin", "manager", "employee"] },
-  { slug: "documents",       label: "Documents",      icon: FileText,        roles: ["admin", "manager", "employee"] },
-  { slug: "org-chart",       label: "Org Chart",      icon: GitBranch,       roles: ["admin", "manager", "employee"] },
-  { slug: "okrs",            label: "Goals & OKRs",   icon: Flag,            roles: ["admin", "manager", "employee"] },
-  { slug: "notifications",   label: "Notifications",  icon: Bell,            roles: ["admin", "manager", "employee"] },
-  { slug: "settings",        label: "Settings",       icon: Settings,        roles: ["admin", "manager", "employee"] },
-  { slug: "team",            label: "Team",           icon: Users,           roles: ["admin", "manager"] },
-  { slug: "team-board",      label: "Task Board",     icon: Kanban,          roles: ["admin", "manager"] },
-  { slug: "recurring-tasks", label: "Recurring Tasks",icon: RefreshCw,       roles: ["admin", "manager"] },
-  { slug: "client-projects", label: "Client Projects",icon: Briefcase,       roles: ["admin", "manager"] },
-  { slug: "reports",         label: "Reports",        icon: BarChart3,       roles: ["admin", "manager"] },
-  { slug: "kpis",            label: "KPIs",           icon: Target,          roles: ["admin"] },
+  {
+    slug: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
+  { slug: "attendance", label: "Attendance", icon: Clock, roles: ["admin", "manager", "employee"] },
+  { slug: "leave", label: "Leave", icon: CalendarOff, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "standups",
+    label: "Standups",
+    icon: ClipboardList,
+    roles: ["admin", "manager", "employee"],
+  },
+  {
+    slug: "deliverables",
+    label: "Deliverables",
+    icon: FolderUp,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "reviews", label: "Reviews", icon: Star, roles: ["admin", "manager", "employee"] },
+  { slug: "payslips", label: "Payslips", icon: Wallet, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "announcements",
+    label: "Announcements",
+    icon: Megaphone,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "kudos", label: "Recognition", icon: Heart, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "messages",
+    label: "Messages",
+    icon: MessageSquare,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "handbook", label: "Handbook", icon: BookOpen, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "documents",
+    label: "Documents",
+    icon: FileText,
+    roles: ["admin", "manager", "employee"],
+  },
+  {
+    slug: "org-chart",
+    label: "Org Chart",
+    icon: GitBranch,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "okrs", label: "Goals & OKRs", icon: Flag, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "notifications",
+    label: "Notifications",
+    icon: Bell,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
+  { slug: "team", label: "Team", icon: Users, roles: ["admin", "manager"] },
+  { slug: "team-board", label: "Task Board", icon: Kanban, roles: ["admin", "manager"] },
+  {
+    slug: "recurring-tasks",
+    label: "Recurring Tasks",
+    icon: RefreshCw,
+    roles: ["admin", "manager"],
+  },
+  {
+    slug: "client-projects",
+    label: "Client Projects",
+    icon: Briefcase,
+    roles: ["admin", "manager"],
+  },
+  { slug: "live", label: "Live", icon: Radio, roles: ["admin", "manager"] },
+  { slug: "reports", label: "Reports", icon: BarChart3, roles: ["admin", "manager"] },
+  { slug: "kpis", label: "KPIs", icon: Target, roles: ["admin"] },
 ];
 
 export function MobileBottomNav({ workspaceSlug }: { workspaceSlug: string }) {
@@ -69,7 +152,10 @@ export function MobileBottomNav({ workspaceSlug }: { workspaceSlug: string }) {
     <>
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 flex items-stretch border-t border-[#1E1E1E] bg-[#111111] md:hidden"
-        style={{ height: "calc(64px + env(safe-area-inset-bottom))", paddingBottom: "env(safe-area-inset-bottom)" }}
+        style={{
+          height: "calc(64px + env(safe-area-inset-bottom))",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
       >
         {BOTTOM_NAV.filter(allowed).map((item) => {
           const Icon = item.icon;
@@ -126,7 +212,10 @@ export function MobileBottomNav({ workspaceSlug }: { workspaceSlug: string }) {
           </div>
 
           {/* Nav list */}
-          <div className="flex flex-col gap-1 px-4 pb-4 overflow-y-auto" style={{ maxHeight: "60vh" }}>
+          <div
+            className="flex flex-col gap-1 px-4 pb-4 overflow-y-auto"
+            style={{ maxHeight: "60vh" }}
+          >
             <div className="pt-2" />
             {ALL_NAV.filter(allowed).map((item) => {
               const Icon = item.icon;

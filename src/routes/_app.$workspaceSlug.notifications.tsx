@@ -7,7 +7,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
-import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock as ClockIcon, Target, Settings as SettingsIcon } from "lucide-react";
+import {
+  Bell,
+  AlertCircle,
+  AlertTriangle,
+  CheckSquare,
+  Clock as ClockIcon,
+  Target,
+  Settings as SettingsIcon,
+} from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -78,7 +86,8 @@ function NotificationsPage() {
       .eq("user_id", user.id)
       .eq("workspace_id", workspace.id)
       .maybeSingle();
-    if (data) setPrefs({ mentions_enabled: data.mentions_enabled, pins_enabled: data.pins_enabled });
+    if (data)
+      setPrefs({ mentions_enabled: data.mentions_enabled, pins_enabled: data.pins_enabled });
   };
 
   const updatePref = async (key: "mentions_enabled" | "pins_enabled", value: boolean) => {
@@ -86,12 +95,15 @@ function NotificationsPage() {
     const next = { ...prefs, [key]: value };
     setPrefs(next);
     setPrefsLoading(true);
-    const { error } = await supabase
-      .from("notification_preferences")
-      .upsert(
-        { user_id: user.id, workspace_id: workspace.id, ...next, updated_at: new Date().toISOString() },
-        { onConflict: "user_id,workspace_id" },
-      );
+    const { error } = await supabase.from("notification_preferences").upsert(
+      {
+        user_id: user.id,
+        workspace_id: workspace.id,
+        ...next,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,workspace_id" },
+    );
     setPrefsLoading(false);
     if (error) {
       toast.error("Failed to save preference");
@@ -159,7 +171,11 @@ function NotificationsPage() {
 
   const markRead = async (n: Notif) => {
     if (n.is_read) return;
-    await supabase.from("notifications").update({ is_read: true }).eq("id", n.id).eq("workspace_id", workspace.id);
+    await supabase
+      .from("notifications")
+      .update({ is_read: true })
+      .eq("id", n.id)
+      .eq("workspace_id", workspace.id);
     setNotifs((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
   };
 
@@ -193,7 +209,9 @@ function NotificationsPage() {
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
               <p className="text-sm font-medium">@mention notifications</p>
-              <p className="text-xs text-muted-foreground">Get notified when someone @mentions you in a channel.</p>
+              <p className="text-xs text-muted-foreground">
+                Get notified when someone @mentions you in a channel.
+              </p>
             </div>
             <Switch
               checked={prefs.mentions_enabled}
@@ -204,7 +222,9 @@ function NotificationsPage() {
           <div className="flex items-center justify-between rounded-lg border border-border p-3">
             <div>
               <p className="text-sm font-medium">Pinned message notifications</p>
-              <p className="text-xs text-muted-foreground">Get notified when a message is pinned or unpinned.</p>
+              <p className="text-xs text-muted-foreground">
+                Get notified when a message is pinned or unpinned.
+              </p>
             </div>
             <Switch
               checked={prefs.pins_enabled}
@@ -221,7 +241,9 @@ function NotificationsPage() {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`flex-1 rounded-md px-3 py-1.5 text-xs ${
-              tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+              tab === t.key
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t.label}
@@ -249,7 +271,9 @@ function NotificationsPage() {
                 }`}
                 onClick={() => markRead(n)}
               >
-                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${colorFor(n.type)}`}>
+                <div
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${colorFor(n.type)}`}
+                >
                   <Icon className="h-4 w-4" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -259,7 +283,9 @@ function NotificationsPage() {
                   </div>
                   <p className="mt-0.5 text-xs text-muted-foreground">{n.message}</p>
                 </div>
-                <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(n.created_at)}</span>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {timeAgo(n.created_at)}
+                </span>
               </li>
             );
           })}

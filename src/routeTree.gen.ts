@@ -38,6 +38,7 @@ import { Route as AppWorkspaceSlugOnboardingRouteImport } from './routes/_app.$w
 import { Route as AppWorkspaceSlugOkrsRouteImport } from './routes/_app.$workspaceSlug.okrs'
 import { Route as AppWorkspaceSlugNotificationsRouteImport } from './routes/_app.$workspaceSlug.notifications'
 import { Route as AppWorkspaceSlugMessagesRouteImport } from './routes/_app.$workspaceSlug.messages'
+import { Route as AppWorkspaceSlugLiveRouteImport } from './routes/_app.$workspaceSlug.live'
 import { Route as AppWorkspaceSlugLeaveRouteImport } from './routes/_app.$workspaceSlug.leave'
 import { Route as AppWorkspaceSlugKudosRouteImport } from './routes/_app.$workspaceSlug.kudos'
 import { Route as AppWorkspaceSlugKpisRouteImport } from './routes/_app.$workspaceSlug.kpis'
@@ -62,6 +63,7 @@ import { Route as ApiPublicCronAutoClockOutRouteImport } from './routes/api/publ
 import { Route as AppWorkspaceSlugTeamUserIdRouteImport } from './routes/_app.$workspaceSlug.team.$userId'
 import { Route as AppWorkspaceSlugTasksAssignRouteImport } from './routes/_app.$workspaceSlug.tasks_.assign'
 import { Route as AppWorkspaceSlugTasksTaskIdRouteImport } from './routes/_app.$workspaceSlug.tasks_.$taskId'
+import { Route as AppWorkspaceSlugSettingsAutomationsRouteImport } from './routes/_app.$workspaceSlug.settings.automations'
 import { Route as AppWorkspaceSlugMessagesActivityRouteImport } from './routes/_app.$workspaceSlug.messages.activity'
 import { Route as AppWorkspaceSlugMessagesDmConversationIdRouteImport } from './routes/_app.$workspaceSlug.messages.dm.$conversationId'
 import { Route as AppWorkspaceSlugMessagesChannelChannelIdRouteImport } from './routes/_app.$workspaceSlug.messages.channel.$channelId'
@@ -219,6 +221,11 @@ const AppWorkspaceSlugMessagesRoute =
     path: '/messages',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
+const AppWorkspaceSlugLiveRoute = AppWorkspaceSlugLiveRouteImport.update({
+  id: '/live',
+  path: '/live',
+  getParentRoute: () => AppWorkspaceSlugRoute,
+} as any)
 const AppWorkspaceSlugLeaveRoute = AppWorkspaceSlugLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -356,6 +363,12 @@ const AppWorkspaceSlugTasksTaskIdRoute =
     path: '/tasks/$taskId',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
+const AppWorkspaceSlugSettingsAutomationsRoute =
+  AppWorkspaceSlugSettingsAutomationsRouteImport.update({
+    id: '/automations',
+    path: '/automations',
+    getParentRoute: () => AppWorkspaceSlugSettingsRoute,
+  } as any)
 const AppWorkspaceSlugMessagesActivityRoute =
   AppWorkspaceSlugMessagesActivityRouteImport.update({
     id: '/activity',
@@ -401,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
+  '/$workspaceSlug/live': typeof AppWorkspaceSlugLiveRoute
   '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
@@ -411,12 +425,13 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
   '/$workspaceSlug/reports': typeof AppWorkspaceSlugReportsRoute
   '/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
-  '/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRoute
+  '/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRouteWithChildren
   '/$workspaceSlug/standups': typeof AppWorkspaceSlugStandupsRoute
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
+  '/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
   '/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
@@ -458,6 +473,7 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
+  '/$workspaceSlug/live': typeof AppWorkspaceSlugLiveRoute
   '/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
@@ -468,12 +484,13 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
   '/$workspaceSlug/reports': typeof AppWorkspaceSlugReportsRoute
   '/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
-  '/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRoute
+  '/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRouteWithChildren
   '/$workspaceSlug/standups': typeof AppWorkspaceSlugStandupsRoute
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
+  '/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
   '/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
@@ -517,6 +534,7 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/kpis': typeof AppWorkspaceSlugKpisRoute
   '/_app/$workspaceSlug/kudos': typeof AppWorkspaceSlugKudosRoute
   '/_app/$workspaceSlug/leave': typeof AppWorkspaceSlugLeaveRoute
+  '/_app/$workspaceSlug/live': typeof AppWorkspaceSlugLiveRoute
   '/_app/$workspaceSlug/messages': typeof AppWorkspaceSlugMessagesRouteWithChildren
   '/_app/$workspaceSlug/notifications': typeof AppWorkspaceSlugNotificationsRoute
   '/_app/$workspaceSlug/okrs': typeof AppWorkspaceSlugOkrsRoute
@@ -527,12 +545,13 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/recurring-tasks': typeof AppWorkspaceSlugRecurringTasksRoute
   '/_app/$workspaceSlug/reports': typeof AppWorkspaceSlugReportsRoute
   '/_app/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
-  '/_app/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRoute
+  '/_app/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRouteWithChildren
   '/_app/$workspaceSlug/standups': typeof AppWorkspaceSlugStandupsRoute
   '/_app/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/_app/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
+  '/_app/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/_app/$workspaceSlug/tasks_/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
   '/_app/$workspaceSlug/tasks_/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/_app/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
@@ -576,6 +595,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/kpis'
     | '/$workspaceSlug/kudos'
     | '/$workspaceSlug/leave'
+    | '/$workspaceSlug/live'
     | '/$workspaceSlug/messages'
     | '/$workspaceSlug/notifications'
     | '/$workspaceSlug/okrs'
@@ -592,6 +612,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
     | '/$workspaceSlug/messages/activity'
+    | '/$workspaceSlug/settings/automations'
     | '/$workspaceSlug/tasks/$taskId'
     | '/$workspaceSlug/tasks/assign'
     | '/$workspaceSlug/team/$userId'
@@ -633,6 +654,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/kpis'
     | '/$workspaceSlug/kudos'
     | '/$workspaceSlug/leave'
+    | '/$workspaceSlug/live'
     | '/$workspaceSlug/messages'
     | '/$workspaceSlug/notifications'
     | '/$workspaceSlug/okrs'
@@ -649,6 +671,7 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
     | '/$workspaceSlug/messages/activity'
+    | '/$workspaceSlug/settings/automations'
     | '/$workspaceSlug/tasks/$taskId'
     | '/$workspaceSlug/tasks/assign'
     | '/$workspaceSlug/team/$userId'
@@ -691,6 +714,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/kpis'
     | '/_app/$workspaceSlug/kudos'
     | '/_app/$workspaceSlug/leave'
+    | '/_app/$workspaceSlug/live'
     | '/_app/$workspaceSlug/messages'
     | '/_app/$workspaceSlug/notifications'
     | '/_app/$workspaceSlug/okrs'
@@ -707,6 +731,7 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/team'
     | '/_app/$workspaceSlug/team-board'
     | '/_app/$workspaceSlug/messages/activity'
+    | '/_app/$workspaceSlug/settings/automations'
     | '/_app/$workspaceSlug/tasks_/$taskId'
     | '/_app/$workspaceSlug/tasks_/assign'
     | '/_app/$workspaceSlug/team/$userId'
@@ -953,6 +978,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugMessagesRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
+    '/_app/$workspaceSlug/live': {
+      id: '/_app/$workspaceSlug/live'
+      path: '/live'
+      fullPath: '/$workspaceSlug/live'
+      preLoaderRoute: typeof AppWorkspaceSlugLiveRouteImport
+      parentRoute: typeof AppWorkspaceSlugRoute
+    }
     '/_app/$workspaceSlug/leave': {
       id: '/_app/$workspaceSlug/leave'
       path: '/leave'
@@ -1121,6 +1153,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugTasksTaskIdRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
+    '/_app/$workspaceSlug/settings/automations': {
+      id: '/_app/$workspaceSlug/settings/automations'
+      path: '/automations'
+      fullPath: '/$workspaceSlug/settings/automations'
+      preLoaderRoute: typeof AppWorkspaceSlugSettingsAutomationsRouteImport
+      parentRoute: typeof AppWorkspaceSlugSettingsRoute
+    }
     '/_app/$workspaceSlug/messages/activity': {
       id: '/_app/$workspaceSlug/messages/activity'
       path: '/activity'
@@ -1166,6 +1205,21 @@ const AppWorkspaceSlugMessagesRouteWithChildren =
     AppWorkspaceSlugMessagesRouteChildren,
   )
 
+interface AppWorkspaceSlugSettingsRouteChildren {
+  AppWorkspaceSlugSettingsAutomationsRoute: typeof AppWorkspaceSlugSettingsAutomationsRoute
+}
+
+const AppWorkspaceSlugSettingsRouteChildren: AppWorkspaceSlugSettingsRouteChildren =
+  {
+    AppWorkspaceSlugSettingsAutomationsRoute:
+      AppWorkspaceSlugSettingsAutomationsRoute,
+  }
+
+const AppWorkspaceSlugSettingsRouteWithChildren =
+  AppWorkspaceSlugSettingsRoute._addFileChildren(
+    AppWorkspaceSlugSettingsRouteChildren,
+  )
+
 interface AppWorkspaceSlugTeamRouteChildren {
   AppWorkspaceSlugTeamUserIdRoute: typeof AppWorkspaceSlugTeamUserIdRoute
 }
@@ -1190,6 +1244,7 @@ interface AppWorkspaceSlugRouteChildren {
   AppWorkspaceSlugKpisRoute: typeof AppWorkspaceSlugKpisRoute
   AppWorkspaceSlugKudosRoute: typeof AppWorkspaceSlugKudosRoute
   AppWorkspaceSlugLeaveRoute: typeof AppWorkspaceSlugLeaveRoute
+  AppWorkspaceSlugLiveRoute: typeof AppWorkspaceSlugLiveRoute
   AppWorkspaceSlugMessagesRoute: typeof AppWorkspaceSlugMessagesRouteWithChildren
   AppWorkspaceSlugNotificationsRoute: typeof AppWorkspaceSlugNotificationsRoute
   AppWorkspaceSlugOkrsRoute: typeof AppWorkspaceSlugOkrsRoute
@@ -1200,7 +1255,7 @@ interface AppWorkspaceSlugRouteChildren {
   AppWorkspaceSlugRecurringTasksRoute: typeof AppWorkspaceSlugRecurringTasksRoute
   AppWorkspaceSlugReportsRoute: typeof AppWorkspaceSlugReportsRoute
   AppWorkspaceSlugReviewsRoute: typeof AppWorkspaceSlugReviewsRoute
-  AppWorkspaceSlugSettingsRoute: typeof AppWorkspaceSlugSettingsRoute
+  AppWorkspaceSlugSettingsRoute: typeof AppWorkspaceSlugSettingsRouteWithChildren
   AppWorkspaceSlugStandupsRoute: typeof AppWorkspaceSlugStandupsRoute
   AppWorkspaceSlugTasksRoute: typeof AppWorkspaceSlugTasksRoute
   AppWorkspaceSlugTeamRoute: typeof AppWorkspaceSlugTeamRouteWithChildren
@@ -1222,6 +1277,7 @@ const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
   AppWorkspaceSlugKpisRoute: AppWorkspaceSlugKpisRoute,
   AppWorkspaceSlugKudosRoute: AppWorkspaceSlugKudosRoute,
   AppWorkspaceSlugLeaveRoute: AppWorkspaceSlugLeaveRoute,
+  AppWorkspaceSlugLiveRoute: AppWorkspaceSlugLiveRoute,
   AppWorkspaceSlugMessagesRoute: AppWorkspaceSlugMessagesRouteWithChildren,
   AppWorkspaceSlugNotificationsRoute: AppWorkspaceSlugNotificationsRoute,
   AppWorkspaceSlugOkrsRoute: AppWorkspaceSlugOkrsRoute,
@@ -1232,7 +1288,7 @@ const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
   AppWorkspaceSlugRecurringTasksRoute: AppWorkspaceSlugRecurringTasksRoute,
   AppWorkspaceSlugReportsRoute: AppWorkspaceSlugReportsRoute,
   AppWorkspaceSlugReviewsRoute: AppWorkspaceSlugReviewsRoute,
-  AppWorkspaceSlugSettingsRoute: AppWorkspaceSlugSettingsRoute,
+  AppWorkspaceSlugSettingsRoute: AppWorkspaceSlugSettingsRouteWithChildren,
   AppWorkspaceSlugStandupsRoute: AppWorkspaceSlugStandupsRoute,
   AppWorkspaceSlugTasksRoute: AppWorkspaceSlugTasksRoute,
   AppWorkspaceSlugTeamRoute: AppWorkspaceSlugTeamRouteWithChildren,
@@ -1281,3 +1337,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

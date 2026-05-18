@@ -68,7 +68,12 @@ function PayslipsPage() {
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from("payslips").select("*").eq("workspace_id", workspace.id).order("period_year", { ascending: false }).order("period_month", { ascending: false });
+    let q = supabase
+      .from("payslips")
+      .select("*")
+      .eq("workspace_id", workspace.id)
+      .order("period_year", { ascending: false })
+      .order("period_month", { ascending: false });
     if (!isAdmin) q = q.eq("user_id", user.id);
     const { data, error } = await q;
     if (error) {
@@ -85,13 +90,17 @@ function PayslipsPage() {
         .select("id, full_name, email, base_salary")
         .in("id", ids);
       const map: Record<string, ProfileMini> = {};
-      (profs ?? []).forEach((p) => { map[p.id] = p as ProfileMini; });
+      (profs ?? []).forEach((p) => {
+        map[p.id] = p as ProfileMini;
+      });
       setProfiles(map);
     }
     setLoading(false);
   }, [user, isAdmin]);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   function downloadPayslip(p: PayslipRow) {
     const subj = profiles[p.user_id];
@@ -109,7 +118,9 @@ function PayslipsPage() {
       `NET PAY:       ${fmtMoney(Number(p.net_pay), p.currency)}`,
       "",
       p.notes ? `Notes: ${p.notes}` : "",
-    ].filter(Boolean).join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
     const blob = new Blob([lines], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -133,9 +144,17 @@ function PayslipsPage() {
         {isAdmin && (
           <Dialog open={createOpen} onOpenChange={setCreateOpen}>
             <DialogTrigger asChild>
-              <Button><Plus className="mr-2 h-4 w-4" /> Issue Payslip</Button>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" /> Issue Payslip
+              </Button>
             </DialogTrigger>
-            <CreatePayslipDialog workspaceId={workspace.id} onCreated={() => { setCreateOpen(false); void load(); }} />
+            <CreatePayslipDialog
+              workspaceId={workspace.id}
+              onCreated={() => {
+                setCreateOpen(false);
+                void load();
+              }}
+            />
           </Dialog>
         )}
       </div>
@@ -156,9 +175,13 @@ function PayslipsPage() {
                       <Wallet className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-medium">{MONTHS[p.period_month - 1]} {p.period_year}</p>
+                      <p className="font-medium">
+                        {MONTHS[p.period_month - 1]} {p.period_year}
+                      </p>
                       {isAdmin && subj && (
-                        <p className="text-xs text-muted-foreground">{subj.full_name ?? subj.email}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {subj.full_name ?? subj.email}
+                        </p>
                       )}
                     </div>
                   </div>
@@ -169,15 +192,21 @@ function PayslipsPage() {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Bonus</p>
-                      <p className="tabular-nums text-success">+{fmtMoney(Number(p.bonus), p.currency)}</p>
+                      <p className="tabular-nums text-success">
+                        +{fmtMoney(Number(p.bonus), p.currency)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Deductions</p>
-                      <p className="tabular-nums text-destructive">-{fmtMoney(Number(p.deductions), p.currency)}</p>
+                      <p className="tabular-nums text-destructive">
+                        -{fmtMoney(Number(p.deductions), p.currency)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Net</p>
-                      <p className="tabular-nums font-bold">{fmtMoney(Number(p.net_pay), p.currency)}</p>
+                      <p className="tabular-nums font-bold">
+                        {fmtMoney(Number(p.net_pay), p.currency)}
+                      </p>
                     </div>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => downloadPayslip(p)}>
@@ -185,7 +214,9 @@ function PayslipsPage() {
                   </Button>
                 </div>
                 {p.notes && (
-                  <p className="mt-3 text-xs text-muted-foreground border-t border-border pt-2">{p.notes}</p>
+                  <p className="mt-3 text-xs text-muted-foreground border-t border-border pt-2">
+                    {p.notes}
+                  </p>
                 )}
               </Card>
             );
@@ -196,7 +227,13 @@ function PayslipsPage() {
   );
 }
 
-function CreatePayslipDialog({ workspaceId, onCreated }: { workspaceId: string; onCreated: () => void }) {
+function CreatePayslipDialog({
+  workspaceId,
+  onCreated,
+}: {
+  workspaceId: string;
+  onCreated: () => void;
+}) {
   const { user } = useAuth();
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
@@ -230,7 +267,10 @@ function CreatePayslipDialog({ workspaceId, onCreated }: { workspaceId: string; 
   const net = Number(form.base_salary) + Number(form.bonus) - Number(form.deductions);
 
   async function submit() {
-    if (!form.user_id) { toast.error("Pick an employee"); return; }
+    if (!form.user_id) {
+      toast.error("Pick an employee");
+      return;
+    }
     setSubmitting(true);
     const { error } = await supabase.from("payslips").insert({
       user_id: form.user_id,
@@ -264,48 +304,87 @@ function CreatePayslipDialog({ workspaceId, onCreated }: { workspaceId: string; 
 
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>Issue Payslip</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Issue Payslip</DialogTitle>
+      </DialogHeader>
       <div className="space-y-3">
         <div>
           <Label>Employee</Label>
           <Select value={form.user_id} onValueChange={(v) => setForm({ ...form, user_id: v })}>
-            <SelectTrigger><SelectValue placeholder="Pick employee" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="Pick employee" />
+            </SelectTrigger>
             <SelectContent>
-              {employees.map((e) => <SelectItem key={e.id} value={e.id}>{e.full_name ?? e.email}</SelectItem>)}
+              {employees.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.full_name ?? e.email}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label>Month</Label>
-            <Select value={String(form.period_month)} onValueChange={(v) => setForm({ ...form, period_month: Number(v) })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={String(form.period_month)}
+              onValueChange={(v) => setForm({ ...form, period_month: Number(v) })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
-                {MONTHS.map((m, i) => <SelectItem key={m} value={String(i + 1)}>{m}</SelectItem>)}
+                {MONTHS.map((m, i) => (
+                  <SelectItem key={m} value={String(i + 1)}>
+                    {m}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label>Year</Label>
-            <Input type="number" value={form.period_year} onChange={(e) => setForm({ ...form, period_year: Number(e.target.value) })} />
+            <Input
+              type="number"
+              value={form.period_year}
+              onChange={(e) => setForm({ ...form, period_year: Number(e.target.value) })}
+            />
           </div>
           <div>
             <Label>Currency</Label>
-            <Input value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })} />
+            <Input
+              value={form.currency}
+              onChange={(e) => setForm({ ...form, currency: e.target.value.toUpperCase() })}
+            />
           </div>
         </div>
         <div className="grid grid-cols-3 gap-3">
           <div>
             <Label>Base salary</Label>
-            <Input type="number" step="0.01" value={form.base_salary} onChange={(e) => setForm({ ...form, base_salary: Number(e.target.value) })} />
+            <Input
+              type="number"
+              step="0.01"
+              value={form.base_salary}
+              onChange={(e) => setForm({ ...form, base_salary: Number(e.target.value) })}
+            />
           </div>
           <div>
             <Label>Bonus</Label>
-            <Input type="number" step="0.01" value={form.bonus} onChange={(e) => setForm({ ...form, bonus: Number(e.target.value) })} />
+            <Input
+              type="number"
+              step="0.01"
+              value={form.bonus}
+              onChange={(e) => setForm({ ...form, bonus: Number(e.target.value) })}
+            />
           </div>
           <div>
             <Label>Deductions</Label>
-            <Input type="number" step="0.01" value={form.deductions} onChange={(e) => setForm({ ...form, deductions: Number(e.target.value) })} />
+            <Input
+              type="number"
+              step="0.01"
+              value={form.deductions}
+              onChange={(e) => setForm({ ...form, deductions: Number(e.target.value) })}
+            />
           </div>
         </div>
         <div className="rounded border border-border bg-muted/30 p-3 flex items-center justify-between">
@@ -314,11 +393,17 @@ function CreatePayslipDialog({ workspaceId, onCreated }: { workspaceId: string; 
         </div>
         <div>
           <Label>Notes (optional)</Label>
-          <Textarea rows={2} value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
+          <Textarea
+            rows={2}
+            value={form.notes}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
+          />
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={submit} disabled={submitting}>{submitting ? "Issuing…" : "Issue Payslip"}</Button>
+        <Button onClick={submit} disabled={submitting}>
+          {submitting ? "Issuing…" : "Issue Payslip"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );

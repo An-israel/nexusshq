@@ -13,7 +13,17 @@ import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { setEmployeeActiveFn, removeWorkspaceMemberFn } from "@/lib/admin.functions";
-import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck, ClipboardList, Trash2 } from "lucide-react";
+import {
+  Users,
+  CheckCircle2,
+  AlertTriangle,
+  Clock,
+  Shield,
+  UserX,
+  UserCheck,
+  ClipboardList,
+  Trash2,
+} from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -62,45 +72,71 @@ function TeamPage() {
         .select("user_id, profiles:user_id(*)")
         .eq("workspace_id", workspace.id)
         .eq("is_active", true);
-      const profiles = ((memberRows ?? [])
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map((r: any) => r.profiles)
-        .filter(Boolean) as Profile[])
-        .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""));
+      const profiles = (
+        (memberRows ?? [])
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .map((r: any) => r.profiles)
+          .filter(Boolean) as Profile[]
+      ).sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""));
 
       const userIds = profiles.map((p) => p.id);
-      const [tasksRes, attRes, flagsRes, overdueRes, completedTodayRes, rolesRes] = await Promise.all([
-        userIds.length
-          ? supabase.from("tasks").select("id, assigned_to, status, due_date, task_type")
-              .eq("workspace_id", workspace.id)
-              .in("assigned_to", userIds)
-          : Promise.resolve({ data: [], error: null }),
-        userIds.length
-          ? supabase.from("attendance").select("user_id, clock_in, clock_out").eq("date", today)
-              .in("user_id", userIds)
-          : Promise.resolve({ data: [], error: null }),
-        userIds.length
-          ? supabase.from("flags").select("flagged_user_id, is_resolved").eq("is_resolved", false)
-              .eq("workspace_id", workspace.id)
-              .in("flagged_user_id", userIds)
-          : Promise.resolve({ data: [], error: null }),
-        supabase.from("tasks").select("id", { count: "exact", head: true })
-          .eq("workspace_id", workspace.id)
-          .lt("due_date", today).neq("status", "completed"),
-        supabase.from("tasks").select("id", { count: "exact", head: true })
-          .eq("workspace_id", workspace.id)
-          .eq("status", "completed").gte("completed_at", `${today}T00:00:00`),
-        userIds.length
-          ? supabase.from("user_roles").select("user_id, role").in("user_id", userIds)
-          : Promise.resolve({ data: [], error: null }),
-      ]);
+      const [tasksRes, attRes, flagsRes, overdueRes, completedTodayRes, rolesRes] =
+        await Promise.all([
+          userIds.length
+            ? supabase
+                .from("tasks")
+                .select("id, assigned_to, status, due_date, task_type")
+                .eq("workspace_id", workspace.id)
+                .in("assigned_to", userIds)
+            : Promise.resolve({ data: [], error: null }),
+          userIds.length
+            ? supabase
+                .from("attendance")
+                .select("user_id, clock_in, clock_out")
+                .eq("date", today)
+                .in("user_id", userIds)
+            : Promise.resolve({ data: [], error: null }),
+          userIds.length
+            ? supabase
+                .from("flags")
+                .select("flagged_user_id, is_resolved")
+                .eq("is_resolved", false)
+                .eq("workspace_id", workspace.id)
+                .in("flagged_user_id", userIds)
+            : Promise.resolve({ data: [], error: null }),
+          supabase
+            .from("tasks")
+            .select("id", { count: "exact", head: true })
+            .eq("workspace_id", workspace.id)
+            .lt("due_date", today)
+            .neq("status", "completed"),
+          supabase
+            .from("tasks")
+            .select("id", { count: "exact", head: true })
+            .eq("workspace_id", workspace.id)
+            .eq("status", "completed")
+            .gte("completed_at", `${today}T00:00:00`),
+          userIds.length
+            ? supabase.from("user_roles").select("user_id, role").in("user_id", userIds)
+            : Promise.resolve({ data: [], error: null }),
+        ]);
 
       if (cancelled) return;
 
-      const tasks = (tasksRes.data as Array<{
-        id: string; assigned_to: string; status: string; due_date: string; task_type: string;
-      }>) ?? [];
-      const att = (attRes.data as Array<{ user_id: string; clock_in: string | null; clock_out: string | null }>) ?? [];
+      const tasks =
+        (tasksRes.data as Array<{
+          id: string;
+          assigned_to: string;
+          status: string;
+          due_date: string;
+          task_type: string;
+        }>) ?? [];
+      const att =
+        (attRes.data as Array<{
+          user_id: string;
+          clock_in: string | null;
+          clock_out: string | null;
+        }>) ?? [];
       const flags = (flagsRes.data as Array<{ flagged_user_id: string }>) ?? [];
       const roles = (rolesRes.data as Array<{ user_id: string; role: AppRole }>) ?? [];
       const roleMap = new Map<string, AppRole>();
@@ -123,7 +159,9 @@ function TeamPage() {
       const rows: MemberRow[] = profiles.map((p) => {
         const userTasks = tasks.filter((t) => t.assigned_to === p.id);
         const todays = userTasks.filter((t) => t.due_date === today);
-        const weeks = userTasks.filter((t) => t.due_date >= weekStartStr && t.due_date <= weekEndStr);
+        const weeks = userTasks.filter(
+          (t) => t.due_date >= weekStartStr && t.due_date <= weekEndStr,
+        );
         const a = att.find((x) => x.user_id === p.id);
         return {
           profile: p,
@@ -156,7 +194,9 @@ function TeamPage() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Team Overview</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Live snapshot of every active employee.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Live snapshot of every active employee.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {isManager && (
@@ -176,14 +216,21 @@ function TeamPage() {
               </Link>
             </Button>
           )}
-          {isManager && <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} isAdmin={isAdmin} />}
+          {isManager && (
+            <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} isAdmin={isAdmin} />
+          )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard icon={Users} label="Active employees" value={stats.activeCount} />
         <StatCard icon={CheckCircle2} label="Completed today" value={stats.completedToday} />
-        <StatCard icon={AlertTriangle} label="Overdue right now" value={stats.overdueNow} tone="danger" />
+        <StatCard
+          icon={AlertTriangle}
+          label="Overdue right now"
+          value={stats.overdueNow}
+          tone="danger"
+        />
         <StatCard icon={Clock} label="Clocked in today" value={stats.clockedInToday} />
       </div>
 
@@ -196,16 +243,18 @@ function TeamPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {members.filter((m) => m.profile.is_active).map((m) => (
-              <MemberCard
-                key={m.profile.id}
-                m={m}
-                isAdmin={isAdmin}
-                isManager={isManager}
-                onRoleChanged={() => setReloadKey((k) => k + 1)}
-                onActivationChanged={() => setReloadKey((k) => k + 1)}
-              />
-            ))}
+            {members
+              .filter((m) => m.profile.is_active)
+              .map((m) => (
+                <MemberCard
+                  key={m.profile.id}
+                  m={m}
+                  isAdmin={isAdmin}
+                  isManager={isManager}
+                  onRoleChanged={() => setReloadKey((k) => k + 1)}
+                  onActivationChanged={() => setReloadKey((k) => k + 1)}
+                />
+              ))}
             {members.filter((m) => m.profile.is_active).length === 0 && (
               <div className="col-span-full rounded-2xl border border-dashed border-border bg-card p-10 text-center text-sm text-muted-foreground">
                 No active employees yet.
@@ -219,16 +268,18 @@ function TeamPage() {
                 Deactivated accounts
               </p>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 opacity-60">
-                {members.filter((m) => !m.profile.is_active).map((m) => (
-                  <MemberCard
-                    key={m.profile.id}
-                    m={m}
-                    isAdmin={isAdmin}
-                    isManager={isManager}
-                    onRoleChanged={() => setReloadKey((k) => k + 1)}
-                    onActivationChanged={() => setReloadKey((k) => k + 1)}
-                  />
-                ))}
+                {members
+                  .filter((m) => !m.profile.is_active)
+                  .map((m) => (
+                    <MemberCard
+                      key={m.profile.id}
+                      m={m}
+                      isAdmin={isAdmin}
+                      isManager={isManager}
+                      onRoleChanged={() => setReloadKey((k) => k + 1)}
+                      onActivationChanged={() => setReloadKey((k) => k + 1)}
+                    />
+                  ))}
               </div>
             </div>
           )}
@@ -253,9 +304,13 @@ function StatCard({
     <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-center justify-between">
         <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
-        <Icon className={`h-4 w-4 ${tone === "danger" ? "text-destructive" : "text-muted-foreground"}`} />
+        <Icon
+          className={`h-4 w-4 ${tone === "danger" ? "text-destructive" : "text-muted-foreground"}`}
+        />
       </div>
-      <p className={`mt-2 text-2xl font-bold ${tone === "danger" && value > 0 ? "text-destructive" : ""}`}>
+      <p
+        className={`mt-2 text-2xl font-bold ${tone === "danger" && value > 0 ? "text-destructive" : ""}`}
+      >
         {value}
       </p>
     </div>
@@ -350,11 +405,15 @@ function MemberCard({
             <div className="mt-3 space-y-1">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Today</span>
-                <span className="font-medium text-foreground">{m.todayDone}/{m.todayTotal} ({todayPct}%)</span>
+                <span className="font-medium text-foreground">
+                  {m.todayDone}/{m.todayTotal} ({todayPct}%)
+                </span>
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>This week</span>
-                <span className="font-medium text-foreground">{m.weekDone}/{m.weekTotal}</span>
+                <span className="font-medium text-foreground">
+                  {m.weekDone}/{m.weekTotal}
+                </span>
               </div>
             </div>
           </div>
@@ -370,9 +429,17 @@ function MemberCard({
             onClick={toggleActive}
             disabled={toggling}
           >
-            {m.profile.is_active
-              ? <><UserX className="mr-1.5 h-3 w-3" />Deactivate</>
-              : <><UserCheck className="mr-1.5 h-3 w-3" />Reactivate</>}
+            {m.profile.is_active ? (
+              <>
+                <UserX className="mr-1.5 h-3 w-3" />
+                Deactivate
+              </>
+            ) : (
+              <>
+                <UserCheck className="mr-1.5 h-3 w-3" />
+                Reactivate
+              </>
+            )}
           </Button>
           {m.profile.is_active && (
             <ManageRoleDialog

@@ -2,12 +2,7 @@ import React from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyMentions, notifyPinChange } from "./notify";
-import type {
-  Message,
-  MsgProfile,
-  MessageReaction,
-  MessageAttachment,
-} from "./types";
+import type { Message, MsgProfile, MessageReaction, MessageAttachment } from "./types";
 
 const PAGE_SIZE = 50;
 
@@ -52,9 +47,7 @@ type RawAttachment = {
   created_at: string;
 };
 
-async function loadProfiles(
-  userIds: string[]
-): Promise<Map<string, MsgProfile>> {
+async function loadProfiles(userIds: string[]): Promise<Map<string, MsgProfile>> {
   const unique = Array.from(new Set(userIds));
   if (unique.length === 0) return new Map();
   const { data, error } = await supabase
@@ -87,7 +80,7 @@ async function enrichMessages(rawMsgs: RawMessage[]): Promise<Message[]> {
     supabase
       .from("message_attachments")
       .select(
-        "id,message_id,file_name,file_type,file_size_bytes,google_drive_file_id,google_drive_view_url,storage_path,thumbnail_url,created_at"
+        "id,message_id,file_name,file_type,file_size_bytes,google_drive_file_id,google_drive_view_url,storage_path,thumbnail_url,created_at",
       )
       .in("message_id", msgIds),
   ]);
@@ -146,7 +139,7 @@ export function useMessages(params: {
     let q = supabase
       .from("messages")
       .select(
-        "id,workspace_id,channel_id,conversation_id,sender_id,body,body_html,parent_message_id,thread_reply_count,thread_last_reply_at,is_edited,edited_at,is_deleted,pinned,pinned_by,has_attachment,created_at"
+        "id,workspace_id,channel_id,conversation_id,sender_id,body,body_html,parent_message_id,thread_reply_count,thread_last_reply_at,is_edited,edited_at,is_deleted,pinned,pinned_by,has_attachment,created_at",
       )
       .eq("is_deleted", false)
       .order("created_at", { ascending: false })
@@ -157,9 +150,7 @@ export function useMessages(params: {
     } else if (channelId) {
       q = q.eq("channel_id", channelId).is("parent_message_id", null);
     } else if (conversationId) {
-      q = q
-        .eq("conversation_id", conversationId)
-        .is("parent_message_id", null);
+      q = q.eq("conversation_id", conversationId).is("parent_message_id", null);
     }
 
     return q;
@@ -235,13 +226,10 @@ export function useMessages(params: {
 
     const filterParts: string[] = [];
     if (channelId) filterParts.push(`channel_id=eq.${channelId}`);
-    else if (conversationId)
-      filterParts.push(`conversation_id=eq.${conversationId}`);
+    else if (conversationId) filterParts.push(`conversation_id=eq.${conversationId}`);
 
     const realtimeChannel = supabase
-      .channel(
-        `messages-${channelId ?? conversationId ?? parentMessageId ?? "none"}`
-      )
+      .channel(`messages-${channelId ?? conversationId ?? parentMessageId ?? "none"}`)
       .on(
         "postgres_changes",
         {
@@ -257,8 +245,7 @@ export function useMessages(params: {
           } else {
             if (newRaw.parent_message_id !== null) return;
             if (channelId && newRaw.channel_id !== channelId) return;
-            if (conversationId && newRaw.conversation_id !== conversationId)
-              return;
+            if (conversationId && newRaw.conversation_id !== conversationId) return;
           }
           const enriched = await enrichMessages([newRaw]);
           setMessages((prev) => {
@@ -266,7 +253,7 @@ export function useMessages(params: {
             if (exists) return prev;
             return [...prev, ...enriched];
           });
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -282,15 +269,11 @@ export function useMessages(params: {
           const updated = enriched[0];
           if (!updated) return;
           if (updatedRaw.is_deleted) {
-            setMessages((prev) =>
-              prev.filter((m) => m.id !== updatedRaw.id)
-            );
+            setMessages((prev) => prev.filter((m) => m.id !== updatedRaw.id));
           } else {
-            setMessages((prev) =>
-              prev.map((m) => (m.id === updated.id ? updated : m))
-            );
+            setMessages((prev) => prev.map((m) => (m.id === updated.id ? updated : m)));
           }
-        }
+        },
       )
       .subscribe();
 
@@ -344,8 +327,7 @@ export function useMessages(params: {
         };
         if (channelId) insertPayload["channel_id"] = channelId;
         if (conversationId) insertPayload["conversation_id"] = conversationId;
-        if (parentMessageId)
-          insertPayload["parent_message_id"] = parentMessageId;
+        if (parentMessageId) insertPayload["parent_message_id"] = parentMessageId;
 
         // Retry with exponential backoff on transient errors (network blips,
         // 5xx). Workspace-scoped RLS still applies — a true permission denial
@@ -359,10 +341,15 @@ export function useMessages(params: {
             .insert(insertPayload as never)
             .select()
             .single();
-          if (!res.error) { msgData = res.data; lastErr = null; break; }
+          if (!res.error) {
+            msgData = res.data;
+            lastErr = null;
+            break;
+          }
           lastErr = res.error;
           const code = res.error.code ?? "";
-          const isPermOrValidation = code.startsWith("42") || code.startsWith("PGRST") || code === "23514";
+          const isPermOrValidation =
+            code.startsWith("42") || code.startsWith("PGRST") || code === "23514";
           if (isPermOrValidation) break;
           await new Promise((r) => setTimeout(r, 250 * Math.pow(2, attempt)));
         }
@@ -395,10 +382,10 @@ export function useMessages(params: {
                 storage_path: storagePath,
                 thumbnail_url: urlData?.publicUrl ?? null,
               };
-            })
+            }),
           );
           const validAttachments = attachmentInserts.filter(
-            (a): a is NonNullable<typeof a> => a !== null
+            (a): a is NonNullable<typeof a> => a !== null,
           );
           if (validAttachments.length > 0) {
             const { error: attErr } = await supabase
@@ -411,9 +398,7 @@ export function useMessages(params: {
         const enriched = await enrichMessages([insertedMsg]);
         const real = enriched[0];
         if (real) {
-          setMessages((prev) =>
-            prev.map((m) => (m.id === optimisticId ? real : m))
-          );
+          setMessages((prev) => prev.map((m) => (m.id === optimisticId ? real : m)));
         }
 
         // Fire-and-forget: in-app notifications for @mentions in channel messages.
@@ -432,40 +417,32 @@ export function useMessages(params: {
         setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
       }
     },
-    [workspaceId, channelId, conversationId, parentMessageId]
+    [workspaceId, channelId, conversationId, parentMessageId],
   );
 
-  const editMessage = React.useCallback(
-    async (id: string, body: string) => {
-      const { error } = await supabase
-        .from("messages")
-        .update({
-          body,
-          is_edited: true,
-          edited_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-      if (error) {
-        console.error("editMessage error:", error);
-        toast.error("Failed to edit message");
-        return;
-      }
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === id
-            ? { ...m, body, is_edited: true, edited_at: new Date().toISOString() }
-            : m
-        )
-      );
-    },
-    []
-  );
-
-  const deleteMessage = React.useCallback(async (id: string) => {
+  const editMessage = React.useCallback(async (id: string, body: string) => {
     const { error } = await supabase
       .from("messages")
-      .update({ is_deleted: true })
+      .update({
+        body,
+        is_edited: true,
+        edited_at: new Date().toISOString(),
+      })
       .eq("id", id);
+    if (error) {
+      console.error("editMessage error:", error);
+      toast.error("Failed to edit message");
+      return;
+    }
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === id ? { ...m, body, is_edited: true, edited_at: new Date().toISOString() } : m,
+      ),
+    );
+  }, []);
+
+  const deleteMessage = React.useCallback(async (id: string) => {
+    const { error } = await supabase.from("messages").update({ is_deleted: true }).eq("id", id);
     if (error) {
       console.error("deleteMessage error:", error);
       toast.error("Failed to delete message");
@@ -495,10 +472,8 @@ export function useMessages(params: {
       const target = messages.find((m) => m.id === id);
       setMessages((prev) =>
         prev.map((m) =>
-          m.id === id
-            ? { ...m, pinned, pinned_by: pinned ? (user?.id ?? null) : null }
-            : m
-        )
+          m.id === id ? { ...m, pinned, pinned_by: pinned ? (user?.id ?? null) : null } : m,
+        ),
       );
       if (workspaceId && user && target) {
         void notifyPinChange({
@@ -512,7 +487,7 @@ export function useMessages(params: {
         });
       }
     },
-    [workspaceId, channelId, conversationId, messages]
+    [workspaceId, channelId, conversationId, messages],
   );
 
   return {

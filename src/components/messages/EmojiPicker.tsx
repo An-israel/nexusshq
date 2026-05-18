@@ -156,11 +156,7 @@ export function EmojiPicker({ onSelect, trigger }: Props) {
                   <p className="text-[10px] text-[#6B7280] uppercase tracking-wide mb-1.5">
                     Results
                   </p>
-                  <EmojiGrid
-                    emojis={filtered}
-                    onSelect={handleSelect}
-                    onHover={setHoveredEmoji}
-                  />
+                  <EmojiGrid emojis={filtered} onSelect={handleSelect} onHover={setHoveredEmoji} />
                 </div>
               )
             ) : (
@@ -204,7 +200,7 @@ function EmojiGrid({
           onMouseLeave={() => onHover(null)}
           className={cn(
             "flex items-center justify-center w-8 h-8 rounded text-lg",
-            "hover:bg-[#2A2A2A] transition-colors"
+            "hover:bg-[#2A2A2A] transition-colors",
           )}
         >
           {entry.emoji}

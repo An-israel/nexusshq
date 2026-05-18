@@ -3,6 +3,7 @@
 ## Prerequisites
 
 ### All platforms
+
 ```bash
 # 1. Install Rust (if not already installed)
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -13,15 +14,19 @@ npm install
 ```
 
 ### Windows only
+
 Install [Microsoft Edge WebView2](https://developer.microsoft.com/en-us/microsoft-edge/webview2/) — usually already present on Windows 10/11.
 
 ### macOS only
+
 Xcode Command Line Tools:
+
 ```bash
 xcode-select --install
 ```
 
 ### Linux only
+
 ```bash
 sudo apt update
 sudo apt install -y \
@@ -41,16 +46,21 @@ sudo apt install -y \
 ## Setup (run once)
 
 ### 1. Generate icons
+
 ```bash
 npm run tauri:icons
 ```
+
 This reads `public/icons/icon.svg` and writes all required formats to `src-tauri/icons/`.
 
 ### 2. Set your deployed URL
+
 The app loads your deployed Cloudflare URL. Update the default in `src-tauri/build.rs`:
+
 ```rust
 .unwrap_or_else(|_| "https://YOUR_URL.lovable.app".to_string())
 ```
+
 Or set it as an environment variable when building (see below).
 
 ---

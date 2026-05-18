@@ -11,7 +11,12 @@ import { MessageItem } from "@/components/messages/MessageItem";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { ThreadPanel } from "@/components/messages/ThreadPanel";
 import { initialsOf } from "@/lib/nexus";
-import type { DmConversationWithMeta, Message, MsgProfile, UserPresence } from "@/lib/messaging/types";
+import type {
+  DmConversationWithMeta,
+  Message,
+  MsgProfile,
+  UserPresence,
+} from "@/lib/messaging/types";
 
 interface DmViewProps {
   conversation: DmConversationWithMeta;
@@ -52,7 +57,10 @@ function Avatar({ profile, size = 8 }: { profile: MsgProfile | undefined; size?:
   }
   return (
     <div
-      className={cn("rounded-full flex items-center justify-center shrink-0 text-white text-xs font-semibold", sizeClass)}
+      className={cn(
+        "rounded-full flex items-center justify-center shrink-0 text-white text-xs font-semibold",
+        sizeClass,
+      )}
       style={{ backgroundColor: profile ? hashColor(profile.id) : "#374151" }}
     >
       {initialsOf(name)}
@@ -62,19 +70,19 @@ function Avatar({ profile, size = 8 }: { profile: MsgProfile | undefined; size?:
 
 function PresenceDot({ status }: { status: UserPresence["status"] | undefined }) {
   const color =
-    status === "active" ? "bg-success" :
-    status === "away" ? "bg-warning" :
-    status === "dnd" ? "bg-destructive" :
-    "bg-muted-foreground";
+    status === "active"
+      ? "bg-success"
+      : status === "away"
+        ? "bg-warning"
+        : status === "dnd"
+          ? "bg-destructive"
+          : "bg-muted-foreground";
   return (
     <span className={cn("inline-block h-2.5 w-2.5 rounded-full ring-2 ring-background", color)} />
   );
 }
 
-function getDmTitle(
-  conversation: DmConversationWithMeta,
-  currentUserId: string
-): string {
+function getDmTitle(conversation: DmConversationWithMeta, currentUserId: string): string {
   if (conversation.type === "direct") {
     const other = conversation.members.find((m) => m.user_id !== currentUserId);
     return other?.profile?.full_name ?? other?.profile?.email ?? "Unknown";
@@ -106,7 +114,16 @@ export function DmView({
   const prevMessageCount = React.useRef(0);
   const unreadFromIdxSet = React.useRef(false);
 
-  const { messages, loading, hasMore, loadMore, sendMessage, editMessage, deleteMessage, pinMessage } = useMessages({
+  const {
+    messages,
+    loading,
+    hasMore,
+    loadMore,
+    sendMessage,
+    editMessage,
+    deleteMessage,
+    pinMessage,
+  } = useMessages({
     workspaceId,
     conversationId: conversation.id,
   });
@@ -192,7 +209,8 @@ export function DmView({
   const groupedMessages = React.useMemo(() => {
     return messages.map((msg, idx) => {
       const prev = messages[idx - 1];
-      const showDateDivider = !prev || !isSameDay(new Date(msg.created_at), new Date(prev.created_at));
+      const showDateDivider =
+        !prev || !isSameDay(new Date(msg.created_at), new Date(prev.created_at));
       const isContinuation =
         !showDateDivider &&
         !!prev &&
@@ -241,7 +259,9 @@ export function DmView({
             <p className="truncate font-semibold text-white leading-tight">{title}</p>
             {isDirect && otherPresence?.status_text && (
               <p className="truncate text-xs text-[#6B7280]">
-                {otherPresence.status_emoji && <span className="mr-1">{otherPresence.status_emoji}</span>}
+                {otherPresence.status_emoji && (
+                  <span className="mr-1">{otherPresence.status_emoji}</span>
+                )}
                 {otherPresence.status_text}
               </p>
             )}
@@ -261,11 +281,7 @@ export function DmView({
         </div>
 
         {/* Message list */}
-        <div
-          ref={scrollRef}
-          className="relative flex-1 overflow-y-auto"
-          onScroll={handleScroll}
-        >
+        <div ref={scrollRef} className="relative flex-1 overflow-y-auto" onScroll={handleScroll}>
           {loading && (
             <div className="flex h-full items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />

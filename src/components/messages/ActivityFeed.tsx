@@ -88,10 +88,7 @@ function groupLabel(date: Date): string {
   return format(date, "MMMM d, yyyy");
 }
 
-export function ActivityFeed({
-  workspaceId,
-  currentUserId,
-}: ActivityFeedProps) {
+export function ActivityFeed({ workspaceId, currentUserId }: ActivityFeedProps) {
   const [notifications, setNotifications] = React.useState<Notification[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [markingRead, setMarkingRead] = React.useState(false);
@@ -113,7 +110,9 @@ export function ActivityFeed({
     }
 
     const rows = (data ?? []) as unknown as Notification[];
-    const senderIds = Array.from(new Set(rows.map((n) => n.sender_id).filter((id): id is string => !!id)));
+    const senderIds = Array.from(
+      new Set(rows.map((n) => n.sender_id).filter((id): id is string => !!id)),
+    );
 
     let senderMap: Record<string, Notification["sender"]> = {};
     if (senderIds.length > 0) {
@@ -129,8 +128,8 @@ export function ActivityFeed({
     setNotifications(
       rows.map((n) => ({
         ...n,
-        sender: n.sender_id ? senderMap[n.sender_id] ?? null : null,
-      }))
+        sender: n.sender_id ? (senderMap[n.sender_id] ?? null) : null,
+      })),
     );
     setLoading(false);
   }, [workspaceId, currentUserId]);
@@ -153,7 +152,7 @@ export function ActivityFeed({
         },
         () => {
           fetchNotifications();
-        }
+        },
       )
       .subscribe();
     return () => {
@@ -250,7 +249,7 @@ export function ActivityFeed({
                     key={notif.id}
                     className={cn(
                       "flex items-start gap-3 px-5 py-3 transition-colors hover:bg-[#1A1A1A]",
-                      !notif.is_read && "bg-[#1A1A1A]/50"
+                      !notif.is_read && "bg-[#1A1A1A]/50",
                     )}
                   >
                     <SenderAvatar sender={notif.sender} />

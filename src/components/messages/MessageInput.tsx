@@ -67,7 +67,7 @@ function ToolbarButton({ label, onClick, active, children }: ToolbarButtonProps)
       onClick={onClick}
       className={cn(
         "p-1.5 rounded text-[#9CA3AF] hover:bg-[#252525] hover:text-white transition-colors",
-        active && "bg-[#252525] text-white"
+        active && "bg-[#252525] text-white",
       )}
     >
       {children}
@@ -98,11 +98,7 @@ export function MessageInput({
     if (mentionQuery === null) return [];
     const q = mentionQuery.toLowerCase();
     return workspaceMembers
-      .filter(
-        (m) =>
-          m.full_name?.toLowerCase().includes(q) ||
-          m.email?.toLowerCase().includes(q)
-      )
+      .filter((m) => m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q))
       .slice(0, 6);
   }, [mentionQuery, workspaceMembers]);
 
@@ -130,15 +126,11 @@ export function MessageInput({
     if (!el) return;
     const { start, end } = getSelection();
     const selected = value.slice(start, end);
-    const next =
-      value.slice(0, start) + before + selected + after + value.slice(end);
+    const next = value.slice(0, start) + before + selected + after + value.slice(end);
     setValue(next);
     requestAnimationFrame(() => {
       el.focus();
-      el.setSelectionRange(
-        start + before.length,
-        end + before.length
-      );
+      el.setSelectionRange(start + before.length, end + before.length);
     });
   }
 
@@ -239,9 +231,7 @@ export function MessageInput({
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
-        setMentionIndex(
-          (i) => (i - 1 + filteredMembers.length) % filteredMembers.length
-        );
+        setMentionIndex((i) => (i - 1 + filteredMembers.length) % filteredMembers.length);
         return;
       }
       if (e.key === "Enter" || e.key === "Tab") {
@@ -354,7 +344,7 @@ export function MessageInput({
                 "w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors text-left",
                 i === mentionIndex
                   ? "bg-[#2A2A2A] text-white"
-                  : "text-[#E5E7EB] hover:bg-[#252525]"
+                  : "text-[#E5E7EB] hover:bg-[#252525]",
               )}
             >
               <div
@@ -374,13 +364,9 @@ export function MessageInput({
                 )}
               </div>
               <div className="min-w-0">
-                <p className="font-medium truncate">
-                  {member.full_name ?? member.email}
-                </p>
+                <p className="font-medium truncate">{member.full_name ?? member.email}</p>
                 {member.department && (
-                  <p className="text-xs text-[#9CA3AF] truncate">
-                    {member.department}
-                  </p>
+                  <p className="text-xs text-[#9CA3AF] truncate">{member.department}</p>
                 )}
               </div>
             </button>
@@ -395,16 +381,12 @@ export function MessageInput({
         onDrop={handleDrop}
         className={cn(
           "relative rounded-xl border bg-[#1A1A1A] transition-colors",
-          dragging
-            ? "border-primary border-dashed"
-            : "border-[#2A2A2A]"
+          dragging ? "border-primary border-dashed" : "border-[#2A2A2A]",
         )}
       >
         {dragging && (
           <div className="absolute inset-0 rounded-xl z-10 flex items-center justify-center bg-[#1A1A1A]/80 border-2 border-dashed border-primary">
-            <p className="text-primary text-sm font-medium">
-              Drop files to upload
-            </p>
+            <p className="text-primary text-sm font-medium">Drop files to upload</p>
           </div>
         )}
 
@@ -471,7 +453,7 @@ export function MessageInput({
           className={cn(
             "w-full bg-transparent outline-none resize-none text-base text-white",
             "placeholder:text-[#6B7280] px-3 py-2 leading-relaxed",
-            "disabled:opacity-50"
+            "disabled:opacity-50",
           )}
           style={{ minHeight: "36px", maxHeight: "160px", fontSize: "16px" }}
           aria-label={placeholder}
@@ -510,12 +492,7 @@ export function MessageInput({
 
           <div className="flex items-center gap-2">
             {showCounter && (
-              <span
-                className={cn(
-                  "text-xs",
-                  charsLeft < 200 ? "text-red-400" : "text-[#9CA3AF]"
-                )}
-              >
+              <span className={cn("text-xs", charsLeft < 200 ? "text-red-400" : "text-[#9CA3AF]")}>
                 {charsLeft}
               </span>
             )}
@@ -527,7 +504,7 @@ export function MessageInput({
                 "p-1.5 rounded-lg transition-colors",
                 canSend
                   ? "bg-primary text-white hover:bg-primary/90"
-                  : "bg-[#252525] text-[#6B7280] cursor-not-allowed"
+                  : "bg-[#252525] text-[#6B7280] cursor-not-allowed",
               )}
               aria-label="Send message"
             >

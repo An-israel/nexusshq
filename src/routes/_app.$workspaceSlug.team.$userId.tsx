@@ -11,13 +11,7 @@ import { requireAnyRole } from "@/lib/role-access";
 import { useAuth } from "@/lib/auth-context";
 import { ArrowLeft, UserX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
-import {
-  PRIORITY_BADGE,
-  STATUS_BADGE,
-  deptLabel,
-  initialsOf,
-  timeAgo,
-} from "@/lib/nexus";
+import { PRIORITY_BADGE, STATUS_BADGE, deptLabel, initialsOf, timeAgo } from "@/lib/nexus";
 import { QuickAssignTaskDialog } from "@/components/team/QuickAssignTaskDialog";
 import { FlagEmployeeDialog } from "@/components/team/FlagEmployeeDialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -40,7 +34,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug/team/$userId")({
 });
 
 function EmployeeDetailPage() {
-  const { userId } = Route.useParams();
+  const { userId, workspaceSlug } = Route.useParams();
   const { isAdmin } = useAuth();
   const { workspace } = useWorkspace();
   const setActive = useServerFn(setEmployeeActiveFn);
@@ -59,7 +53,9 @@ function EmployeeDetailPage() {
   // Warning history filtering & pagination
   const [warningFrom, setWarningFrom] = useState<string>("");
   const [warningTo, setWarningTo] = useState<string>("");
-  const [warningStatusFilter, setWarningStatusFilter] = useState<"all" | "active" | "resolved">("all");
+  const [warningStatusFilter, setWarningStatusFilter] = useState<"all" | "active" | "resolved">(
+    "all",
+  );
   const [warningPage, setWarningPage] = useState(0);
   const WARNING_PAGE_SIZE = 5;
   // Confirm-resolve dialog state
@@ -73,16 +69,34 @@ function EmployeeDetailPage() {
       monthStart.setDate(1);
       const monthStartStr = monthStart.toISOString().slice(0, 10);
 
-      const { data: prof } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", userId)
+        .maybeSingle();
       const p = prof as Profile | null;
       if (!cancelled) setProfile(p);
 
       const [tasksRes, flagsRes, attRes, kpisRes] = await Promise.all([
-        supabase.from("tasks").select("*").eq("assigned_to", userId).eq("workspace_id", workspace.id).order("due_date", { ascending: false }),
-        supabase.from("flags").select("*").eq("flagged_user_id", userId).eq("workspace_id", workspace.id).order("created_at", { ascending: false }),
+        supabase
+          .from("tasks")
+          .select("*")
+          .eq("assigned_to", userId)
+          .eq("workspace_id", workspace.id)
+          .order("due_date", { ascending: false }),
+        supabase
+          .from("flags")
+          .select("*")
+          .eq("flagged_user_id", userId)
+          .eq("workspace_id", workspace.id)
+          .order("created_at", { ascending: false }),
         supabase.from("attendance").select("*").eq("user_id", userId).gte("date", monthStartStr),
         p?.department
-          ? supabase.from("kpis").select("*").eq("department", p.department as Database["public"]["Enums"]["department_type"]).eq("workspace_id", workspace.id)
+          ? supabase
+              .from("kpis")
+              .select("*")
+              .eq("department", p.department as Database["public"]["Enums"]["department_type"])
+              .eq("workspace_id", workspace.id)
           : Promise.resolve({ data: [] as Kpi[], error: null }),
       ]);
       const t = (tasksRes.data as Task[]) ?? [];
@@ -98,7 +112,10 @@ function EmployeeDetailPage() {
         const { data: ups } = await supabase
           .from("task_updates")
           .select("*")
-          .in("task_id", t.map((x) => x.id))
+          .in(
+            "task_id",
+            t.map((x) => x.id),
+          )
           .order("created_at", { ascending: false })
           .limit(20);
         if (!cancelled) setUpdates((ups as Update[]) ?? []);
@@ -145,7 +162,8 @@ function EmployeeDetailPage() {
   async function toggleActive() {
     if (!profile) return;
     const next = !profile.is_active;
-    if (!confirm(`${next ? "Reactivate" : "Deactivate"} ${profile.full_name ?? profile.email}?`)) return;
+    if (!confirm(`${next ? "Reactivate" : "Deactivate"} ${profile.full_name ?? profile.email}?`))
+      return;
     setTogglingActive(true);
     try {
       await setActive({ data: { userId: profile.id, isActive: next } });
@@ -218,7 +236,11 @@ function EmployeeDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/team" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+      <Link
+        to="/$workspaceSlug/team"
+        params={{ workspaceSlug }}
+        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      >
         <ArrowLeft className="h-4 w-4" /> Back to Team
       </Link>
 
@@ -232,10 +254,15 @@ function EmployeeDetailPage() {
             </div>
             <div className="min-w-0 flex-1">
               <h1 className="truncate text-2xl font-bold">{profile.full_name ?? "—"}</h1>
-              <p className="text-sm text-muted-foreground">{profile.job_title ?? "—"} · {profile.email}</p>
+              <p className="text-sm text-muted-foreground">
+                {profile.job_title ?? "—"} · {profile.email}
+              </p>
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{deptLabel(profile.department)}</Badge>
-                <Badge variant="outline" className={profile.is_active ? "text-success" : "text-destructive"}>
+                <Badge
+                  variant="outline"
+                  className={profile.is_active ? "text-success" : "text-destructive"}
+                >
                   {profile.is_active ? "Active" : "Inactive"}
                 </Badge>
               </div>
@@ -246,7 +273,9 @@ function EmployeeDetailPage() {
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="rounded-2xl border border-border bg-card p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Attendance · This Month</p>
+          <p className="text-xs uppercase tracking-wider text-muted-foreground">
+            Attendance · This Month
+          </p>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
             <div>
               <p className="text-xl font-bold text-success">{monthPresent}</p>
@@ -269,20 +298,27 @@ function EmployeeDetailPage() {
             <p className="mt-3 text-sm text-muted-foreground">No active warnings.</p>
           ) : (
             <ul className="mt-3 space-y-2">
-              {flags.filter((f) => !f.is_resolved).map((f) => (
-                <li key={f.id} className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="text-[10px] text-destructive">{f.severity}</Badge>
-                    <span className="text-xs text-muted-foreground">{timeAgo(f.created_at)}</span>
-                  </div>
-                  <p className="mt-1.5">{f.reason}</p>
-                  <div className="mt-2 flex justify-end">
-                    <Button size="sm" variant="outline" onClick={() => setConfirmFlag(f)}>
-                      Mark resolved
-                    </Button>
-                  </div>
-                </li>
-              ))}
+              {flags
+                .filter((f) => !f.is_resolved)
+                .map((f) => (
+                  <li
+                    key={f.id}
+                    className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <Badge variant="outline" className="text-[10px] text-destructive">
+                        {f.severity}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">{timeAgo(f.created_at)}</span>
+                    </div>
+                    <p className="mt-1.5">{f.reason}</p>
+                    <div className="mt-2 flex justify-end">
+                      <Button size="sm" variant="outline" onClick={() => setConfirmFlag(f)}>
+                        Mark resolved
+                      </Button>
+                    </div>
+                  </li>
+                ))}
             </ul>
           )}
         </div>
@@ -300,7 +336,10 @@ function EmployeeDetailPage() {
                 <button
                   key={s}
                   type="button"
-                  onClick={() => { setWarningStatusFilter(s); setWarningPage(0); }}
+                  onClick={() => {
+                    setWarningStatusFilter(s);
+                    setWarningPage(0);
+                  }}
                   className={`rounded-md px-2.5 py-1 text-xs capitalize ${
                     warningStatusFilter === s
                       ? "bg-primary text-primary-foreground"
@@ -314,19 +353,30 @@ function EmployeeDetailPage() {
             <Input
               type="date"
               value={warningFrom}
-              onChange={(e) => { setWarningFrom(e.target.value); setWarningPage(0); }}
+              onChange={(e) => {
+                setWarningFrom(e.target.value);
+                setWarningPage(0);
+              }}
               className="h-8 w-36 text-xs"
               aria-label="From date"
             />
             <Input
               type="date"
               value={warningTo}
-              onChange={(e) => { setWarningTo(e.target.value); setWarningPage(0); }}
+              onChange={(e) => {
+                setWarningTo(e.target.value);
+                setWarningPage(0);
+              }}
               className="h-8 w-36 text-xs"
               aria-label="To date"
             />
             {(warningFrom || warningTo || warningStatusFilter !== "all") && (
-              <Button variant="ghost" size="sm" onClick={clearWarningFilters} className="h-8 text-xs">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearWarningFilters}
+                className="h-8 text-xs"
+              >
                 Clear
               </Button>
             )}
@@ -341,16 +391,24 @@ function EmployeeDetailPage() {
                 <li
                   key={f.id}
                   className={`rounded-lg border p-3 text-sm ${
-                    f.is_resolved ? "border-border bg-background/40" : "border-destructive/30 bg-destructive/5"
+                    f.is_resolved
+                      ? "border-border bg-background/40"
+                      : "border-destructive/30 bg-destructive/5"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="text-[10px]">{f.severity}</Badge>
+                      <Badge variant="outline" className="text-[10px]">
+                        {f.severity}
+                      </Badge>
                       {f.is_resolved ? (
-                        <Badge variant="outline" className="text-[10px] text-success">Resolved</Badge>
+                        <Badge variant="outline" className="text-[10px] text-success">
+                          Resolved
+                        </Badge>
                       ) : (
-                        <Badge variant="outline" className="text-[10px] text-destructive">Active</Badge>
+                        <Badge variant="outline" className="text-[10px] text-destructive">
+                          Active
+                        </Badge>
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground">{timeAgo(f.created_at)}</span>
@@ -366,7 +424,9 @@ function EmployeeDetailPage() {
             </ul>
             {warningTotalPages > 1 && (
               <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-                <span>Page {safePage + 1} of {warningTotalPages}</span>
+                <span>
+                  Page {safePage + 1} of {warningTotalPages}
+                </span>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
@@ -412,14 +472,18 @@ function EmployeeDetailPage() {
       {/* Tasks */}
       <section className="rounded-2xl border border-border bg-card p-5">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Assigned Tasks</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+            Assigned Tasks
+          </h2>
           <div className="flex gap-1 rounded-lg border border-border bg-background/40 p-1">
             {["all", "todo", "in_progress", "completed", "overdue"].map((s) => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
                 className={`rounded-md px-2.5 py-1 text-xs ${
-                  statusFilter === s ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  statusFilter === s
+                    ? "bg-primary text-primary-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {s.replace("_", " ")}
@@ -434,15 +498,22 @@ function EmployeeDetailPage() {
         ) : (
           <ul className="space-y-2">
             {filteredTasks.map((t) => (
-              <li key={t.id} className="flex items-center gap-3 rounded-lg border border-border bg-background/40 p-3">
+              <li
+                key={t.id}
+                className="flex items-center gap-3 rounded-lg border border-border bg-background/40 p-3"
+              >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium">{t.title}</p>
                   <p className="text-xs text-muted-foreground">
                     Due {new Date(t.due_date).toLocaleDateString()} · {t.progress_percent}%
                   </p>
                 </div>
-                <Badge variant="outline" className={PRIORITY_BADGE[t.priority] ?? ""}>{t.priority}</Badge>
-                <Badge variant="outline" className={STATUS_BADGE[t.status] ?? ""}>{t.status.replace("_", " ")}</Badge>
+                <Badge variant="outline" className={PRIORITY_BADGE[t.priority] ?? ""}>
+                  {t.priority}
+                </Badge>
+                <Badge variant="outline" className={STATUS_BADGE[t.status] ?? ""}>
+                  {t.status.replace("_", " ")}
+                </Badge>
               </li>
             ))}
           </ul>
@@ -459,14 +530,18 @@ function EmployeeDetailPage() {
         ) : (
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {kpis.map((k) => {
-              const done = tasks.filter((t) => t.kpi_id === k.id && t.status === "completed").length;
+              const done = tasks.filter(
+                (t) => t.kpi_id === k.id && t.status === "completed",
+              ).length;
               const target = Number(k.target_value) || 1;
               const pct = Math.min(100, Math.round((done / target) * 100));
               return (
                 <div key={k.id} className="rounded-xl border border-border bg-background/40 p-4">
                   <div className="flex items-baseline justify-between">
                     <p className="text-sm font-medium">{k.title}</p>
-                    <span className="text-xs text-muted-foreground">{done}/{target} {k.unit}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {done}/{target} {k.unit}
+                    </span>
                   </div>
                   <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div className="h-full bg-primary" style={{ width: `${pct}%` }} />
@@ -480,7 +555,9 @@ function EmployeeDetailPage() {
 
       {/* Activity timeline */}
       <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">Activity Timeline</h2>
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+          Activity Timeline
+        </h2>
         {updates.length === 0 ? (
           <p className="text-sm text-muted-foreground">No activity yet.</p>
         ) : (
@@ -492,12 +569,19 @@ function EmployeeDetailPage() {
                   <div className="flex-1">
                     <p className="text-sm">
                       Updated <span className="font-medium">"{task?.title ?? "task"}"</span>
-                      {u.new_status ? <> to <span className="text-primary">{u.new_status}</span></> : null}
+                      {u.new_status ? (
+                        <>
+                          {" "}
+                          to <span className="text-primary">{u.new_status}</span>
+                        </>
+                      ) : null}
                       {u.new_progress != null ? <> at {u.new_progress}%</> : null}
                     </p>
                     {u.note && <p className="mt-0.5 text-xs text-muted-foreground">"{u.note}"</p>}
                   </div>
-                  <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(u.created_at)}</span>
+                  <span className="shrink-0 text-xs text-muted-foreground">
+                    {timeAgo(u.created_at)}
+                  </span>
                 </li>
               );
             })}
@@ -524,9 +608,13 @@ function EmployeeDetailPage() {
             className={profile.is_active ? "text-destructive hover:text-destructive" : ""}
           >
             {profile.is_active ? (
-              <><UserX className="mr-2 h-4 w-4" /> Deactivate Account</>
+              <>
+                <UserX className="mr-2 h-4 w-4" /> Deactivate Account
+              </>
             ) : (
-              <><UserCheck className="mr-2 h-4 w-4" /> Reactivate Account</>
+              <>
+                <UserCheck className="mr-2 h-4 w-4" /> Reactivate Account
+              </>
             )}
           </Button>
         )}

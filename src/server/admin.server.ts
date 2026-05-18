@@ -42,8 +42,7 @@ export async function assertCallerIsManagerOrAdmin(callerId: string, callerClien
     .eq("user_id", callerId)
     .in("role", ["admin", "manager"]);
   if (error) throw new Error(error.message);
-  if (!data || data.length === 0)
-    throw new Error("Forbidden: manager or admin role required");
+  if (!data || data.length === 0) throw new Error("Forbidden: manager or admin role required");
 }
 
 export interface InviteEmployeeInput {
@@ -62,11 +61,13 @@ export async function inviteEmployee(input: InviteEmployeeInput) {
   const email = input.email.trim().toLowerCase();
   if (!email) throw new Error("Email is required");
 
-  const { data: invited, error: inviteError } =
-    await adminClient.auth.admin.inviteUserByEmail(email, {
+  const { data: invited, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(
+    email,
+    {
       data: { full_name: input.full_name },
       redirectTo: input.redirectTo,
-    });
+    },
+  );
   if (inviteError) throw new Error(inviteError.message);
 
   const userId = invited.user?.id;
@@ -105,11 +106,7 @@ export async function inviteEmployee(input: InviteEmployeeInput) {
 }
 
 // Uses the caller's JWT — manager RLS policies allow these writes (see migration).
-export async function setEmployeeActive(
-  userId: string,
-  isActive: boolean,
-  callerClient: DbClient,
-) {
+export async function setEmployeeActive(userId: string, isActive: boolean, callerClient: DbClient) {
   const { error } = await callerClient
     .from("profiles")
     .update({ is_active: isActive })
@@ -129,20 +126,11 @@ export async function removeWorkspaceMember(
   if (error) throw new Error(error.message);
 }
 
-export async function setEmployeeRole(
-  userId: string,
-  role: AppRole,
-  callerClient: DbClient,
-) {
-  const { error: delError } = await callerClient
-    .from("user_roles")
-    .delete()
-    .eq("user_id", userId);
+export async function setEmployeeRole(userId: string, role: AppRole, callerClient: DbClient) {
+  const { error: delError } = await callerClient.from("user_roles").delete().eq("user_id", userId);
   if (delError) throw new Error(delError.message);
 
-  const { error } = await callerClient
-    .from("user_roles")
-    .insert({ user_id: userId, role });
+  const { error } = await callerClient.from("user_roles").insert({ user_id: userId, role });
   if (error) throw new Error(error.message);
 }
 
@@ -161,7 +149,9 @@ const PASSCODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 function generatePasscode(len = 6): string {
   const arr = new Uint8Array(len);
   crypto.getRandomValues(arr);
-  return Array.from(arr).map((b) => PASSCODE_CHARS[b % PASSCODE_CHARS.length]).join("");
+  return Array.from(arr)
+    .map((b) => PASSCODE_CHARS[b % PASSCODE_CHARS.length])
+    .join("");
 }
 
 export interface CreateInvitationInput {
@@ -258,10 +248,12 @@ export async function redeemInvitation(input: RedeemInvitationInput): Promise<{
     await adminClient.from("user_roles").delete().eq("user_id", userId);
     await adminClient.from("user_roles").insert({ user_id: userId, role: inv.role });
 
-    await adminClient.from("workspace_members").upsert(
-      { workspace_id: inv.workspace_id, user_id: userId, role: inv.role, is_active: true },
-      { onConflict: "workspace_id,user_id" },
-    );
+    await adminClient
+      .from("workspace_members")
+      .upsert(
+        { workspace_id: inv.workspace_id, user_id: userId, role: inv.role, is_active: true },
+        { onConflict: "workspace_id,user_id" },
+      );
   }
 
   // Mark invitation as used

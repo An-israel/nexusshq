@@ -1,6 +1,18 @@
 import * as React from "react";
 import { format, isToday, isYesterday, isSameDay } from "date-fns";
-import { Hash, Lock, Megaphone, Pin, Search, Settings, Users, ChevronDown, ArrowDown, ArrowLeft, MoreHorizontal } from "lucide-react";
+import {
+  Hash,
+  Lock,
+  Megaphone,
+  Pin,
+  Search,
+  Settings,
+  Users,
+  ChevronDown,
+  ArrowDown,
+  ArrowLeft,
+  MoreHorizontal,
+} from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
@@ -67,7 +79,16 @@ export function ChannelView({
   const prevMessageCount = React.useRef(0);
   const unreadFromIdxSet = React.useRef(false);
 
-  const { messages, loading, hasMore, loadMore, sendMessage, editMessage, deleteMessage, pinMessage } = useMessages({
+  const {
+    messages,
+    loading,
+    hasMore,
+    loadMore,
+    sendMessage,
+    editMessage,
+    deleteMessage,
+    pinMessage,
+  } = useMessages({
     workspaceId,
     channelId: channel.id,
   });
@@ -145,7 +166,8 @@ export function ChannelView({
   const groupedMessages = React.useMemo(() => {
     return messages.map((msg, idx) => {
       const prev = messages[idx - 1];
-      const showDateDivider = !prev || !isSameDay(new Date(msg.created_at), new Date(prev.created_at));
+      const showDateDivider =
+        !prev || !isSameDay(new Date(msg.created_at), new Date(prev.created_at));
       const isContinuation =
         !showDateDivider &&
         !!prev &&
@@ -192,7 +214,9 @@ export function ChannelView({
             {channel.description && (
               <>
                 <span className="text-[#4B5563] hidden sm:inline">·</span>
-                <span className="truncate text-sm text-[#6B7280] hidden sm:inline">{channel.description}</span>
+                <span className="truncate text-sm text-[#6B7280] hidden sm:inline">
+                  {channel.description}
+                </span>
               </>
             )}
           </div>
@@ -223,13 +247,19 @@ export function ChannelView({
               <DropdownMenuContent align="end" className="bg-[#1A1A1A] border-[#2A2A2A]">
                 <DropdownMenuItem
                   className="text-[#9CA3AF] hover:text-white focus:text-white focus:bg-[#2A2A2A] cursor-pointer"
-                  onClick={() => { setSettingsOpen(false); setMembersOpen(true); }}
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    setMembersOpen(true);
+                  }}
                 >
                   View members
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="text-[#9CA3AF] hover:text-white focus:text-white focus:bg-[#2A2A2A] cursor-pointer"
-                  onClick={() => { setSettingsOpen(false); setPinnedOpen(true); }}
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    setPinnedOpen(true);
+                  }}
                 >
                   Pinned messages
                 </DropdownMenuItem>
@@ -245,11 +275,7 @@ export function ChannelView({
         </div>
 
         {/* Message list */}
-        <div
-          ref={scrollRef}
-          className="relative flex-1 overflow-y-auto"
-          onScroll={handleScroll}
-        >
+        <div ref={scrollRef} className="relative flex-1 overflow-y-auto" onScroll={handleScroll}>
           {loading && (
             <div className="flex h-full items-center justify-center">
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
@@ -387,7 +413,12 @@ export function ChannelView({
       <ChannelMembersPanel
         open={membersOpen}
         onClose={() => setMembersOpen(false)}
-        channel={{ id: channel.id, name: channel.name, workspace_id: workspaceId, type: channel.type }}
+        channel={{
+          id: channel.id,
+          name: channel.name,
+          workspace_id: workspaceId,
+          type: channel.type,
+        }}
         currentUserId={currentUserId}
       />
     </div>

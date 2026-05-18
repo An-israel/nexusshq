@@ -9,20 +9,14 @@ export function usePresence(workspaceId: string | null): {
   updateMyPresence: (
     status: UserPresence["status"],
     emoji?: string,
-    text?: string
+    text?: string,
   ) => Promise<void>;
 } {
-  const [presence, setPresence] = React.useState<Record<string, UserPresence>>(
-    {}
-  );
+  const [presence, setPresence] = React.useState<Record<string, UserPresence>>({});
   const myUserIdRef = React.useRef<string | null>(null);
 
   const updateMyPresence = React.useCallback(
-    async (
-      status: UserPresence["status"],
-      emoji?: string,
-      text?: string
-    ) => {
+    async (status: UserPresence["status"], emoji?: string, text?: string) => {
       if (!workspaceId) return;
 
       const {
@@ -42,13 +36,13 @@ export function usePresence(workspaceId: string | null): {
           status_text: text ?? null,
           last_seen_at: new Date().toISOString(),
         },
-        { onConflict: "user_id,workspace_id" }
+        { onConflict: "user_id,workspace_id" },
       );
       if (error) {
         console.error("updateMyPresence error:", error);
       }
     },
-    [workspaceId]
+    [workspaceId],
   );
 
   React.useEffect(() => {
@@ -69,9 +63,7 @@ export function usePresence(workspaceId: string | null): {
 
       const { data, error } = await supabase
         .from("user_presence")
-        .select(
-          "user_id,workspace_id,status,status_emoji,status_text,last_seen_at"
-        )
+        .select("user_id,workspace_id,status,status_emoji,status_text,last_seen_at")
         .eq("workspace_id", workspaceId);
 
       if (error) {
@@ -95,7 +87,7 @@ export function usePresence(workspaceId: string | null): {
             status: "active",
             last_seen_at: new Date().toISOString(),
           },
-          { onConflict: "user_id,workspace_id" }
+          { onConflict: "user_id,workspace_id" },
         );
       }
     };
@@ -130,7 +122,7 @@ export function usePresence(workspaceId: string | null): {
               [row.user_id]: row,
             }));
           }
-        }
+        },
       )
       .subscribe();
 
@@ -143,7 +135,7 @@ export function usePresence(workspaceId: string | null): {
           status: "active",
           last_seen_at: new Date().toISOString(),
         },
-        { onConflict: "user_id,workspace_id" }
+        { onConflict: "user_id,workspace_id" },
       );
     }, HEARTBEAT_INTERVAL_MS);
 
@@ -153,15 +145,18 @@ export function usePresence(workspaceId: string | null): {
       supabase.removeChannel(realtimeChannel);
 
       if (myUserIdRef.current) {
-        supabase.from("user_presence").upsert(
-          {
-            user_id: myUserIdRef.current,
-            workspace_id: workspaceId,
-            status: "offline",
-            last_seen_at: new Date().toISOString(),
-          },
-          { onConflict: "user_id,workspace_id" }
-        ).then(() => {});
+        supabase
+          .from("user_presence")
+          .upsert(
+            {
+              user_id: myUserIdRef.current,
+              workspace_id: workspaceId,
+              status: "offline",
+              last_seen_at: new Date().toISOString(),
+            },
+            { onConflict: "user_id,workspace_id" },
+          )
+          .then(() => {});
       }
     };
   }, [workspaceId]);

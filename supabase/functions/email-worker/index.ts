@@ -5,7 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
@@ -52,11 +52,11 @@ async function sendViaResend(payload: EmailPayload): Promise<void> {
 
 Deno.serve(async (_req) => {
   try {
-    const { data: messages, error: readErr } = await supabase.rpc("read_email_batch", {
+    const { data: messages, error: readErr } = (await supabase.rpc("read_email_batch", {
       queue_name: QUEUE_NAME,
       batch_size: BATCH_SIZE,
       vt: VT_SECONDS,
-    }) as { data: QueueMessage[] | null; error: unknown };
+    })) as { data: QueueMessage[] | null; error: unknown };
 
     if (readErr) {
       console.error("Failed to read queue:", readErr);
@@ -71,8 +71,12 @@ Deno.serve(async (_req) => {
 
       // Guard: skip messages that have been retried too many times
       if (msg.read_ct > 5) {
-        console.warn(`msg ${msg.msg_id} exceeded retry limit (read_ct=${msg.read_ct}), moving to DLQ`);
-        await supabase.rpc("move_to_dlq", { queue_name: QUEUE_NAME, msg_id: msg.msg_id }).catch(() => {});
+        console.warn(
+          `msg ${msg.msg_id} exceeded retry limit (read_ct=${msg.read_ct}), moving to DLQ`,
+        );
+        await supabase
+          .rpc("move_to_dlq", { queue_name: QUEUE_NAME, msg_id: msg.msg_id })
+          .catch(() => {});
         results.dlq++;
         continue;
       }

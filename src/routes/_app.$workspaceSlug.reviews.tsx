@@ -27,12 +27,7 @@ import {
 import { toast } from "sonner";
 import { Star, CheckCircle2, Plus, Sparkles } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/reviews")({
@@ -132,7 +127,11 @@ function ReviewsPage() {
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from("performance_reviews").select("*").eq("workspace_id", workspace.id).order("period_end", { ascending: false });
+    let q = supabase
+      .from("performance_reviews")
+      .select("*")
+      .eq("workspace_id", workspace.id)
+      .order("period_end", { ascending: false });
     if (!isManager) q = q.eq("user_id", user.id);
     const { data, error } = await q;
     if (error) {
@@ -142,7 +141,12 @@ function ReviewsPage() {
     }
     const rows = (data ?? []) as ReviewRow[];
     setReviews(rows);
-    const ids = Array.from(new Set([...rows.map((r) => r.user_id), ...rows.map((r) => r.reviewer_id).filter((x): x is string => !!x)]));
+    const ids = Array.from(
+      new Set([
+        ...rows.map((r) => r.user_id),
+        ...rows.map((r) => r.reviewer_id).filter((x): x is string => !!x),
+      ]),
+    );
     if (ids.length) {
       const { data: profs } = await supabase
         .from("profiles")
@@ -190,7 +194,13 @@ function ReviewsPage() {
                 <Plus className="mr-2 h-4 w-4" /> New Review
               </Button>
             </DialogTrigger>
-            <CreateReviewDialog workspaceId={workspace.id} onCreated={() => { setCreateOpen(false); void load(); }} />
+            <CreateReviewDialog
+              workspaceId={workspace.id}
+              onCreated={() => {
+                setCreateOpen(false);
+                void load();
+              }}
+            />
           </Dialog>
         )}
       </div>
@@ -252,7 +262,11 @@ function ReviewsPage() {
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <Star className="h-12 w-12 text-muted-foreground/30" />
           <p className="text-sm text-muted-foreground">No performance reviews yet.</p>
-          {isManager && <p className="text-xs text-muted-foreground">Create the first review using the button above.</p>}
+          {isManager && (
+            <p className="text-xs text-muted-foreground">
+              Create the first review using the button above.
+            </p>
+          )}
         </div>
       ) : (
         <div className="grid gap-3">
@@ -260,7 +274,11 @@ function ReviewsPage() {
             const subj = profiles[r.user_id];
             const reviewer = r.reviewer_id ? profiles[r.reviewer_id] : null;
             const avg = Math.round(
-              (r.productivity_score + r.quality_score + r.attendance_score + r.collaboration_score) / 4,
+              (r.productivity_score +
+                r.quality_score +
+                r.attendance_score +
+                r.collaboration_score) /
+                4,
             );
             return (
               <Card key={r.id} className="p-5 space-y-4">
@@ -271,7 +289,9 @@ function ReviewsPage() {
                       <h3 className="font-semibold">
                         {r.period_start} → {r.period_end}
                       </h3>
-                      <span className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${RATING_STYLE[r.overall_rating]}`}>
+                      <span
+                        className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${RATING_STYLE[r.overall_rating]}`}
+                      >
                         {RATING_LABEL[r.overall_rating]}
                       </span>
                     </div>
@@ -358,7 +378,15 @@ function ReviewsPage() {
   );
 }
 
-function ScoreDisplay({ label, value, color = "hsl(var(--primary))" }: { label: string; value: number; color?: string }) {
+function ScoreDisplay({
+  label,
+  value,
+  color = "hsl(var(--primary))",
+}: {
+  label: string;
+  value: number;
+  color?: string;
+}) {
   const r = 36;
   const circ = 2 * Math.PI * r;
   const dash = (value / 100) * circ;
@@ -370,14 +398,24 @@ function ScoreDisplay({ label, value, color = "hsl(var(--primary))" }: { label: 
         <svg width="88" height="88" viewBox="0 0 88 88">
           <circle cx="44" cy="44" r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth="7" />
           <circle
-            cx="44" cy="44" r={r} fill="none"
-            stroke={color} strokeWidth="7"
+            cx="44"
+            cy="44"
+            r={r}
+            fill="none"
+            stroke={color}
+            strokeWidth="7"
             strokeDasharray={`${dash} ${circ}`}
             strokeLinecap="round"
             transform="rotate(-90 44 44)"
           />
-          <text x="44" y="44" textAnchor="middle" dominantBaseline="central"
-            fontSize="16" fontWeight="700" fill="currentColor"
+          <text
+            x="44"
+            y="44"
+            textAnchor="middle"
+            dominantBaseline="central"
+            fontSize="16"
+            fontWeight="700"
+            fill="currentColor"
           >
             {value}
           </text>
@@ -398,7 +436,13 @@ function ScoreDisplay({ label, value, color = "hsl(var(--primary))" }: { label: 
   );
 }
 
-function CreateReviewDialog({ workspaceId, onCreated }: { workspaceId: string; onCreated: () => void }) {
+function CreateReviewDialog({
+  workspaceId,
+  onCreated,
+}: {
+  workspaceId: string;
+  onCreated: () => void;
+}) {
   const { user } = useAuth();
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [submitting, setSubmitting] = React.useState(false);
@@ -480,18 +524,27 @@ function CreateReviewDialog({ workspaceId, onCreated }: { workspaceId: string; o
           <div>
             <Label>Employee</Label>
             <Select value={form.user_id} onValueChange={(v) => setForm({ ...form, user_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Pick employee" /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue placeholder="Pick employee" />
+              </SelectTrigger>
               <SelectContent>
                 {employees.map((e) => (
-                  <SelectItem key={e.id} value={e.id}>{e.full_name ?? e.email}</SelectItem>
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.full_name ?? e.email}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label>Overall rating</Label>
-            <Select value={form.overall_rating} onValueChange={(v) => setForm({ ...form, overall_rating: v as Rating })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={form.overall_rating}
+              onValueChange={(v) => setForm({ ...form, overall_rating: v as Rating })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="exceeds">Exceeds</SelectItem>
                 <SelectItem value="meets">Meets</SelectItem>
@@ -502,35 +555,73 @@ function CreateReviewDialog({ workspaceId, onCreated }: { workspaceId: string; o
           </div>
           <div>
             <Label>Period start</Label>
-            <Input type="date" value={form.period_start} onChange={(e) => setForm({ ...form, period_start: e.target.value })} className="text-base md:text-sm" />
+            <Input
+              type="date"
+              value={form.period_start}
+              onChange={(e) => setForm({ ...form, period_start: e.target.value })}
+              className="text-base md:text-sm"
+            />
           </div>
           <div>
             <Label>Period end</Label>
-            <Input type="date" value={form.period_end} onChange={(e) => setForm({ ...form, period_end: e.target.value })} className="text-base md:text-sm" />
+            <Input
+              type="date"
+              value={form.period_end}
+              onChange={(e) => setForm({ ...form, period_end: e.target.value })}
+              className="text-base md:text-sm"
+            />
           </div>
         </div>
 
-        {(["productivity_score", "quality_score", "attendance_score", "collaboration_score"] as const).map((k) => (
+        {(
+          [
+            "productivity_score",
+            "quality_score",
+            "attendance_score",
+            "collaboration_score",
+          ] as const
+        ).map((k) => (
           <div key={k}>
             <div className="flex items-center justify-between mb-1">
               <Label className="capitalize">{k.replace("_score", "").replace("_", " ")}</Label>
               <span className="text-sm tabular-nums">{form[k]}</span>
             </div>
-            <Slider value={[form[k]]} min={0} max={100} step={5} onValueChange={(v) => setForm({ ...form, [k]: v[0] ?? 0 })} />
+            <Slider
+              value={[form[k]]}
+              min={0}
+              max={100}
+              step={5}
+              onValueChange={(v) => setForm({ ...form, [k]: v[0] ?? 0 })}
+            />
           </div>
         ))}
 
         <div>
           <Label>Strengths</Label>
-          <Textarea rows={2} value={form.strengths} onChange={(e) => setForm({ ...form, strengths: e.target.value })} className="text-base md:text-sm" />
+          <Textarea
+            rows={2}
+            value={form.strengths}
+            onChange={(e) => setForm({ ...form, strengths: e.target.value })}
+            className="text-base md:text-sm"
+          />
         </div>
         <div>
           <Label>Areas to improve</Label>
-          <Textarea rows={2} value={form.areas_to_improve} onChange={(e) => setForm({ ...form, areas_to_improve: e.target.value })} className="text-base md:text-sm" />
+          <Textarea
+            rows={2}
+            value={form.areas_to_improve}
+            onChange={(e) => setForm({ ...form, areas_to_improve: e.target.value })}
+            className="text-base md:text-sm"
+          />
         </div>
         <div>
           <Label>Manager notes</Label>
-          <Textarea rows={2} value={form.manager_notes} onChange={(e) => setForm({ ...form, manager_notes: e.target.value })} className="text-base md:text-sm" />
+          <Textarea
+            rows={2}
+            value={form.manager_notes}
+            onChange={(e) => setForm({ ...form, manager_notes: e.target.value })}
+            className="text-base md:text-sm"
+          />
         </div>
       </div>
       <DialogFooter>

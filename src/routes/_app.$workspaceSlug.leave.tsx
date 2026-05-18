@@ -77,15 +77,15 @@ interface ProfileMini {
 // ─── Colour helper ────────────────────────────────────────────────────────────
 
 const COLOR_CLASS: Record<string, string> = {
-  blue:   "bg-blue-500/15 text-blue-600 border-blue-500/30",
-  amber:  "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  blue: "bg-blue-500/15 text-blue-600 border-blue-500/30",
+  amber: "bg-amber-500/15 text-amber-600 border-amber-500/30",
   purple: "bg-purple-500/15 text-purple-600 border-purple-500/30",
-  pink:   "bg-pink-500/15 text-pink-600 border-pink-500/30",
-  teal:   "bg-teal-500/15 text-teal-600 border-teal-500/30",
+  pink: "bg-pink-500/15 text-pink-600 border-pink-500/30",
+  teal: "bg-teal-500/15 text-teal-600 border-teal-500/30",
 };
 
 const STATUS_STYLE: Record<string, string> = {
-  pending:  "bg-warning/15 text-warning border-warning/30",
+  pending: "bg-warning/15 text-warning border-warning/30",
   approved: "bg-success/15 text-success border-success/30",
   rejected: "bg-destructive/15 text-destructive border-destructive/30",
 };
@@ -127,7 +127,11 @@ function LeavePage() {
       supabase.from("leave_types").select("*").eq("workspace_id", workspace.id).order("name"),
       supabase.from("leave_balances").select("*").eq("workspace_id", workspace.id).eq("year", year),
       isManager
-        ? supabase.from("leave_requests").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false })
+        ? supabase
+            .from("leave_requests")
+            .select("*")
+            .eq("workspace_id", workspace.id)
+            .order("created_at", { ascending: false })
         : supabase
             .from("leave_requests")
             .select("*")
@@ -153,24 +157,30 @@ function LeavePage() {
         .select("id, full_name, email")
         .in("id", ids);
       const map: Record<string, ProfileMini> = {};
-      (profs ?? []).forEach((p) => { map[p.id] = p as ProfileMini; });
+      (profs ?? []).forEach((p) => {
+        map[p.id] = p as ProfileMini;
+      });
       setProfiles(map);
     }
 
     setLoading(false);
   }, [user, isManager, year]);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   // Auto-initialise balances if none exist for this user this year
   React.useEffect(() => {
     if (!user || loading) return;
     const mine = balances.filter((b) => b.user_id === user.id);
     if (mine.length === 0 && leaveTypes.length > 0) {
-      void supabase.rpc("init_leave_balances", {
-        p_user_id: user.id,
-        p_year: year,
-      }).then(() => void load());
+      void supabase
+        .rpc("init_leave_balances", {
+          p_user_id: user.id,
+          p_year: year,
+        })
+        .then(() => void load());
     }
   }, [user, loading, balances, leaveTypes, year, load]);
 
@@ -221,10 +231,7 @@ function LeavePage() {
                   <p className="text-xs text-muted-foreground">remaining</p>
                 </div>
                 <div className="h-1.5 rounded bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all"
-                    style={{ width: `${pct}%` }}
-                  />
+                  <div className="h-full bg-primary transition-all" style={{ width: `${pct}%` }} />
                 </div>
               </Card>
             );
@@ -293,7 +300,10 @@ function LeavePage() {
         balances={myBalances}
         userId={user?.id ?? ""}
         workspaceId={workspace.id}
-        onCreated={() => { setRequestOpen(false); void load(); }}
+        onCreated={() => {
+          setRequestOpen(false);
+          void load();
+        }}
       />
     </div>
   );
@@ -438,10 +448,7 @@ function RequestList({
                         {type.name}
                       </Badge>
                     )}
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${STATUS_STYLE[r.status]}`}
-                    >
+                    <Badge variant="outline" className={`text-xs ${STATUS_STYLE[r.status]}`}>
                       {r.status === "pending" && <Clock className="mr-1 h-3 w-3" />}
                       {r.status === "approved" && <CheckCircle2 className="mr-1 h-3 w-3" />}
                       {r.status === "rejected" && <XCircle className="mr-1 h-3 w-3" />}
@@ -453,22 +460,16 @@ function RequestList({
                   </div>
 
                   {showEmployee && person && (
-                    <p className="text-sm font-medium">
-                      {person.full_name ?? person.email}
-                    </p>
+                    <p className="text-sm font-medium">{person.full_name ?? person.email}</p>
                   )}
 
                   <p className="text-sm text-muted-foreground">
                     {r.start_date} → {r.end_date}
                   </p>
 
-                  {r.reason && (
-                    <p className="text-xs text-muted-foreground italic">"{r.reason}"</p>
-                  )}
+                  {r.reason && <p className="text-xs text-muted-foreground italic">"{r.reason}"</p>}
                   {r.reviewer_note && (
-                    <p className="text-xs text-muted-foreground">
-                      Manager note: {r.reviewer_note}
-                    </p>
+                    <p className="text-xs text-muted-foreground">Manager note: {r.reviewer_note}</p>
                   )}
                 </div>
 
@@ -480,7 +481,10 @@ function RequestList({
                         size="sm"
                         variant="outline"
                         className="gap-1 text-success border-success/40 hover:bg-success/10"
-                        onClick={() => { setAction("approved"); setReviewId(r.id); }}
+                        onClick={() => {
+                          setAction("approved");
+                          setReviewId(r.id);
+                        }}
                       >
                         <CheckCircle2 className="h-3 w-3" /> Approve
                       </Button>
@@ -488,7 +492,10 @@ function RequestList({
                         size="sm"
                         variant="outline"
                         className="gap-1 text-destructive border-destructive/40 hover:bg-destructive/10"
-                        onClick={() => { setAction("rejected"); setReviewId(r.id); }}
+                        onClick={() => {
+                          setAction("rejected");
+                          setReviewId(r.id);
+                        }}
                       >
                         <XCircle className="h-3 w-3" /> Reject
                       </Button>
@@ -508,9 +515,7 @@ function RequestList({
             <DialogTitle className="capitalize">{action} leave request</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Optional note to send to the employee:
-            </p>
+            <p className="text-sm text-muted-foreground">Optional note to send to the employee:</p>
             <Textarea
               rows={3}
               placeholder="e.g. Enjoy your time off! / Please reschedule to next month."
@@ -519,7 +524,9 @@ function RequestList({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setReviewId(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setReviewId(null)}>
+              Cancel
+            </Button>
             <Button
               onClick={submitReview}
               disabled={saving}
@@ -572,8 +579,14 @@ function RequestLeaveDialog({
   const remaining = balance ? balance.days_allocated - balance.days_used : null;
 
   async function submit() {
-    if (!form.leave_type_id) { toast.error("Pick a leave type"); return; }
-    if (days <= 0) { toast.error("End date must be after start date"); return; }
+    if (!form.leave_type_id) {
+      toast.error("Pick a leave type");
+      return;
+    }
+    if (days <= 0) {
+      toast.error("End date must be after start date");
+      return;
+    }
     if (remaining !== null && days > remaining) {
       toast.error(`You only have ${remaining} days remaining for this leave type`);
       return;
@@ -591,7 +604,11 @@ function RequestLeaveDialog({
       status: selectedType?.requires_approval ? "pending" : "approved",
     });
 
-    if (error) { toast.error(error.message); setSubmitting(false); return; }
+    if (error) {
+      toast.error(error.message);
+      setSubmitting(false);
+      return;
+    }
 
     // Notify managers
     const { data: managers } = await supabase
@@ -648,9 +665,7 @@ function RequestLeaveDialog({
                   return (
                     <SelectItem key={t.id} value={t.id}>
                       {t.name}
-                      <span className="ml-2 text-xs text-muted-foreground">
-                        ({rem} days left)
-                      </span>
+                      <span className="ml-2 text-xs text-muted-foreground">({rem} days left)</span>
                     </SelectItem>
                   );
                 })}
@@ -692,10 +707,15 @@ function RequestLeaveDialog({
 
           {days > 0 && (
             <p className="text-sm text-muted-foreground">
-              That's <strong>{days} working day{days !== 1 ? "s" : ""}</strong>.
+              That's{" "}
+              <strong>
+                {days} working day{days !== 1 ? "s" : ""}
+              </strong>
+              .
               {remaining !== null && (
                 <span className={days > remaining ? " text-destructive" : ""}>
-                  {" "}You have {remaining} remaining.
+                  {" "}
+                  You have {remaining} remaining.
                 </span>
               )}
             </p>
@@ -715,7 +735,9 @@ function RequestLeaveDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button onClick={submit} disabled={submitting || days <= 0}>
             {submitting ? "Submitting…" : "Submit request"}
           </Button>
