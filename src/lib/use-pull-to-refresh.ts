@@ -1,6 +1,9 @@
 import { useEffect, useRef, useCallback } from "react";
 
-export function usePullToRefresh(onRefresh: () => void, containerRef?: React.RefObject<HTMLElement>) {
+export function usePullToRefresh(
+  onRefresh: () => void,
+  containerRef?: React.RefObject<HTMLElement>,
+) {
   const startY = useRef(0);
   const pulling = useRef(false);
   const indicatorRef = useRef<HTMLDivElement | null>(null);
@@ -25,7 +28,10 @@ export function usePullToRefresh(onRefresh: () => void, containerRef?: React.Ref
     function onTouchMove(e: TouchEvent) {
       if (!pulling.current) return;
       const el = target as Element;
-      if (el.scrollTop > 0) { pulling.current = false; return; }
+      if (el.scrollTop > 0) {
+        pulling.current = false;
+        return;
+      }
       const deltaY = (e.touches[0]?.clientY ?? 0) - startY.current;
       if (deltaY < 0) return;
       const progress = Math.min(deltaY / THRESHOLD, 1);

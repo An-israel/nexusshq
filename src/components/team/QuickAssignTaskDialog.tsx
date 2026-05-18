@@ -101,9 +101,7 @@ export function QuickAssignTaskDialog({
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>
-            Assign task{assigneeName ? ` to ${assigneeName}` : ""}
-          </DialogTitle>
+          <DialogTitle>Assign task{assigneeName ? ` to ${assigneeName}` : ""}</DialogTitle>
         </DialogHeader>
         <div className="space-y-3">
           <div>
@@ -135,9 +133,7 @@ export function QuickAssignTaskDialog({
               <Label>Priority</Label>
               <Select
                 value={form.priority}
-                onValueChange={(v) =>
-                  setForm({ ...form, priority: v as typeof form.priority })
-                }
+                onValueChange={(v) => setForm({ ...form, priority: v as typeof form.priority })}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -154,9 +150,7 @@ export function QuickAssignTaskDialog({
               <Label>Type</Label>
               <Select
                 value={form.task_type}
-                onValueChange={(v) =>
-                  setForm({ ...form, task_type: v as typeof form.task_type })
-                }
+                onValueChange={(v) => setForm({ ...form, task_type: v as typeof form.task_type })}
               >
                 <SelectTrigger>
                   <SelectValue />

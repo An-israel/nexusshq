@@ -30,11 +30,7 @@ export interface WorkspaceContextValue {
   memberCount: number;
   loading: boolean;
   error: string | null;
-  setWorkspaceData: (
-    workspace: Workspace,
-    role: WorkspaceRole,
-    memberCount: number,
-  ) => void;
+  setWorkspaceData: (workspace: Workspace, role: WorkspaceRole, memberCount: number) => void;
   clearWorkspace: () => void;
 }
 
@@ -73,9 +69,7 @@ function WorkspaceProvider({ children }: WorkspaceProviderProps): React.JSX.Elem
   const isOwner = workspaceRole === "owner";
   const isWorkspaceAdmin = workspaceRole === "owner" || workspaceRole === "admin";
   const isWorkspaceManager =
-    workspaceRole === "owner" ||
-    workspaceRole === "admin" ||
-    workspaceRole === "manager";
+    workspaceRole === "owner" || workspaceRole === "admin" || workspaceRole === "manager";
 
   const value = React.useMemo<WorkspaceContextValue>(
     () => ({
@@ -104,11 +98,7 @@ function WorkspaceProvider({ children }: WorkspaceProviderProps): React.JSX.Elem
     ],
   );
 
-  return (
-    <WorkspaceContext.Provider value={value}>
-      {children}
-    </WorkspaceContext.Provider>
-  );
+  return <WorkspaceContext.Provider value={value}>{children}</WorkspaceContext.Provider>;
 }
 
 function useWorkspace(): WorkspaceContextValue {

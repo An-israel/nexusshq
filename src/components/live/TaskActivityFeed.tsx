@@ -105,7 +105,7 @@ function CounterCard({ label, value, valueClass }: CounterCardProps) {
         className={cn(
           "text-4xl font-bold text-white transition-transform",
           animating && "animate-bounce",
-          valueClass
+          valueClass,
         )}
       >
         {value}
@@ -169,9 +169,7 @@ export function TaskActivityFeed({ events, counters, activeTasks }: Props) {
         </div>
 
         {displayedEvents.length === 0 ? (
-          <p className="text-[#555] text-sm text-center py-3">
-            Task activity will appear here
-          </p>
+          <p className="text-[#555] text-sm text-center py-3">Task activity will appear here</p>
         ) : (
           <ScrollArea className="max-h-56">
             <div className="space-y-1">
@@ -179,10 +177,7 @@ export function TaskActivityFeed({ events, counters, activeTasks }: Props) {
                 const time = new Date(event.time);
                 const relative = formatDistanceToNow(time, { addSuffix: true });
                 return (
-                  <div
-                    key={event.id}
-                    className="flex items-start gap-2.5 py-1.5 px-1"
-                  >
+                  <div key={event.id} className="flex items-start gap-2.5 py-1.5 px-1">
                     <Avatar
                       url={event.avatarUrl}
                       name={event.userName}
@@ -216,9 +211,7 @@ export function TaskActivityFeed({ events, counters, activeTasks }: Props) {
         </h3>
 
         {activeTasks.length === 0 ? (
-          <p className="text-[#555] text-sm text-center py-3">
-            No tasks in progress right now
-          </p>
+          <p className="text-[#555] text-sm text-center py-3">No tasks in progress right now</p>
         ) : (
           <div className="space-y-3">
             {visibleTasks.map((task) => {
@@ -227,8 +220,8 @@ export function TaskActivityFeed({ events, counters, activeTasks }: Props) {
               const dueDateDisplay = isToday
                 ? "Today"
                 : task.dueDate
-                ? format(new Date(task.dueDate), "MMM d")
-                : "—";
+                  ? format(new Date(task.dueDate), "MMM d")
+                  : "—";
 
               return (
                 <div
@@ -268,10 +261,7 @@ export function TaskActivityFeed({ events, counters, activeTasks }: Props) {
                     <span className="text-[#444]">·</span>
                     <span className="text-[#666]">Priority:</span>
                     <Badge
-                      className={cn(
-                        "text-xs px-1.5 py-0 h-4",
-                        priorityBadgeClass(task.priority)
-                      )}
+                      className={cn("text-xs px-1.5 py-0 h-4", priorityBadgeClass(task.priority))}
                     >
                       {task.priority}
                     </Badge>

@@ -1,6 +1,6 @@
-import React from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { deptLabel, todayISO } from '@/lib/nexus';
+import React from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { deptLabel, todayISO } from "@/lib/nexus";
 import type {
   LiveEmployee,
   AttendanceEvent,
@@ -11,7 +11,7 @@ import type {
   TimelinePoint,
   PendingDeliverable,
   OverdueTaskRow,
-} from './types';
+} from "./types";
 
 export type { OverdueTaskRow };
 
@@ -26,7 +26,7 @@ interface RawProfile {
 
 interface RawPresence {
   user_id: string;
-  status: 'active' | 'away' | 'dnd' | 'offline';
+  status: "active" | "away" | "dnd" | "offline";
   last_seen_at: string | null;
   status_emoji: string | null;
   status_text: string | null;
@@ -97,7 +97,7 @@ function buildEmployees(
       department: p.department,
       job_title: p.job_title,
       avatar_url: p.avatar_url,
-      status: pres?.status ?? 'offline',
+      status: pres?.status ?? "offline",
       last_seen_at: pres?.last_seen_at ?? null,
       status_emoji: pres?.status_emoji ?? null,
       status_text: pres?.status_text ?? null,
@@ -110,10 +110,10 @@ function buildEmployees(
 
 function buildTaskCounters(tasks: RawTask[], today: string): TaskCounters {
   const completedToday = tasks.filter(
-    (t) => t.status === 'completed' && t.completed_at?.startsWith(today),
+    (t) => t.status === "completed" && t.completed_at?.startsWith(today),
   ).length;
-  const inProgress = tasks.filter((t) => t.status === 'in_progress').length;
-  const overdue = tasks.filter((t) => t.status === 'overdue').length;
+  const inProgress = tasks.filter((t) => t.status === "in_progress").length;
+  const overdue = tasks.filter((t) => t.status === "overdue").length;
   return { totalToday: tasks.length, completedToday, inProgress, overdue };
 }
 
@@ -124,10 +124,10 @@ function buildDeptProductivity(
   const deptMap = new Map<string, { completed: number; total: number }>();
   for (const task of tasks) {
     const profile = task.assigned_to ? profileMap.get(task.assigned_to) : null;
-    const dept = profile?.department ?? 'other';
+    const dept = profile?.department ?? "other";
     const entry = deptMap.get(dept) ?? { completed: 0, total: 0 };
     entry.total += 1;
-    if (task.status === 'completed') entry.completed += 1;
+    if (task.status === "completed") entry.completed += 1;
     deptMap.set(dept, entry);
   }
   return Array.from(deptMap.entries()).map(([department, { completed, total }]) => ({
@@ -141,7 +141,7 @@ function buildDeptProductivity(
 
 function buildTimeline(tasks: RawTask[], today: string): TimelinePoint[] {
   const completedTimes = tasks
-    .filter((t) => t.status === 'completed' && t.completed_at?.startsWith(today))
+    .filter((t) => t.status === "completed" && t.completed_at?.startsWith(today))
     .map((t) => new Date(t.completed_at!).getHours())
     .sort((a, b) => a - b);
 
@@ -149,7 +149,7 @@ function buildTimeline(tasks: RawTask[], today: string): TimelinePoint[] {
   let cumulative = 0;
   for (let h = 6; h <= 22; h++) {
     cumulative += completedTimes.filter((hr) => hr === h).length;
-    const suffix = h < 12 ? 'AM' : 'PM';
+    const suffix = h < 12 ? "AM" : "PM";
     const display = h === 12 ? 12 : h > 12 ? h - 12 : h;
     points.push({ hour: `${display}${suffix}`, cumulative });
   }
@@ -161,7 +161,7 @@ function buildOverdueTasks(
   profileMap: Map<string, RawProfile>,
 ): OverdueTaskRow[] {
   return tasks
-    .filter((t) => t.status === 'overdue' && t.assigned_to)
+    .filter((t) => t.status === "overdue" && t.assigned_to)
     .map((t) => {
       const profile = profileMap.get(t.assigned_to!);
       const dueDate = t.due_date ? new Date(t.due_date) : null;
@@ -188,37 +188,38 @@ function buildActivityLog(
   taskActivity: TaskActivityEvent[],
 ): ActivityLogEntry[] {
   const entries: ActivityLogEntry[] = [
-    ...attendanceEvents.map((e): ActivityLogEntry => ({
-      id: e.id,
-      icon: e.action === 'clock_in' ? '🟢' : '🔴',
-      description:
-        e.action === 'clock_in'
-          ? `${e.userName} clocked in${e.isLate ? ' (late)' : ''}`
-          : `${e.userName} clocked out`,
-      time: e.time,
-      type: e.action,
-    })),
-    ...taskActivity.map((e): ActivityLogEntry => ({
-      id: e.id,
-      icon: e.action === 'completed' ? '✅' : e.action === 'started' ? '▶️' : '📝',
-      description:
-        e.action === 'completed'
-          ? `${e.userName} completed "${e.taskTitle}"`
-          : e.action === 'started'
-          ? `${e.userName} started "${e.taskTitle}"`
-          : `${e.userName} updated "${e.taskTitle}"`,
-      time: e.time,
-      type: e.action === 'completed' ? 'task_complete' : 'task_update',
-    })),
+    ...attendanceEvents.map(
+      (e): ActivityLogEntry => ({
+        id: e.id,
+        icon: e.action === "clock_in" ? "🟢" : "🔴",
+        description:
+          e.action === "clock_in"
+            ? `${e.userName} clocked in${e.isLate ? " (late)" : ""}`
+            : `${e.userName} clocked out`,
+        time: e.time,
+        type: e.action,
+      }),
+    ),
+    ...taskActivity.map(
+      (e): ActivityLogEntry => ({
+        id: e.id,
+        icon: e.action === "completed" ? "✅" : e.action === "started" ? "▶️" : "📝",
+        description:
+          e.action === "completed"
+            ? `${e.userName} completed "${e.taskTitle}"`
+            : e.action === "started"
+              ? `${e.userName} started "${e.taskTitle}"`
+              : `${e.userName} updated "${e.taskTitle}"`,
+        time: e.time,
+        type: e.action === "completed" ? "task_complete" : "task_update",
+      }),
+    ),
   ];
   return entries.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
 }
 
-function computeProductivityScore(
-  counters: TaskCounters,
-  employees: LiveEmployee[],
-): number {
-  const activeCount = employees.filter((e) => e.status === 'active').length;
+function computeProductivityScore(counters: TaskCounters, employees: LiveEmployee[]): number {
+  const activeCount = employees.filter((e) => e.status === "active").length;
   const totalCount = employees.length;
   if (totalCount === 0) return 0;
 
@@ -268,7 +269,9 @@ export function useLiveData(workspaceId: string | null): {
   });
   const [deptProductivity, setDeptProductivity] = React.useState<DeptProductivity[]>([]);
   const [timelinePoints, setTimelinePoints] = React.useState<TimelinePoint[]>([]);
-  const [overdueTasksWithEmployee, setOverdueTasksWithEmployee] = React.useState<OverdueTaskRow[]>([]);
+  const [overdueTasksWithEmployee, setOverdueTasksWithEmployee] = React.useState<OverdueTaskRow[]>(
+    [],
+  );
   const [pendingDeliverables, setPendingDeliverables] = React.useState<PendingDeliverable[]>([]);
   const [activeTasks, setActiveTasks] = React.useState<ActiveTaskRow[]>([]);
   const [productivityScore, setProductivityScore] = React.useState(0);
@@ -313,9 +316,7 @@ export function useLiveData(workspaceId: string | null): {
       profiles,
       presenceMapRef.current,
       attendanceMapRef.current,
-    ).sort(
-      (a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3),
-    );
+    ).sort((a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3));
     const newCounters = buildTaskCounters(tasks, today);
     const newDept = buildDeptProductivity(tasks, profileMapRef.current);
     const newTimeline = buildTimeline(tasks, today);
@@ -329,18 +330,18 @@ export function useLiveData(workspaceId: string | null): {
     setOverdueTasksWithEmployee(newOverdue);
     setProductivityScore(newScore);
     const newActiveTasks: ActiveTaskRow[] = tasks
-      .filter((t) => t.status === 'in_progress' && t.assigned_to)
+      .filter((t) => t.status === "in_progress" && t.assigned_to)
       .map((t) => {
         const p = profileMapRef.current.get(t.assigned_to!);
         return {
           id: t.id,
           title: t.title,
           assignedTo: t.assigned_to!,
-          assigneeName: p?.full_name ?? 'Unknown',
+          assigneeName: p?.full_name ?? "Unknown",
           assigneeAvatarUrl: p?.avatar_url ?? null,
           progress: t.progress_percent,
           priority: t.priority,
-          dueDate: t.due_date ?? '',
+          dueDate: t.due_date ?? "",
         };
       });
     setActiveTasks(newActiveTasks);
@@ -351,39 +352,49 @@ export function useLiveData(workspaceId: string | null): {
 
     const today = todayISO();
 
-    const [membersResult, presenceResult, attendanceResult, tasksResult, updatesResult, deliverablesResult] =
-      await Promise.all([
-        supabase
-          .from('workspace_members')
-          .select('user_id, profiles!inner(id, full_name, email, department, job_title, avatar_url)')
-          .eq('workspace_id', workspaceId),
-        supabase
-          .from('user_presence')
-          .select('user_id, status, last_seen_at, status_emoji, status_text')
-          .eq('workspace_id', workspaceId),
-        supabase
-          .from('attendance')
-          .select('id, user_id, date, clock_in, clock_out, total_minutes, status')
-          .eq('workspace_id', workspaceId)
-          .eq('date', today),
-        supabase
-          .from('tasks')
-          .select('id, title, assigned_to, status, priority, progress_percent, due_date, completed_at, created_at')
-          .eq('workspace_id', workspaceId)
-          .or(`created_at.gte.${today}T00:00:00,due_date.eq.${today},status.eq.in_progress`),
-        supabase
-          .from('task_updates')
-          .select('id, task_id, updated_by, old_status, new_status, old_progress, new_progress, note, created_at')
-          .eq('workspace_id' as never, workspaceId)
-          .gte('created_at', `${today}T00:00:00`)
-          .order('created_at', { ascending: false })
-          .limit(50),
-        supabase
-          .from('deliverables')
-          .select('id, task_id, user_id, file_name, file_size_bytes, status, created_at')
-          .eq('workspace_id', workspaceId)
-          .eq('status', 'submitted'),
-      ]);
+    const [
+      membersResult,
+      presenceResult,
+      attendanceResult,
+      tasksResult,
+      updatesResult,
+      deliverablesResult,
+    ] = await Promise.all([
+      supabase
+        .from("workspace_members")
+        .select("user_id, profiles!inner(id, full_name, email, department, job_title, avatar_url)")
+        .eq("workspace_id", workspaceId),
+      supabase
+        .from("user_presence")
+        .select("user_id, status, last_seen_at, status_emoji, status_text")
+        .eq("workspace_id", workspaceId),
+      supabase
+        .from("attendance")
+        .select("id, user_id, date, clock_in, clock_out, total_minutes, status")
+        .eq("workspace_id", workspaceId)
+        .eq("date", today),
+      supabase
+        .from("tasks")
+        .select(
+          "id, title, assigned_to, status, priority, progress_percent, due_date, completed_at, created_at",
+        )
+        .eq("workspace_id", workspaceId)
+        .or(`created_at.gte.${today}T00:00:00,due_date.eq.${today},status.eq.in_progress`),
+      supabase
+        .from("task_updates")
+        .select(
+          "id, task_id, updated_by, old_status, new_status, old_progress, new_progress, note, created_at",
+        )
+        .eq("workspace_id" as never, workspaceId)
+        .gte("created_at", `${today}T00:00:00`)
+        .order("created_at", { ascending: false })
+        .limit(50),
+      supabase
+        .from("deliverables")
+        .select("id, task_id, user_id, file_name, file_size_bytes, status, created_at")
+        .eq("workspace_id", workspaceId)
+        .eq("status", "submitted"),
+    ]);
 
     if (!mountedRef.current) return;
 
@@ -431,7 +442,7 @@ export function useLiveData(workspaceId: string | null): {
             userId: row.user_id,
             userName: profile?.full_name ?? row.user_id,
             avatarUrl: profile?.avatar_url ?? null,
-            action: 'clock_in',
+            action: "clock_in",
             time: row.clock_in,
             isLate: clockInDate > nineAM,
           });
@@ -442,7 +453,7 @@ export function useLiveData(workspaceId: string | null): {
             userId: row.user_id,
             userName: profile?.full_name ?? row.user_id,
             avatarUrl: profile?.avatar_url ?? null,
-            action: 'clock_out',
+            action: "clock_out",
             time: row.clock_out,
             isLate: false,
           });
@@ -456,15 +467,16 @@ export function useLiveData(workspaceId: string | null): {
       for (const row of updatesResult.data as RawTaskUpdate[]) {
         const profile = row.updated_by ? profileMap.get(row.updated_by) : null;
         const task = tasksRef.current.get(row.task_id);
-        let action: 'started' | 'updated' | 'completed' = 'updated';
-        if (row.new_status === 'in_progress' && row.old_status !== 'in_progress') action = 'started';
-        else if (row.new_status === 'completed') action = 'completed';
+        let action: "started" | "updated" | "completed" = "updated";
+        if (row.new_status === "in_progress" && row.old_status !== "in_progress")
+          action = "started";
+        else if (row.new_status === "completed") action = "completed";
         newTaskActivity.push({
           id: row.id,
           taskId: row.task_id,
           taskTitle: task?.title ?? row.task_id,
-          userId: row.updated_by ?? '',
-          userName: profile?.full_name ?? row.updated_by ?? 'Unknown',
+          userId: row.updated_by ?? "",
+          userName: profile?.full_name ?? row.updated_by ?? "Unknown",
           avatarUrl: profile?.avatar_url ?? null,
           action,
           progressBefore: row.old_progress ?? null,
@@ -514,11 +526,16 @@ export function useLiveData(workspaceId: string | null): {
     const channel = supabase
       .channel(`live-ops-${workspaceId}`)
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'user_presence', filter: `workspace_id=eq.${workspaceId}` },
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "user_presence",
+          filter: `workspace_id=eq.${workspaceId}`,
+        },
         (payload) => {
           scheduleBatch(() => {
-            if (payload.eventType === 'DELETE') {
+            if (payload.eventType === "DELETE") {
               const old = payload.old as { user_id?: string };
               if (old.user_id) presenceMapRef.current.delete(old.user_id);
             } else {
@@ -530,11 +547,16 @@ export function useLiveData(workspaceId: string | null): {
         },
       )
       .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'attendance', filter: `workspace_id=eq.${workspaceId}` },
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "attendance",
+          filter: `workspace_id=eq.${workspaceId}`,
+        },
         (payload) => {
           scheduleBatch(() => {
-            if (payload.eventType === 'DELETE') return;
+            if (payload.eventType === "DELETE") return;
             const row = payload.new as RawAttendance;
             if (row.date !== today) return;
 
@@ -542,11 +564,9 @@ export function useLiveData(workspaceId: string | null): {
             rebuildDerived();
 
             const profile = profileMapRef.current.get(row.user_id);
-            if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+            if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
               setAttendanceEvents((prev) => {
-                const filtered = prev.filter(
-                  (e) => e.userId !== row.user_id,
-                );
+                const filtered = prev.filter((e) => e.userId !== row.user_id);
                 const next = [...filtered];
                 if (row.clock_in) {
                   const clockInDate = new Date(row.clock_in);
@@ -557,7 +577,7 @@ export function useLiveData(workspaceId: string | null): {
                     userId: row.user_id,
                     userName: profile?.full_name ?? row.user_id,
                     avatarUrl: profile?.avatar_url ?? null,
-                    action: 'clock_in',
+                    action: "clock_in",
                     time: row.clock_in,
                     isLate: clockInDate > nineAM,
                   });
@@ -568,44 +588,39 @@ export function useLiveData(workspaceId: string | null): {
                     userId: row.user_id,
                     userName: profile?.full_name ?? row.user_id,
                     avatarUrl: profile?.avatar_url ?? null,
-                    action: 'clock_out',
+                    action: "clock_out",
                     time: row.clock_out,
                     isLate: false,
                   });
                 }
-                return next.filter(
-                  (e) =>
-                    e.time.startsWith(today),
-                );
+                return next.filter((e) => e.time.startsWith(today));
               });
             }
           });
         },
       )
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'task_updates' },
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "task_updates" },
         (payload) => {
           scheduleBatch(() => {
             const row = payload.new as RawTaskUpdate;
             if (!row.created_at.startsWith(today)) return;
 
-            const profile = row.updated_by
-              ? profileMapRef.current.get(row.updated_by)
-              : null;
+            const profile = row.updated_by ? profileMapRef.current.get(row.updated_by) : null;
             const task = tasksRef.current.get(row.task_id);
 
-            let action: 'started' | 'updated' | 'completed' = 'updated';
-            if (row.new_status === 'in_progress' && row.old_status !== 'in_progress')
-              action = 'started';
-            else if (row.new_status === 'completed') action = 'completed';
+            let action: "started" | "updated" | "completed" = "updated";
+            if (row.new_status === "in_progress" && row.old_status !== "in_progress")
+              action = "started";
+            else if (row.new_status === "completed") action = "completed";
 
             const entry: TaskActivityEvent = {
               id: row.id,
               taskId: row.task_id,
               taskTitle: task?.title ?? row.task_id,
-              userId: row.updated_by ?? '',
-              userName: profile?.full_name ?? row.updated_by ?? 'Unknown',
+              userId: row.updated_by ?? "",
+              userName: profile?.full_name ?? row.updated_by ?? "Unknown",
               avatarUrl: profile?.avatar_url ?? null,
               action,
               progressBefore: row.old_progress ?? null,
@@ -618,15 +633,15 @@ export function useLiveData(workspaceId: string | null): {
             setActivityLog((prev) => {
               const logEntry: ActivityLogEntry = {
                 id: row.id,
-                icon: action === 'completed' ? '✅' : action === 'started' ? '▶️' : '📝',
+                icon: action === "completed" ? "✅" : action === "started" ? "▶️" : "📝",
                 description:
-                  action === 'completed'
+                  action === "completed"
                     ? `${entry.userName} completed "${entry.taskTitle}"`
-                    : action === 'started'
-                    ? `${entry.userName} started "${entry.taskTitle}"`
-                    : `${entry.userName} updated "${entry.taskTitle}"`,
+                    : action === "started"
+                      ? `${entry.userName} started "${entry.taskTitle}"`
+                      : `${entry.userName} updated "${entry.taskTitle}"`,
                 time: row.created_at,
-                type: action === 'completed' ? 'task_complete' : 'task_update',
+                type: action === "completed" ? "task_complete" : "task_update",
               };
               return [logEntry, ...prev].slice(0, 100);
             });
@@ -634,8 +649,13 @@ export function useLiveData(workspaceId: string | null): {
         },
       )
       .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'tasks', filter: `workspace_id=eq.${workspaceId}` },
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "tasks",
+          filter: `workspace_id=eq.${workspaceId}`,
+        },
         (payload) => {
           scheduleBatch(() => {
             const row = payload.new as RawTask;
@@ -645,12 +665,17 @@ export function useLiveData(workspaceId: string | null): {
         },
       )
       .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'deliverables', filter: `workspace_id=eq.${workspaceId}` },
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "deliverables",
+          filter: `workspace_id=eq.${workspaceId}`,
+        },
         (payload) => {
           scheduleBatch(() => {
             const row = payload.new as RawDeliverable;
-            if (row.status !== 'submitted') return;
+            if (row.status !== "submitted") return;
             const profile = profileMapRef.current.get(row.user_id);
             const task = row.task_id ? tasksRef.current.get(row.task_id) : null;
             const entry: PendingDeliverable = {
@@ -668,52 +693,53 @@ export function useLiveData(workspaceId: string | null): {
         },
       )
       .subscribe((status) => {
-        if (status === 'SUBSCRIBED') setIsConnected(true);
-        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') setIsConnected(false);
+        if (status === "SUBSCRIBED") setIsConnected(true);
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") setIsConnected(false);
       });
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
         hiddenSinceRef.current = Date.now();
       } else {
-        const hiddenDuration = hiddenSinceRef.current
-          ? Date.now() - hiddenSinceRef.current
-          : 0;
+        const hiddenDuration = hiddenSinceRef.current ? Date.now() - hiddenSinceRef.current : 0;
         hiddenSinceRef.current = null;
         if (hiddenDuration >= 30 * 60 * 1000 && myUserIdRef.current && workspaceId) {
-          void supabase.from('user_presence').upsert(
+          void supabase.from("user_presence").upsert(
             {
               user_id: myUserIdRef.current,
               workspace_id: workspaceId,
-              status: 'away',
+              status: "away",
               last_seen_at: new Date().toISOString(),
             },
-            { onConflict: 'user_id,workspace_id' },
+            { onConflict: "user_id,workspace_id" },
           );
         }
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    const heartbeat = setInterval(async () => {
-      if (document.hidden || !myUserIdRef.current || !workspaceId) return;
-      await supabase.from('user_presence').upsert(
-        {
-          user_id: myUserIdRef.current,
-          workspace_id: workspaceId,
-          status: 'active',
-          last_seen_at: new Date().toISOString(),
-        },
-        { onConflict: 'user_id,workspace_id' },
-      );
-    }, 5 * 60 * 1000);
+    const heartbeat = setInterval(
+      async () => {
+        if (document.hidden || !myUserIdRef.current || !workspaceId) return;
+        await supabase.from("user_presence").upsert(
+          {
+            user_id: myUserIdRef.current,
+            workspace_id: workspaceId,
+            status: "active",
+            last_seen_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id,workspace_id" },
+        );
+      },
+      5 * 60 * 1000,
+    );
 
     return () => {
       mountedRef.current = false;
       if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
       clearInterval(heartbeat);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       void supabase.removeChannel(channel);
     };
   }, [workspaceId, fetchAll, scheduleBatch, rebuildDerived]);

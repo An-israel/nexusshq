@@ -10,11 +10,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
-import {
-  BarChart,
-  Bar,
-  Cell,
-} from "recharts";
+import { BarChart, Bar, Cell } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInCalendarDays } from "date-fns";
 import type {
@@ -48,15 +44,35 @@ function punctualityBarColor(pct: number): string {
 function cellDot(status: AttendanceCellStatus): JSX.Element {
   switch (status) {
     case "present":
-      return <span style={{ color: "#22c55e" }} title="Present">•</span>;
+      return (
+        <span style={{ color: "#22c55e" }} title="Present">
+          •
+        </span>
+      );
     case "late":
-      return <span style={{ color: "#f59e0b" }} title="Late">•</span>;
+      return (
+        <span style={{ color: "#f59e0b" }} title="Late">
+          •
+        </span>
+      );
     case "absent":
-      return <span style={{ color: "#ef4444" }} title="Absent">•</span>;
+      return (
+        <span style={{ color: "#ef4444" }} title="Absent">
+          •
+        </span>
+      );
     case "leave":
-      return <span style={{ color: "#14b8a6" }} title="Leave">•</span>;
+      return (
+        <span style={{ color: "#14b8a6" }} title="Leave">
+          •
+        </span>
+      );
     case "weekend":
-      return <span style={{ color: "#374151" }} title="Weekend">·</span>;
+      return (
+        <span style={{ color: "#374151" }} title="Weekend">
+          ·
+        </span>
+      );
     case "future":
       return <span />;
   }
@@ -117,9 +133,7 @@ export function Section2AttendanceSummary({
   const displayed = showAll ? sorted : sorted.slice(0, 10);
 
   // Derive unique day numbers for matrix header
-  const matrixDayNums: number[] = matrix.length > 0
-    ? matrix[0].days.map((d) => d.day)
-    : [];
+  const matrixDayNums: number[] = matrix.length > 0 ? matrix[0].days.map((d) => d.day) : [];
 
   return (
     <section>
@@ -156,9 +170,7 @@ export function Section2AttendanceSummary({
           ) : (
             <>
               <p className="text-xs text-muted-foreground">Total Late Arrivals</p>
-              <p className="text-2xl font-bold text-amber-400">
-                {stats?.totalLateArrivals ?? 0}
-              </p>
+              <p className="text-2xl font-bold text-amber-400">{stats?.totalLateArrivals ?? 0}</p>
             </>
           )}
         </StatCard>
@@ -173,9 +185,7 @@ export function Section2AttendanceSummary({
           ) : (
             <>
               <p className="text-xs text-muted-foreground">Total Absent Days</p>
-              <p className="text-2xl font-bold text-red-400">
-                {stats?.totalAbsentDays ?? 0}
-              </p>
+              <p className="text-2xl font-bold text-red-400">{stats?.totalAbsentDays ?? 0}</p>
             </>
           )}
         </StatCard>
@@ -273,7 +283,10 @@ export function Section2AttendanceSummary({
           <div className="space-y-2.5">
             {displayed.map((emp) => (
               <div key={emp.id} className="flex items-center gap-3">
-                <span className="text-xs text-muted-foreground w-32 shrink-0 truncate" title={emp.name}>
+                <span
+                  className="text-xs text-muted-foreground w-32 shrink-0 truncate"
+                  title={emp.name}
+                >
                   {emp.name}
                 </span>
                 <div className="flex-1 bg-[#1a1a1a] rounded-full h-2 min-w-0">
@@ -334,7 +347,10 @@ export function Section2AttendanceSummary({
               <tbody>
                 {matrix.map((row) => (
                   <tr key={row.employeeId}>
-                    <td className="sticky left-0 bg-[#111] text-muted-foreground pr-3 py-0.5 z-10 truncate max-w-[120px]" title={row.employeeName}>
+                    <td
+                      className="sticky left-0 bg-[#111] text-muted-foreground pr-3 py-0.5 z-10 truncate max-w-[120px]"
+                      title={row.employeeName}
+                    >
                       {row.employeeName}
                     </td>
                     {row.days.map((cell, ci) => (
@@ -350,19 +366,34 @@ export function Section2AttendanceSummary({
             {/* Legend */}
             <div className="flex flex-wrap items-center gap-4 mt-4 text-[10px] text-muted-foreground">
               <span className="flex items-center gap-1">
-                <span style={{ color: "#22c55e" }} className="text-sm">•</span> Present
+                <span style={{ color: "#22c55e" }} className="text-sm">
+                  •
+                </span>{" "}
+                Present
               </span>
               <span className="flex items-center gap-1">
-                <span style={{ color: "#f59e0b" }} className="text-sm">•</span> Late
+                <span style={{ color: "#f59e0b" }} className="text-sm">
+                  •
+                </span>{" "}
+                Late
               </span>
               <span className="flex items-center gap-1">
-                <span style={{ color: "#ef4444" }} className="text-sm">•</span> Absent
+                <span style={{ color: "#ef4444" }} className="text-sm">
+                  •
+                </span>{" "}
+                Absent
               </span>
               <span className="flex items-center gap-1">
-                <span style={{ color: "#14b8a6" }} className="text-sm">•</span> Leave
+                <span style={{ color: "#14b8a6" }} className="text-sm">
+                  •
+                </span>{" "}
+                Leave
               </span>
               <span className="flex items-center gap-1">
-                <span style={{ color: "#374151" }} className="text-sm">·</span> Weekend
+                <span style={{ color: "#374151" }} className="text-sm">
+                  ·
+                </span>{" "}
+                Weekend
               </span>
             </div>
           </div>

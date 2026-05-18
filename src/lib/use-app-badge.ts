@@ -16,7 +16,10 @@ export function useAppBadge() {
   const { user } = useAuth();
 
   const refresh = useCallback(async () => {
-    if (!user) { applyBadge(0); return; }
+    if (!user) {
+      applyBadge(0);
+      return;
+    }
 
     const [{ count: notifCount }, { count: dmCount }] = await Promise.all([
       supabase
@@ -34,7 +37,9 @@ export function useAppBadge() {
     applyBadge((notifCount ?? 0) + (dmCount ?? 0));
   }, [user]);
 
-  useEffect(() => { void refresh(); }, [refresh]);
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
 
   // Clear badge when tab/window gets focus (user is actively using the app)
   useEffect(() => {

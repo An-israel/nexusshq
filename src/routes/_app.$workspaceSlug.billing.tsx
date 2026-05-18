@@ -120,7 +120,10 @@ function startOfMonthISO(): string {
 
 function StatusBadge({ status }: { status: string }) {
   const map: Record<string, { label: string; className: string }> = {
-    trialing: { label: "Trialing", className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/40" },
+    trialing: {
+      label: "Trialing",
+      className: "bg-yellow-500/10 text-yellow-400 border-yellow-500/40",
+    },
     active: { label: "Active", className: "bg-green-500/10 text-green-400 border-green-500/40" },
     past_due: { label: "Past Due", className: "bg-red-500/10 text-red-400 border-red-500/40" },
     cancelled: { label: "Cancelled", className: "bg-muted text-muted-foreground border-border" },
@@ -217,7 +220,9 @@ function PlanCard({
         <div className="flex flex-wrap items-start justify-between gap-2">
           <p className={`text-base font-semibold ${plan.colorClass}`}>{plan.label}</p>
           {isCurrent && (
-            <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${plan.badgeClass}`}>
+            <span
+              className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-semibold ${plan.badgeClass}`}
+            >
               Current Plan
             </span>
           )}
@@ -288,11 +293,7 @@ function BillingPage() {
     async function fetchBillingData() {
       setLoading(true);
       const [subRes, seatsRes] = await Promise.all([
-        supabase
-          .from("subscriptions")
-          .select("*")
-          .eq("workspace_id", workspace.id)
-          .maybeSingle(),
+        supabase.from("subscriptions").select("*").eq("workspace_id", workspace.id).maybeSingle(),
         supabase
           .from("workspace_members")
           .select("id", { count: "exact", head: true })
@@ -411,11 +412,13 @@ function BillingPage() {
               }`}
             >
               Annual
-              <span className={`rounded-full px-1 text-[9px] font-bold ${
-                billingCycle === "annual"
-                  ? "bg-primary-foreground/20 text-primary-foreground"
-                  : "bg-green-500/15 text-green-500"
-              }`}>
+              <span
+                className={`rounded-full px-1 text-[9px] font-bold ${
+                  billingCycle === "annual"
+                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    : "bg-green-500/15 text-green-500"
+                }`}
+              >
                 –30%
               </span>
             </button>
@@ -423,7 +426,12 @@ function BillingPage() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {PLANS.map((plan) => (
-            <PlanCard key={plan.id} plan={plan} currentPlan={workspace.plan} billing={billingCycle} />
+            <PlanCard
+              key={plan.id}
+              plan={plan}
+              currentPlan={workspace.plan}
+              billing={billingCycle}
+            />
           ))}
         </div>
       </section>
@@ -437,12 +445,7 @@ function BillingPage() {
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            icon={Users}
-            label="Active members"
-            value={usedSeats}
-            loading={loading}
-          />
+          <StatCard icon={Users} label="Active members" value={usedSeats} loading={loading} />
           <StatCard
             icon={MessageSquare}
             label="Messages this month"
@@ -567,8 +570,8 @@ function CurrentPlanCard({
                     seatLimitReached
                       ? "font-semibold text-red-400"
                       : isNearLimit
-                      ? "font-semibold text-yellow-400"
-                      : "text-muted-foreground"
+                        ? "font-semibold text-yellow-400"
+                        : "text-muted-foreground"
                   }
                 >
                   {usedSeats} / {planSeats}
@@ -579,9 +582,7 @@ function CurrentPlanCard({
                 value={seatPct}
                 className={[
                   "h-2",
-                  seatLimitReached || isNearLimit
-                    ? "[&>div]:bg-red-500"
-                    : "[&>div]:bg-primary",
+                  seatLimitReached || isNearLimit ? "[&>div]:bg-red-500" : "[&>div]:bg-primary",
                 ].join(" ")}
               />
 

@@ -30,19 +30,27 @@ function presenceLabel(presence: UserPresence | undefined): string {
   const prefix = emoji ? `${emoji} ` : "";
   if (text) return `${prefix}${text}`;
   switch (presence.status) {
-    case "active": return "Active";
-    case "away": return "Away";
-    case "dnd": return "Do not disturb";
-    default: return "Offline";
+    case "active":
+      return "Active";
+    case "away":
+      return "Away";
+    case "dnd":
+      return "Do not disturb";
+    default:
+      return "Offline";
   }
 }
 
 function presenceColor(status: UserPresence["status"] | undefined): string {
   switch (status) {
-    case "active": return "#22c55e";
-    case "away": return "#eab308";
-    case "dnd": return "#ef4444";
-    default: return "#6b7280";
+    case "active":
+      return "#22c55e";
+    case "away":
+      return "#eab308";
+    case "dnd":
+      return "#ef4444";
+    default:
+      return "#6b7280";
   }
 }
 
@@ -136,7 +144,7 @@ export function ProfilePopup({ profile, presence, trigger, onSendMessage, worksp
               onClick={() => setOpen(false)}
               className={cn(
                 "flex items-center justify-center h-8 rounded-md text-xs",
-                "text-[#9CA3AF] hover:text-white hover:bg-[#2A2A2A] transition-colors"
+                "text-[#9CA3AF] hover:text-white hover:bg-[#2A2A2A] transition-colors",
               )}
             >
               View profile

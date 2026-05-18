@@ -35,26 +35,13 @@ function hashColor(id: string): string {
 }
 
 function TrendIcon({ trend }: { trend: StaffAttentionRow["trend"] }) {
-  if (trend === "improving")
-    return <TrendingUp className="h-3.5 w-3.5 text-green-400" />;
-  if (trend === "declining")
-    return <TrendingDown className="h-3.5 w-3.5 text-red-400" />;
+  if (trend === "improving") return <TrendingUp className="h-3.5 w-3.5 text-green-400" />;
+  if (trend === "declining") return <TrendingDown className="h-3.5 w-3.5 text-red-400" />;
   return <Minus className="h-3.5 w-3.5 text-muted-foreground" />;
 }
 
-function MiniBar({
-  value,
-  color,
-}: {
-  value: number;
-  color: "green" | "amber" | "red";
-}) {
-  const fill =
-    color === "green"
-      ? "#22c55e"
-      : color === "amber"
-      ? "#f59e0b"
-      : "#ef4444";
+function MiniBar({ value, color }: { value: number; color: "green" | "amber" | "red" }) {
+  const fill = color === "green" ? "#22c55e" : color === "amber" ? "#f59e0b" : "#ef4444";
   return (
     <div className="flex items-center gap-1.5">
       <div className="w-14 h-1.5 rounded-full bg-[#2a2a2a] overflow-hidden">
@@ -63,18 +50,12 @@ function MiniBar({
           style={{ width: `${Math.min(value, 100)}%`, backgroundColor: fill }}
         />
       </div>
-      <span className="text-xs tabular-nums text-muted-foreground">
-        {value.toFixed(0)}%
-      </span>
+      <span className="text-xs tabular-nums text-muted-foreground">{value.toFixed(0)}%</span>
     </div>
   );
 }
 
-export function Section6StaffAttention({
-  rows,
-  loading,
-  dateRange,
-}: Props) {
+export function Section6StaffAttention({ rows, loading, dateRange }: Props) {
   if (loading) {
     return (
       <div>
@@ -110,8 +91,7 @@ export function Section6StaffAttention({
     <div>
       <h2 className="text-xl font-bold text-white mb-1">Staff Attention Needed</h2>
       <p className="text-sm text-muted-foreground mb-2">
-        Employees with low scores, overdue tasks, or active flags for{" "}
-        {dateRange.label}
+        Employees with low scores, overdue tasks, or active flags for {dateRange.label}
       </p>
       <p className="text-xs text-amber-400/80 mb-6">
         {rows.length} employee{rows.length !== 1 ? "s" : ""} flagged for review
@@ -121,13 +101,7 @@ export function Section6StaffAttention({
         {rows.map((row) => {
           const emp = row.employee;
           return (
-            <Card
-              key={emp.id}
-              className={cn(
-                "p-4 border bg-[#0f0f0f]",
-                scoreBg(row.score),
-              )}
-            >
+            <Card key={emp.id} className={cn("p-4 border bg-[#0f0f0f]", scoreBg(row.score))}>
               {/* Header */}
               <div className="flex items-start gap-3 mb-3">
                 {emp.avatarUrl ? (
@@ -145,9 +119,7 @@ export function Section6StaffAttention({
                   </div>
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-white truncate">
-                    {emp.name}
-                  </p>
+                  <p className="text-sm font-semibold text-white truncate">{emp.name}</p>
                   <p className="text-xs text-muted-foreground capitalize truncate">
                     {emp.department.replace(/_/g, " ")}
                   </p>
@@ -168,11 +140,7 @@ export function Section6StaffAttention({
                   <MiniBar
                     value={row.completionPct}
                     color={
-                      row.completionPct >= 70
-                        ? "green"
-                        : row.completionPct >= 40
-                        ? "amber"
-                        : "red"
+                      row.completionPct >= 70 ? "green" : row.completionPct >= 40 ? "amber" : "red"
                     }
                   />
                 </div>
@@ -181,11 +149,7 @@ export function Section6StaffAttention({
                   <MiniBar
                     value={row.attendancePct}
                     color={
-                      row.attendancePct >= 80
-                        ? "green"
-                        : row.attendancePct >= 60
-                        ? "amber"
-                        : "red"
+                      row.attendancePct >= 80 ? "green" : row.attendancePct >= 60 ? "amber" : "red"
                     }
                   />
                 </div>
@@ -200,9 +164,7 @@ export function Section6StaffAttention({
                   </span>
                 )}
                 {row.overdueTaskCount > 0 && (
-                  <span className="text-xs text-amber-400">
-                    {row.overdueTaskCount} overdue
-                  </span>
+                  <span className="text-xs text-amber-400">{row.overdueTaskCount} overdue</span>
                 )}
                 <span className="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
                   <TrendIcon trend={row.trend} />

@@ -16,24 +16,23 @@ import {
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import {
-  Zap,
-  Check,
-  X,
-  Loader2,
-  Building2,
-  ArrowRight,
-  ChevronRight,
-} from "lucide-react";
+import { Zap, Check, X, Loader2, Building2, ArrowRight, ChevronRight } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
       { title: "Sign Up — Start Your Free Nexus HQ Workspace" },
-      { name: "description", content: "Create your Nexus HQ workspace in minutes and start a 7-day free trial — no credit card required." },
+      {
+        name: "description",
+        content:
+          "Create your Nexus HQ workspace in minutes and start a 7-day free trial — no credit card required.",
+      },
       { property: "og:title", content: "Sign Up — Start Your Free Nexus HQ Workspace" },
-      { property: "og:description", content: "Create a workspace and start a 7-day free trial — no credit card required." },
+      {
+        property: "og:description",
+        content: "Create a workspace and start a 7-day free trial — no credit card required.",
+      },
       { property: "og:url", content: "https://nexus.skryveai.com/signup" },
     ],
     links: [{ rel: "canonical", href: "https://nexus.skryveai.com/signup" }],
@@ -167,7 +166,7 @@ function SignupPage() {
       }
       const slug = slugs[0];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      navigate({ to: slug ? `/${slug}/dashboard` as any : "/create-workspace" });
+      navigate({ to: slug ? (`/${slug}/dashboard` as any) : "/create-workspace" });
     })();
   }, [session, navigate]);
 
@@ -241,7 +240,10 @@ function SignupPage() {
 
   function goToStep2() {
     const err = validateStep1();
-    if (err) { toast.error(err); return; }
+    if (err) {
+      toast.error(err);
+      return;
+    }
     setStep(2);
   }
 
@@ -293,43 +295,35 @@ function SignupPage() {
       if (wsError) throw wsError;
 
       // 3. Upsert profile (handle_new_user trigger may have already created it)
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .upsert(
-          {
-            id: user.id,
-            full_name: fullName.trim(),
-            email: email.trim().toLowerCase(),
-          },
-          { onConflict: "id" },
-        );
+      const { error: profileError } = await supabase.from("profiles").upsert(
+        {
+          id: user.id,
+          full_name: fullName.trim(),
+          email: email.trim().toLowerCase(),
+        },
+        { onConflict: "id" },
+      );
 
       if (profileError) throw profileError;
 
       // 4. Add as workspace owner
-      const { error: memberError } = await supabase
-        .from("workspace_members")
-        .insert({
-          workspace_id: workspace.id,
-          user_id: user.id,
-          role: "owner",
-        });
+      const { error: memberError } = await supabase.from("workspace_members").insert({
+        workspace_id: workspace.id,
+        user_id: user.id,
+        role: "owner",
+      });
 
       if (memberError) throw memberError;
 
       // 5. Create subscription
-      const { error: subError } = await supabase
-        .from("subscriptions")
-        .insert({
-          workspace_id: workspace.id,
-          plan: selectedPlan,
-          status: selectedPlan === "starter" ? "trialing" : "active",
-          current_period_start: now.toISOString(),
-          current_period_end: thirtyDaysOut.toISOString(),
-          ...(selectedPlan === "starter"
-            ? { trial_ends_at: fourteenDaysOut.toISOString() }
-            : {}),
-        });
+      const { error: subError } = await supabase.from("subscriptions").insert({
+        workspace_id: workspace.id,
+        plan: selectedPlan,
+        status: selectedPlan === "starter" ? "trialing" : "active",
+        current_period_start: now.toISOString(),
+        current_period_end: thirtyDaysOut.toISOString(),
+        ...(selectedPlan === "starter" ? { trial_ends_at: fourteenDaysOut.toISOString() } : {}),
+      });
 
       if (subError) throw subError;
 
@@ -411,7 +405,17 @@ function SignupPage() {
 
 // ── Step dot ────────────────────────────────────────────────────────────────
 
-function StepDot({ n, active, done, label }: { n: number; active: boolean; done: boolean; label: string }) {
+function StepDot({
+  n,
+  active,
+  done,
+  label,
+}: {
+  n: number;
+  active: boolean;
+  done: boolean;
+  label: string;
+}) {
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div
@@ -425,7 +429,9 @@ function StepDot({ n, active, done, label }: { n: number; active: boolean; done:
       >
         {done ? <Check className="h-4 w-4" /> : n}
       </div>
-      <span className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground"}`}>
+      <span
+        className={`text-xs font-medium ${active ? "text-foreground" : "text-muted-foreground"}`}
+      >
         {label}
       </span>
     </div>
@@ -474,7 +480,10 @@ function Step1({
       </div>
 
       <form
-        onSubmit={(e) => { e.preventDefault(); onNext(); }}
+        onSubmit={(e) => {
+          e.preventDefault();
+          onNext();
+        }}
         className="space-y-5 rounded-2xl border border-border bg-card p-7 shadow-xl"
       >
         <div className="space-y-2">
@@ -635,12 +644,8 @@ function Step2({
               {slugStatus === "checking" && (
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               )}
-              {slugStatus === "available" && (
-                <Check className="h-4 w-4 text-green-500" />
-              )}
-              {slugStatus === "taken" && (
-                <X className="h-4 w-4 text-destructive" />
-              )}
+              {slugStatus === "available" && <Check className="h-4 w-4 text-green-500" />}
+              {slugStatus === "taken" && <X className="h-4 w-4 text-destructive" />}
             </div>
           </div>
 
@@ -688,10 +693,7 @@ function Step2({
             type="submit"
             className="flex-1 gap-2"
             disabled={
-              submitting ||
-              !isValidSlug ||
-              slugStatus === "taken" ||
-              slugStatus === "checking"
+              submitting || !isValidSlug || slugStatus === "taken" || slugStatus === "checking"
             }
           >
             {submitting ? (

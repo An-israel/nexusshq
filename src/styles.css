@@ -64,9 +64,9 @@
   --radius: 0.75rem;
 
   /* base surfaces — #0F0F0F bg, #1A1A1A cards, #2A2A2A borders */
-  --background: oklch(0.16 0 0);            /* #0F0F0F */
-  --foreground: oklch(1 0 0);               /* white */
-  --card: oklch(0.21 0 0);                  /* #1A1A1A */
+  --background: oklch(0.16 0 0); /* #0F0F0F */
+  --foreground: oklch(1 0 0); /* white */
+  --card: oklch(0.21 0 0); /* #1A1A1A */
   --card-foreground: oklch(1 0 0);
   --popover: oklch(0.21 0 0);
   --popover-foreground: oklch(1 0 0);
@@ -79,7 +79,7 @@
   --secondary-foreground: oklch(1 0 0);
 
   --muted: oklch(0.22 0 0);
-  --muted-foreground: oklch(0.71 0 0);      /* #9CA3AF-ish */
+  --muted-foreground: oklch(0.71 0 0); /* #9CA3AF-ish */
 
   --accent: oklch(0.27 0 0);
   --accent-foreground: oklch(1 0 0);
@@ -96,8 +96,8 @@
   --warning: oklch(0.78 0.16 73);
   --warning-foreground: oklch(0.16 0 0);
 
-  --border: oklch(0.28 0 0);                /* #2A2A2A */
-  --input: oklch(0.19 0 0);                 /* #111111 */
+  --border: oklch(0.28 0 0); /* #2A2A2A */
+  --input: oklch(0.19 0 0); /* #111111 */
   --ring: oklch(0.62 0.19 259);
 
   --chart-1: oklch(0.62 0.19 259);
@@ -156,7 +156,8 @@
     border-color: var(--color-border);
   }
 
-  html, body {
+  html,
+  body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);

@@ -32,18 +32,11 @@ export function BrandMark({
   const s = SIZE_MAP[size];
   const inner = (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <span
-        className={cn(
-          "flex items-center justify-center bg-primary/15 text-primary",
-          s.box,
-        )}
-      >
+      <span className={cn("flex items-center justify-center bg-primary/15 text-primary", s.box)}>
         <Zap className={s.icon} />
       </span>
       {showWordmark && (
-        <span className={cn("font-bold tracking-tight text-foreground", s.word)}>
-          Nexus HQ
-        </span>
+        <span className={cn("font-bold tracking-tight text-foreground", s.word)}>Nexus HQ</span>
       )}
     </span>
   );

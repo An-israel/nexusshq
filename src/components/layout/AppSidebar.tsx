@@ -1,11 +1,39 @@
 import * as React from "react";
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, CheckSquare, Users, Target, Clock, Bell, Settings,
-  LogOut, ChevronLeft, ChevronRight, Star, Wallet, FolderUp, Kanban,
-  Megaphone, MessageSquare, GitBranch, BookOpen, ClipboardList, RefreshCw,
-  Briefcase, Sparkles, CalendarOff, Flag, BarChart3, UserCircle, CreditCard,
-  Heart, FileText, Brain, Zap, Radio, Building2,
+  LayoutDashboard,
+  CheckSquare,
+  Users,
+  Target,
+  Clock,
+  Bell,
+  Settings,
+  LogOut,
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  Wallet,
+  FolderUp,
+  Kanban,
+  Megaphone,
+  MessageSquare,
+  GitBranch,
+  BookOpen,
+  ClipboardList,
+  RefreshCw,
+  Briefcase,
+  Sparkles,
+  CalendarOff,
+  Flag,
+  BarChart3,
+  UserCircle,
+  CreditCard,
+  Heart,
+  FileText,
+  Brain,
+  Zap,
+  Radio,
+  Building2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
@@ -22,34 +50,133 @@ interface NavItem {
 }
 
 const NAV: NavItem[] = [
-  { slug: "dashboard",       label: "Dashboard",       icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
-  { slug: "messages",        label: "Messages",        icon: MessageSquare,   roles: ["admin", "manager", "employee"], flagKey: "messages" },
-  { slug: "standups",        label: "Standups",        icon: ClipboardList,   roles: ["admin", "manager", "employee"], flagKey: "standups" },
-  { slug: "tasks",           label: "Tasks",           icon: CheckSquare,     roles: ["admin", "manager", "employee"] },
-  { slug: "kudos",           label: "Appreciation",    icon: Heart,           roles: ["admin", "manager", "employee"] },
-  { slug: "reviews",         label: "Reviews",         icon: Star,            roles: ["admin", "manager", "employee"], flagKey: "reviews" },
-  { slug: "attendance",      label: "Attendance",      icon: Clock,           roles: ["admin", "manager", "employee"] },
-  { slug: "leave",           label: "Leave",           icon: CalendarOff,     roles: ["admin", "manager", "employee"], flagKey: "leave" },
-  { slug: "deliverables",    label: "Deliverables",    icon: FolderUp,        roles: ["admin", "manager", "employee"], flagKey: "deliverables" },
-  { slug: "payslips",        label: "Payslips",        icon: Wallet,          roles: ["admin", "manager", "employee"], flagKey: "payslips" },
-  { slug: "announcements",   label: "Announcements",   icon: Megaphone,       roles: ["admin", "manager", "employee"], flagKey: "announcements" },
-  { slug: "handbook",        label: "Handbook",        icon: BookOpen,        roles: ["admin", "manager", "employee"], flagKey: "handbook" },
-  { slug: "documents",       label: "Documents",       icon: FileText,        roles: ["admin", "manager", "employee"] },
-  { slug: "org-chart",       label: "Org Chart",       icon: GitBranch,       roles: ["admin", "manager", "employee"], flagKey: "org-chart" },
-  { slug: "okrs",            label: "Goals & OKRs",    icon: Flag,            roles: ["admin", "manager", "employee"], flagKey: "okrs" },
-  { slug: "notifications",   label: "Notifications",   icon: Bell,            roles: ["admin", "manager", "employee"] },
-  { slug: "settings",        label: "Settings",        icon: Settings,        roles: ["admin", "manager", "employee"] },
-  { slug: "settings/automations", label: "Automations", icon: Zap,           roles: ["admin"] },
-  { slug: "team",            label: "Team",            icon: Users,           roles: ["admin", "manager"] },
-  { slug: "team-board",      label: "Task Board",      icon: Kanban,          roles: ["admin", "manager"], flagKey: "team-board" },
-  { slug: "recurring-tasks", label: "Recurring Tasks", icon: RefreshCw,       roles: ["admin", "manager"], flagKey: "recurring-tasks" },
-  { slug: "client-projects", label: "Client Projects", icon: Briefcase,       roles: ["admin", "manager"], flagKey: "client-projects" },
-  { slug: "live",            label: "Live",            icon: Radio,           roles: ["admin", "manager"] },
-  { slug: "reports",         label: "Reports",         icon: BarChart3,       roles: ["admin", "manager"], flagKey: "reports" },
-  { slug: "burnout",         label: "Wellbeing",       icon: Brain,           roles: ["admin", "manager"] },
-  { slug: "kpis",            label: "KPIs",            icon: Target,          roles: ["admin"], flagKey: "kpis" },
-  { slug: "billing",         label: "Billing",         icon: CreditCard,      roles: ["admin"] },
-  { slug: "profile",         label: "Profile",         icon: UserCircle,      roles: ["admin", "manager", "employee"] },
+  {
+    slug: "dashboard",
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    roles: ["admin", "manager", "employee"],
+  },
+  {
+    slug: "messages",
+    label: "Messages",
+    icon: MessageSquare,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "messages",
+  },
+  {
+    slug: "standups",
+    label: "Standups",
+    icon: ClipboardList,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "standups",
+  },
+  { slug: "tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
+  { slug: "kudos", label: "Appreciation", icon: Heart, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "reviews",
+    label: "Reviews",
+    icon: Star,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "reviews",
+  },
+  { slug: "attendance", label: "Attendance", icon: Clock, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "leave",
+    label: "Leave",
+    icon: CalendarOff,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "leave",
+  },
+  {
+    slug: "deliverables",
+    label: "Deliverables",
+    icon: FolderUp,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "deliverables",
+  },
+  {
+    slug: "payslips",
+    label: "Payslips",
+    icon: Wallet,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "payslips",
+  },
+  {
+    slug: "announcements",
+    label: "Announcements",
+    icon: Megaphone,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "announcements",
+  },
+  {
+    slug: "handbook",
+    label: "Handbook",
+    icon: BookOpen,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "handbook",
+  },
+  {
+    slug: "documents",
+    label: "Documents",
+    icon: FileText,
+    roles: ["admin", "manager", "employee"],
+  },
+  {
+    slug: "org-chart",
+    label: "Org Chart",
+    icon: GitBranch,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "org-chart",
+  },
+  {
+    slug: "okrs",
+    label: "Goals & OKRs",
+    icon: Flag,
+    roles: ["admin", "manager", "employee"],
+    flagKey: "okrs",
+  },
+  {
+    slug: "notifications",
+    label: "Notifications",
+    icon: Bell,
+    roles: ["admin", "manager", "employee"],
+  },
+  { slug: "settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
+  { slug: "settings/automations", label: "Automations", icon: Zap, roles: ["admin"] },
+  { slug: "team", label: "Team", icon: Users, roles: ["admin", "manager"] },
+  {
+    slug: "team-board",
+    label: "Task Board",
+    icon: Kanban,
+    roles: ["admin", "manager"],
+    flagKey: "team-board",
+  },
+  {
+    slug: "recurring-tasks",
+    label: "Recurring Tasks",
+    icon: RefreshCw,
+    roles: ["admin", "manager"],
+    flagKey: "recurring-tasks",
+  },
+  {
+    slug: "client-projects",
+    label: "Client Projects",
+    icon: Briefcase,
+    roles: ["admin", "manager"],
+    flagKey: "client-projects",
+  },
+  { slug: "live", label: "Live", icon: Radio, roles: ["admin", "manager"] },
+  {
+    slug: "reports",
+    label: "Reports",
+    icon: BarChart3,
+    roles: ["admin", "manager"],
+    flagKey: "reports",
+  },
+  { slug: "burnout", label: "Wellbeing", icon: Brain, roles: ["admin", "manager"] },
+  { slug: "kpis", label: "KPIs", icon: Target, roles: ["admin"], flagKey: "kpis" },
+  { slug: "billing", label: "Billing", icon: CreditCard, roles: ["admin"] },
+  { slug: "profile", label: "Profile", icon: UserCircle, roles: ["admin", "manager", "employee"] },
 ];
 
 export function AppSidebar({
@@ -93,7 +220,11 @@ export function AppSidebar({
           className="flex items-center gap-2 px-1"
         >
           {workspace?.logo_url ? (
-            <img src={workspace.logo_url} alt={workspace.name} className="h-8 w-8 rounded-lg object-cover shrink-0" />
+            <img
+              src={workspace.logo_url}
+              alt={workspace.name}
+              className="h-8 w-8 rounded-lg object-cover shrink-0"
+            />
           ) : (
             <div
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-white"
@@ -106,7 +237,9 @@ export function AppSidebar({
           )}
           {!collapsed && (
             <div className="flex flex-col leading-tight min-w-0">
-              <span className="text-sm font-semibold truncate">{workspace?.name ?? "Nexus HQ"}</span>
+              <span className="text-sm font-semibold truncate">
+                {workspace?.name ?? "Nexus HQ"}
+              </span>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
                 {role ?? ""}
               </span>
@@ -159,12 +292,7 @@ export function AppSidebar({
             Switch workspace
           </Button>
         )}
-        <div
-          className={cn(
-            "flex items-center gap-2 rounded-lg p-2",
-            !collapsed && "bg-accent/40",
-          )}
-        >
+        <div className={cn("flex items-center gap-2 rounded-lg p-2", !collapsed && "bg-accent/40")}>
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
             {(profile?.full_name ?? profile?.email ?? "?").slice(0, 1).toUpperCase()}
           </div>

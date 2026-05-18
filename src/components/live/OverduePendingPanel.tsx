@@ -123,9 +123,7 @@ function OverdueTasksPanel({
 
                   {/* Task title + overdue */}
                   <div>
-                    <p className="text-[#ccc] text-sm font-medium leading-tight">
-                      {task.title}
-                    </p>
+                    <p className="text-[#ccc] text-sm font-medium leading-tight">{task.title}</p>
                     <p className="text-red-400 text-xs mt-0.5">
                       {task.daysOverdue} {task.daysOverdue === 1 ? "day" : "days"} overdue
                     </p>
@@ -134,10 +132,7 @@ function OverdueTasksPanel({
                   {/* Badges */}
                   <div className="flex items-center gap-2 flex-wrap">
                     <Badge
-                      className={cn(
-                        "text-xs px-1.5 py-0 h-4",
-                        priorityBadgeClass(task.priority)
-                      )}
+                      className={cn("text-xs px-1.5 py-0 h-4", priorityBadgeClass(task.priority))}
                     >
                       {task.priority}
                     </Badge>
@@ -227,9 +222,7 @@ function PendingApprovalsPanel({
 
       {deliverables.length === 0 ? (
         <div className="flex-1 flex items-center justify-center">
-          <p className="text-emerald-400 text-sm text-center">
-            ✅ Nothing waiting for review
-          </p>
+          <p className="text-emerald-400 text-sm text-center">✅ Nothing waiting for review</p>
         </div>
       ) : (
         <ScrollArea className="flex-1">
@@ -248,26 +241,18 @@ function PendingApprovalsPanel({
                   className={cn(
                     "bg-[#0d0d0d] border border-[#1a1a1a] rounded-lg p-3 space-y-2 transition-all duration-500",
                     isApproving && "opacity-0 scale-95",
-                    isApproved && "hidden"
+                    isApproved && "hidden",
                   )}
                 >
                   {/* Employee */}
                   <div className="flex items-center gap-2">
-                    <Avatar
-                      url={item.avatarUrl}
-                      name={name}
-                      id={item.userId}
-                      size={28}
-                    />
+                    <Avatar url={item.avatarUrl} name={name} id={item.userId} size={28} />
                     <span className="text-white text-sm font-medium">{name}</span>
                   </div>
 
                   {/* File info */}
                   <div>
-                    <p
-                      className="text-[#ccc] text-sm font-medium truncate"
-                      title={item.fileName}
-                    >
+                    <p className="text-[#ccc] text-sm font-medium truncate" title={item.fileName}>
                       {item.fileName}
                     </p>
                     <p className="text-[#555] text-xs mt-0.5">Uploaded {relative}</p>

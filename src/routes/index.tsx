@@ -2,9 +2,24 @@ import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getLastWorkspaceSlug } from "@/lib/last-workspace";
 import {
-  Clock, CheckSquare, MessageSquare, BarChart3, Users, Shield,
-  ArrowRight, Zap, Monitor, Download, Star, Sparkles, Briefcase,
-  CalendarOff, Flag, BookOpen, Bell, ChevronRight,
+  Clock,
+  CheckSquare,
+  MessageSquare,
+  BarChart3,
+  Users,
+  Shield,
+  ArrowRight,
+  Zap,
+  Monitor,
+  Download,
+  Star,
+  Sparkles,
+  Briefcase,
+  CalendarOff,
+  Flag,
+  BookOpen,
+  Bell,
+  ChevronRight,
 } from "lucide-react";
 
 const TIMEOUT_SENTINEL = Symbol("timeout");
@@ -14,9 +29,17 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Nexus HQ — All-in-One Workspace for Team Operations" },
-      { name: "description", content: "Run attendance, tasks, standups, OKRs, KPIs and AI insights from one workspace built for modern teams." },
+      {
+        name: "description",
+        content:
+          "Run attendance, tasks, standups, OKRs, KPIs and AI insights from one workspace built for modern teams.",
+      },
       { property: "og:title", content: "Nexus HQ — All-in-One Workspace for Team Operations" },
-      { property: "og:description", content: "Attendance, tasks, standups, OKRs, KPIs and AI insights — unified for modern teams." },
+      {
+        property: "og:description",
+        content:
+          "Attendance, tasks, standups, OKRs, KPIs and AI insights — unified for modern teams.",
+      },
       { property: "og:url", content: "https://nexus.skryveai.com/" },
     ],
     links: [{ rel: "canonical", href: "https://nexus.skryveai.com/" }],
@@ -37,7 +60,9 @@ export const Route = createFileRoute("/")({
         .eq("is_active", true);
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const slugs = (memberships ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
+      const slugs = (memberships ?? [])
+        .map((m: any) => m?.workspaces?.slug)
+        .filter(Boolean) as string[];
 
       if (slugs.length > 1) {
         // Prefer the user's last selected workspace if it's still valid.
@@ -61,18 +86,66 @@ export const Route = createFileRoute("/")({
 });
 
 const FEATURES = [
-  { icon: Clock, title: "Attendance Tracking", desc: "One-tap clock in/out. Auto-clock-out at end of day. Real-time status visible to every manager." },
-  { icon: CheckSquare, title: "Task Management", desc: "Assign daily, weekly, monthly, or one-time tasks with priorities, deadlines, and progress tracking." },
-  { icon: MessageSquare, title: "Team Messaging", desc: "Direct messages and group channels built in. @mention teammates, share files, auto-link URLs." },
-  { icon: BarChart3, title: "Reports & KPIs", desc: "Visual dashboards for task completion, attendance trends, and team performance — exportable to CSV." },
-  { icon: Users, title: "Org Chart & Teams", desc: "Visualise your company structure. Manage roles, departments, and reporting lines easily." },
-  { icon: Shield, title: "Role-Based Access", desc: "Admins, managers, and employees each see exactly what they need — nothing more, nothing less." },
-  { icon: Sparkles, title: "AI Intelligence", desc: "Claude AI writes task descriptions, analyses performance reviews, and flags burnout risk automatically." },
-  { icon: Briefcase, title: "Client Projects", desc: "Give clients a branded portal link to track project milestones — no login required on their end." },
-  { icon: CalendarOff, title: "Leave Management", desc: "Submit, approve, and track leave requests with automatic balance calculations per leave type." },
-  { icon: Flag, title: "Goals & OKRs", desc: "Set company-wide objectives and key results. Track progress with live indicators at every level." },
-  { icon: BookOpen, title: "Company Handbook", desc: "Publish policies, guides, and SOPs that every employee can access from any device." },
-  { icon: Bell, title: "Smart Notifications", desc: "In-app and email alerts for every important event. Nothing slips through the cracks." },
+  {
+    icon: Clock,
+    title: "Attendance Tracking",
+    desc: "One-tap clock in/out. Auto-clock-out at end of day. Real-time status visible to every manager.",
+  },
+  {
+    icon: CheckSquare,
+    title: "Task Management",
+    desc: "Assign daily, weekly, monthly, or one-time tasks with priorities, deadlines, and progress tracking.",
+  },
+  {
+    icon: MessageSquare,
+    title: "Team Messaging",
+    desc: "Direct messages and group channels built in. @mention teammates, share files, auto-link URLs.",
+  },
+  {
+    icon: BarChart3,
+    title: "Reports & KPIs",
+    desc: "Visual dashboards for task completion, attendance trends, and team performance — exportable to CSV.",
+  },
+  {
+    icon: Users,
+    title: "Org Chart & Teams",
+    desc: "Visualise your company structure. Manage roles, departments, and reporting lines easily.",
+  },
+  {
+    icon: Shield,
+    title: "Role-Based Access",
+    desc: "Admins, managers, and employees each see exactly what they need — nothing more, nothing less.",
+  },
+  {
+    icon: Sparkles,
+    title: "AI Intelligence",
+    desc: "Claude AI writes task descriptions, analyses performance reviews, and flags burnout risk automatically.",
+  },
+  {
+    icon: Briefcase,
+    title: "Client Projects",
+    desc: "Give clients a branded portal link to track project milestones — no login required on their end.",
+  },
+  {
+    icon: CalendarOff,
+    title: "Leave Management",
+    desc: "Submit, approve, and track leave requests with automatic balance calculations per leave type.",
+  },
+  {
+    icon: Flag,
+    title: "Goals & OKRs",
+    desc: "Set company-wide objectives and key results. Track progress with live indicators at every level.",
+  },
+  {
+    icon: BookOpen,
+    title: "Company Handbook",
+    desc: "Publish policies, guides, and SOPs that every employee can access from any device.",
+  },
+  {
+    icon: Bell,
+    title: "Smart Notifications",
+    desc: "In-app and email alerts for every important event. Nothing slips through the cracks.",
+  },
 ];
 
 const STATS = [
@@ -102,17 +175,20 @@ const HOW_IT_WORKS = [
 
 const TESTIMONIALS = [
   {
-    quote: "We replaced four separate apps with Nexus HQ. Attendance, tasks, messaging, and approvals all in one place. Our team actually uses it.",
+    quote:
+      "We replaced four separate apps with Nexus HQ. Attendance, tasks, messaging, and approvals all in one place. Our team actually uses it.",
     name: "Amara O.",
     role: "Operations Manager",
   },
   {
-    quote: "The AI burnout detection caught an issue before it became a problem. That feature alone is worth the subscription.",
+    quote:
+      "The AI burnout detection caught an issue before it became a problem. That feature alone is worth the subscription.",
     name: "David K.",
     role: "HR Director",
   },
   {
-    quote: "The client project portal is brilliant. Clients can see milestone progress without needing a login — they love it.",
+    quote:
+      "The client project portal is brilliant. Clients can see milestone progress without needing a login — they love it.",
     name: "Sarah M.",
     role: "Agency Owner",
   },
@@ -134,9 +210,15 @@ function LandingPage() {
             </span>
           </div>
           <nav className="hidden items-center gap-7 text-[13px] text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-            <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
-            <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
+            <a href="#features" className="hover:text-foreground transition-colors">
+              Features
+            </a>
+            <a href="#workflow" className="hover:text-foreground transition-colors">
+              Workflow
+            </a>
+            <Link to="/pricing" className="hover:text-foreground transition-colors">
+              Pricing
+            </Link>
           </nav>
           <div className="flex items-center gap-2">
             <Link
@@ -166,7 +248,8 @@ function LandingPage() {
               "radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.35) 1px, transparent 0)",
             backgroundSize: "28px 28px",
             maskImage: "radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 75%)",
-            WebkitMaskImage: "radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 75%)",
+            WebkitMaskImage:
+              "radial-gradient(ellipse 80% 60% at 50% 30%, black 30%, transparent 75%)",
           }}
         />
         {/* Aurora glow */}
@@ -237,16 +320,23 @@ function LandingPage() {
                 <span className="h-2.5 w-2.5 rounded-full bg-destructive/60" />
                 <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
                 <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
-                <span className="ml-3 text-[11px] font-mono text-muted-foreground">nexus.app/dashboard</span>
+                <span className="ml-3 text-[11px] font-mono text-muted-foreground">
+                  nexus.app/dashboard
+                </span>
               </div>
               {/* Faux dashboard */}
               <div className="grid grid-cols-12 gap-3 p-4">
                 <div className="col-span-3 space-y-2">
-                  {["Dashboard","Tasks","Attendance","Messages","Reports","Team"].map((it, i) => (
-                    <div key={it} className={`rounded-md px-2.5 py-1.5 text-[11px] ${i === 0 ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}>
-                      {it}
-                    </div>
-                  ))}
+                  {["Dashboard", "Tasks", "Attendance", "Messages", "Reports", "Team"].map(
+                    (it, i) => (
+                      <div
+                        key={it}
+                        className={`rounded-md px-2.5 py-1.5 text-[11px] ${i === 0 ? "bg-primary/15 text-primary" : "text-muted-foreground"}`}
+                      >
+                        {it}
+                      </div>
+                    ),
+                  )}
                 </div>
                 <div className="col-span-9 space-y-3">
                   <div className="grid grid-cols-3 gap-2">
@@ -255,7 +345,10 @@ function LandingPage() {
                       { l: "Tasks due", v: "12" },
                       { l: "Overtime (wk)", v: "8.5h" },
                     ].map((s) => (
-                      <div key={s.l} className="rounded-lg border border-border/50 bg-background/40 p-3">
+                      <div
+                        key={s.l}
+                        className="rounded-lg border border-border/50 bg-background/40 p-3"
+                      >
                         <p className="text-[10px] text-muted-foreground">{s.l}</p>
                         <p className="mt-1 text-base font-semibold tabular-nums">{s.v}</p>
                       </div>
@@ -267,7 +360,7 @@ function LandingPage() {
                       <p className="text-[10px] text-muted-foreground">Live</p>
                     </div>
                     <div className="mt-2.5 flex h-20 items-end gap-1">
-                      {[40,55,30,72,48,90,65,80,52,68,75,88].map((h, i) => (
+                      {[40, 55, 30, 72, 48, 90, 65, 80, 52, 68, 75, 88].map((h, i) => (
                         <div
                           key={i}
                           className="flex-1 rounded-sm bg-gradient-to-t from-primary/70 to-primary/30"
@@ -304,10 +397,15 @@ function LandingPage() {
       <section className="border-t border-border/40 py-28" id="features">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-14 max-w-2xl">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Platform</p>
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Platform
+            </p>
             <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
               One workspace.
-              <span className="text-muted-foreground"> Twelve modules. Zero context switching.</span>
+              <span className="text-muted-foreground">
+                {" "}
+                Twelve modules. Zero context switching.
+              </span>
             </h2>
           </div>
           <div className="grid gap-px overflow-hidden rounded-2xl border border-border/60 bg-border/40 sm:grid-cols-2 lg:grid-cols-3">
@@ -331,7 +429,9 @@ function LandingPage() {
       <section className="border-t border-border/40 py-28" id="workflow">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-14 max-w-2xl">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Workflow</p>
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Workflow
+            </p>
             <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
               Live in minutes.
               <span className="text-muted-foreground"> Not weeks.</span>
@@ -346,7 +446,9 @@ function LandingPage() {
                 <div className="mb-5 flex items-center justify-between">
                   <span className="font-mono text-[11px] text-muted-foreground">{step}</span>
                   <span className="h-px flex-1 mx-3 bg-gradient-to-r from-border/60 to-transparent" />
-                  <span className="text-[11px] text-muted-foreground">{i === HOW_IT_WORKS.length - 1 ? "Done" : "Next →"}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {i === HOW_IT_WORKS.length - 1 ? "Done" : "Next →"}
+                  </span>
                 </div>
                 <h3 className="mb-1.5 text-[15px] font-semibold tracking-tight">{title}</h3>
                 <p className="text-[13px] leading-relaxed text-muted-foreground">{desc}</p>
@@ -360,7 +462,9 @@ function LandingPage() {
       <section className="border-t border-border/40 py-28">
         <div className="mx-auto max-w-6xl px-6">
           <div className="mb-14 max-w-2xl">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Customers</p>
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Customers
+            </p>
             <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
               Teams that switched.
               <span className="text-muted-foreground"> Never looked back.</span>
@@ -370,7 +474,9 @@ function LandingPage() {
             {TESTIMONIALS.map(({ quote, name, role }) => (
               <div key={name} className="bg-background p-7">
                 <div className="mb-4 flex gap-0.5">
-                  {[1,2,3,4,5].map((n) => <Star key={n} className="h-3 w-3 fill-warning text-warning" />)}
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <Star key={n} className="h-3 w-3 fill-warning text-warning" />
+                  ))}
                 </div>
                 <p className="mb-6 text-[14px] leading-relaxed text-foreground/90">"{quote}"</p>
                 <div className="flex items-center gap-3 border-t border-border/40 pt-4">
@@ -392,7 +498,9 @@ function LandingPage() {
       <section className="border-t border-border/40 py-24">
         <div className="mx-auto max-w-5xl px-6">
           <div className="mb-12 max-w-2xl">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Pricing</p>
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+              Pricing
+            </p>
             <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
               Fair pricing.
               <span className="text-muted-foreground"> No surprises.</span>
@@ -401,7 +509,13 @@ function LandingPage() {
           <div className="mb-8 grid gap-3 sm:grid-cols-3">
             {[
               { tier: "Starter", price: "Free", users: "Up to 10 users", highlight: false },
-              { tier: "Growth", price: "$49", suffix: "/mo", users: "Up to 100 users", highlight: true },
+              {
+                tier: "Growth",
+                price: "$49",
+                suffix: "/mo",
+                users: "Up to 100 users",
+                highlight: true,
+              },
               { tier: "Enterprise", price: "Custom", users: "Unlimited users", highlight: false },
             ].map(({ tier, price, suffix, users, highlight }) => (
               <div
@@ -413,7 +527,9 @@ function LandingPage() {
                 }`}
               >
                 <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{tier}</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {tier}
+                  </p>
                   {highlight && (
                     <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
                       Popular
@@ -447,7 +563,9 @@ function LandingPage() {
                 <Monitor className="h-5 w-5" />
               </div>
               <div className="flex-1">
-                <h3 className="text-[16px] font-semibold tracking-tight">Native desktop app for Windows</h3>
+                <h3 className="text-[16px] font-semibold tracking-tight">
+                  Native desktop app for Windows
+                </h3>
                 <p className="mt-1 text-[13px] text-muted-foreground">
                   Lives in your system tray. Launches faster than your browser. No tabs to lose.
                 </p>
@@ -510,13 +628,24 @@ function LandingPage() {
               <span className="text-[13px] font-semibold tracking-tight">Nexus HQ</span>
             </div>
             <nav className="flex items-center gap-6 text-[12px] text-muted-foreground">
-              <Link to="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
-              <Link to="/login" className="hover:text-foreground transition-colors">Sign in</Link>
-              <a href={DOWNLOAD_URL} target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
+              <Link to="/pricing" className="hover:text-foreground transition-colors">
+                Pricing
+              </Link>
+              <Link to="/login" className="hover:text-foreground transition-colors">
+                Sign in
+              </Link>
+              <a
+                href={DOWNLOAD_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-foreground transition-colors"
+              >
                 Download
               </a>
             </nav>
-            <p className="text-[11px] text-muted-foreground">© {new Date().getFullYear()} Nexus HQ</p>
+            <p className="text-[11px] text-muted-foreground">
+              © {new Date().getFullYear()} Nexus HQ
+            </p>
           </div>
         </div>
       </footer>

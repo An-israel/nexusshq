@@ -45,10 +45,14 @@ function initialsOf(name: string | null): string {
 
 function presenceDotColor(status: UserPresence["status"] | undefined): string {
   switch (status) {
-    case "active": return "#22c55e";
-    case "away": return "#eab308";
-    case "dnd": return "#ef4444";
-    default: return "#6b7280";
+    case "active":
+      return "#22c55e";
+    case "away":
+      return "#eab308";
+    case "dnd":
+      return "#ef4444";
+    default:
+      return "#6b7280";
   }
 }
 
@@ -121,7 +125,12 @@ const STATUS_OPTIONS: {
   icon: React.ReactNode;
   color: string;
 }[] = [
-  { status: "active", label: "Active", icon: <CheckCircle2 className="w-4 h-4" />, color: "#22c55e" },
+  {
+    status: "active",
+    label: "Active",
+    icon: <CheckCircle2 className="w-4 h-4" />,
+    color: "#22c55e",
+  },
   { status: "away", label: "Away", icon: <Circle className="w-4 h-4" />, color: "#eab308" },
   { status: "dnd", label: "Do not disturb", icon: <Moon className="w-4 h-4" />, color: "#ef4444" },
   { status: "offline", label: "Offline", icon: <Volume2 className="w-4 h-4" />, color: "#6b7280" },
@@ -176,7 +185,7 @@ export function MessagesSidebar({
 
   const joinedChannels = React.useMemo(
     () => channels.filter((c) => c.is_member && !c.is_archived),
-    [channels]
+    [channels],
   );
 
   const myPresence = presence[currentUserId];
@@ -188,7 +197,11 @@ export function MessagesSidebar({
   async function handleSetStatus(status: UserPresence["status"]) {
     setSavingStatus(true);
     try {
-      await updateMyPresence(status, myPresence?.status_emoji ?? undefined, myPresence?.status_text ?? undefined);
+      await updateMyPresence(
+        status,
+        myPresence?.status_emoji ?? undefined,
+        myPresence?.status_text ?? undefined,
+      );
     } finally {
       setSavingStatus(false);
     }
@@ -197,7 +210,11 @@ export function MessagesSidebar({
   async function handleSaveCustomStatus() {
     setSavingStatus(true);
     try {
-      await updateMyPresence(myPresence?.status ?? "active", undefined, customStatusText.trim() || undefined);
+      await updateMyPresence(
+        myPresence?.status ?? "active",
+        undefined,
+        customStatusText.trim() || undefined,
+      );
       setStatusPopoverOpen(false);
     } finally {
       setSavingStatus(false);
@@ -213,8 +230,7 @@ export function MessagesSidebar({
   }, [conversations, currentUserId]);
 
   function ChannelIcon({ type }: { type: ChannelWithMeta["type"] }) {
-    if (type === "private")
-      return <Lock className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />;
+    if (type === "private") return <Lock className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />;
     if (type === "announcement")
       return <Megaphone className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />;
     return <Hash className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />;
@@ -264,7 +280,7 @@ export function MessagesSidebar({
           to={`/${workspaceSlug}/dashboard` as string}
           className={cn(
             "flex items-center gap-2.5 h-8 px-2 rounded-md mx-1 cursor-pointer",
-            "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm"
+            "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm",
           )}
         >
           <Home className="w-4 h-4 shrink-0" />
@@ -279,7 +295,7 @@ export function MessagesSidebar({
           }}
           className={cn(
             "flex items-center gap-2.5 h-8 px-2 rounded-md mx-1 w-full cursor-pointer",
-            "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm"
+            "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm",
           )}
         >
           <MessageSquare className="w-4 h-4 shrink-0" />
@@ -293,7 +309,7 @@ export function MessagesSidebar({
             "flex items-center gap-2.5 h-8 px-2 rounded-md mx-1 w-full cursor-pointer transition-colors text-sm",
             isActivityActive
               ? "bg-[#1E1E1E] text-white"
-              : "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white"
+              : "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white",
           )}
         >
           <Bell className="w-4 h-4 shrink-0" />
@@ -331,7 +347,7 @@ export function MessagesSidebar({
                     ? "bg-[#1E1E1E] text-white"
                     : hasUnread
                       ? "text-white font-semibold hover:bg-[#1A1A1A]"
-                      : "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white"
+                      : "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white",
                 )}
               >
                 <ChannelIcon type={ch.type} />
@@ -350,7 +366,7 @@ export function MessagesSidebar({
             onClick={onOpenCreateChannel}
             className={cn(
               "flex items-center gap-1.5 h-8 px-2 rounded-md mx-1 w-[calc(100%-8px)]",
-              "text-[#9CA3AF] hover:text-white hover:bg-[#1A1A1A] transition-colors text-sm cursor-pointer"
+              "text-[#9CA3AF] hover:text-white hover:bg-[#1A1A1A] transition-colors text-sm cursor-pointer",
             )}
           >
             <Plus className="w-3.5 h-3.5 shrink-0" />
@@ -384,9 +400,7 @@ export function MessagesSidebar({
             const isCurrentUserDirect =
               isDirect && conv.members.every((m) => m.user_id === currentUserId);
             const displayName = dmDisplayName(conv, currentUserId);
-            const otherPresence = otherMember
-              ? presence[otherMember.user_id]
-              : undefined;
+            const otherPresence = otherMember ? presence[otherMember.user_id] : undefined;
 
             const groupMembers = !isDirect
               ? conv.members.filter((m) => m.user_id !== currentUserId).slice(0, 3)
@@ -403,15 +417,11 @@ export function MessagesSidebar({
                     ? "bg-[#1E1E1E] text-white"
                     : hasUnread
                       ? "text-white font-semibold hover:bg-[#1A1A1A]"
-                      : "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white"
+                      : "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white",
                 )}
               >
                 {isDirect ? (
-                  <UserAvatar
-                    profile={otherProfile}
-                    size={24}
-                    presence={otherPresence}
-                  />
+                  <UserAvatar profile={otherProfile} size={24} presence={otherPresence} />
                 ) : (
                   <div className="relative w-6 h-6 shrink-0">
                     {groupMembers.slice(0, 2).map((m, i) => (
@@ -460,7 +470,7 @@ export function MessagesSidebar({
             onClick={onOpenNewDm}
             className={cn(
               "flex items-center gap-1.5 h-8 px-2 rounded-md mx-1 w-[calc(100%-8px)]",
-              "text-[#9CA3AF] hover:text-white hover:bg-[#1A1A1A] transition-colors text-sm cursor-pointer"
+              "text-[#9CA3AF] hover:text-white hover:bg-[#1A1A1A] transition-colors text-sm cursor-pointer",
             )}
           >
             <Plus className="w-3.5 h-3.5 shrink-0" />
@@ -505,18 +515,24 @@ export function MessagesSidebar({
                     key={opt.status}
                     type="button"
                     disabled={savingStatus}
-                    onClick={() => { void handleSetStatus(opt.status); setStatusPopoverOpen(false); }}
+                    onClick={() => {
+                      void handleSetStatus(opt.status);
+                      setStatusPopoverOpen(false);
+                    }}
                     className={cn(
                       "flex items-center gap-2.5 px-2 py-2 rounded-md text-sm transition-colors w-full text-left disabled:opacity-50",
                       isActive
                         ? "bg-[#2A2A2A] text-white"
-                        : "text-[#9CA3AF] hover:bg-[#1E1E1E] hover:text-white"
+                        : "text-[#9CA3AF] hover:bg-[#1E1E1E] hover:text-white",
                     )}
                   >
                     <span style={{ color: opt.color }}>{opt.icon}</span>
                     <span>{opt.label}</span>
                     {isActive && (
-                      <span className="ml-auto w-1.5 h-1.5 rounded-full" style={{ backgroundColor: opt.color }} />
+                      <span
+                        className="ml-auto w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: opt.color }}
+                      />
                     )}
                   </button>
                 );
@@ -528,13 +544,15 @@ export function MessagesSidebar({
                   type="text"
                   value={customStatusText}
                   onChange={(e) => setCustomStatusText(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") void handleSaveCustomStatus(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") void handleSaveCustomStatus();
+                  }}
                   placeholder="What's your status?"
                   maxLength={100}
                   className={cn(
                     "w-full bg-[#111111] border border-[#2A2A2A] rounded-md px-3 py-1.5",
                     "text-sm text-white placeholder:text-[#4B5563] outline-none",
-                    "focus:ring-1 focus:ring-[#3B3B3B] transition-colors"
+                    "focus:ring-1 focus:ring-[#3B3B3B] transition-colors",
                   )}
                 />
                 <button

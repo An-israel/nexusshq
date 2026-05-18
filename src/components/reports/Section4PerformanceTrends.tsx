@@ -104,8 +104,20 @@ export function Section4PerformanceTrends({
   // Lines to render
   const lines: Array<{ key: string; color: string; label: string }> =
     departmentFilter || depts.length === 0
-      ? [{ key: "score", color: departmentFilter ? (DEPT_COLORS[departmentFilter] ?? DEFAULT_LINE_COLOR) : DEFAULT_LINE_COLOR, label: departmentFilter ?? "Score" }]
-      : depts.map((d) => ({ key: d, color: DEPT_COLORS[d] ?? DEFAULT_LINE_COLOR, label: d.replace(/_/g, " ") }));
+      ? [
+          {
+            key: "score",
+            color: departmentFilter
+              ? (DEPT_COLORS[departmentFilter] ?? DEFAULT_LINE_COLOR)
+              : DEFAULT_LINE_COLOR,
+            label: departmentFilter ?? "Score",
+          },
+        ]
+      : depts.map((d) => ({
+          key: d,
+          color: DEPT_COLORS[d] ?? DEFAULT_LINE_COLOR,
+          label: d.replace(/_/g, " "),
+        }));
 
   // Stat delta
   const delta = stats ? stats.avgScore - stats.prevAvgScore : 0;
@@ -143,9 +155,7 @@ export function Section4PerformanceTrends({
         {/* Average score */}
         <Card className="p-4 bg-[#111] border-[#1f1f1f]">
           <p className="text-xs text-muted-foreground mb-1">Average Team Score</p>
-          <p className="text-3xl font-bold text-white">
-            {stats ? stats.avgScore.toFixed(1) : "—"}
-          </p>
+          <p className="text-3xl font-bold text-white">{stats ? stats.avgScore.toFixed(1) : "—"}</p>
           <p className="text-xs text-muted-foreground mt-0.5">out of 100</p>
         </Card>
 
@@ -163,18 +173,14 @@ export function Section4PerformanceTrends({
         {/* Exceptional */}
         <Card className="p-4 bg-[#111] border-[#1f1f1f]">
           <p className="text-xs text-muted-foreground mb-1">Rated Exceptional</p>
-          <p className="text-3xl font-bold text-green-400">
-            {stats?.exceptionalCount ?? "—"}
-          </p>
+          <p className="text-3xl font-bold text-green-400">{stats?.exceptionalCount ?? "—"}</p>
           <p className="text-xs text-muted-foreground mt-0.5">score ≥ 90</p>
         </Card>
 
         {/* Needs improvement */}
         <Card className="p-4 bg-[#111] border-[#1f1f1f]">
           <p className="text-xs text-muted-foreground mb-1">Needs Improvement</p>
-          <p className="text-3xl font-bold text-red-400">
-            {stats?.needsImprovementCount ?? "—"}
-          </p>
+          <p className="text-3xl font-bold text-red-400">{stats?.needsImprovementCount ?? "—"}</p>
           <p className="text-xs text-muted-foreground mt-0.5">score &lt; 65</p>
         </Card>
       </div>
@@ -206,7 +212,12 @@ export function Section4PerformanceTrends({
                 y={75}
                 stroke="#3b3b3b"
                 strokeDasharray="4 4"
-                label={{ value: "Baseline 75", position: "insideTopRight", fill: "#6b7280", fontSize: 10 }}
+                label={{
+                  value: "Baseline 75",
+                  position: "insideTopRight",
+                  fill: "#6b7280",
+                  fontSize: 10,
+                }}
               />
               {lines.map((l) => (
                 <Line
@@ -229,7 +240,9 @@ export function Section4PerformanceTrends({
       <div className="bg-[#111] rounded-xl border border-[#1f1f1f] p-4 mt-4">
         <p className="text-sm font-semibold text-white mb-3">Score Distribution This Period</p>
         {distribution.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-8 text-center">No distribution data available.</p>
+          <p className="text-sm text-muted-foreground py-8 text-center">
+            No distribution data available.
+          </p>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={distribution} margin={{ top: 16, right: 16, left: 0, bottom: 4 }}>
@@ -249,7 +262,12 @@ export function Section4PerformanceTrends({
               />
               <Tooltip
                 cursor={{ fill: "rgba(255,255,255,0.03)" }}
-                contentStyle={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 8, fontSize: 12 }}
+                contentStyle={{
+                  background: "#1a1a1a",
+                  border: "1px solid #2a2a2a",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
                 labelStyle={{ color: "#fff" }}
                 itemStyle={{ color: "#aaa" }}
               />

@@ -52,9 +52,7 @@ export function LiveHeader({ lastUpdated, isConnected, onRefresh, refreshing }: 
             disabled={refreshing}
             className="border-[#2f2f2f] bg-transparent text-[#aaa] hover:text-white hover:border-[#555] h-8 px-3"
           >
-            <RefreshCw
-              className={cn("w-3.5 h-3.5 mr-1.5", refreshing && "animate-spin")}
-            />
+            <RefreshCw className={cn("w-3.5 h-3.5 mr-1.5", refreshing && "animate-spin")} />
             Refresh
           </Button>
         </div>

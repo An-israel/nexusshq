@@ -75,11 +75,7 @@ function Avatar({
   size?: "sm" | "md" | "lg";
 }) {
   const sizeClass =
-    size === "lg"
-      ? "w-14 h-14 text-lg"
-      : size === "sm"
-        ? "w-8 h-8 text-xs"
-        : "w-10 h-10 text-sm";
+    size === "lg" ? "w-14 h-14 text-lg" : size === "sm" ? "w-8 h-8 text-xs" : "w-10 h-10 text-sm";
   if (avatarUrl) {
     return (
       <img
@@ -132,12 +128,7 @@ function LoadingSkeleton() {
 
 // ---- Main component ----
 
-export function Section7TopPerformers({
-  topFive,
-  mostConsistent,
-  mostImproved,
-  loading,
-}: Props) {
+export function Section7TopPerformers({ topFive, mostConsistent, mostImproved, loading }: Props) {
   if (loading) return <LoadingSkeleton />;
 
   return (
@@ -165,10 +156,7 @@ export function Section7TopPerformers({
                 <span className="text-2xl leading-none">{medalLabel(performer.rank)}</span>
 
                 {/* Avatar */}
-                <Avatar
-                  name={performer.employee.name}
-                  avatarUrl={performer.employee.avatarUrl}
-                />
+                <Avatar name={performer.employee.name} avatarUrl={performer.employee.avatarUrl} />
 
                 {/* Name + dept */}
                 <div className="min-w-0 w-full">
@@ -202,9 +190,7 @@ export function Section7TopPerformers({
       <div className="grid md:grid-cols-2 gap-4">
         {/* Most Consistent */}
         <Card className="p-5 bg-green-500/5 border-green-500/20">
-          <p className="text-sm font-semibold text-green-400 mb-4">
-            🏅 Most Consistent This Month
-          </p>
+          <p className="text-sm font-semibold text-green-400 mb-4">🏅 Most Consistent This Month</p>
           {mostConsistent ? (
             <div className="flex items-start gap-4">
               <Avatar
@@ -225,9 +211,7 @@ export function Section7TopPerformers({
                 <div className="mt-3 flex gap-4">
                   <div>
                     <p className="text-xs text-muted-foreground">Avg. Score</p>
-                    <p className="text-lg font-bold text-green-400">
-                      {mostConsistent.score}
-                    </p>
+                    <p className="text-lg font-bold text-green-400">{mostConsistent.score}</p>
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Variation</p>
@@ -245,9 +229,7 @@ export function Section7TopPerformers({
 
         {/* Most Improved */}
         <Card className="p-5 bg-blue-500/5 border-blue-500/20">
-          <p className="text-sm font-semibold text-blue-400 mb-4">
-            📈 Most Improved
-          </p>
+          <p className="text-sm font-semibold text-blue-400 mb-4">📈 Most Improved</p>
           {mostImproved ? (
             <div className="flex items-start gap-4">
               <Avatar
@@ -256,9 +238,7 @@ export function Section7TopPerformers({
                 size="lg"
               />
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-foreground text-base">
-                  {mostImproved.employee.name}
-                </p>
+                <p className="font-bold text-foreground text-base">{mostImproved.employee.name}</p>
                 <p className="text-sm text-muted-foreground">
                   {mostImproved.employee.department
                     .split("_")
@@ -282,9 +262,7 @@ export function Section7TopPerformers({
                     (+{mostImproved.improvement.toFixed(1)}%)
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Last Month → This Month
-                </p>
+                <p className="text-xs text-muted-foreground mt-1">Last Month → This Month</p>
               </div>
             </div>
           ) : (

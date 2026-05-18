@@ -81,15 +81,10 @@ const FeedItem = React.memo(function FeedItem({ event, isNew }: FeedItemProps) {
     <div
       className={cn(
         "flex items-center gap-3 py-2 px-1 transition-all duration-300",
-        isNew && !visible ? "opacity-0 -translate-y-2" : "opacity-100 translate-y-0"
+        isNew && !visible ? "opacity-0 -translate-y-2" : "opacity-100 translate-y-0",
       )}
     >
-      <Avatar
-        url={event.avatarUrl}
-        name={event.userName}
-        id={event.userId}
-        size={32}
-      />
+      <Avatar url={event.avatarUrl} name={event.userName} id={event.userId} size={32} />
       <div className="flex-1 min-w-0">
         <span className="text-white font-medium text-sm">{event.userName}</span>
         <span className="text-[#888] text-sm">
@@ -98,7 +93,7 @@ const FeedItem = React.memo(function FeedItem({ event, isNew }: FeedItemProps) {
           <span
             className={cn(
               "font-medium",
-              event.action === "clock_in" ? "text-emerald-400" : "text-rose-400"
+              event.action === "clock_in" ? "text-emerald-400" : "text-rose-400",
             )}
           >
             {event.action === "clock_in" ? "in" : "out"}
@@ -123,24 +118,15 @@ interface ReminderButtonState {
   sent: boolean;
 }
 
-export function AttendanceFeed({
-  events,
-  employees,
-  workspaceId,
-  currentUserId,
-}: Props) {
+export function AttendanceFeed({ events, employees, workspaceId, currentUserId }: Props) {
   const [reminderStates, setReminderStates] = useState<Record<string, ReminderButtonState>>({});
 
   // IDs of employees who have a clock_in event today
-  const clockedInIds = new Set(
-    events.filter((e) => e.action === "clock_in").map((e) => e.userId)
-  );
+  const clockedInIds = new Set(events.filter((e) => e.action === "clock_in").map((e) => e.userId));
 
   // Employees not yet clocked in: offline status AND no clock_in event today
   const notYetClockedIn = employees.filter(
-    (emp) =>
-      !clockedInIds.has(emp.id) &&
-      (emp.status === "offline" || !clockedInIds.has(emp.id))
+    (emp) => !clockedInIds.has(emp.id) && (emp.status === "offline" || !clockedInIds.has(emp.id)),
   );
 
   const lateCount = events.filter((e) => e.isLate && e.action === "clock_in").length;
@@ -184,7 +170,7 @@ export function AttendanceFeed({
         }));
       }, 2000);
     },
-    [workspaceId]
+    [workspaceId],
   );
 
   return (
@@ -198,8 +184,7 @@ export function AttendanceFeed({
       {/* Summary bar */}
       <div className="flex items-center gap-2 text-sm text-[#888]">
         <span>
-          <span className="text-white font-medium">{clockedInIds.size}</span>{" "}
-          clocked in today
+          <span className="text-white font-medium">{clockedInIds.size}</span> clocked in today
         </span>
         <span className="text-[#333]">|</span>
         <span>
@@ -210,7 +195,12 @@ export function AttendanceFeed({
         </span>
         <span className="text-[#333]">|</span>
         <span>
-          <span className={cn("font-medium", notYetClockedIn.length > 0 ? "text-rose-400" : "text-white")}>
+          <span
+            className={cn(
+              "font-medium",
+              notYetClockedIn.length > 0 ? "text-rose-400" : "text-white",
+            )}
+          >
             {notYetClockedIn.length}
           </span>{" "}
           not yet clocked in
@@ -221,9 +211,7 @@ export function AttendanceFeed({
 
       {/* Live feed */}
       {displayedEvents.length === 0 ? (
-        <p className="text-[#555] text-sm text-center py-4">
-          No clock-ins recorded yet today
-        </p>
+        <p className="text-[#555] text-sm text-center py-4">No clock-ins recorded yet today</p>
       ) : (
         <ScrollArea className="max-h-64">
           <div className="divide-y divide-[#1a1a1a]">

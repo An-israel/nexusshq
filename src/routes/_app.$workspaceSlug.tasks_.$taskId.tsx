@@ -88,7 +88,12 @@ function TaskDetailPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [{ data: t, error: te }, { data: u }] = await Promise.all([
-      supabase.from("tasks").select("*").eq("id", taskId).eq("workspace_id", workspace.id).maybeSingle(),
+      supabase
+        .from("tasks")
+        .select("*")
+        .eq("id", taskId)
+        .eq("workspace_id", workspace.id)
+        .maybeSingle(),
       supabase
         .from("task_updates")
         .select("*")
@@ -150,7 +155,11 @@ function TaskDetailPage() {
       status: newStatus,
       completed_at: newStatus === "completed" ? new Date().toISOString() : null,
     };
-    const { error } = await supabase.from("tasks").update(patch).eq("id", task.id).eq("workspace_id", workspace.id);
+    const { error } = await supabase
+      .from("tasks")
+      .update(patch)
+      .eq("id", task.id)
+      .eq("workspace_id", workspace.id);
     if (error) {
       toast.error(error.message);
       setSaving(false);
@@ -234,7 +243,11 @@ function TaskDetailPage() {
   async function deleteTask() {
     if (!task) return;
     if (!confirm("Delete this task permanently?")) return;
-    const { error } = await supabase.from("tasks").delete().eq("id", task.id).eq("workspace_id", workspace.id);
+    const { error } = await supabase
+      .from("tasks")
+      .delete()
+      .eq("id", task.id)
+      .eq("workspace_id", workspace.id);
     if (error) {
       toast.error(error.message);
       return;
@@ -248,7 +261,13 @@ function TaskDetailPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <Button variant="ghost" size="sm" onClick={() => navigate({ to: "/$workspaceSlug/tasks", params: { workspaceSlug: workspace.slug } })}>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() =>
+          navigate({ to: "/$workspaceSlug/tasks", params: { workspaceSlug: workspace.slug } })
+        }
+      >
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to tasks
       </Button>
 
@@ -386,11 +405,16 @@ function TaskDetailPage() {
             {updates.map((u) => {
               const who = u.updated_by ? profileMap[u.updated_by] : null;
               return (
-                <li key={u.id} className="flex gap-3 text-sm border-b border-border pb-3 last:border-0">
+                <li
+                  key={u.id}
+                  className="flex gap-3 text-sm border-b border-border pb-3 last:border-0"
+                >
                   <div className="h-2 w-2 mt-2 rounded-full bg-primary shrink-0" />
                   <div className="flex-1">
                     <p>
-                      <span className="font-medium">{who?.full_name ?? who?.email ?? "Someone"}</span>{" "}
+                      <span className="font-medium">
+                        {who?.full_name ?? who?.email ?? "Someone"}
+                      </span>{" "}
                       <span className="text-muted-foreground">
                         moved {u.old_progress ?? 0}% → {u.new_progress ?? 0}%
                         {u.new_status && u.new_status !== u.old_status

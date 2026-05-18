@@ -105,11 +105,7 @@ export function ProductivityOverview({
               endAngle={90 - (score / 100) * 360}
             >
               <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-              <RadialBar
-                dataKey="value"
-                cornerRadius={10}
-                background={{ fill: "#1a1a1a" }}
-              />
+              <RadialBar dataKey="value" cornerRadius={10} background={{ fill: "#1a1a1a" }} />
             </RadialBarChart>
             {/* Center text overlay */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">

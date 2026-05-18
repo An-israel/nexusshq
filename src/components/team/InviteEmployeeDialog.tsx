@@ -29,7 +29,15 @@ interface Generated {
   inviteUrl: string;
 }
 
-function CopyField({ label, icon: Icon, value }: { label: string; icon: React.ComponentType<{ className?: string }>; value: string }) {
+function CopyField({
+  label,
+  icon: Icon,
+  value,
+}: {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  value: string;
+}) {
   const [copied, setCopied] = React.useState(false);
   function copy() {
     navigator.clipboard.writeText(value).then(() => {
@@ -81,7 +89,14 @@ export function InviteEmployeeDialog({
   });
 
   function reset() {
-    setForm({ email: "", full_name: "", job_title: "", department: "other", phone: "", role: "employee" });
+    setForm({
+      email: "",
+      full_name: "",
+      job_title: "",
+      department: "other",
+      phone: "",
+      role: "employee",
+    });
     setGenerated(null);
   }
 
@@ -124,7 +139,12 @@ export function InviteEmployeeDialog({
         <UserPlus className="mr-2 h-4 w-4" /> Invite Employee
       </Button>
 
-      <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
+      <Dialog
+        open={open}
+        onOpenChange={(v) => {
+          if (!v) handleClose();
+        }}
+      >
         <DialogContent className="max-w-lg">
           {!generated ? (
             <>
@@ -175,12 +195,18 @@ export function InviteEmployeeDialog({
                     <Label>Department</Label>
                     <Select
                       value={form.department}
-                      onValueChange={(v) => setForm({ ...form, department: v as (typeof DEPARTMENTS)[number] })}
+                      onValueChange={(v) =>
+                        setForm({ ...form, department: v as (typeof DEPARTMENTS)[number] })
+                      }
                     >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         {DEPARTMENTS.map((d) => (
-                          <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>
+                          <SelectItem key={d} value={d}>
+                            {deptLabel(d)}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -189,9 +215,13 @@ export function InviteEmployeeDialog({
                     <Label>Role</Label>
                     <Select
                       value={form.role}
-                      onValueChange={(v) => setForm({ ...form, role: v as "admin" | "manager" | "employee" })}
+                      onValueChange={(v) =>
+                        setForm({ ...form, role: v as "admin" | "manager" | "employee" })
+                      }
                     >
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="employee">Employee</SelectItem>
                         <SelectItem value="manager">Manager</SelectItem>
@@ -201,12 +231,15 @@ export function InviteEmployeeDialog({
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  No email is sent. You'll get a link and passcode to share with the employee directly.
+                  No email is sent. You'll get a link and passcode to share with the employee
+                  directly.
                 </p>
               </div>
 
               <DialogFooter>
-                <Button variant="outline" onClick={handleClose}>Cancel</Button>
+                <Button variant="outline" onClick={handleClose}>
+                  Cancel
+                </Button>
                 <Button onClick={submit} disabled={submitting}>
                   {submitting ? "Generating…" : "Generate invite"}
                 </Button>
@@ -228,7 +261,8 @@ export function InviteEmployeeDialog({
                 <CopyField label="Passcode" icon={KeyRound} value={generated.passcode} />
 
                 <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-                  The employee visits <strong>/join</strong> on the app and enters either the link or passcode to create their account.
+                  The employee visits <strong>/join</strong> on the app and enters either the link
+                  or passcode to create their account.
                 </div>
               </div>
 

@@ -30,7 +30,7 @@ type RawMessage = {
 
 export function useChannels(
   workspaceId: string | null,
-  userId: string | null
+  userId: string | null,
 ): {
   channels: ChannelWithMeta[];
   joinedChannels: ChannelWithMeta[];
@@ -54,7 +54,9 @@ export function useChannels(
       const [channelsRes, membersRes] = await Promise.all([
         supabase
           .from("channels")
-          .select("id,workspace_id,name,description,type,created_by,is_default,is_archived,created_at")
+          .select(
+            "id,workspace_id,name,description,type,created_by,is_default,is_archived,created_at",
+          )
           .eq("workspace_id", workspaceId)
           .eq("is_archived", false),
         supabase
@@ -89,9 +91,7 @@ export function useChannels(
         return;
       }
 
-      const myReadTimes = Array.from(myMemberByChannel.values()).map(
-        (m) => m.last_read_at
-      );
+      const myReadTimes = Array.from(myMemberByChannel.values()).map((m) => m.last_read_at);
       const oldestReadAt =
         myReadTimes.length > 0
           ? myReadTimes.reduce((a, b) => (a < b ? a : b))
@@ -124,7 +124,7 @@ export function useChannels(
         const channelMessages = messagesByChannel.get(ch.id) ?? [];
         const lastReadAt = myMember?.last_read_at ?? new Date(0).toISOString();
         const unreadCount = channelMessages.filter(
-          (msg) => msg.sender_id !== userId && msg.created_at > lastReadAt
+          (msg) => msg.sender_id !== userId && msg.created_at > lastReadAt,
         ).length;
 
         return {
@@ -164,7 +164,7 @@ export function useChannels(
         },
         () => {
           fetchChannels();
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -176,7 +176,7 @@ export function useChannels(
         },
         () => {
           fetchChannels();
-        }
+        },
       )
       .subscribe();
 
@@ -200,7 +200,7 @@ export function useChannels(
       }
       await fetchChannels();
     },
-    [userId, workspaceId, fetchChannels]
+    [userId, workspaceId, fetchChannels],
   );
 
   const markChannelRead = React.useCallback(
@@ -216,25 +216,17 @@ export function useChannels(
         return;
       }
       setChannels((prev) =>
-        prev.map((ch) =>
-          ch.id === channelId ? { ...ch, unread_count: 0 } : ch
-        )
+        prev.map((ch) => (ch.id === channelId ? { ...ch, unread_count: 0 } : ch)),
       );
     },
-    [userId]
+    [userId],
   );
 
-  const joinedChannels = React.useMemo(
-    () => channels.filter((ch) => ch.is_member),
-    [channels]
-  );
+  const joinedChannels = React.useMemo(() => channels.filter((ch) => ch.is_member), [channels]);
 
   const publicChannels = React.useMemo(
-    () =>
-      channels.filter(
-        (ch) => ch.type === "public" || ch.type === "announcement"
-      ),
-    [channels]
+    () => channels.filter((ch) => ch.type === "public" || ch.type === "announcement"),
+    [channels],
   );
 
   return {

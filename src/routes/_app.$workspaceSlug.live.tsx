@@ -80,7 +80,11 @@ function LivePage() {
   async function handleApproveDeliverable(id: string) {
     const { error } = await supabase
       .from("deliverables")
-      .update({ status: "approved", reviewed_at: new Date().toISOString(), reviewer_id: currentUserId })
+      .update({
+        status: "approved",
+        reviewed_at: new Date().toISOString(),
+        reviewer_id: currentUserId,
+      })
       .eq("id", id);
     if (error) {
       toast.error("Failed to approve deliverable");
@@ -125,12 +129,9 @@ function LivePage() {
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 md:px-6 py-6 space-y-8 max-w-[1400px] mx-auto">
-
             {/* Section 1: Team Status Grid */}
             <section>
-              <h2 className="text-base font-semibold text-white mb-3">
-                Team Status
-              </h2>
+              <h2 className="text-base font-semibold text-white mb-3">Team Status</h2>
               <TeamStatusGrid
                 employees={employees}
                 onSelectEmployee={setSelectedEmployeeId}
@@ -140,9 +141,7 @@ function LivePage() {
 
             {/* Section 2: Attendance Feed */}
             <section>
-              <h2 className="text-base font-semibold text-white mb-3">
-                Attendance — Today
-              </h2>
+              <h2 className="text-base font-semibold text-white mb-3">Attendance — Today</h2>
               <AttendanceFeed
                 events={attendanceEvents}
                 employees={employees}
@@ -153,9 +152,7 @@ function LivePage() {
 
             {/* Section 3: Task Progress */}
             <section>
-              <h2 className="text-base font-semibold text-white mb-3">
-                Task Activity
-              </h2>
+              <h2 className="text-base font-semibold text-white mb-3">Task Activity</h2>
               <TaskActivityFeed
                 events={taskActivity}
                 counters={taskCounters}
@@ -165,9 +162,7 @@ function LivePage() {
 
             {/* Section 4: Overdue + Pending */}
             <section>
-              <h2 className="text-base font-semibold text-white mb-3">
-                Attention Required
-              </h2>
+              <h2 className="text-base font-semibold text-white mb-3">Attention Required</h2>
               <OverduePendingPanel
                 overdueTasks={overdueTasksWithEmployee}
                 pendingDeliverables={pendingDeliverables}
@@ -179,9 +174,7 @@ function LivePage() {
 
             {/* Section 5: Productivity Overview */}
             <section>
-              <h2 className="text-base font-semibold text-white mb-3">
-                Productivity Overview
-              </h2>
+              <h2 className="text-base font-semibold text-white mb-3">Productivity Overview</h2>
               <ProductivityOverview
                 score={productivityScore}
                 counters={taskCounters}
@@ -190,7 +183,6 @@ function LivePage() {
                 loading={false}
               />
             </section>
-
           </div>
         </div>
 

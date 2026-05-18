@@ -9,12 +9,7 @@ interface SwipeableRowProps {
   className?: string;
 }
 
-export function SwipeableRow({
-  children,
-  onComplete,
-  onDelete,
-  className,
-}: SwipeableRowProps) {
+export function SwipeableRow({ children, onComplete, onDelete, className }: SwipeableRowProps) {
   const [translateX, setTranslateX] = React.useState(0);
   const startX = React.useRef(0);
   const startY = React.useRef(0);
@@ -47,8 +42,7 @@ export function SwipeableRow({
 
     // Apply resistance at limits
     const raw = dx + translateX;
-    const bounded =
-      raw < MAX_SWIPE ? MAX_SWIPE + (raw - MAX_SWIPE) * 0.2 : Math.min(0, raw);
+    const bounded = raw < MAX_SWIPE ? MAX_SWIPE + (raw - MAX_SWIPE) * 0.2 : Math.min(0, raw);
     if (rowRef.current) {
       rowRef.current.style.transform = `translateX(${bounded}px)`;
       rowRef.current.style.transition = "none";

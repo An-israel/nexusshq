@@ -52,8 +52,15 @@ interface DeliverableRow {
   created_at: string;
 }
 
-interface ProfileMini { id: string; full_name: string | null; email: string | null; }
-interface TaskMini { id: string; title: string; }
+interface ProfileMini {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+}
+interface TaskMini {
+  id: string;
+  title: string;
+}
 interface QualityScore {
   id: string;
   deliverable_id: string;
@@ -90,18 +97,30 @@ function DeliverablesPage() {
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from("deliverables").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false });
+    let q = supabase
+      .from("deliverables")
+      .select("*")
+      .eq("workspace_id", workspace.id)
+      .order("created_at", { ascending: false });
     if (scope === "mine" || !isManager) q = q.eq("user_id", user.id);
     const { data, error } = await q;
-    if (error) { toast.error(error.message); setLoading(false); return; }
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
     const rows = (data ?? []) as DeliverableRow[];
     setItems(rows);
     const ids = Array.from(new Set(rows.map((r) => r.user_id)));
     if (ids.length) {
       const { data: profs } = await supabase
-        .from("profiles").select("id, full_name, email").in("id", ids);
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", ids);
       const map: Record<string, ProfileMini> = {};
-      (profs ?? []).forEach((p) => { map[p.id] = p as ProfileMini; });
+      (profs ?? []).forEach((p) => {
+        map[p.id] = p as ProfileMini;
+      });
       setProfiles(map);
     }
     // Load quality scores for visible deliverables
@@ -110,19 +129,31 @@ function DeliverablesPage() {
         .from("deliverable_scores")
         .select("*")
         .eq("workspace_id", workspace.id)
-        .in("deliverable_id", rows.map((r) => r.id));
+        .in(
+          "deliverable_id",
+          rows.map((r) => r.id),
+        );
       const scoreMap: Record<string, QualityScore> = {};
-      (scoreData ?? []).forEach((s: QualityScore) => { scoreMap[s.deliverable_id] = s; });
+      (scoreData ?? []).forEach((s: QualityScore) => {
+        scoreMap[s.deliverable_id] = s;
+      });
       setScores(scoreMap);
     }
     setLoading(false);
   }, [user, isManager, scope]);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   async function downloadFile(d: DeliverableRow) {
-    const { data, error } = await supabase.storage.from("deliverables").createSignedUrl(d.storage_path, 60);
-    if (error || !data) { toast.error(error?.message ?? "Failed to get link"); return; }
+    const { data, error } = await supabase.storage
+      .from("deliverables")
+      .createSignedUrl(d.storage_path, 60);
+    if (error || !data) {
+      toast.error(error?.message ?? "Failed to get link");
+      return;
+    }
     window.open(data.signedUrl, "_blank");
   }
 
@@ -138,12 +169,20 @@ function DeliverablesPage() {
         reviewed_at: new Date().toISOString(),
       })
       .eq("id", d.id);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     await supabase.from("notifications").insert({
       workspace_id: workspace.id,
       user_id: d.user_id,
       type: status === "approved" ? "task_assigned" : "warning",
-      title: status === "approved" ? "✅ Deliverable approved" : status === "rejected" ? "❌ Deliverable rejected" : "🔄 Revision requested",
+      title:
+        status === "approved"
+          ? "✅ Deliverable approved"
+          : status === "rejected"
+            ? "❌ Deliverable rejected"
+            : "🔄 Revision requested",
       message: `${d.file_name}${note ? ` — ${note}` : ""}`,
       related_task_id: d.task_id,
     });
@@ -156,7 +195,9 @@ function DeliverablesPage() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl font-bold">Deliverables</h1>
-          <p className="text-sm text-muted-foreground">Submit work files (≤ 25MB) and review submissions.</p>
+          <p className="text-sm text-muted-foreground">
+            Submit work files (≤ 25MB) and review submissions.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           {isManager && (
@@ -167,11 +208,19 @@ function DeliverablesPage() {
               </TabsList>
             </Tabs>
           )}
-              <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
+          <Dialog open={uploadOpen} onOpenChange={setUploadOpen}>
             <DialogTrigger asChild>
-              <Button><Upload className="mr-2 h-4 w-4" /> Submit File</Button>
+              <Button>
+                <Upload className="mr-2 h-4 w-4" /> Submit File
+              </Button>
             </DialogTrigger>
-            <UploadDialog onUploaded={() => { setUploadOpen(false); void load(); }} workspaceId={workspace.id} />
+            <UploadDialog
+              onUploaded={() => {
+                setUploadOpen(false);
+                void load();
+              }}
+              workspaceId={workspace.id}
+            />
           </Dialog>
         </div>
       </div>
@@ -193,12 +242,16 @@ function DeliverablesPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-medium truncate">{d.file_name}</p>
-                      <span className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_STYLE[d.status]}`}>
+                      <span
+                        className={`text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_STYLE[d.status]}`}
+                      >
                         {d.status.replace("_", " ")}
                       </span>
                     </div>
                     {d.description && (
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{d.description}</p>
+                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                        {d.description}
+                      </p>
                     )}
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1.5 flex-wrap">
                       <span>{fmtSize(d.file_size_bytes)}</span>
@@ -207,7 +260,8 @@ function DeliverablesPage() {
                     </div>
                     {d.reviewer_note && (
                       <p className="text-xs mt-2 rounded bg-muted/40 p-2 border border-border">
-                        <span className="text-muted-foreground">Reviewer note:</span> {d.reviewer_note}
+                        <span className="text-muted-foreground">Reviewer note:</span>{" "}
+                        {d.reviewer_note}
                       </p>
                     )}
                   </div>
@@ -217,13 +271,28 @@ function DeliverablesPage() {
                     </Button>
                     {isManager && d.status === "submitted" && (
                       <>
-                        <Button size="sm" variant="outline" onClick={() => review(d, "approved")} title="Approve">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => review(d, "approved")}
+                          title="Approve"
+                        >
                           <Check className="h-3.5 w-3.5 text-success" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => review(d, "revision_requested")} title="Request revision">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => review(d, "revision_requested")}
+                          title="Request revision"
+                        >
                           <RotateCcw className="h-3.5 w-3.5 text-warning" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => review(d, "rejected")} title="Reject">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => review(d, "rejected")}
+                          title="Reject"
+                        >
                           <X className="h-3.5 w-3.5 text-destructive" />
                         </Button>
                       </>
@@ -235,12 +304,17 @@ function DeliverablesPage() {
                         onClick={() => setScoreTarget(d)}
                         title="Quality score"
                       >
-                        <Star className={`h-3.5 w-3.5 ${scores[d.id] ? "text-warning fill-warning" : "text-muted-foreground"}`} />
+                        <Star
+                          className={`h-3.5 w-3.5 ${scores[d.id] ? "text-warning fill-warning" : "text-muted-foreground"}`}
+                        />
                       </Button>
                     )}
                     {/* Show average score badge for employees */}
                     {!isManager && scores[d.id] && (
-                      <div className="flex items-center gap-1 text-xs text-warning" title="Quality score">
+                      <div
+                        className="flex items-center gap-1 text-xs text-warning"
+                        title="Quality score"
+                      >
                         <Star className="h-3 w-3 fill-warning" />
                         {(
                           (scores[d.id].quality_score +
@@ -265,7 +339,10 @@ function DeliverablesPage() {
             existing={scores[scoreTarget.id] ?? null}
             reviewerId={user?.id ?? ""}
             workspaceId={workspace.id}
-            onSaved={() => { setScoreTarget(null); void load(); }}
+            onSaved={() => {
+              setScoreTarget(null);
+              void load();
+            }}
           />
         )}
       </Dialog>
@@ -307,7 +384,10 @@ function QualityScoreDialog({
       ? await supabase.from("deliverable_scores").update(payload).eq("id", existing.id)
       : await supabase.from("deliverable_scores").insert(payload);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     // Notify employee of their score
     await supabase.from("notifications").insert({
       workspace_id: workspaceId,
@@ -347,7 +427,9 @@ function QualityScoreDialog({
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save score"}</Button>
+        <Button onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Save score"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );
@@ -380,7 +462,13 @@ function ScoreSlider({
   );
 }
 
-function UploadDialog({ onUploaded, workspaceId }: { onUploaded: () => void; workspaceId: string }) {
+function UploadDialog({
+  onUploaded,
+  workspaceId,
+}: {
+  onUploaded: () => void;
+  workspaceId: string;
+}) {
   const { user } = useAuth();
   const [tasks, setTasks] = React.useState<TaskMini[]>([]);
   const [files, setFiles] = React.useState<File[]>([]);
@@ -392,7 +480,8 @@ function UploadDialog({ onUploaded, workspaceId }: { onUploaded: () => void; wor
   React.useEffect(() => {
     if (!user) return;
     void supabase
-      .from("tasks").select("id, title")
+      .from("tasks")
+      .select("id, title")
       .eq("workspace_id", workspaceId)
       .eq("assigned_to", user.id)
       .neq("status", "completed")
@@ -401,9 +490,15 @@ function UploadDialog({ onUploaded, workspaceId }: { onUploaded: () => void; wor
   }, [user]);
 
   async function submit() {
-    if (!files.length || !user) { toast.error("Select at least one file"); return; }
+    if (!files.length || !user) {
+      toast.error("Select at least one file");
+      return;
+    }
     const oversized = files.find((f) => f.size > MAX_BYTES);
-    if (oversized) { toast.error(`"${oversized.name}" exceeds 25MB`); return; }
+    if (oversized) {
+      toast.error(`"${oversized.name}" exceeds 25MB`);
+      return;
+    }
     setUploading(true);
 
     let succeeded = 0;
@@ -415,7 +510,10 @@ function UploadDialog({ onUploaded, workspaceId }: { onUploaded: () => void; wor
       const { error: upErr } = await supabase.storage.from("deliverables").upload(path, file, {
         contentType: file.type || "application/octet-stream",
       });
-      if (upErr) { toast.error(`${file.name}: ${upErr.message}`); continue; }
+      if (upErr) {
+        toast.error(`${file.name}: ${upErr.message}`);
+        continue;
+      }
       const { error } = await supabase.from("deliverables").insert({
         workspace_id: workspaceId,
         task_id: taskId || null,
@@ -446,7 +544,9 @@ function UploadDialog({ onUploaded, workspaceId }: { onUploaded: () => void; wor
 
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>Submit Deliverables</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Submit Deliverables</DialogTitle>
+      </DialogHeader>
       <div className="space-y-3">
         <div>
           <Label>Files (max 25MB each · stored in Supabase Storage)</Label>
@@ -458,7 +558,10 @@ function UploadDialog({ onUploaded, workspaceId }: { onUploaded: () => void; wor
           {files.length > 0 && (
             <div className="mt-1 space-y-0.5">
               {files.map((f, i) => (
-                <p key={i} className="text-xs text-muted-foreground flex items-center justify-between">
+                <p
+                  key={i}
+                  className="text-xs text-muted-foreground flex items-center justify-between"
+                >
                   <span className="truncate">{f.name}</span>
                   <span className="shrink-0 ml-2">{fmtSize(f.size)}</span>
                 </p>
@@ -472,20 +575,33 @@ function UploadDialog({ onUploaded, workspaceId }: { onUploaded: () => void; wor
         <div>
           <Label>Linked task (optional)</Label>
           <Select value={taskId} onValueChange={setTaskId}>
-            <SelectTrigger><SelectValue placeholder="None" /></SelectTrigger>
+            <SelectTrigger>
+              <SelectValue placeholder="None" />
+            </SelectTrigger>
             <SelectContent>
-              {tasks.map((t) => <SelectItem key={t.id} value={t.id}>{t.title}</SelectItem>)}
+              {tasks.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.title}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div>
           <Label>Description</Label>
-          <Textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="What's in these files?" />
+          <Textarea
+            rows={3}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What's in these files?"
+          />
         </div>
       </div>
       <DialogFooter>
         <Button onClick={submit} disabled={uploading || !files.length}>
-          {uploading ? progress || "Uploading…" : `Submit${files.length > 1 ? ` ${files.length} files` : ""}`}
+          {uploading
+            ? progress || "Uploading…"
+            : `Submit${files.length > 1 ? ` ${files.length} files` : ""}`}
         </Button>
       </DialogFooter>
     </DialogContent>

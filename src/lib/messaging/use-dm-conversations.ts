@@ -29,7 +29,7 @@ type RawMessage = {
 
 export function useDmConversations(
   workspaceId: string | null,
-  userId: string | null
+  userId: string | null,
 ): {
   conversations: DmConversationWithMeta[];
   loading: boolean;
@@ -37,9 +37,7 @@ export function useDmConversations(
   markConversationRead: (conversationId: string) => Promise<void>;
   refetch: () => void;
 } {
-  const [conversations, setConversations] = React.useState<
-    DmConversationWithMeta[]
-  >([]);
+  const [conversations, setConversations] = React.useState<DmConversationWithMeta[]>([]);
   const [loading, setLoading] = React.useState(false);
 
   const fetchConversations = React.useCallback(async () => {
@@ -63,7 +61,7 @@ export function useDmConversations(
       }
 
       const convIds = (myMembershipsRes.data ?? []).map(
-        (r: { conversation_id: string }) => r.conversation_id
+        (r: { conversation_id: string }) => r.conversation_id,
       );
       if (convIds.length === 0) {
         setConversations([]);
@@ -73,9 +71,7 @@ export function useDmConversations(
       const [convsRes, allMembersRes] = await Promise.all([
         supabase
           .from("dm_conversations")
-          .select(
-            "id,workspace_id,type,name,created_by,last_message_at,created_at"
-          )
+          .select("id,workspace_id,type,name,created_by,last_message_at,created_at")
           .in("id", convIds)
           .eq("workspace_id", workspaceId)
           .order("last_message_at", { ascending: false }),
@@ -99,9 +95,7 @@ export function useDmConversations(
       const rawConvs = (convsRes.data ?? []) as RawConversation[];
       const allMembers = (allMembersRes.data ?? []) as RawDmMember[];
 
-      const memberUserIds = Array.from(
-        new Set(allMembers.map((m) => m.user_id))
-      );
+      const memberUserIds = Array.from(new Set(allMembers.map((m) => m.user_id)));
       const profilesRes = memberUserIds.length
         ? await supabase
             .from("profiles")
@@ -128,9 +122,7 @@ export function useDmConversations(
         }
       }
 
-      const readTimes = Array.from(myMemberByConv.values()).map(
-        (m) => m.last_read_at
-      );
+      const readTimes = Array.from(myMemberByConv.values()).map((m) => m.last_read_at);
       const oldestReadAt =
         readTimes.length > 0
           ? readTimes.reduce((a, b) => (a < b ? a : b))
@@ -159,19 +151,17 @@ export function useDmConversations(
         const lastReadAt = myMember?.last_read_at ?? new Date(0).toISOString();
         const convMessages = messagesByConv.get(conv.id) ?? [];
         const unreadCount = convMessages.filter(
-          (msg) => msg.sender_id !== userId && msg.created_at > lastReadAt
+          (msg) => msg.sender_id !== userId && msg.created_at > lastReadAt,
         ).length;
 
-        const members: DmMember[] = (membersByConv.get(conv.id) ?? []).map(
-          (m) => ({
-            id: m.id,
-            conversation_id: m.conversation_id,
-            user_id: m.user_id,
-            last_read_at: m.last_read_at,
-            is_muted: m.is_muted,
-            profile: profileMap.get(m.user_id),
-          })
-        );
+        const members: DmMember[] = (membersByConv.get(conv.id) ?? []).map((m) => ({
+          id: m.id,
+          conversation_id: m.conversation_id,
+          user_id: m.user_id,
+          last_read_at: m.last_read_at,
+          is_muted: m.is_muted,
+          profile: profileMap.get(m.user_id),
+        }));
 
         return {
           ...conv,
@@ -211,7 +201,7 @@ export function useDmConversations(
         },
         () => {
           fetchConversations();
-        }
+        },
       )
       .on(
         "postgres_changes",
@@ -223,7 +213,7 @@ export function useDmConversations(
         },
         () => {
           fetchConversations();
-        }
+        },
       )
       .subscribe();
 
@@ -250,7 +240,7 @@ export function useDmConversations(
         if (myConvsRes.error) throw myConvsRes.error;
 
         const myConvIds = (myConvsRes.data ?? []).map(
-          (r: { conversation_id: string }) => r.conversation_id
+          (r: { conversation_id: string }) => r.conversation_id,
         );
 
         if (myConvIds.length > 0) {
@@ -263,7 +253,7 @@ export function useDmConversations(
           if (otherConvsRes.error) throw otherConvsRes.error;
 
           const sharedConvIds = (otherConvsRes.data ?? []).map(
-            (r: { conversation_id: string }) => r.conversation_id
+            (r: { conversation_id: string }) => r.conversation_id,
           );
 
           if (sharedConvIds.length > 0) {
@@ -275,9 +265,7 @@ export function useDmConversations(
 
               if (membersRes.error) continue;
 
-              const memberIds = (membersRes.data ?? []).map(
-                (r: { user_id: string }) => r.user_id
-              );
+              const memberIds = (membersRes.data ?? []).map((r: { user_id: string }) => r.user_id);
               if (memberIds.length === 2) {
                 return convId;
               }
@@ -288,14 +276,12 @@ export function useDmConversations(
 
       const newConvId = crypto.randomUUID();
 
-      const { error: convErr } = await supabase
-        .from("dm_conversations")
-        .insert({
-          id: newConvId,
-          workspace_id: workspaceId,
-          type: isDirect ? "direct" : "group",
-          created_by: userId,
-        });
+      const { error: convErr } = await supabase.from("dm_conversations").insert({
+        id: newConvId,
+        workspace_id: workspaceId,
+        type: isDirect ? "direct" : "group",
+        created_by: userId,
+      });
 
       if (convErr) throw convErr;
 
@@ -304,9 +290,7 @@ export function useDmConversations(
         user_id: uid,
       }));
 
-      const { error: membersErr } = await supabase
-        .from("dm_members")
-        .insert(memberInserts);
+      const { error: membersErr } = await supabase.from("dm_members").insert(memberInserts);
 
       if (membersErr) {
         await supabase.from("dm_conversations").delete().eq("id", newConvId);
@@ -316,7 +300,7 @@ export function useDmConversations(
       await fetchConversations();
       return newConvId;
     },
-    [workspaceId, userId, fetchConversations]
+    [workspaceId, userId, fetchConversations],
   );
 
   const markConversationRead = React.useCallback(
@@ -332,12 +316,10 @@ export function useDmConversations(
         return;
       }
       setConversations((prev) =>
-        prev.map((c) =>
-          c.id === conversationId ? { ...c, unread_count: 0 } : c
-        )
+        prev.map((c) => (c.id === conversationId ? { ...c, unread_count: 0 } : c)),
       );
     },
-    [userId]
+    [userId],
   );
 
   return {

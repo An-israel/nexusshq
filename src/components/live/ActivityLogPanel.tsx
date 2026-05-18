@@ -53,10 +53,7 @@ export function ActivityLogPanel({
 
   // Update "last updated" every 10 seconds
   useEffect(() => {
-    lastUpdatedIntervalRef.current = setInterval(
-      () => setLastUpdatedTick((t) => t + 1),
-      10_000
-    );
+    lastUpdatedIntervalRef.current = setInterval(() => setLastUpdatedTick((t) => t + 1), 10_000);
     return () => {
       if (lastUpdatedIntervalRef.current) clearInterval(lastUpdatedIntervalRef.current);
     };
@@ -81,7 +78,7 @@ export function ActivityLogPanel({
         <div
           className={cn(
             "w-2 h-2 rounded-full flex-shrink-0",
-            isConnected ? "bg-green-500" : "bg-amber-500"
+            isConnected ? "bg-green-500" : "bg-amber-500",
           )}
         />
 
@@ -106,7 +103,7 @@ export function ActivityLogPanel({
           <div
             className={cn(
               "w-2 h-2 rounded-full",
-              isConnected ? "bg-green-500 animate-pulse" : "bg-amber-500"
+              isConnected ? "bg-green-500 animate-pulse" : "bg-amber-500",
             )}
           />
           <span className="text-white font-semibold text-sm">Live Activity</span>
@@ -114,10 +111,7 @@ export function ActivityLogPanel({
 
         <div className="flex items-center gap-2">
           <span
-            className={cn(
-              "text-xs font-medium",
-              isConnected ? "text-green-400" : "text-amber-400"
-            )}
+            className={cn("text-xs font-medium", isConnected ? "text-green-400" : "text-amber-400")}
           >
             {isConnected ? "Live" : "Reconnecting..."}
           </span>
@@ -135,9 +129,7 @@ export function ActivityLogPanel({
       {/* Reconnecting banner */}
       {!isConnected && (
         <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 border-b border-amber-500/20 flex-shrink-0">
-          <span className="text-amber-400 text-xs">
-            ⚠ Live updates paused — reconnecting...
-          </span>
+          <span className="text-amber-400 text-xs">⚠ Live updates paused — reconnecting...</span>
         </div>
       )}
 
@@ -154,9 +146,7 @@ export function ActivityLogPanel({
                 key={entry.id}
                 className="flex items-start gap-2.5 px-4 py-3 hover:bg-white/[0.02] transition-colors"
               >
-                <span className="text-base leading-none mt-0.5 flex-shrink-0">
-                  {entry.icon}
-                </span>
+                <span className="text-base leading-none mt-0.5 flex-shrink-0">{entry.icon}</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-[#ccc] text-xs leading-snug break-words">
                     {entry.description}

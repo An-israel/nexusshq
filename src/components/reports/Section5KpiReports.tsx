@@ -72,9 +72,9 @@ const STATUS_ORDER: Record<KpiRow["status"], number> = {
 
 function barColor(pct: number): string {
   if (pct >= 100) return "#3b82f6"; // blue
-  if (pct >= 70) return "#22c55e";  // green
-  if (pct >= 40) return "#f59e0b";  // amber
-  return "#ef4444";                 // red
+  if (pct >= 70) return "#22c55e"; // green
+  if (pct >= 40) return "#f59e0b"; // amber
+  return "#ef4444"; // red
 }
 
 // ---- Progress bar cell ----
@@ -84,8 +84,8 @@ function PctProgressBar({ pct, status }: { pct: number; status: KpiRow["status"]
     status === "complete" || status === "on_track"
       ? "#22c55e"
       : status === "at_risk"
-      ? "#f59e0b"
-      : "#ef4444";
+        ? "#f59e0b"
+        : "#ef4444";
 
   const capped = Math.min(pct, 100);
 
@@ -103,8 +103,8 @@ function PctProgressBar({ pct, status }: { pct: number; status: KpiRow["status"]
           status === "complete" || status === "on_track"
             ? "text-green-400"
             : status === "at_risk"
-            ? "text-amber-400"
-            : "text-red-400",
+              ? "text-amber-400"
+              : "text-red-400",
         )}
       >
         {pct.toFixed(0)}%
@@ -128,8 +128,7 @@ function ChartTooltip({
     <div className="rounded-lg border border-[#2a2a2a] bg-[#1a1a1a] px-3 py-2 text-xs shadow-lg max-w-[200px]">
       <p className="mb-1 font-medium text-white truncate">{row.title}</p>
       <p className="text-muted-foreground">
-        Department:{" "}
-        <span className="text-white">{row.department.replace(/_/g, " ")}</span>
+        Department: <span className="text-white">{row.department.replace(/_/g, " ")}</span>
       </p>
       <p className="text-muted-foreground">
         % Achieved:{" "}
@@ -165,10 +164,7 @@ export function Section5KpiReports({ kpiRows, loading, dateRange }: Props) {
   }, [kpiRows, activePeriod]);
 
   // Chart data (limit to 10 for readability)
-  const chartData = useMemo(
-    () => filteredRows.slice(0, 10),
-    [filteredRows],
-  );
+  const chartData = useMemo(() => filteredRows.slice(0, 10), [filteredRows]);
 
   // Loading skeleton
   if (loading) {
@@ -255,9 +251,7 @@ export function Section5KpiReports({ kpiRows, loading, dateRange }: Props) {
         {filteredRows.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 gap-3">
             <Target className="h-10 w-10 text-muted-foreground opacity-40" />
-            <p className="text-sm text-muted-foreground">
-              No KPIs configured for this workspace
-            </p>
+            <p className="text-sm text-muted-foreground">No KPIs configured for this workspace</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -301,9 +295,7 @@ export function Section5KpiReports({ kpiRows, loading, dateRange }: Props) {
                     <td className="py-3 pr-4">
                       <PctProgressBar pct={row.pctAchieved} status={row.status} />
                     </td>
-                    <td className="py-3 pr-4 capitalize text-muted-foreground">
-                      {row.period}
-                    </td>
+                    <td className="py-3 pr-4 capitalize text-muted-foreground">{row.period}</td>
                     <td className="py-3">
                       <KpiStatusBadge status={row.status} />
                     </td>
@@ -317,28 +309,19 @@ export function Section5KpiReports({ kpiRows, loading, dateRange }: Props) {
 
       {/* Achievement bar chart */}
       <div className="bg-[#111] rounded-xl border border-[#1f1f1f] p-4 mt-4">
-        <p className="text-sm font-semibold text-white mb-3">
-          KPI Achievement — % of Target Met
-        </p>
+        <p className="text-sm font-semibold text-white mb-3">KPI Achievement — % of Target Met</p>
         {chartData.length === 0 ? (
           <p className="text-sm text-muted-foreground py-8 text-center">
             No KPI data for this period.
           </p>
         ) : (
-          <ResponsiveContainer
-            width="100%"
-            height={Math.max(180, chartData.length * 42)}
-          >
+          <ResponsiveContainer width="100%" height={Math.max(180, chartData.length * 42)}>
             <BarChart
               data={chartData}
               layout="vertical"
               margin={{ top: 4, right: 48, left: 8, bottom: 4 }}
             >
-              <CartesianGrid
-                strokeDasharray="3 3"
-                stroke="#1f1f1f"
-                horizontal={false}
-              />
+              <CartesianGrid strokeDasharray="3 3" stroke="#1f1f1f" horizontal={false} />
               <XAxis
                 type="number"
                 domain={[0, 100]}
@@ -354,9 +337,7 @@ export function Section5KpiReports({ kpiRows, loading, dateRange }: Props) {
                 axisLine={false}
                 tickLine={false}
                 width={140}
-                tickFormatter={(v: string) =>
-                  v.length > 20 ? v.slice(0, 19) + "…" : v
-                }
+                tickFormatter={(v: string) => (v.length > 20 ? v.slice(0, 19) + "…" : v)}
               />
               <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
               <Bar

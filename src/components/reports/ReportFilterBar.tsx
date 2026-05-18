@@ -12,11 +12,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
-import {
-  type DateRange,
-  type DateRangePreset,
-  getDateRange,
-} from "@/lib/reports/date-ranges";
+import { type DateRange, type DateRangePreset, getDateRange } from "@/lib/reports/date-ranges";
 
 const PRESET_LABELS: Record<DateRangePreset, string> = {
   today: "Today",
@@ -68,12 +64,8 @@ export function ReportFilterBar({
   exportingPdf,
 }: ReportFilterBarProps) {
   const [customOpen, setCustomOpen] = useState(false);
-  const [customFrom, setCustomFrom] = useState<string>(
-    () => format(dateRange.start, "yyyy-MM-dd"),
-  );
-  const [customTo, setCustomTo] = useState<string>(
-    () => format(dateRange.end, "yyyy-MM-dd"),
-  );
+  const [customFrom, setCustomFrom] = useState<string>(() => format(dateRange.start, "yyyy-MM-dd"));
+  const [customTo, setCustomTo] = useState<string>(() => format(dateRange.end, "yyyy-MM-dd"));
 
   function handlePresetClick(preset: DateRangePreset) {
     if (preset === "custom") {

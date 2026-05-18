@@ -58,17 +58,21 @@ function hashColor(id: string): string {
   return colors[hash % colors.length];
 }
 
-function Avatar({ userId, name, avatarUrl }: { userId: string; name: string; avatarUrl: string | null }) {
+function Avatar({
+  userId,
+  name,
+  avatarUrl,
+}: {
+  userId: string;
+  name: string;
+  avatarUrl: string | null;
+}) {
   const avatarColor = hashColor(userId);
   const initial = name.charAt(0).toUpperCase();
 
   if (avatarUrl) {
     return (
-      <img
-        src={avatarUrl}
-        alt={name}
-        className="h-8 w-8 rounded-full object-cover shrink-0"
-      />
+      <img src={avatarUrl} alt={name} className="h-8 w-8 rounded-full object-cover shrink-0" />
     );
   }
 
@@ -178,17 +182,26 @@ export function ChannelMembersPanel({
           .limit(10);
 
         setCandidates(
-          ((profs ?? []) as Array<{ id: string; full_name: string | null; avatar_url: string | null; job_title: string | null; email: string | null }>)
-            .filter((p) =>
-              (p.full_name ?? "").toLowerCase().includes(q) ||
-              (p.email ?? "").toLowerCase().includes(q)
+          (
+            (profs ?? []) as Array<{
+              id: string;
+              full_name: string | null;
+              avatar_url: string | null;
+              job_title: string | null;
+              email: string | null;
+            }>
+          )
+            .filter(
+              (p) =>
+                (p.full_name ?? "").toLowerCase().includes(q) ||
+                (p.email ?? "").toLowerCase().includes(q),
             )
             .map((p) => ({
               user_id: p.id,
               full_name: p.full_name,
               avatar_url: p.avatar_url,
               job_title: p.job_title,
-            }))
+            })),
         );
       } catch (err) {
         console.error("Failed to search workspace members", err);
@@ -256,7 +269,7 @@ export function ChannelMembersPanel({
     <div
       className={cn(
         "fixed right-0 top-0 h-full w-80 bg-[#111111] border-l border-[#2A2A2A] z-30 flex flex-col transition-transform duration-200",
-        open ? "translate-x-0" : "translate-x-full"
+        open ? "translate-x-0" : "translate-x-full",
       )}
     >
       {/* Header */}
@@ -373,7 +386,9 @@ export function ChannelMembersPanel({
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm text-white">{displayName}</p>
                         {candidate.job_title && (
-                          <p className="truncate text-[11px] text-[#6B7280]">{candidate.job_title}</p>
+                          <p className="truncate text-[11px] text-[#6B7280]">
+                            {candidate.job_title}
+                          </p>
                         )}
                       </div>
                       {adding === candidate.user_id ? (

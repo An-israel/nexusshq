@@ -19,12 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { ChevronDown, Clock, History as HistoryIcon } from "lucide-react";
@@ -106,18 +101,14 @@ function TeamBoardPage() {
   async function changeStatus(task: Task, status: Status) {
     if (task.status === status) return;
     // Optimistic update
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status } : t)),
-    );
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status } : t)));
     try {
       await updateStatus({ data: { taskId: task.id, status } });
       toast.success(`Moved to ${status.replace("_", " ")}`);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to update");
       // Revert on error
-      setTasks((prev) =>
-        prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t)),
-      );
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t)));
     }
   }
 
@@ -139,8 +130,7 @@ function TeamBoardPage() {
     };
     filteredTasks.forEach((t) => {
       // Treat past-due, non-completed tasks as overdue
-      const isOverdue =
-        t.status !== "completed" && t.due_date < today && t.status !== "overdue";
+      const isOverdue = t.status !== "completed" && t.due_date < today && t.status !== "overdue";
       const status: Status = isOverdue ? "overdue" : (t.status as Status);
       out[status]?.push(t);
     });
@@ -149,9 +139,7 @@ function TeamBoardPage() {
 
   const departments = React.useMemo(() => {
     const set = new Set<string>();
-    Object.values(profiles).forEach(
-      (p) => p.department && set.add(p.department),
-    );
+    Object.values(profiles).forEach((p) => p.department && set.add(p.department));
     return Array.from(set).sort();
   }, [profiles]);
 
@@ -166,7 +154,10 @@ function TeamBoardPage() {
         </div>
         <div className="flex items-center gap-2">
           {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-          <Link to={`/${workspaceSlug}/team` as any} className="text-xs text-muted-foreground hover:text-foreground underline">
+          <Link
+            to={`/${workspaceSlug}/team` as any}
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
             Team overview
           </Link>
           <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
@@ -241,9 +232,7 @@ function TeamBoardPage() {
                             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/15 text-[9px] font-semibold text-primary">
                               {initialsOf(p?.full_name ?? p?.email)}
                             </span>
-                            <span className="truncate">
-                              {p?.full_name ?? p?.email ?? "—"}
-                            </span>
+                            <span className="truncate">{p?.full_name ?? p?.email ?? "—"}</span>
                           </div>
                           <div className="mt-2 flex items-center justify-between gap-2 text-[10px] text-muted-foreground">
                             <span className="flex items-center gap-1">
@@ -270,16 +259,14 @@ function TeamBoardPage() {
                                   </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                  {COLUMNS.filter((c) => c.id !== col.id).map(
-                                    (c) => (
-                                      <DropdownMenuItem
-                                        key={c.id}
-                                        onClick={() => void changeStatus(t, c.id)}
-                                      >
-                                        Move to {c.label}
-                                      </DropdownMenuItem>
-                                    ),
-                                  )}
+                                  {COLUMNS.filter((c) => c.id !== col.id).map((c) => (
+                                    <DropdownMenuItem
+                                      key={c.id}
+                                      onClick={() => void changeStatus(t, c.id)}
+                                    >
+                                      Move to {c.label}
+                                    </DropdownMenuItem>
+                                  ))}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </div>
@@ -295,10 +282,7 @@ function TeamBoardPage() {
         </div>
       )}
 
-      <Sheet
-        open={!!historyTask}
-        onOpenChange={(open) => !open && setHistoryTask(null)}
-      >
+      <Sheet open={!!historyTask} onOpenChange={(open) => !open && setHistoryTask(null)}>
         <SheetContent className="w-full sm:max-w-md overflow-y-auto">
           <SheetHeader>
             <SheetTitle>Audit trail</SheetTitle>
@@ -307,29 +291,24 @@ function TeamBoardPage() {
             <div className="mt-4 space-y-3">
               <p className="text-sm font-semibold">{historyTask.title}</p>
               {history.length === 0 ? (
-                <p className="text-xs text-muted-foreground">
-                  No changes recorded yet.
-                </p>
+                <p className="text-xs text-muted-foreground">No changes recorded yet.</p>
               ) : (
                 <ul className="space-y-3">
                   {history.map((u) => {
                     const editor = profiles[u.updated_by ?? ""];
                     return (
-                      <li
-                        key={u.id}
-                        className="border-l-2 border-primary/40 pl-3 text-xs"
-                      >
+                      <li key={u.id} className="border-l-2 border-primary/40 pl-3 text-xs">
                         <p className="font-medium">
                           {u.old_status && u.new_status ? (
                             <>
                               {u.old_status.replace("_", " ")}
                               {" → "}
-                              <span className="text-primary">
-                                {u.new_status.replace("_", " ")}
-                              </span>
+                              <span className="text-primary">{u.new_status.replace("_", " ")}</span>
                             </>
                           ) : u.new_progress != null ? (
-                            <>Progress {u.old_progress ?? 0}% → {u.new_progress}%</>
+                            <>
+                              Progress {u.old_progress ?? 0}% → {u.new_progress}%
+                            </>
                           ) : (
                             "Updated"
                           )}
@@ -338,11 +317,7 @@ function TeamBoardPage() {
                           {editor?.full_name ?? editor?.email ?? "Someone"} ·{" "}
                           {timeAgo(u.created_at)}
                         </p>
-                        {u.note && (
-                          <p className="mt-1 italic text-muted-foreground">
-                            "{u.note}"
-                          </p>
-                        )}
+                        {u.note && <p className="mt-1 italic text-muted-foreground">"{u.note}"</p>}
                       </li>
                     );
                   })}

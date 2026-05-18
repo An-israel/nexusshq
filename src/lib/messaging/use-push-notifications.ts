@@ -3,10 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function usePushNotifications(
   currentUserId: string | null,
-  _workspaceSlug: string
+  _workspaceSlug: string,
 ): { permissionGranted: boolean } {
   const [permissionGranted, setPermissionGranted] = React.useState(
-    typeof Notification !== "undefined" && Notification.permission === "granted"
+    typeof Notification !== "undefined" && Notification.permission === "granted",
   );
 
   React.useEffect(() => {
@@ -42,7 +42,7 @@ export function usePushNotifications(
             icon: "/favicon.ico",
           });
           n.onclick = () => window.focus();
-        }
+        },
       )
       .subscribe();
 

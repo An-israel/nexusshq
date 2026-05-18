@@ -71,13 +71,7 @@ Deno.serve(async (_req) => {
     }
 
     if (!rows || rows.length === 0) {
-      await logAutomation(
-        ws.id,
-        "auto_clockout",
-        null,
-        { date: today, count: 0 },
-        "skipped",
-      );
+      await logAutomation(ws.id, "auto_clockout", null, { date: today, count: 0 }, "skipped");
       continue;
     }
 
@@ -85,10 +79,7 @@ Deno.serve(async (_req) => {
 
     for (const row of rows as AttendanceRow[]) {
       const clockInMs = new Date(row.clock_in).getTime();
-      const totalMinutes = Math.max(
-        0,
-        Math.round((clockOutMs - clockInMs) / 60_000),
-      );
+      const totalMinutes = Math.max(0, Math.round((clockOutMs - clockInMs) / 60_000));
 
       // Determine final status
       const clockInDate = new Date(row.clock_in);
@@ -110,9 +101,7 @@ Deno.serve(async (_req) => {
         .eq("id", row.id);
 
       if (updateErr) {
-        errors.push(
-          `workspace ${ws.id}, attendance ${row.id}: ${updateErr.message}`,
-        );
+        errors.push(`workspace ${ws.id}, attendance ${row.id}: ${updateErr.message}`);
         await logAutomation(
           ws.id,
           "auto_clockout",
@@ -150,9 +139,7 @@ Deno.serve(async (_req) => {
       totalProcessed++;
     }
 
-    console.log(
-      `[auto-clockout-engine] workspace=${ws.id} clocked_out=${wsCount}`,
-    );
+    console.log(`[auto-clockout-engine] workspace=${ws.id} clocked_out=${wsCount}`);
   }
 
   return Response.json({

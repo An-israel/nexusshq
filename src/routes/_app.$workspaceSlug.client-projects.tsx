@@ -77,10 +77,7 @@ function ClientProjectsPage() {
 
   const loadProjects = React.useCallback(async () => {
     setLoading(true);
-    let q = supabase
-      .from("client_projects")
-      .select("*")
-      .order("created_at", { ascending: false });
+    let q = supabase.from("client_projects").select("*").order("created_at", { ascending: false });
     if (workspace?.id) q = q.eq("workspace_id", workspace.id);
     const { data } = await q;
     const projs = (data ?? []) as ClientProject[];
@@ -91,7 +88,10 @@ function ClientProjectsPage() {
       const { data: views } = await supabase
         .from("client_portal_views")
         .select("project_id")
-        .in("project_id", projs.map((p) => p.id));
+        .in(
+          "project_id",
+          projs.map((p) => p.id),
+        );
       const counts: Record<string, number> = {};
       (views ?? []).forEach((v: { project_id: string }) => {
         counts[v.project_id] = (counts[v.project_id] ?? 0) + 1;
@@ -111,7 +111,9 @@ function ClientProjectsPage() {
     setTasks((data ?? []) as ProjectTask[]);
   }, []);
 
-  React.useEffect(() => { void loadProjects(); }, [loadProjects]);
+  React.useEffect(() => {
+    void loadProjects();
+  }, [loadProjects]);
   React.useEffect(() => {
     if (selected) void loadTasks(selected.id);
     else setTasks([]);
@@ -143,7 +145,7 @@ function ClientProjectsPage() {
   async function updateProjectStatus(id: string, status: ClientProject["status"]) {
     await supabase.from("client_projects").update({ status }).eq("id", id);
     void loadProjects();
-    setSelected((prev) => prev?.id === id ? { ...prev, status } : prev);
+    setSelected((prev) => (prev?.id === id ? { ...prev, status } : prev));
   }
 
   function copyLink(token: string) {
@@ -160,7 +162,9 @@ function ClientProjectsPage() {
   return (
     <div className="flex h-[calc(100vh-8rem)] md:h-[calc(100vh-7rem)] flex-col md:flex-row gap-0 overflow-hidden rounded-xl border border-border">
       {/* Project list — full width on mobile, fixed sidebar on desktop */}
-      <aside className={`border-b md:border-b-0 md:border-r border-border flex flex-col md:w-72 ${selected ? "hidden md:flex" : "flex w-full"}`}>
+      <aside
+        className={`border-b md:border-b-0 md:border-r border-border flex flex-col md:w-72 ${selected ? "hidden md:flex" : "flex w-full"}`}
+      >
         <div className="flex items-center justify-between p-4 border-b border-border">
           <h2 className="font-semibold">Client Projects</h2>
           <Button size="sm" onClick={() => setNewProjectOpen(true)}>
@@ -177,14 +181,17 @@ function ClientProjectsPage() {
             >
               <div className="flex items-center justify-between gap-2">
                 <p className="text-sm font-medium truncate">{p.name}</p>
-                <span className={`shrink-0 text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_BADGE[p.status]}`}>
+                <span
+                  className={`shrink-0 text-[10px] uppercase tracking-wide rounded border px-1.5 py-0.5 ${STATUS_BADGE[p.status]}`}
+                >
                   {p.status.replace("_", " ")}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">{p.client_name}</p>
               {viewCounts[p.id] ? (
                 <p className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1">
-                  <Eye className="h-3 w-3" /> {viewCounts[p.id]} view{viewCounts[p.id] !== 1 ? "s" : ""}
+                  <Eye className="h-3 w-3" /> {viewCounts[p.id]} view
+                  {viewCounts[p.id] !== 1 ? "s" : ""}
                 </p>
               ) : null}
             </button>
@@ -196,7 +203,9 @@ function ClientProjectsPage() {
       </aside>
 
       {/* Project detail */}
-      <div className={`flex flex-1 flex-col min-w-0 overflow-hidden ${!selected ? "hidden md:flex" : "flex"}`}>
+      <div
+        className={`flex flex-1 flex-col min-w-0 overflow-hidden ${!selected ? "hidden md:flex" : "flex"}`}
+      >
         {selected ? (
           <>
             <div className="flex items-start justify-between gap-3 border-b border-border px-4 md:px-6 py-4 shrink-0 flex-wrap">
@@ -217,7 +226,9 @@ function ClientProjectsPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 <Select
                   value={selected.status}
-                  onValueChange={(v) => updateProjectStatus(selected.id, v as ClientProject["status"])}
+                  onValueChange={(v) =>
+                    updateProjectStatus(selected.id, v as ClientProject["status"])
+                  }
                 >
                   <SelectTrigger className="w-32 h-8 text-xs">
                     <SelectValue />
@@ -231,7 +242,11 @@ function ClientProjectsPage() {
                 <Button size="sm" variant="outline" onClick={() => copyLink(selected.access_token)}>
                   <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy client link
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => window.open(`/track/${selected.access_token}`, "_blank")}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => window.open(`/track/${selected.access_token}`, "_blank")}
+                >
                   <ExternalLink className="h-3.5 w-3.5" />
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => deleteProject(selected.id)}>
@@ -265,7 +280,9 @@ function ClientProjectsPage() {
                 </Button>
               </div>
               {tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No milestones yet. Add one to get started.</p>
+                <p className="text-sm text-muted-foreground">
+                  No milestones yet. Add one to get started.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {tasks.map((task) => (
@@ -286,7 +303,9 @@ function ClientProjectsPage() {
                         {TASK_STATUS_ICON[task.status]}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <p className={`text-sm ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}>
+                        <p
+                          className={`text-sm ${task.status === "completed" ? "line-through text-muted-foreground" : ""}`}
+                        >
                           {task.title}
                         </p>
                         {task.due_date && (
@@ -313,7 +332,10 @@ function ClientProjectsPage() {
         <NewProjectDialog
           createdBy={user?.id ?? ""}
           workspaceId={workspace?.id ?? ""}
-          onSaved={() => { setNewProjectOpen(false); void loadProjects(); }}
+          onSaved={() => {
+            setNewProjectOpen(false);
+            void loadProjects();
+          }}
         />
       </Dialog>
       {selected && (
@@ -321,7 +343,10 @@ function ClientProjectsPage() {
           <NewTaskDialog
             projectId={selected.id}
             nextIndex={tasks.length}
-            onSaved={() => { setNewTaskOpen(false); void loadTasks(selected.id); }}
+            onSaved={() => {
+              setNewTaskOpen(false);
+              void loadTasks(selected.id);
+            }}
           />
         </Dialog>
       )}
@@ -329,13 +354,24 @@ function ClientProjectsPage() {
   );
 }
 
-function NewProjectDialog({ createdBy, workspaceId, onSaved }: { createdBy: string; workspaceId: string; onSaved: () => void }) {
+function NewProjectDialog({
+  createdBy,
+  workspaceId,
+  onSaved,
+}: {
+  createdBy: string;
+  workspaceId: string;
+  onSaved: () => void;
+}) {
   const [name, setName] = React.useState("");
   const [clientName, setClientName] = React.useState("");
   const [desc, setDesc] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   async function save() {
-    if (!name.trim() || !clientName.trim()) { toast.error("Name and client name required"); return; }
+    if (!name.trim() || !clientName.trim()) {
+      toast.error("Name and client name required");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("client_projects").insert({
       name: name.trim(),
@@ -345,21 +381,35 @@ function NewProjectDialog({ createdBy, workspaceId, onSaved }: { createdBy: stri
       workspace_id: workspaceId,
     });
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Project created");
     onSaved();
   }
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>New Client Project</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>New Client Project</DialogTitle>
+      </DialogHeader>
       <div className="space-y-3">
         <div>
           <Label>Project name</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Brand Redesign" autoFocus />
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Brand Redesign"
+            autoFocus
+          />
         </div>
         <div>
           <Label>Client name</Label>
-          <Input value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Acme Corp" />
+          <Input
+            value={clientName}
+            onChange={(e) => setClientName(e.target.value)}
+            placeholder="Acme Corp"
+          />
         </div>
         <div>
           <Label>Description (optional)</Label>
@@ -367,7 +417,9 @@ function NewProjectDialog({ createdBy, workspaceId, onSaved }: { createdBy: stri
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={save} disabled={saving}>{saving ? "Creating…" : "Create"}</Button>
+        <Button onClick={save} disabled={saving}>
+          {saving ? "Creating…" : "Create"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );
@@ -386,7 +438,10 @@ function NewTaskDialog({
   const [dueDate, setDueDate] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   async function save() {
-    if (!title.trim()) { toast.error("Title required"); return; }
+    if (!title.trim()) {
+      toast.error("Title required");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("client_project_tasks").insert({
       project_id: projectId,
@@ -395,16 +450,26 @@ function NewTaskDialog({
       order_index: nextIndex,
     });
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     onSaved();
   }
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>Add Milestone</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Add Milestone</DialogTitle>
+      </DialogHeader>
       <div className="space-y-3">
         <div>
           <Label>Milestone title</Label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Initial designs delivered" autoFocus />
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Initial designs delivered"
+            autoFocus
+          />
         </div>
         <div>
           <Label>Due date (optional)</Label>
@@ -412,7 +477,9 @@ function NewTaskDialog({
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Add"}</Button>
+        <Button onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Add"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );

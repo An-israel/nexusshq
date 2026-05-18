@@ -49,9 +49,7 @@ export function ManageRoleDialog({
 }: Props) {
   const setRole = useServerFn(setEmployeeRoleFn);
   const [open, setOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<AppRole>(
-    currentRole ?? "employee",
-  );
+  const [selected, setSelected] = React.useState<AppRole>(currentRole ?? "employee");
   const [saving, setSaving] = React.useState(false);
 
   React.useEffect(() => {
@@ -66,9 +64,7 @@ export function ManageRoleDialog({
     setSaving(true);
     try {
       await setRole({ data: { userId, role: selected } });
-      toast.success(
-        `Role updated to ${selected}${userName ? ` for ${userName}` : ""}.`,
-      );
+      toast.success(`Role updated to ${selected}${userName ? ` for ${userName}` : ""}.`);
       onChanged?.(selected);
       setOpen(false);
     } catch (err) {
@@ -96,10 +92,7 @@ export function ManageRoleDialog({
         </DialogHeader>
         <div className="space-y-3 py-2">
           <Label>Role</Label>
-          <Select
-            value={selected}
-            onValueChange={(v) => setSelected(v as AppRole)}
-          >
+          <Select value={selected} onValueChange={(v) => setSelected(v as AppRole)}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -109,16 +102,10 @@ export function ManageRoleDialog({
               <SelectItem value="employee">Employee</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-muted-foreground">
-            {ROLE_DESCRIPTIONS[selected]}
-          </p>
+          <p className="text-xs text-muted-foreground">{ROLE_DESCRIPTIONS[selected]}</p>
         </div>
         <DialogFooter>
-          <Button
-            variant="ghost"
-            onClick={() => setOpen(false)}
-            disabled={saving}
-          >
+          <Button variant="ghost" onClick={() => setOpen(false)} disabled={saving}>
             Cancel
           </Button>
           <Button onClick={handleSave} disabled={saving}>

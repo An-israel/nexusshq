@@ -24,11 +24,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { toast } from "sonner";
 import { timeAgo } from "@/lib/nexus";
 import { cn } from "@/lib/utils";
@@ -156,9 +152,7 @@ function lastRunStatus(
 ): { status: "success" | "failed" | "skipped" | "never"; log: AutomationLog | null } {
   const relevant = logs.filter((l) => l.automation_type === type);
   if (!relevant.length) return { status: "never", log: null };
-  const latest = relevant.reduce((a, b) =>
-    new Date(a.ran_at) > new Date(b.ran_at) ? a : b,
-  );
+  const latest = relevant.reduce((a, b) => (new Date(a.ran_at) > new Date(b.ran_at) ? a : b));
   return { status: latest.status, log: latest };
 }
 
@@ -182,9 +176,7 @@ function statusLabel(status: "success" | "failed" | "skipped" | "never") {
 function logStatusBadge(status: "success" | "failed" | "skipped") {
   if (status === "success")
     return (
-      <Badge className="bg-green-500/15 text-green-700 border-green-500/30 border">
-        success
-      </Badge>
+      <Badge className="bg-green-500/15 text-green-700 border-green-500/30 border">success</Badge>
     );
   if (status === "failed")
     return (
@@ -287,9 +279,7 @@ function LogsSheet({
                 {logs.map((log) => (
                   <tr key={log.id} className="border-b border-border/50 last:border-0">
                     <td className="py-2 pr-3">{logStatusBadge(log.status)}</td>
-                    <td className="py-2 pr-3 max-w-[120px] truncate text-xs">
-                      {forLabel(log)}
-                    </td>
+                    <td className="py-2 pr-3 max-w-[120px] truncate text-xs">{forLabel(log)}</td>
                     <td className="py-2 pr-3 max-w-[160px] truncate text-xs text-muted-foreground">
                       {detailSummary(log)}
                     </td>
@@ -420,13 +410,11 @@ function ReportSettingsCard({
 
   async function save() {
     setSaving(true);
-    const { error } = await supabase
-      .from("automation_settings")
-      .upsert({
-        workspace_id: workspaceId,
-        daily_report_time: dailyTime,
-        weekly_report_day: weeklyDay,
-      });
+    const { error } = await supabase.from("automation_settings").upsert({
+      workspace_id: workspaceId,
+      daily_report_time: dailyTime,
+      weekly_report_day: weeklyDay,
+    });
     if (error) {
       toast.error(error.message);
     } else {

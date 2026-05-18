@@ -16,7 +16,10 @@ export const Route = createFileRoute("/_app")({
       ),
     ]);
     if (result === TIMEOUT_SENTINEL) return;
-    const { data: { session }, error } = result;
+    const {
+      data: { session },
+      error,
+    } = result;
     if (error) {
       logSupabaseClientError({
         scope: "app-layout:beforeLoad:getSession",

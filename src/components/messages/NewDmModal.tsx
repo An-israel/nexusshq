@@ -34,7 +34,14 @@ interface Props {
   startDm: (userIds: string[]) => Promise<string>;
 }
 
-export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarted, startDm }: Props) {
+export function NewDmModal({
+  open,
+  onClose,
+  workspaceId,
+  currentUserId,
+  onStarted,
+  startDm,
+}: Props) {
   const [search, setSearch] = React.useState("");
   const [results, setResults] = React.useState<MsgProfile[]>([]);
   const [selected, setSelected] = React.useState<MsgProfile[]>([]);
@@ -74,11 +81,16 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
       // First try workspace_members join; fall back to profiles directly if empty
       const { data: wmData } = await supabase
         .from("workspace_members")
-        .select("user_id, is_active, profiles(id, full_name, email, avatar_url, department, job_title)")
+        .select(
+          "user_id, is_active, profiles(id, full_name, email, avatar_url, department, job_title)",
+        )
         .eq("workspace_id", workspaceId)
         .eq("is_active", true);
 
-      if (cancelled) { setSearching(false); return; }
+      if (cancelled) {
+        setSearching(false);
+        return;
+      }
 
       const lowerQ = q.toLowerCase();
       let profiles: MsgProfile[] = [];
@@ -87,13 +99,15 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
         profiles = wmData
           .filter((row) => row.is_active !== false && !selectedIds.has(row.user_id))
           .map((row) =>
-            Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as unknown as MsgProfile | null)
+            Array.isArray(row.profiles)
+              ? (row.profiles[0] ?? null)
+              : (row.profiles as unknown as MsgProfile | null),
           )
           .filter((p): p is MsgProfile => !!p)
           .filter(
             (p) =>
               p.full_name?.toLowerCase().includes(lowerQ) ||
-              p.email?.toLowerCase().includes(lowerQ)
+              p.email?.toLowerCase().includes(lowerQ),
           );
       }
 
@@ -104,9 +118,13 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
           .select("id, full_name, email, avatar_url, department, job_title")
           .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
           .limit(20);
-        if (cancelled) { setSearching(false); return; }
-        profiles = (profData ?? [])
-          .filter((p) => !selectedIds.has(p.id)) as unknown as MsgProfile[];
+        if (cancelled) {
+          setSearching(false);
+          return;
+        }
+        profiles = (profData ?? []).filter(
+          (p) => !selectedIds.has(p.id),
+        ) as unknown as MsgProfile[];
       }
 
       setResults(profiles);
@@ -173,7 +191,12 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
         : "Start group message";
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <DialogContent className="bg-[#1A1A1A] border border-[#2A2A2A] text-white max-w-md p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-[#2A2A2A]">
           <DialogTitle className="text-white text-base font-semibold">New message</DialogTitle>
@@ -188,7 +211,11 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
                 className="inline-flex items-center gap-1.5 bg-[#2A2A2A] text-white text-xs rounded-md px-2 py-1"
               >
                 {p.avatar_url ? (
-                  <img src={p.avatar_url} alt={p.full_name ?? ""} className="w-4 h-4 rounded-full object-cover" />
+                  <img
+                    src={p.avatar_url}
+                    alt={p.full_name ?? ""}
+                    className="w-4 h-4 rounded-full object-cover"
+                  />
                 ) : (
                   <div
                     className="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-semibold"
@@ -220,9 +247,7 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
         </div>
 
         <div className="min-h-[200px] max-h-72 overflow-y-auto">
-          {searching && (
-            <p className="text-xs text-[#6B7280] text-center py-6">Searching...</p>
-          )}
+          {searching && <p className="text-xs text-[#6B7280] text-center py-6">Searching...</p>}
 
           {!searching && search.trim() && results.length === 0 && (
             <p className="text-xs text-[#6B7280] text-center py-6">No people found</p>
@@ -240,7 +265,7 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors",
                     idx === highlightedIdx
                       ? "bg-[#2A2A2A] text-white"
-                      : "text-[#9CA3AF] hover:bg-[#1E1E1E] hover:text-white"
+                      : "text-[#9CA3AF] hover:bg-[#1E1E1E] hover:text-white",
                   )}
                 >
                   {profile.avatar_url ? (
@@ -262,7 +287,9 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
                       {profile.full_name ?? profile.email}
                     </span>
                     {profile.department && (
-                      <span className="text-[11px] text-[#6B7280] truncate">{profile.department}</span>
+                      <span className="text-[11px] text-[#6B7280] truncate">
+                        {profile.department}
+                      </span>
                     )}
                   </div>
                 </button>

@@ -161,7 +161,9 @@ interface MemberWithProfile {
   profiles: Profile | null;
 }
 
-async function getAdminsAndManagers(workspaceId: string): Promise<{ admins: Profile[]; managers: Profile[] }> {
+async function getAdminsAndManagers(
+  workspaceId: string,
+): Promise<{ admins: Profile[]; managers: Profile[] }> {
   const { data } = await supabase
     .from("workspace_members")
     .select("user_id, role, profiles(id, full_name, email)")
@@ -230,21 +232,22 @@ async function runDailyReport(workspaceId: string): Promise<void> {
     .eq("workspace_id", workspaceId);
 
   const allActiveProfiles: Profile[] = ((allMembers ?? []) as any[])
-    .map((m) => m.profiles as Profile & { is_active: boolean } | null)
+    .map((m) => m.profiles as (Profile & { is_active: boolean }) | null)
     .filter((p): p is Profile & { is_active: boolean } => p !== null && p.is_active)
     .map(({ id, full_name, email }) => ({ id, full_name, email }));
 
   const allActiveIds = allActiveProfiles.map((p) => p.id);
 
-  const { data: clockedInRows } = allActiveIds.length > 0
-    ? await supabase
-        .from("attendance")
-        .select("user_id")
-        .eq("workspace_id", workspaceId)
-        .eq("date", today)
-        .not("clock_in", "is", null)
-        .in("user_id", allActiveIds)
-    : { data: [] };
+  const { data: clockedInRows } =
+    allActiveIds.length > 0
+      ? await supabase
+          .from("attendance")
+          .select("user_id")
+          .eq("workspace_id", workspaceId)
+          .eq("date", today)
+          .not("clock_in", "is", null)
+          .in("user_id", allActiveIds)
+      : { data: [] };
 
   const clockedInIds = new Set((clockedInRows ?? []).map((r) => r.user_id));
   const notClockedIn = allActiveProfiles.filter((p) => !clockedInIds.has(p.id));
@@ -261,7 +264,13 @@ async function runDailyReport(workspaceId: string): Promise<void> {
   // Skip sending if nothing to report
   if (completedCount + overdueCount + notClockedIn.length + flagsCount === 0) {
     console.log(`Workspace ${workspaceId}: daily report — nothing to report, skipping`);
-    await logAutomation(workspaceId, "scheduled_report_daily", null, { skipped: "no_data", date: today }, "skipped");
+    await logAutomation(
+      workspaceId,
+      "scheduled_report_daily",
+      null,
+      { skipped: "no_data", date: today },
+      "skipped",
+    );
     return;
   }
 
@@ -330,11 +339,7 @@ async function runDailyReport(workspaceId: string): Promise<void> {
 
   body += ctaButton("View Full Dashboard", APP_URL, "#111827");
 
-  const html = emailWrap(
-    "#111827",
-    `📊 Daily Summary — ${fmtDate(today)}`,
-    body,
-  );
+  const html = emailWrap("#111827", `📊 Daily Summary — ${fmtDate(today)}`, body);
   const subject = `📊 Nexus HQ — Daily Summary ${today}`;
 
   // Send to all admins and managers
@@ -348,14 +353,20 @@ async function runDailyReport(workspaceId: string): Promise<void> {
     sentTo.add(r.email);
   }
 
-  await logAutomation(workspaceId, "scheduled_report_daily", null, {
-    date: today,
-    completed: completedCount,
-    overdue: overdueCount,
-    not_clocked_in: notClockedIn.length,
-    flags: flagsCount,
-    recipients: sentTo.size,
-  }, "success");
+  await logAutomation(
+    workspaceId,
+    "scheduled_report_daily",
+    null,
+    {
+      date: today,
+      completed: completedCount,
+      overdue: overdueCount,
+      not_clocked_in: notClockedIn.length,
+      flags: flagsCount,
+      recipients: sentTo.size,
+    },
+    "success",
+  );
 }
 
 // ── WEEKLY REPORT ───────────────────────────────────────────────────────────
@@ -364,7 +375,7 @@ async function runWeeklyReport(workspaceId: string): Promise<void> {
   // Previous week Mon–Fri
   const today = todayWAT();
   const weekFrom = dateOffsetWAT(-7); // 7 days ago
-  const weekTo = dateOffsetWAT(-1);   // yesterday
+  const weekTo = dateOffsetWAT(-1); // yesterday
   const lf = lastFriday();
 
   // 1. Task completion rate for the week
@@ -378,8 +389,7 @@ async function runWeeklyReport(workspaceId: string): Promise<void> {
   const totalTasks = allWeekTasks?.length ?? 0;
   const completedTasks = (allWeekTasks ?? []).filter((t) => t.status === "completed");
   const completedCount = completedTasks.length;
-  const completionRate =
-    totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+  const completionRate = totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
 
   // 2. Attendance summary for the week
   const { data: attendanceRows } = await supabase
@@ -408,7 +418,9 @@ async function runWeeklyReport(workspaceId: string): Promise<void> {
   if (perfReviews && perfReviews.length > 0) {
     const scoreAccum = new Map<string, { sum: number; count: number }>();
     for (const r of perfReviews) {
-      const avg = ((r.productivity ?? 0) + (r.quality ?? 0) + (r.attendance ?? 0) + (r.collaboration ?? 0)) / 4;
+      const avg =
+        ((r.productivity ?? 0) + (r.quality ?? 0) + (r.attendance ?? 0) + (r.collaboration ?? 0)) /
+        4;
       const existing = scoreAccum.get(r.user_id) ?? { sum: 0, count: 0 };
       scoreAccum.set(r.user_id, { sum: existing.sum + avg, count: existing.count + 1 });
     }
@@ -430,7 +442,12 @@ async function runWeeklyReport(workspaceId: string): Promise<void> {
     .select("user_id, profiles(id, full_name)")
     .eq("workspace_id", workspaceId);
 
-  interface RankedMember { id: string; name: string; score: number; completions: number }
+  interface RankedMember {
+    id: string;
+    name: string;
+    score: number;
+    completions: number;
+  }
   const ranked: RankedMember[] = ((memberRows ?? []) as any[])
     .map((m) => {
       const p = m.profiles as { id: string; full_name: string | null } | null;
@@ -450,7 +467,10 @@ async function runWeeklyReport(workspaceId: string): Promise<void> {
 
   const sortedDesc = [...ranked].sort((a, b) => sortKey(b) - sortKey(a));
   const top3 = sortedDesc.slice(0, 3).filter((m) => m.completions > 0 || m.score >= 0);
-  const bottom3 = sortedDesc.slice(-3).reverse().filter((m) => sortKey(m) < sortKey(sortedDesc[0]));
+  const bottom3 = sortedDesc
+    .slice(-3)
+    .reverse()
+    .filter((m) => sortKey(m) < sortKey(sortedDesc[0]));
 
   // 4. Unresolved flags from last week
   const { data: unresolvedFlags } = await supabase
@@ -489,10 +509,14 @@ async function runWeeklyReport(workspaceId: string): Promise<void> {
   // Top performers
   body += sectionHeader("🏆 Top Performers", "#059669");
   if (top3.length > 0) {
-    const rows = [tableRow(["#", "Employee", perfMap.size > 0 ? "Avg Score" : "Tasks Completed"], true)];
+    const rows = [
+      tableRow(["#", "Employee", perfMap.size > 0 ? "Avg Score" : "Tasks Completed"], true),
+    ];
     top3.forEach((m, i) => {
       const scoreDisplay = m.score >= 0 ? `${m.score}/5` : `${m.completions} tasks`;
-      rows.push(tableRow([`${i + 1}`, m.name, scoreDisplay], false, i % 2 === 0 ? "#f0fdf4" : "#ffffff"));
+      rows.push(
+        tableRow([`${i + 1}`, m.name, scoreDisplay], false, i % 2 === 0 ? "#f0fdf4" : "#ffffff"),
+      );
     });
     body += tableWrap(rows);
   } else {
@@ -539,15 +563,21 @@ async function runWeeklyReport(workspaceId: string): Promise<void> {
     sentTo.add(a.email);
   }
 
-  await logAutomation(workspaceId, "scheduled_report_weekly", null, {
-    week_from: weekFrom,
-    week_to: weekTo,
-    total_tasks: totalTasks,
-    completed: completedCount,
-    completion_rate: completionRate,
-    attendance_present: attPresent,
-    recipients: sentTo.size,
-  }, "success");
+  await logAutomation(
+    workspaceId,
+    "scheduled_report_weekly",
+    null,
+    {
+      week_from: weekFrom,
+      week_to: weekTo,
+      total_tasks: totalTasks,
+      completed: completedCount,
+      completion_rate: completionRate,
+      attendance_present: attPresent,
+      recipients: sentTo.size,
+    },
+    "success",
+  );
 }
 
 // ── MONTHLY REPORT ──────────────────────────────────────────────────────────
@@ -591,7 +621,9 @@ async function runMonthlyReport(workspaceId: string): Promise<void> {
   // 3. Flags issued and resolved
   const { data: allFlags } = await supabase
     .from("flags")
-    .select("id, is_resolved, reason, severity, flagged_user_id, profiles!flags_flagged_user_id_fkey(full_name)")
+    .select(
+      "id, is_resolved, reason, severity, flagged_user_id, profiles!flags_flagged_user_id_fkey(full_name)",
+    )
     .eq("workspace_id", workspaceId)
     .gte("created_at", monthStart + "T00:00:00Z")
     .lte("created_at", monthEnd + "T23:59:59Z");
@@ -684,17 +716,23 @@ async function runMonthlyReport(workspaceId: string): Promise<void> {
     sentTo.add(a.email);
   }
 
-  await logAutomation(workspaceId, "scheduled_report_monthly", null, {
-    month: monthName,
-    month_start: monthStart,
-    month_end: monthEnd,
-    total_assigned: totalAssigned,
-    total_completed: totalCompleted,
-    completion_rate: completionRate,
-    flags_issued: flagsIssued,
-    flags_resolved: flagsResolved,
-    recipients: sentTo.size,
-  }, "success");
+  await logAutomation(
+    workspaceId,
+    "scheduled_report_monthly",
+    null,
+    {
+      month: monthName,
+      month_start: monthStart,
+      month_end: monthEnd,
+      total_assigned: totalAssigned,
+      total_completed: totalCompleted,
+      completion_rate: completionRate,
+      flags_issued: flagsIssued,
+      flags_resolved: flagsResolved,
+      recipients: sentTo.size,
+    },
+    "success",
+  );
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────

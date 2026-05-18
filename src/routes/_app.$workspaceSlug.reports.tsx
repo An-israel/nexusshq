@@ -24,9 +24,7 @@ function ReportsPage() {
   const { workspace } = useWorkspace();
   const workspaceId = workspace?.id ?? null;
 
-  const [dateRange, setDateRange] = React.useState<DateRange>(() =>
-    getDateRange("this_month"),
-  );
+  const [dateRange, setDateRange] = React.useState<DateRange>(() => getDateRange("this_month"));
   const [deptFilter, setDeptFilter] = React.useState<string | null>(null);
   const [employeeFilter, setEmployeeFilter] = React.useState<string | null>(null);
   const [employees, setEmployees] = React.useState<
@@ -125,9 +123,7 @@ function ReportsPage() {
 
       <div className="flex-1 px-4 md:px-6 py-6 space-y-10 max-w-6xl mx-auto w-full">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            Reports &amp; Analytics
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground">Reports &amp; Analytics</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {dateRange.label} · {workspace?.name}
           </p>
@@ -166,17 +162,9 @@ function ReportsPage() {
           loading={loading}
         />
 
-        <Section5KpiReports
-          kpiRows={data.kpiRows}
-          loading={loading}
-          dateRange={dateRange}
-        />
+        <Section5KpiReports kpiRows={data.kpiRows} loading={loading} dateRange={dateRange} />
 
-        <Section6StaffAttention
-          rows={data.attentionRows}
-          loading={loading}
-          dateRange={dateRange}
-        />
+        <Section6StaffAttention rows={data.attentionRows} loading={loading} dateRange={dateRange} />
 
         <Section7TopPerformers
           topFive={data.topFive}

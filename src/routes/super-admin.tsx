@@ -151,7 +151,9 @@ function StatCard({
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+        <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          {label}
+        </p>
         <p className="mt-0.5 text-2xl font-bold text-foreground">
           {loading ? (
             <span className="inline-block h-7 w-12 animate-pulse rounded bg-muted" />
@@ -212,7 +214,9 @@ function ConfirmDialog({
             onClick={() => void run()}
             disabled={busy}
             className={
-              destructive ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""
+              destructive
+                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : ""
             }
           >
             {busy ? "Working…" : confirmLabel}
@@ -257,7 +261,9 @@ function WorkspaceDetailSheet({
   const [loading, setLoading] = React.useState(false);
 
   const [inviteEmail, setInviteEmail] = React.useState("");
-  const [inviteRole, setInviteRole] = React.useState<"employee" | "manager" | "admin" | "owner">("employee");
+  const [inviteRole, setInviteRole] = React.useState<"employee" | "manager" | "admin" | "owner">(
+    "employee",
+  );
   const [creatingInvite, setCreatingInvite] = React.useState(false);
 
   const load = React.useCallback(async () => {
@@ -282,17 +288,39 @@ function WorkspaceDetailSheet({
     }
   }, [ws]);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   // Realtime: auto-refresh members + invites when they change
   React.useEffect(() => {
     if (!ws) return;
     const ch = supabase
       .channel(`ws-detail-${ws.id}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "workspace_invites", filter: `workspace_id=eq.${ws.id}` }, () => void load())
-      .on("postgres_changes", { event: "*", schema: "public", table: "workspace_members", filter: `workspace_id=eq.${ws.id}` }, () => void load())
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "workspace_invites",
+          filter: `workspace_id=eq.${ws.id}`,
+        },
+        () => void load(),
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "workspace_members",
+          filter: `workspace_id=eq.${ws.id}`,
+        },
+        () => void load(),
+      )
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      supabase.removeChannel(ch);
+    };
   }, [ws, load]);
 
   // Periodic refetch fallback (every 30s) so invite status stays accurate
@@ -313,7 +341,10 @@ function WorkspaceDetailSheet({
   }
 
   async function toggleMemberActive(m: MemberRow) {
-    const { error } = await supabase.from("workspace_members").update({ is_active: !m.is_active }).eq("id", m.id);
+    const { error } = await supabase
+      .from("workspace_members")
+      .update({ is_active: !m.is_active })
+      .eq("id", m.id);
     if (error) return toast.error(error.message);
     toast.success(m.is_active ? "Member deactivated" : "Member reactivated");
     void load();
@@ -333,7 +364,9 @@ function WorkspaceDetailSheet({
     if (!inviteEmail.trim()) return;
     setCreatingInvite(true);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { error } = await (supabase as any).from("workspace_invites").insert({
         workspace_id: ws!.id,
@@ -367,7 +400,12 @@ function WorkspaceDetailSheet({
   }
 
   return (
-    <Sheet open={!!ws} onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Sheet
+      open={!!ws}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <SheetContent className="overflow-y-auto sm:max-w-2xl" side="right">
         <SheetHeader className="mb-6">
           <SheetTitle className="flex items-center gap-2">
@@ -381,14 +419,18 @@ function WorkspaceDetailSheet({
           <InfoRow label="Workspace ID" value={ws.id} mono />
           <InfoRow label="Plan" value={ws.plan} />
           <InfoRow label="Members" value={String(members.length)} />
-          <InfoRow label="Status"><StatusBadge ws={ws} /></InfoRow>
+          <InfoRow label="Status">
+            <StatusBadge ws={ws} />
+          </InfoRow>
           <InfoRow label="Created" value={fmtDate(ws.created_at)} />
           <InfoRow label="Trial ends" value={fmtDate(ws.trial_ends_at)} />
         </div>
 
         {/* Members */}
         <div className="mt-8">
-          <h3 className="mb-3 text-sm font-semibold flex items-center gap-2"><Users className="h-4 w-4" /> Members</h3>
+          <h3 className="mb-3 text-sm font-semibold flex items-center gap-2">
+            <Users className="h-4 w-4" /> Members
+          </h3>
           {loading ? (
             <div className="text-xs text-muted-foreground">Loading…</div>
           ) : members.length === 0 ? (
@@ -396,10 +438,17 @@ function WorkspaceDetailSheet({
           ) : (
             <div className="space-y-2">
               {members.map((m) => (
-                <div key={m.id} className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs">
+                <div
+                  key={m.id}
+                  className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs"
+                >
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{m.profiles?.full_name || m.profiles?.email || m.user_id}</p>
-                    {m.profiles?.email && <p className="text-muted-foreground truncate">{m.profiles.email}</p>}
+                    <p className="font-medium truncate">
+                      {m.profiles?.full_name || m.profiles?.email || m.user_id}
+                    </p>
+                    {m.profiles?.email && (
+                      <p className="text-muted-foreground truncate">{m.profiles.email}</p>
+                    )}
                   </div>
                   <select
                     value={m.role}
@@ -411,10 +460,20 @@ function WorkspaceDetailSheet({
                     <option value="manager">Manager</option>
                     <option value="employee">Employee</option>
                   </select>
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => void toggleMemberActive(m)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => void toggleMemberActive(m)}
+                  >
                     {m.is_active ? "Disable" : "Enable"}
                   </Button>
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive" onClick={() => void removeMember(m)}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs text-destructive"
+                    onClick={() => void removeMember(m)}
+                  >
                     Remove
                   </Button>
                 </div>
@@ -457,7 +516,11 @@ function WorkspaceDetailSheet({
                 const now = Date.now();
                 const isUsed = !!inv.accepted_at;
                 const isExpired = !isUsed && new Date(inv.expires_at).getTime() < now;
-                const status: "used" | "expired" | "pending" = isUsed ? "used" : isExpired ? "expired" : "pending";
+                const status: "used" | "expired" | "pending" = isUsed
+                  ? "used"
+                  : isExpired
+                    ? "expired"
+                    : "pending";
                 const statusClass =
                   status === "used"
                     ? "bg-success/15 text-success border-success/30"
@@ -466,18 +529,42 @@ function WorkspaceDetailSheet({
                       : "bg-warning/15 text-warning border-warning/30";
                 const disabled = isUsed || isExpired;
                 return (
-                  <div key={inv.id} className={`flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs ${disabled ? "opacity-60" : ""}`}>
+                  <div
+                    key={inv.id}
+                    className={`flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-xs ${disabled ? "opacity-60" : ""}`}
+                  >
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{inv.email}</p>
                       <p className="text-muted-foreground">
-                        {inv.role} · {isUsed ? `accepted ${fmtDate(inv.accepted_at)}` : isExpired ? `expired ${fmtDate(inv.expires_at)}` : `expires ${fmtDate(inv.expires_at)}`}
+                        {inv.role} ·{" "}
+                        {isUsed
+                          ? `accepted ${fmtDate(inv.accepted_at)}`
+                          : isExpired
+                            ? `expired ${fmtDate(inv.expires_at)}`
+                            : `expires ${fmtDate(inv.expires_at)}`}
                       </p>
                     </div>
-                    <span className={`rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${statusClass}`}>{status}</span>
-                    <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={() => copyInviteUrl(inv)} disabled={disabled}>
+                    <span
+                      className={`rounded border px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide ${statusClass}`}
+                    >
+                      {status}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 px-2 text-xs"
+                      onClick={() => copyInviteUrl(inv)}
+                      disabled={disabled}
+                    >
                       Copy link
                     </Button>
-                    <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-destructive" onClick={() => void revokeInvite(inv)} disabled={isUsed}>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs text-destructive"
+                      onClick={() => void revokeInvite(inv)}
+                      disabled={isUsed}
+                    >
                       {isExpired ? "Delete" : "Revoke"}
                     </Button>
                   </div>
@@ -506,7 +593,9 @@ function InfoRow({
     <div className="flex items-start justify-between gap-4 rounded-lg border border-border bg-muted/30 px-3 py-2.5">
       <span className="shrink-0 text-xs font-medium text-muted-foreground">{label}</span>
       {children ?? (
-        <span className={`text-right text-xs font-medium text-foreground ${mono ? "font-mono break-all" : ""}`}>
+        <span
+          className={`text-right text-xs font-medium text-foreground ${mono ? "font-mono break-all" : ""}`}
+        >
           {value ?? "—"}
         </span>
       )}
@@ -578,12 +667,7 @@ function DashboardTab() {
           value={stats?.activeWorkspaces ?? null}
           loading={loading}
         />
-        <StatCard
-          icon={Clock}
-          label="In Trial"
-          value={stats?.inTrial ?? null}
-          loading={loading}
-        />
+        <StatCard icon={Clock} label="In Trial" value={stats?.inTrial ?? null} loading={loading} />
         <StatCard
           icon={Users}
           label="Total Members"
@@ -649,14 +733,13 @@ function WorkspacesTab() {
     }
   }, []);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   async function toggleActive(ws: WorkspaceRow) {
     const next = !ws.is_active;
-    const { error } = await supabase
-      .from("workspaces")
-      .update({ is_active: next })
-      .eq("id", ws.id);
+    const { error } = await supabase.from("workspaces").update({ is_active: next }).eq("id", ws.id);
 
     if (error) {
       toast.error(error.message);
@@ -688,7 +771,9 @@ function WorkspacesTab() {
         <div>
           <h2 className="text-lg font-semibold">All workspaces</h2>
           <p className="text-sm text-muted-foreground">
-            {loading ? "Loading…" : `${workspaces.length} workspace${workspaces.length !== 1 ? "s" : ""}`}
+            {loading
+              ? "Loading…"
+              : `${workspaces.length} workspace${workspaces.length !== 1 ? "s" : ""}`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -711,14 +796,16 @@ function WorkspacesTab() {
           </Button>
         </div>
       </div>
-      <CreateWorkspaceDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={() => void load()} />
+      <CreateWorkspaceDialog
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onCreated={() => void load()}
+      />
 
       {loading ? (
         <TableSkeleton rows={5} cols={7} />
       ) : workspaces.length === 0 ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">
-          No workspaces yet.
-        </Card>
+        <Card className="p-8 text-center text-sm text-muted-foreground">No workspaces yet.</Card>
       ) : (
         <div className="overflow-x-auto rounded-xl border border-border">
           <table className="w-full text-sm">
@@ -748,9 +835,7 @@ function WorkspacesTab() {
                   <td className="px-4 py-3">
                     <span className="capitalize">{ws.plan}</span>
                   </td>
-                  <td className="px-4 py-3 tabular-nums">
-                    {ws.member_count ?? 0}
-                  </td>
+                  <td className="px-4 py-3 tabular-nums">{ws.member_count ?? 0}</td>
                   <td className="px-4 py-3">
                     <StatusBadge ws={ws} />
                   </td>
@@ -787,9 +872,13 @@ function WorkspacesTab() {
                         title={ws.is_active ? "Suspend workspace" : "Activate workspace"}
                       >
                         {ws.is_active ? (
-                          <><Ban className="h-3.5 w-3.5" /> Suspend</>
+                          <>
+                            <Ban className="h-3.5 w-3.5" /> Suspend
+                          </>
                         ) : (
-                          <><CheckCircle className="h-3.5 w-3.5" /> Activate</>
+                          <>
+                            <CheckCircle className="h-3.5 w-3.5" /> Activate
+                          </>
                         )}
                       </Button>
 
@@ -819,8 +908,14 @@ function WorkspacesTab() {
       {toggleTarget && (
         <ConfirmDialog
           open={!!toggleTarget}
-          onOpenChange={(o) => { if (!o) setToggleTarget(null); }}
-          title={toggleTarget.is_active ? `Suspend "${toggleTarget.name}"?` : `Activate "${toggleTarget.name}"?`}
+          onOpenChange={(o) => {
+            if (!o) setToggleTarget(null);
+          }}
+          title={
+            toggleTarget.is_active
+              ? `Suspend "${toggleTarget.name}"?`
+              : `Activate "${toggleTarget.name}"?`
+          }
           description={
             toggleTarget.is_active
               ? "Members will lose access immediately until you reactivate. This cannot be undone without a manual reactivation."
@@ -836,7 +931,9 @@ function WorkspacesTab() {
       {extendTarget && (
         <ConfirmDialog
           open={!!extendTarget}
-          onOpenChange={(o) => { if (!o) setExtendTarget(null); }}
+          onOpenChange={(o) => {
+            if (!o) setExtendTarget(null);
+          }}
           title={`Extend trial for "${extendTarget.name}"?`}
           description={`This will add 14 days to the current trial period. Current trial end: ${fmtDate(extendTarget.trial_ends_at)}.`}
           confirmLabel="Extend by 14 days"
@@ -855,28 +952,52 @@ const DEFAULT_PLANS = [
     price_ngn: null,
     price_usd: null,
     max_seats: 5,
-    features: ["Attendance tracking", "Task management", "Direct messages", "Org chart", "Company handbook"],
+    features: [
+      "Attendance tracking",
+      "Task management",
+      "Direct messages",
+      "Org chart",
+      "Company handbook",
+    ],
   },
   {
     name: "growth",
     price_ngn: 49000,
     price_usd: 49,
     max_seats: 25,
-    features: ["Everything in Starter", "AI intelligence", "KPIs & OKRs", "Reports & analytics", "Client portal"],
+    features: [
+      "Everything in Starter",
+      "AI intelligence",
+      "KPIs & OKRs",
+      "Reports & analytics",
+      "Client portal",
+    ],
   },
   {
     name: "business",
     price_ngn: 120000,
     price_usd: 120,
     max_seats: 100,
-    features: ["Everything in Growth", "Custom branding", "SSO / SAML", "Dedicated onboarding", "SLA guarantee"],
+    features: [
+      "Everything in Growth",
+      "Custom branding",
+      "SSO / SAML",
+      "Dedicated onboarding",
+      "SLA guarantee",
+    ],
   },
   {
     name: "enterprise",
     price_ngn: null,
     price_usd: null,
     max_seats: null,
-    features: ["Everything in Business", "On-premise option", "Custom integrations", "Audit logs", "24/7 support"],
+    features: [
+      "Everything in Business",
+      "On-premise option",
+      "Custom integrations",
+      "Audit logs",
+      "24/7 support",
+    ],
   },
 ];
 
@@ -900,13 +1021,17 @@ function PlansTab() {
     setLoading(false);
   }, []);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   async function initDefaultPlans() {
     setInitializing(true);
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (supabase as any).from("plans").upsert(DEFAULT_PLANS, { onConflict: "name" });
+      const { error } = await (supabase as any)
+        .from("plans")
+        .upsert(DEFAULT_PLANS, { onConflict: "name" });
       if (error) throw error;
       toast.success("Default plans initialized");
       void load();
@@ -969,7 +1094,9 @@ function PlansTab() {
                 >
                   <td className="px-4 py-3 font-medium capitalize">{plan.name}</td>
                   <td className="px-4 py-3 tabular-nums text-muted-foreground">
-                    {plan.price_ngn != null ? `₦${plan.price_ngn.toLocaleString()}` : "Free / Custom"}
+                    {plan.price_ngn != null
+                      ? `₦${plan.price_ngn.toLocaleString()}`
+                      : "Free / Custom"}
                   </td>
                   <td className="px-4 py-3 tabular-nums text-muted-foreground">
                     {plan.price_usd != null ? `$${plan.price_usd}` : "—"}
@@ -993,17 +1120,32 @@ function PlansTab() {
 // ── Create workspace dialog ──────────────────────────────────────────────────
 
 function CreateWorkspaceDialog({
-  open, onOpenChange, onCreated,
-}: { open: boolean; onOpenChange: (v: boolean) => void; onCreated: () => void }) {
+  open,
+  onOpenChange,
+  onCreated,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onCreated: () => void;
+}) {
   const [name, setName] = React.useState("");
   const [slug, setSlug] = React.useState("");
-  const [plan, setPlan] = React.useState<"starter" | "growth" | "business" | "enterprise">("business");
+  const [plan, setPlan] = React.useState<"starter" | "growth" | "business" | "enterprise">(
+    "business",
+  );
   const [ownerEmail, setOwnerEmail] = React.useState("");
   const [busy, setBusy] = React.useState(false);
 
   React.useEffect(() => {
     if (!slug && name) {
-      setSlug(name.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 30));
+      setSlug(
+        name
+          .toLowerCase()
+          .replace(/[^a-z0-9-]+/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "")
+          .slice(0, 30),
+      );
     }
   }, [name, slug]);
 
@@ -1020,12 +1162,16 @@ function CreateWorkspaceDialog({
       });
       if (error) throw error;
       toast.success("Workspace created");
-      setName(""); setSlug(""); setOwnerEmail("");
+      setName("");
+      setSlug("");
+      setOwnerEmail("");
       onOpenChange(false);
       onCreated();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create workspace");
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -1033,20 +1179,34 @@ function CreateWorkspaceDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create new workspace</DialogTitle>
-          <DialogDescription>Provision a workspace and optionally assign an owner by email.</DialogDescription>
+          <DialogDescription>
+            Provision a workspace and optionally assign an owner by email.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div>
             <label className="text-xs font-medium">Company name</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm" />
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm"
+            />
           </div>
           <div>
             <label className="text-xs font-medium">Slug</label>
-            <input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm font-mono" />
+            <input
+              value={slug}
+              onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+              className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm font-mono"
+            />
           </div>
           <div>
             <label className="text-xs font-medium">Plan</label>
-            <select value={plan} onChange={(e) => setPlan(e.target.value as typeof plan)} className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm">
+            <select
+              value={plan}
+              onChange={(e) => setPlan(e.target.value as typeof plan)}
+              className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm"
+            >
               <option value="starter">Starter</option>
               <option value="growth">Growth</option>
               <option value="business">Business</option>
@@ -1055,12 +1215,22 @@ function CreateWorkspaceDialog({
           </div>
           <div>
             <label className="text-xs font-medium">Owner email (optional)</label>
-            <input type="email" value={ownerEmail} onChange={(e) => setOwnerEmail(e.target.value)} placeholder="user must already exist" className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm" />
+            <input
+              type="email"
+              value={ownerEmail}
+              onChange={(e) => setOwnerEmail(e.target.value)}
+              placeholder="user must already exist"
+              className="mt-1 w-full bg-input border border-border rounded px-3 py-2 text-sm"
+            />
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>Cancel</Button>
-          <Button onClick={() => void submit()} disabled={busy}>{busy ? "Creating…" : "Create"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={busy}>
+            Cancel
+          </Button>
+          <Button onClick={() => void submit()} disabled={busy}>
+            {busy ? "Creating…" : "Create"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -1074,7 +1244,10 @@ function TableSkeleton({ rows, cols }: { rows: number; cols: number }) {
         <div className="h-4 w-48 animate-pulse rounded bg-muted" />
       </div>
       {Array.from({ length: rows }).map((_, r) => (
-        <div key={r} className="flex items-center gap-6 border-b border-border/50 px-4 py-3 last:border-0">
+        <div
+          key={r}
+          className="flex items-center gap-6 border-b border-border/50 px-4 py-3 last:border-0"
+        >
           {Array.from({ length: cols }).map((_, c) => (
             <div
               key={c}
@@ -1124,9 +1297,7 @@ function SuperAdminPage() {
 
           <div className="flex items-center gap-4">
             {user?.email && (
-              <span className="hidden text-xs text-muted-foreground sm:block">
-                {user.email}
-              </span>
+              <span className="hidden text-xs text-muted-foreground sm:block">{user.email}</span>
             )}
             <Link
               to="/"
@@ -1156,30 +1327,22 @@ function SuperAdminPage() {
         <div className="mb-6 flex items-start gap-3 rounded-xl border border-orange-500/20 bg-orange-500/5 px-4 py-3 text-sm text-orange-400">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <span>
-            Actions here affect real customer data. Suspend or delete with care — these operations cannot be automatically reversed.
+            Actions here affect real customer data. Suspend or delete with care — these operations
+            cannot be automatically reversed.
           </span>
         </div>
 
         <Tabs defaultValue="dashboard">
           <TabsList className="mb-6 bg-muted border border-border">
-            <TabsTrigger
-              value="dashboard"
-              className="gap-2 data-[state=active]:text-purple-400"
-            >
+            <TabsTrigger value="dashboard" className="gap-2 data-[state=active]:text-purple-400">
               <BarChart3 className="h-4 w-4" />
               Dashboard
             </TabsTrigger>
-            <TabsTrigger
-              value="workspaces"
-              className="gap-2 data-[state=active]:text-purple-400"
-            >
+            <TabsTrigger value="workspaces" className="gap-2 data-[state=active]:text-purple-400">
               <Building2 className="h-4 w-4" />
               Workspaces
             </TabsTrigger>
-            <TabsTrigger
-              value="plans"
-              className="gap-2 data-[state=active]:text-purple-400"
-            >
+            <TabsTrigger value="plans" className="gap-2 data-[state=active]:text-purple-400">
               <CreditCard className="h-4 w-4" />
               Plans
             </TabsTrigger>

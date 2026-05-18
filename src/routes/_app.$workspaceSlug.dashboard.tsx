@@ -60,7 +60,12 @@ function DashboardPage() {
   const [todayStandup, setTodayStandup] = useState<{ id: string } | null | undefined>(undefined);
   const [pinnedAnnouncement, setPinnedAnnouncement] = useState<Announcement | null>(null);
   const [clockedInTeam, setClockedInTeam] = useState<
-    Array<{ user_id: string; clock_in: string; full_name: string | null; avatar_url: string | null }>
+    Array<{
+      user_id: string;
+      clock_in: string;
+      full_name: string | null;
+      avatar_url: string | null;
+    }>
   >([]);
   const [now, setNow] = useState(Date.now());
 
@@ -93,7 +98,11 @@ function DashboardPage() {
         .gte("due_date", weekStart)
         .lte("due_date", weekEnd),
       profile?.department
-        ? supabase.from("kpis").select("*").eq("workspace_id", workspace.id).eq("department", profile.department as Database["public"]["Enums"]["department_type"])
+        ? supabase
+            .from("kpis")
+            .select("*")
+            .eq("workspace_id", workspace.id)
+            .eq("department", profile.department as Database["public"]["Enums"]["department_type"])
         : Promise.resolve({ data: [] as Kpi[], error: null }),
       supabase
         .from("notifications")
@@ -208,13 +217,19 @@ function DashboardPage() {
     const newOvertime = (att.overtime_minutes ?? 0) + sessionOT;
     const { error } = await supabase
       .from("attendance")
-      .update({ clock_out: nowD.toISOString(), total_minutes: newTotal, overtime_minutes: newOvertime })
+      .update({
+        clock_out: nowD.toISOString(),
+        total_minutes: newTotal,
+        overtime_minutes: newOvertime,
+      })
       .eq("id", att.id);
     if (error) toast.error(error.message);
     else {
       const h = Math.floor(sessionMins / 60);
       const m = sessionMins % 60;
-      toast.success(`Clocked out — ${h}h ${m}m${sessionOT > 0 ? ` · ${Math.floor(sessionOT / 60)}h ${sessionOT % 60}m OT` : ""}`);
+      toast.success(
+        `Clocked out — ${h}h ${m}m${sessionOT > 0 ? ` · ${Math.floor(sessionOT / 60)}h ${sessionOT % 60}m OT` : ""}`,
+      );
     }
     await load();
     setClockBusy(false);
@@ -312,7 +327,11 @@ function DashboardPage() {
         const n = payload.new as Notif;
         if (n?.type === "flag" || n?.type === "warning") {
           toast.warning(n.title, { description: n.message ?? undefined });
-        } else if (n?.type === "task_assigned" || n?.type === "task_overdue" || n?.type === "task_due_soon") {
+        } else if (
+          n?.type === "task_assigned" ||
+          n?.type === "task_overdue" ||
+          n?.type === "task_due_soon"
+        ) {
           toast.info(n.title, { description: n.message ?? undefined });
         }
       }
@@ -396,7 +415,10 @@ function DashboardPage() {
                 <p className="text-sm font-medium">You're clocked in</p>
                 <p className="text-xs text-muted-foreground">
                   {Math.floor(elapsedMin / 60)}h {elapsedMin % 60}m elapsed · since{" "}
-                  {new Date(att.clock_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(att.clock_in).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
             </div>
@@ -411,7 +433,9 @@ function DashboardPage() {
                 Clock Out
               </Button>
               <Link to="/$workspaceSlug/attendance" params={{ workspaceSlug: workspace.slug }}>
-                <Button variant="ghost" size="sm">View log</Button>
+                <Button variant="ghost" size="sm">
+                  View log
+                </Button>
               </Link>
             </div>
           </div>
@@ -425,9 +449,16 @@ function DashboardPage() {
                 <p className="text-sm font-medium">Day complete</p>
                 <p className="text-xs text-muted-foreground">
                   Clocked out at{" "}
-                  {new Date(att.clock_out).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(att.clock_out).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                   {(att.total_minutes ?? 0) > 0 && (
-                    <> · {Math.floor((att.total_minutes ?? 0) / 60)}h {(att.total_minutes ?? 0) % 60}m</>
+                    <>
+                      {" "}
+                      · {Math.floor((att.total_minutes ?? 0) / 60)}h {(att.total_minutes ?? 0) % 60}
+                      m
+                    </>
                   )}
                 </p>
               </div>
@@ -477,9 +508,13 @@ function DashboardPage() {
               <Megaphone className="h-4 w-4 text-amber-500" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-0.5">Pinned Announcement</p>
+              <p className="text-xs font-medium uppercase tracking-wide text-amber-600 dark:text-amber-400 mb-0.5">
+                Pinned Announcement
+              </p>
               <p className="text-sm font-semibold truncate">{pinnedAnnouncement.title}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">{pinnedAnnouncement.body}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground line-clamp-1">
+                {pinnedAnnouncement.body}
+              </p>
             </div>
           </div>
         </Link>
@@ -499,7 +534,9 @@ function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-semibold">Submit your standup</p>
-                <p className="text-xs text-muted-foreground">You haven't submitted today's standup yet.</p>
+                <p className="text-xs text-muted-foreground">
+                  You haven't submitted today's standup yet.
+                </p>
               </div>
             </div>
             <span className="text-xs font-medium text-primary shrink-0">Do it now →</span>
@@ -514,7 +551,11 @@ function DashboardPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Clocked in now · {clockedInTeam.length}
             </h2>
-            <Link to="/$workspaceSlug/attendance" params={{ workspaceSlug: workspace.slug }} className="text-xs text-primary hover:underline">
+            <Link
+              to="/$workspaceSlug/attendance"
+              params={{ workspaceSlug: workspace.slug }}
+              className="text-xs text-primary hover:underline"
+            >
               View attendance
             </Link>
           </div>
@@ -525,7 +566,10 @@ function DashboardPage() {
               {clockedInTeam.map((m) => {
                 const elapsed = Math.floor((now - new Date(m.clock_in).getTime()) / 60000);
                 return (
-                  <li key={m.user_id} className="flex items-center gap-3 rounded-lg border border-border bg-background/40 p-3">
+                  <li
+                    key={m.user_id}
+                    className="flex items-center gap-3 rounded-lg border border-border bg-background/40 p-3"
+                  >
                     <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted">
                       {m.avatar_url ? (
                         <img src={m.avatar_url} alt="" className="h-full w-full object-cover" />
@@ -540,7 +584,10 @@ function DashboardPage() {
                       <p className="truncate text-sm font-medium">{m.full_name ?? "Unknown"}</p>
                       <p className="text-xs text-muted-foreground">
                         {Math.floor(elapsed / 60)}h {elapsed % 60}m · since{" "}
-                        {new Date(m.clock_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        {new Date(m.clock_in).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </p>
                     </div>
                   </li>
@@ -552,13 +599,16 @@ function DashboardPage() {
       )}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-
         <section className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               Today's Tasks
             </h2>
-            <Link to="/$workspaceSlug/tasks" params={{ workspaceSlug: workspace.slug }} className="text-xs text-primary hover:underline">
+            <Link
+              to="/$workspaceSlug/tasks"
+              params={{ workspaceSlug: workspace.slug }}
+              className="text-xs text-primary hover:underline"
+            >
               View all
             </Link>
           </div>
@@ -584,7 +634,11 @@ function DashboardPage() {
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
               This Week
             </h2>
-            <Link to="/$workspaceSlug/tasks" params={{ workspaceSlug: workspace.slug }} className="text-xs text-primary hover:underline">
+            <Link
+              to="/$workspaceSlug/tasks"
+              params={{ workspaceSlug: workspace.slug }}
+              className="text-xs text-primary hover:underline"
+            >
               View all
             </Link>
           </div>
@@ -653,7 +707,11 @@ function DashboardPage() {
           <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
             Recent Notifications
           </h2>
-          <Link to="/$workspaceSlug/notifications" params={{ workspaceSlug: workspace.slug }} className="text-xs text-primary hover:underline">
+          <Link
+            to="/$workspaceSlug/notifications"
+            params={{ workspaceSlug: workspace.slug }}
+            className="text-xs text-primary hover:underline"
+          >
             View all
           </Link>
         </div>

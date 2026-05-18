@@ -1,11 +1,37 @@
 import * as React from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, CheckSquare, Clock, Users, CalendarOff, ClipboardList,
-  FolderUp, Star, Wallet, Megaphone, Heart, MessageSquare, BookOpen,
-  FileText, GitBranch, Flag, Bell, Settings, Kanban, RefreshCw, Briefcase,
-  Radio, BarChart3, Target, Brain, Zap, UserCircle, Building2, Search,
-  LogIn, LogOut,
+  LayoutDashboard,
+  CheckSquare,
+  Clock,
+  Users,
+  CalendarOff,
+  ClipboardList,
+  FolderUp,
+  Star,
+  Wallet,
+  Megaphone,
+  Heart,
+  MessageSquare,
+  BookOpen,
+  FileText,
+  GitBranch,
+  Flag,
+  Bell,
+  Settings,
+  Kanban,
+  RefreshCw,
+  Briefcase,
+  Radio,
+  BarChart3,
+  Target,
+  Brain,
+  Zap,
+  UserCircle,
+  Building2,
+  Search,
+  LogIn,
+  LogOut,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -32,33 +58,83 @@ interface NavEntry {
 }
 
 const NAV_ENTRIES: NavEntry[] = [
-  { label: "Dashboard",       icon: LayoutDashboard, slug: "dashboard",       roles: ["admin", "manager", "employee"] },
-  { label: "Tasks",           icon: CheckSquare,     slug: "tasks",           roles: ["admin", "manager", "employee"] },
-  { label: "Attendance",      icon: Clock,           slug: "attendance",      roles: ["admin", "manager", "employee"] },
-  { label: "Leave",           icon: CalendarOff,     slug: "leave",           roles: ["admin", "manager", "employee"] },
-  { label: "Standups",        icon: ClipboardList,   slug: "standups",        roles: ["admin", "manager", "employee"] },
-  { label: "Deliverables",    icon: FolderUp,        slug: "deliverables",    roles: ["admin", "manager", "employee"] },
-  { label: "Reviews",         icon: Star,            slug: "reviews",         roles: ["admin", "manager", "employee"] },
-  { label: "Payslips",        icon: Wallet,          slug: "payslips",        roles: ["admin", "manager", "employee"] },
-  { label: "Announcements",   icon: Megaphone,       slug: "announcements",   roles: ["admin", "manager", "employee"] },
-  { label: "Recognition",     icon: Heart,           slug: "kudos",           roles: ["admin", "manager", "employee"] },
-  { label: "Messages",        icon: MessageSquare,   slug: "messages",        roles: ["admin", "manager", "employee"] },
-  { label: "Handbook",        icon: BookOpen,        slug: "handbook",        roles: ["admin", "manager", "employee"] },
-  { label: "Documents",       icon: FileText,        slug: "documents",       roles: ["admin", "manager", "employee"] },
-  { label: "Org Chart",       icon: GitBranch,       slug: "org-chart",       roles: ["admin", "manager", "employee"] },
-  { label: "Goals & OKRs",    icon: Flag,            slug: "okrs",            roles: ["admin", "manager", "employee"] },
-  { label: "Notifications",   icon: Bell,            slug: "notifications",   roles: ["admin", "manager", "employee"] },
-  { label: "Settings",        icon: Settings,        slug: "settings",        roles: ["admin", "manager", "employee"] },
-  { label: "Profile",         icon: UserCircle,      slug: "profile",         roles: ["admin", "manager", "employee"] },
-  { label: "Team",            icon: Users,           slug: "team",            roles: ["admin", "manager"] },
-  { label: "Task Board",      icon: Kanban,          slug: "team-board",      roles: ["admin", "manager"] },
-  { label: "Recurring Tasks", icon: RefreshCw,       slug: "recurring-tasks", roles: ["admin", "manager"] },
-  { label: "Client Projects", icon: Briefcase,       slug: "client-projects", roles: ["admin", "manager"] },
-  { label: "Live",            icon: Radio,           slug: "live",            roles: ["admin", "manager"] },
-  { label: "Reports",         icon: BarChart3,       slug: "reports",         roles: ["admin", "manager"] },
-  { label: "Wellbeing",       icon: Brain,           slug: "burnout",         roles: ["admin", "manager"] },
-  { label: "KPIs",            icon: Target,          slug: "kpis",            roles: ["admin"] },
-  { label: "Automations",     icon: Zap,             slug: "settings/automations", roles: ["admin"] },
+  {
+    label: "Dashboard",
+    icon: LayoutDashboard,
+    slug: "dashboard",
+    roles: ["admin", "manager", "employee"],
+  },
+  { label: "Tasks", icon: CheckSquare, slug: "tasks", roles: ["admin", "manager", "employee"] },
+  { label: "Attendance", icon: Clock, slug: "attendance", roles: ["admin", "manager", "employee"] },
+  { label: "Leave", icon: CalendarOff, slug: "leave", roles: ["admin", "manager", "employee"] },
+  {
+    label: "Standups",
+    icon: ClipboardList,
+    slug: "standups",
+    roles: ["admin", "manager", "employee"],
+  },
+  {
+    label: "Deliverables",
+    icon: FolderUp,
+    slug: "deliverables",
+    roles: ["admin", "manager", "employee"],
+  },
+  { label: "Reviews", icon: Star, slug: "reviews", roles: ["admin", "manager", "employee"] },
+  { label: "Payslips", icon: Wallet, slug: "payslips", roles: ["admin", "manager", "employee"] },
+  {
+    label: "Announcements",
+    icon: Megaphone,
+    slug: "announcements",
+    roles: ["admin", "manager", "employee"],
+  },
+  { label: "Recognition", icon: Heart, slug: "kudos", roles: ["admin", "manager", "employee"] },
+  {
+    label: "Messages",
+    icon: MessageSquare,
+    slug: "messages",
+    roles: ["admin", "manager", "employee"],
+  },
+  { label: "Handbook", icon: BookOpen, slug: "handbook", roles: ["admin", "manager", "employee"] },
+  {
+    label: "Documents",
+    icon: FileText,
+    slug: "documents",
+    roles: ["admin", "manager", "employee"],
+  },
+  {
+    label: "Org Chart",
+    icon: GitBranch,
+    slug: "org-chart",
+    roles: ["admin", "manager", "employee"],
+  },
+  { label: "Goals & OKRs", icon: Flag, slug: "okrs", roles: ["admin", "manager", "employee"] },
+  {
+    label: "Notifications",
+    icon: Bell,
+    slug: "notifications",
+    roles: ["admin", "manager", "employee"],
+  },
+  { label: "Settings", icon: Settings, slug: "settings", roles: ["admin", "manager", "employee"] },
+  { label: "Profile", icon: UserCircle, slug: "profile", roles: ["admin", "manager", "employee"] },
+  { label: "Team", icon: Users, slug: "team", roles: ["admin", "manager"] },
+  { label: "Task Board", icon: Kanban, slug: "team-board", roles: ["admin", "manager"] },
+  {
+    label: "Recurring Tasks",
+    icon: RefreshCw,
+    slug: "recurring-tasks",
+    roles: ["admin", "manager"],
+  },
+  {
+    label: "Client Projects",
+    icon: Briefcase,
+    slug: "client-projects",
+    roles: ["admin", "manager"],
+  },
+  { label: "Live", icon: Radio, slug: "live", roles: ["admin", "manager"] },
+  { label: "Reports", icon: BarChart3, slug: "reports", roles: ["admin", "manager"] },
+  { label: "Wellbeing", icon: Brain, slug: "burnout", roles: ["admin", "manager"] },
+  { label: "KPIs", icon: Target, slug: "kpis", roles: ["admin"] },
+  { label: "Automations", icon: Zap, slug: "settings/automations", roles: ["admin"] },
 ];
 
 // Global singleton for opening the palette from anywhere
@@ -77,7 +153,9 @@ export function GlobalCommandPalette({ workspaceSlug }: CommandPaletteProps) {
   // Register open handler
   React.useEffect(() => {
     _open = () => setOpen(true);
-    return () => { _open = null; };
+    return () => {
+      _open = null;
+    };
   }, []);
 
   // Cmd+K / Ctrl+K shortcut
@@ -169,18 +247,12 @@ export function GlobalCommandPalette({ workspaceSlug }: CommandPaletteProps) {
 
         {/* Quick actions */}
         <CommandGroup heading="Quick actions">
-          <CommandItem
-            onSelect={() => void clockIn()}
-            disabled={clockBusy}
-          >
+          <CommandItem onSelect={() => void clockIn()} disabled={clockBusy}>
             <LogIn className="mr-2 h-4 w-4 text-success" />
             Clock In
             <CommandShortcut>⏰ WAT</CommandShortcut>
           </CommandItem>
-          <CommandItem
-            onSelect={() => void clockOut()}
-            disabled={clockBusy}
-          >
+          <CommandItem onSelect={() => void clockOut()} disabled={clockBusy}>
             <LogOut className="mr-2 h-4 w-4 text-muted-foreground" />
             Clock Out
           </CommandItem>
@@ -207,18 +279,12 @@ export function GlobalCommandPalette({ workspaceSlug }: CommandPaletteProps) {
               (entry.slug !== "dashboard" &&
                 pathname.startsWith(`/${workspaceSlug}/${entry.slug}`));
             return (
-              <CommandItem
-                key={entry.slug}
-                value={entry.label}
-                onSelect={() => go(entry.slug)}
-              >
+              <CommandItem key={entry.slug} value={entry.label} onSelect={() => go(entry.slug)}>
                 <Icon
                   className={`mr-2 h-4 w-4 ${isActive ? "text-primary" : "text-muted-foreground"}`}
                 />
                 {entry.label}
-                {isActive && (
-                  <CommandShortcut className="text-primary">Current</CommandShortcut>
-                )}
+                {isActive && <CommandShortcut className="text-primary">Current</CommandShortcut>}
               </CommandItem>
             );
           })}
@@ -226,7 +292,12 @@ export function GlobalCommandPalette({ workspaceSlug }: CommandPaletteProps) {
 
         {/* Account */}
         <CommandGroup heading="Account">
-          <CommandItem onSelect={() => { setOpen(false); void navigate({ to: "/workspaces" }); }}>
+          <CommandItem
+            onSelect={() => {
+              setOpen(false);
+              void navigate({ to: "/workspaces" });
+            }}
+          >
             <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
             Switch Workspace
           </CommandItem>

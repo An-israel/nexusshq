@@ -1,19 +1,15 @@
-import {
-  createClient,
-  SupabaseClient,
-} from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // ── Supabase client (service role) ──────────────────────────────────────────
 
 export const supabase: SupabaseClient = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
 // ── App base URL ─────────────────────────────────────────────────────────────
 
-export const APP_URL =
-  Deno.env.get("APP_URL") ?? "https://nexus.skryveai.com";
+export const APP_URL = Deno.env.get("APP_URL") ?? "https://nexus.skryveai.com";
 
 // ── Date/time helpers (WAT = UTC+1) ─────────────────────────────────────────
 
@@ -67,7 +63,7 @@ export interface AutomationSettings {
  * upserts a default row and returns the defaults.
  */
 export async function getAutomationSettings(
-  workspaceId: string
+  workspaceId: string,
 ): Promise<AutomationSettings | null> {
   const { data, error } = await supabase
     .from("automation_settings")
@@ -90,7 +86,10 @@ export async function getAutomationSettings(
     .maybeSingle();
 
   if (insertErr) {
-    console.error(`[helpers] upsert automation_settings error for ${workspaceId}:`, insertErr.message);
+    console.error(
+      `[helpers] upsert automation_settings error for ${workspaceId}:`,
+      insertErr.message,
+    );
     return null;
   }
 
@@ -132,7 +131,7 @@ export async function logAutomation(
   automationType: string,
   triggeredFor: string | null,
   details: Record<string, unknown>,
-  status: "success" | "failed" | "skipped"
+  status: "success" | "failed" | "skipped",
 ): Promise<void> {
   const { error } = await supabase.from("automation_logs").insert({
     workspace_id: workspaceId,
@@ -158,7 +157,7 @@ export async function sendNotification(
   type: string,
   title: string,
   message: string,
-  relatedTaskId?: string
+  relatedTaskId?: string,
 ): Promise<void> {
   const { error } = await supabase.from("notifications").insert({
     user_id: userId,
@@ -179,11 +178,7 @@ export async function sendNotification(
 /**
  * Enqueues a transactional email for delivery by the email-worker function.
  */
-export async function enqueueEmail(
-  to: string,
-  subject: string,
-  html: string
-): Promise<void> {
+export async function enqueueEmail(to: string, subject: string, html: string): Promise<void> {
   const { error } = await supabase.rpc("enqueue_email", {
     queue_name: "transactional_emails",
     payload: { to, subject, html },
@@ -201,10 +196,7 @@ export async function enqueueEmail(
  * Requires env vars: WHATSAPP_API_KEY, WHATSAPP_USERNAME (default "sandbox"),
  * WHATSAPP_SENDER_ID (default "NexusHQ").
  */
-export async function sendWhatsApp(
-  phone: string,
-  message: string
-): Promise<void> {
+export async function sendWhatsApp(phone: string, message: string): Promise<void> {
   const apiKey = Deno.env.get("WHATSAPP_API_KEY");
   const username = Deno.env.get("WHATSAPP_USERNAME") ?? "sandbox";
   const senderId = Deno.env.get("WHATSAPP_SENDER_ID") ?? "NexusHQ";
@@ -222,18 +214,15 @@ export async function sendWhatsApp(
     from: senderId,
   });
 
-  const resp = await fetch(
-    "https://api.africastalking.com/version1/messaging",
-    {
-      method: "POST",
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/x-www-form-urlencoded",
-        apiKey,
-      },
-      body: params.toString(),
-    }
-  );
+  const resp = await fetch("https://api.africastalking.com/version1/messaging", {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
+      apiKey,
+    },
+    body: params.toString(),
+  });
 
   if (!resp.ok) {
     console.error("[helpers] sendWhatsApp failed:", await resp.text());
@@ -249,10 +238,7 @@ export async function sendWhatsApp(
  *   - Starts with '0'        → replace leading '0' with '+234'
  *   - Otherwise              → prepend '+234'
  */
-export async function notifyUserWhatsApp(
-  userId: string,
-  message: string
-): Promise<void> {
+export async function notifyUserWhatsApp(userId: string, message: string): Promise<void> {
   const { data: profile, error } = await supabase
     .from("profiles")
     .select("phone, whatsapp_opt_in, full_name")
@@ -323,11 +309,7 @@ export function emailFooter(): string {
  * @param url   - Link URL.
  * @param color - Button background colour (default #111111).
  */
-export function emailButton(
-  label: string,
-  url: string,
-  color = "#111111"
-): string {
+export function emailButton(label: string, url: string, color = "#111111"): string {
   return `
     <div style="text-align:center;margin:24px 0;">
       <a href="${url}"

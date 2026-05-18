@@ -56,8 +56,18 @@ function HandbookPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [secRes, pageRes] = await Promise.all([
-      supabase.from("wiki_sections").select("*").eq("workspace_id", workspace.id).order("order_index").order("created_at"),
-      supabase.from("wiki_pages").select("*").eq("workspace_id", workspace.id).order("is_pinned", { ascending: false }).order("updated_at", { ascending: false }),
+      supabase
+        .from("wiki_sections")
+        .select("*")
+        .eq("workspace_id", workspace.id)
+        .order("order_index")
+        .order("created_at"),
+      supabase
+        .from("wiki_pages")
+        .select("*")
+        .eq("workspace_id", workspace.id)
+        .order("is_pinned", { ascending: false })
+        .order("updated_at", { ascending: false }),
     ]);
     const secs = (secRes.data ?? []) as WikiSection[];
     setSections(secs);
@@ -66,7 +76,9 @@ function HandbookPage() {
     setLoading(false);
   }, []);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   async function deletePage(id: string) {
     if (!confirm("Delete this page?")) return;
@@ -100,7 +112,13 @@ function HandbookPage() {
           </div>
           {isManager && (
             <div className="flex gap-1">
-              <Button size="sm" variant="ghost" className="h-6 px-1" onClick={() => setNewSectionOpen(true)} title="New section">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-6 px-1"
+                onClick={() => setNewSectionOpen(true)}
+                title="New section"
+              >
                 <Plus className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -112,9 +130,16 @@ function HandbookPage() {
           {/* Pinned pages */}
           {pinnedPages.length > 0 && (
             <div className="mb-2">
-              <p className="px-4 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">Pinned</p>
+              <p className="px-4 py-1 text-[10px] uppercase tracking-wider text-muted-foreground">
+                Pinned
+              </p>
               {pinnedPages.map((p) => (
-                <PageNavItem key={p.id} page={p} selected={selectedPage?.id === p.id} onSelect={setSelectedPage} />
+                <PageNavItem
+                  key={p.id}
+                  page={p}
+                  selected={selectedPage?.id === p.id}
+                  onSelect={setSelectedPage}
+                />
               ))}
             </div>
           )}
@@ -128,13 +153,19 @@ function HandbookPage() {
                 <div className="flex items-center group">
                   <button
                     className="flex flex-1 items-center gap-1.5 px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-                    onClick={() => setExpanded((prev) => {
-                      const next = new Set(prev);
-                      open ? next.delete(sec.id) : next.add(sec.id);
-                      return next;
-                    })}
+                    onClick={() =>
+                      setExpanded((prev) => {
+                        const next = new Set(prev);
+                        open ? next.delete(sec.id) : next.add(sec.id);
+                        return next;
+                      })
+                    }
                   >
-                    {open ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    {open ? (
+                      <ChevronDown className="h-3 w-3" />
+                    ) : (
+                      <ChevronRight className="h-3 w-3" />
+                    )}
                     {sec.title}
                   </button>
                   {isManager && (
@@ -148,21 +179,38 @@ function HandbookPage() {
                     </div>
                   )}
                 </div>
-                {open && secPages.map((p) => (
-                  <PageNavItem key={p.id} page={p} selected={selectedPage?.id === p.id} onSelect={setSelectedPage} indent />
-                ))}
+                {open &&
+                  secPages.map((p) => (
+                    <PageNavItem
+                      key={p.id}
+                      page={p}
+                      selected={selectedPage?.id === p.id}
+                      onSelect={setSelectedPage}
+                      indent
+                    />
+                  ))}
               </div>
             );
           })}
 
           {/* Unsectioned pages */}
           {unsectionedPages.map((p) => (
-            <PageNavItem key={p.id} page={p} selected={selectedPage?.id === p.id} onSelect={setSelectedPage} />
+            <PageNavItem
+              key={p.id}
+              page={p}
+              selected={selectedPage?.id === p.id}
+              onSelect={setSelectedPage}
+            />
           ))}
 
           {isManager && (
             <div className="px-4 pt-3">
-              <Button size="sm" variant="outline" className="w-full text-xs" onClick={() => setNewPageOpen(true)}>
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full text-xs"
+                onClick={() => setNewPageOpen(true)}
+              >
                 <Plus className="mr-1.5 h-3 w-3" /> New page
               </Button>
             </div>
@@ -179,7 +227,9 @@ function HandbookPage() {
               {isManager && (
                 <div className="flex gap-1.5 shrink-0">
                   <Button size="sm" variant="outline" onClick={() => togglePin(selectedPage)}>
-                    <Pin className={`h-3.5 w-3.5 mr-1 ${selectedPage.is_pinned ? "text-primary" : ""}`} />
+                    <Pin
+                      className={`h-3.5 w-3.5 mr-1 ${selectedPage.is_pinned ? "text-primary" : ""}`}
+                    />
                     {selectedPage.is_pinned ? "Unpin" : "Pin"}
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => setEditPage(selectedPage)}>
@@ -218,7 +268,10 @@ function HandbookPage() {
       {/* Dialogs */}
       <Dialog open={newSectionOpen} onOpenChange={setNewSectionOpen}>
         <NewSectionDialog
-          onSaved={() => { setNewSectionOpen(false); void load(); }}
+          onSaved={() => {
+            setNewSectionOpen(false);
+            void load();
+          }}
           nextIndex={sections.length}
           workspaceId={workspace.id}
         />
@@ -228,7 +281,10 @@ function HandbookPage() {
           sections={sections}
           authorId={user?.id ?? ""}
           workspaceId={workspace.id}
-          onSaved={(page) => { setNewPageOpen(false); void load().then(() => setSelectedPage(page)); }}
+          onSaved={(page) => {
+            setNewPageOpen(false);
+            void load().then(() => setSelectedPage(page));
+          }}
         />
       </Dialog>
       <Dialog open={!!editPage} onOpenChange={(o) => !o && setEditPage(null)}>
@@ -271,25 +327,47 @@ function PageNavItem({
   );
 }
 
-function NewSectionDialog({ onSaved, nextIndex, workspaceId }: { onSaved: () => void; nextIndex: number; workspaceId: string }) {
+function NewSectionDialog({
+  onSaved,
+  nextIndex,
+  workspaceId,
+}: {
+  onSaved: () => void;
+  nextIndex: number;
+  workspaceId: string;
+}) {
   const [title, setTitle] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   async function save() {
     if (!title.trim()) return;
     setSaving(true);
-    const { error } = await supabase.from("wiki_sections").insert({ workspace_id: workspaceId, title: title.trim(), order_index: nextIndex });
+    const { error } = await supabase
+      .from("wiki_sections")
+      .insert({ workspace_id: workspaceId, title: title.trim(), order_index: nextIndex });
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Section created");
     onSaved();
   }
   return (
     <DialogContent>
-      <DialogHeader><DialogTitle>New Section</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>New Section</DialogTitle>
+      </DialogHeader>
       <Label>Section name</Label>
-      <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Brand Guidelines" autoFocus />
+      <Input
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        placeholder="Brand Guidelines"
+        autoFocus
+      />
       <DialogFooter>
-        <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : "Create"}</Button>
+        <Button onClick={save} disabled={saving || !title.trim()}>
+          {saving ? "Saving…" : "Create"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );
@@ -315,21 +393,37 @@ function NewPageDialog({
     setSaving(true);
     const { data, error } = await supabase
       .from("wiki_pages")
-      .insert({ workspace_id: workspaceId, title: title.trim(), content: content.trim(), section_id: sectionId || null, author_id: authorId })
+      .insert({
+        workspace_id: workspaceId,
+        title: title.trim(),
+        content: content.trim(),
+        section_id: sectionId || null,
+        author_id: authorId,
+      })
       .select()
       .single();
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Page created");
     onSaved(data as WikiPage);
   }
   return (
     <DialogContent className="max-w-lg">
-      <DialogHeader><DialogTitle>New Page</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>New Page</DialogTitle>
+      </DialogHeader>
       <div className="space-y-3">
         <div>
           <Label>Title</Label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Onboarding Checklist" autoFocus />
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Onboarding Checklist"
+            autoFocus
+          />
         </div>
         <div>
           <Label>Section (optional)</Label>
@@ -339,16 +433,27 @@ function NewPageDialog({
             onChange={(e) => setSectionId(e.target.value)}
           >
             <option value="">No section</option>
-            {sections.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+            {sections.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.title}
+              </option>
+            ))}
           </select>
         </div>
         <div>
           <Label>Content</Label>
-          <Textarea rows={8} value={content} onChange={(e) => setContent(e.target.value)} placeholder="Write your content here…" />
+          <Textarea
+            rows={8}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Write your content here…"
+          />
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={save} disabled={saving || !title.trim()}>{saving ? "Saving…" : "Create"}</Button>
+        <Button onClick={save} disabled={saving || !title.trim()}>
+          {saving ? "Saving…" : "Create"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );
@@ -362,18 +467,27 @@ function EditPageDialog({ page, onSaved }: { page: WikiPage; onSaved: (p: WikiPa
     setSaving(true);
     const { data, error } = await supabase
       .from("wiki_pages")
-      .update({ title: title.trim(), content: content.trim(), updated_at: new Date().toISOString() })
+      .update({
+        title: title.trim(),
+        content: content.trim(),
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", page.id)
       .select()
       .single();
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Page updated");
     onSaved(data as WikiPage);
   }
   return (
     <DialogContent className="max-w-lg">
-      <DialogHeader><DialogTitle>Edit Page</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Edit Page</DialogTitle>
+      </DialogHeader>
       <div className="space-y-3">
         <div>
           <Label>Title</Label>
@@ -385,7 +499,9 @@ function EditPageDialog({ page, onSaved }: { page: WikiPage; onSaved: (p: WikiPa
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Save"}</Button>
+        <Button onClick={save} disabled={saving}>
+          {saving ? "Saving…" : "Save"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );

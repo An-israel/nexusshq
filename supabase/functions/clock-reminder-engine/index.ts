@@ -96,7 +96,7 @@ async function handleMorning15(workspaceId: string, today: string): Promise<numb
     .eq("role", "employee");
 
   const employees: ActiveEmployee[] = (memberRows ?? [])
-    .map((m) => (m as any).profiles as ActiveEmployee & { is_active: boolean } | null)
+    .map((m) => (m as any).profiles as (ActiveEmployee & { is_active: boolean }) | null)
     .filter((p): p is ActiveEmployee & { is_active: boolean } => p !== null && p.is_active)
     .map(({ id, full_name, email }) => ({ id, full_name, email }));
 
@@ -165,7 +165,7 @@ async function handleMorning30(workspaceId: string, today: string): Promise<numb
     .eq("role", "employee");
 
   const employees: ActiveEmployee[] = (memberRows ?? [])
-    .map((m) => (m as any).profiles as ActiveEmployee & { is_active: boolean } | null)
+    .map((m) => (m as any).profiles as (ActiveEmployee & { is_active: boolean }) | null)
     .filter((p): p is ActiveEmployee & { is_active: boolean } => p !== null && p.is_active)
     .map(({ id, full_name, email }) => ({ id, full_name, email }));
 
@@ -230,20 +230,18 @@ async function handleMorning30(workspaceId: string, today: string): Promise<numb
     if (upsertErr) {
       // Try raw INSERT … ON CONFLICT approach via raw SQL through .from()
       // We do an upsert but guard with a check that clock_in is null
-      await supabase
-        .from("attendance")
-        .upsert(
-          {
-            user_id: emp.id,
-            date: today,
-            workspace_id: workspaceId,
-            status: "late",
-          },
-          {
-            onConflict: "user_id,date",
-            ignoreDuplicates: false,
-          },
-        );
+      await supabase.from("attendance").upsert(
+        {
+          user_id: emp.id,
+          date: today,
+          workspace_id: workspaceId,
+          status: "late",
+        },
+        {
+          onConflict: "user_id,date",
+          ignoreDuplicates: false,
+        },
+      );
       // Note: the Supabase upsert above will overwrite status regardless of
       // clock_in state; the RPC version (if available) guards on clock_in IS NULL.
       // The RPC is the preferred path; this is a fallback for dev environments.
@@ -417,7 +415,9 @@ Deno.serve(async (req) => {
   const validSteps: Step[] = ["morning_15", "morning_30", "afternoon_15", "auto_clockout"];
   if (!step || !validSteps.includes(step)) {
     return new Response(
-      JSON.stringify({ error: `Invalid or missing 'step'. Must be one of: ${validSteps.join(", ")}` }),
+      JSON.stringify({
+        error: `Invalid or missing 'step'. Must be one of: ${validSteps.join(", ")}`,
+      }),
       { status: 400, headers: { "Content-Type": "application/json" } },
     );
   }

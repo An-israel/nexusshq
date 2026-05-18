@@ -7,8 +7,20 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { Heart, Send, Award } from "lucide-react";
@@ -65,7 +77,11 @@ function KudosPage() {
       .order("created_at", { ascending: false })
       .limit(50);
     if (error) {
-      if (error.message.includes("schema cache") || error.message.includes("does not exist") || error.code === "42P01") {
+      if (
+        error.message.includes("schema cache") ||
+        error.message.includes("does not exist") ||
+        error.code === "42P01"
+      ) {
         setMigrationPending(true);
       } else {
         toast.error(error.message);
@@ -78,17 +94,26 @@ function KudosPage() {
     setKudos(rows);
 
     // Fetch all profiles mentioned
-    const ids = Array.from(new Set([...rows.map(k => k.from_user_id), ...rows.map(k => k.to_user_id)]));
+    const ids = Array.from(
+      new Set([...rows.map((k) => k.from_user_id), ...rows.map((k) => k.to_user_id)]),
+    );
     if (ids.length) {
-      const { data: profs } = await supabase.from("profiles").select("id, full_name, email, avatar_url").in("id", ids);
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, avatar_url")
+        .in("id", ids);
       const map: Record<string, ProfileMini> = {};
-      (profs ?? []).forEach(p => { map[p.id] = p as ProfileMini; });
+      (profs ?? []).forEach((p) => {
+        map[p.id] = p as ProfileMini;
+      });
       setProfiles(map);
     }
     setLoading(false);
   }, [workspace.id]);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   // Load team members for "Send Kudos" recipient picker — SCOPED to current workspace
   React.useEffect(() => {
@@ -99,15 +124,24 @@ function KudosPage() {
         .select("user_id")
         .eq("workspace_id", workspace.id)
         .eq("is_active", true);
-      if (memErr) { console.error("Recognition: load members failed", memErr); return; }
+      if (memErr) {
+        console.error("Recognition: load members failed", memErr);
+        return;
+      }
       const ids = (members ?? []).map((m) => m.user_id).filter((id) => id !== user?.id);
-      if (!ids.length) { setTeamMembers([]); return; }
+      if (!ids.length) {
+        setTeamMembers([]);
+        return;
+      }
       const { data: profs, error: profErr } = await supabase
         .from("profiles")
         .select("id, full_name, email, avatar_url")
         .in("id", ids)
         .order("full_name");
-      if (profErr) { console.error("Recognition: load profiles failed", profErr); return; }
+      if (profErr) {
+        console.error("Recognition: load profiles failed", profErr);
+        return;
+      }
       setTeamMembers((profs ?? []) as ProfileMini[]);
     })();
   }, [workspace?.id, user?.id]);
@@ -124,7 +158,11 @@ function KudosPage() {
       message: message.trim(),
       emoji,
     });
-    if (error) { toast.error(error.message); setSending(false); return; }
+    if (error) {
+      toast.error(error.message);
+      setSending(false);
+      return;
+    }
 
     // Send notification to recipient
     await supabase.from("notifications").insert({
@@ -171,8 +209,8 @@ function KudosPage() {
         <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 space-y-2">
           <p className="text-sm font-semibold text-warning">Database migration required</p>
           <p className="text-xs text-muted-foreground">
-            The Recognition feature needs a database table that hasn't been created yet.
-            Please run the migration in your Supabase SQL editor:
+            The Recognition feature needs a database table that hasn't been created yet. Please run
+            the migration in your Supabase SQL editor:
           </p>
           <p className="text-xs font-mono bg-muted rounded p-2 break-all">
             supabase/migrations/20260514000000_kudos_documents_gps_whatsapp.sql
@@ -191,14 +229,14 @@ function KudosPage() {
             <div>
               <Label className="text-xs text-muted-foreground mb-2 block">Pick an emoji</Label>
               <div className="flex gap-2 flex-wrap">
-                {EMOJIS.map(e => (
+                {EMOJIS.map((e) => (
                   <button
                     key={e}
                     type="button"
                     onClick={() => setEmoji(e)}
                     className={cn(
                       "text-2xl rounded-xl p-2 transition-all active:scale-95",
-                      emoji === e ? "bg-primary/20 ring-2 ring-primary" : "hover:bg-muted"
+                      emoji === e ? "bg-primary/20 ring-2 ring-primary" : "hover:bg-muted",
                     )}
                   >
                     {e}
@@ -215,7 +253,7 @@ function KudosPage() {
                   <SelectValue placeholder="Pick a teammate" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teamMembers.map(m => (
+                  {teamMembers.map((m) => (
                     <SelectItem key={m.id} value={m.id}>
                       {m.full_name ?? m.email}
                     </SelectItem>
@@ -232,7 +270,7 @@ function KudosPage() {
                 rows={3}
                 placeholder="Great job on the client pitch! Your work made a real difference."
                 value={message}
-                onChange={e => setMessage(e.target.value)}
+                onChange={(e) => setMessage(e.target.value)}
                 maxLength={280}
               />
               <p className="text-right text-xs text-muted-foreground mt-1">{message.length}/280</p>
@@ -274,7 +312,7 @@ function KudosPage() {
         </div>
       ) : (
         <div className="space-y-3">
-          {kudos.map(k => (
+          {kudos.map((k) => (
             <Card key={k.id} className="p-5 hover:shadow-md transition-shadow">
               <div className="flex items-start gap-3">
                 {/* Avatar */}
@@ -286,7 +324,9 @@ function KudosPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-2xl leading-none">{k.emoji}</span>
                     <p className="text-sm font-semibold">{nameOf(k.to_user_id)}</p>
-                    <span className="text-xs text-muted-foreground">from {nameOf(k.from_user_id)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      from {nameOf(k.from_user_id)}
+                    </span>
                   </div>
                   {/* Message */}
                   <p className="mt-2 text-sm text-foreground leading-relaxed">{k.message}</p>

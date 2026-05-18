@@ -103,21 +103,13 @@ export function Section3TaskCompletion({
     );
   }
 
-  const SortHeader = ({
-    col,
-    children,
-  }: {
-    col: SortKey;
-    children: React.ReactNode;
-  }) => (
+  const SortHeader = ({ col, children }: { col: SortKey; children: React.ReactNode }) => (
     <th
       className="pb-2 text-left text-xs font-medium text-muted-foreground whitespace-nowrap pr-4 cursor-pointer select-none hover:text-foreground transition-colors"
       onClick={() => toggleSort(col)}
     >
       {children}
-      {sortKey === col && (
-        <span className="ml-1">{sortAsc ? "↑" : "↓"}</span>
-      )}
+      {sortKey === col && <span className="ml-1">{sortAsc ? "↑" : "↓"}</span>}
     </th>
   );
 
@@ -171,10 +163,7 @@ export function Section3TaskCompletion({
         <div className="bg-[#111] rounded-xl border border-[#1f1f1f] p-4 mt-4">
           <p className="text-sm font-semibold text-white mb-3">Weekly Completion Velocity</p>
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart
-              data={velocityPoints}
-              margin={{ top: 4, right: 16, left: 0, bottom: 0 }}
-            >
+            <LineChart data={velocityPoints} margin={{ top: 4, right: 16, left: 0, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#222" />
               <XAxis
                 dataKey="week"
@@ -230,9 +219,7 @@ export function Section3TaskCompletion({
                 axisLine={false}
                 tickLine={false}
                 width={120}
-                tickFormatter={(v: string) =>
-                  v.length > 16 ? v.slice(0, 15) + "…" : v
-                }
+                tickFormatter={(v: string) => (v.length > 16 ? v.slice(0, 15) + "…" : v)}
               />
               <Tooltip
                 formatter={(v: number) => [`${v.toFixed(0)}%`, "Completion"]}
@@ -290,19 +277,14 @@ export function Section3TaskCompletion({
               </thead>
               <tbody className="divide-y divide-[#1a1a1a]">
                 {sortedRows.map((row) => (
-                  <tr
-                    key={row.id}
-                    className="hover:bg-white/[0.02] transition-colors"
-                  >
+                  <tr key={row.id} className="hover:bg-white/[0.02] transition-colors">
                     <td className="py-3 pr-4 font-medium text-white max-w-[160px] truncate">
                       {row.name}
                     </td>
                     <td className="py-3 pr-4 tabular-nums text-green-400 font-semibold">
                       {row.completed}
                     </td>
-                    <td className="py-3 pr-4 tabular-nums text-muted-foreground">
-                      {row.assigned}
-                    </td>
+                    <td className="py-3 pr-4 tabular-nums text-muted-foreground">{row.assigned}</td>
                     <td className="py-3 pr-4 tabular-nums">
                       <span
                         className={cn(

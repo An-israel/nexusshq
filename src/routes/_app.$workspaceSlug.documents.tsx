@@ -8,21 +8,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { timeAgo } from "@/lib/nexus";
 import { cn } from "@/lib/utils";
-import {
-  FileText, Upload, ExternalLink, PenLine, Lock, FolderOpen,
-} from "lucide-react";
+import { FileText, Upload, ExternalLink, PenLine, Lock, FolderOpen } from "lucide-react";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/documents")({
   component: DocumentsPage,
@@ -105,16 +109,26 @@ function DocumentsPage() {
       .select("*")
       .eq("workspace_id", workspace.id)
       .order("created_at", { ascending: false });
-    if (error) { toast.error(error.message); setLoading(false); return; }
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
     setDocs((data ?? []) as DocumentRow[]);
     setLoading(false);
   }, [workspace.id]);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   React.useEffect(() => {
     if (!isManager) return;
-    void supabase.from("profiles").select("id, full_name, email").eq("is_active", true).order("full_name")
+    void supabase
+      .from("profiles")
+      .select("id, full_name, email")
+      .eq("is_active", true)
+      .order("full_name")
       .then(({ data }) => setEmployees((data ?? []) as ProfileMini[]));
   }, [isManager]);
 
@@ -126,9 +140,13 @@ function DocumentsPage() {
     try {
       const ext = uploadForm.file.name.split(".").pop() ?? "bin";
       const path = `${workspace.id}/${uploadForm.userId}/${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("documents").upload(path, uploadForm.file);
+      const { error: upErr } = await supabase.storage
+        .from("documents")
+        .upload(path, uploadForm.file);
       if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from("documents").getPublicUrl(path);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("documents").getPublicUrl(path);
       const { error: dbErr } = await supabase.from("documents").insert({
         workspace_id: workspace.id,
         user_id: uploadForm.userId,
@@ -151,7 +169,13 @@ function DocumentsPage() {
       });
       toast.success("Document uploaded");
       setUploadOpen(false);
-      setUploadForm({ userId: "", title: "", docType: "other", requiresSignature: false, file: null });
+      setUploadForm({
+        userId: "",
+        title: "",
+        docType: "other",
+        requiresSignature: false,
+        file: null,
+      });
       void load();
     } catch (err) {
       toast.error((err as Error).message);
@@ -164,11 +188,18 @@ function DocumentsPage() {
     if (!signDoc) return;
     if (!sigName.trim()) return toast.error("Enter your name to sign");
     setSigning(true);
-    const { error } = await supabase.from("documents").update({
-      signed_at: new Date().toISOString(),
-      signature_text: sigName.trim(),
-    }).eq("id", signDoc.id);
-    if (error) { toast.error(error.message); setSigning(false); return; }
+    const { error } = await supabase
+      .from("documents")
+      .update({
+        signed_at: new Date().toISOString(),
+        signature_text: sigName.trim(),
+      })
+      .eq("id", signDoc.id);
+    if (error) {
+      toast.error(error.message);
+      setSigning(false);
+      return;
+    }
     toast.success("Document signed");
     setSignDoc(null);
     setSigName("");
@@ -176,8 +207,8 @@ function DocumentsPage() {
     void load();
   }
 
-  const myDocs = isManager ? docs : docs.filter(d => d.user_id === user?.id);
-  const pendingSig = myDocs.filter(d => d.requires_signature && !d.signed_at).length;
+  const myDocs = isManager ? docs : docs.filter((d) => d.user_id === user?.id);
+  const pendingSig = myDocs.filter((d) => d.requires_signature && !d.signed_at).length;
 
   return (
     <div className="space-y-6">
@@ -186,7 +217,9 @@ function DocumentsPage() {
         <div>
           <h1 className="text-2xl font-bold">Document Vault</h1>
           <p className="text-sm text-muted-foreground">
-            {isManager ? "Manage team documents and contracts." : "Your personal documents and contracts."}
+            {isManager
+              ? "Manage team documents and contracts."
+              : "Your personal documents and contracts."}
           </p>
         </div>
         {isManager && (
@@ -201,7 +234,8 @@ function DocumentsPage() {
         <div className="flex items-center gap-3 rounded-xl bg-warning/10 border border-warning/30 p-4">
           <PenLine className="h-5 w-5 text-warning shrink-0" />
           <p className="text-sm font-medium text-warning">
-            {pendingSig} document{pendingSig > 1 ? "s" : ""} require{pendingSig === 1 ? "s" : ""} your signature
+            {pendingSig} document{pendingSig > 1 ? "s" : ""} require{pendingSig === 1 ? "s" : ""}{" "}
+            your signature
           </p>
         </div>
       )}
@@ -215,13 +249,18 @@ function DocumentsPage() {
           <div className="space-y-4">
             <div>
               <Label>Employee</Label>
-              <Select value={uploadForm.userId} onValueChange={v => setUploadForm(f => ({ ...f, userId: v }))}>
+              <Select
+                value={uploadForm.userId}
+                onValueChange={(v) => setUploadForm((f) => ({ ...f, userId: v }))}
+              >
                 <SelectTrigger className="text-base md:text-sm">
                   <SelectValue placeholder="Pick employee" />
                 </SelectTrigger>
                 <SelectContent>
-                  {employees.map(e => (
-                    <SelectItem key={e.id} value={e.id}>{e.full_name ?? e.email}</SelectItem>
+                  {employees.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.full_name ?? e.email}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -232,18 +271,23 @@ function DocumentsPage() {
                 className="text-base md:text-sm"
                 placeholder="e.g. Employment Contract 2025"
                 value={uploadForm.title}
-                onChange={e => setUploadForm(f => ({ ...f, title: e.target.value }))}
+                onChange={(e) => setUploadForm((f) => ({ ...f, title: e.target.value }))}
               />
             </div>
             <div>
               <Label>Type</Label>
-              <Select value={uploadForm.docType} onValueChange={v => setUploadForm(f => ({ ...f, docType: v as DocType }))}>
+              <Select
+                value={uploadForm.docType}
+                onValueChange={(v) => setUploadForm((f) => ({ ...f, docType: v as DocType }))}
+              >
                 <SelectTrigger className="text-base md:text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {(Object.keys(DOC_TYPE_LABEL) as DocType[]).map(t => (
-                    <SelectItem key={t} value={t}>{DOC_TYPE_LABEL[t]}</SelectItem>
+                  {(Object.keys(DOC_TYPE_LABEL) as DocType[]).map((t) => (
+                    <SelectItem key={t} value={t}>
+                      {DOC_TYPE_LABEL[t]}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -254,7 +298,9 @@ function DocumentsPage() {
                 type="file"
                 accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                 className="text-base md:text-sm"
-                onChange={e => setUploadForm(f => ({ ...f, file: e.target.files?.[0] ?? null }))}
+                onChange={(e) =>
+                  setUploadForm((f) => ({ ...f, file: e.target.files?.[0] ?? null }))
+                }
               />
             </div>
             <div className="flex items-center gap-2">
@@ -262,10 +308,14 @@ function DocumentsPage() {
                 type="checkbox"
                 id="req-sig"
                 checked={uploadForm.requiresSignature}
-                onChange={e => setUploadForm(f => ({ ...f, requiresSignature: e.target.checked }))}
+                onChange={(e) =>
+                  setUploadForm((f) => ({ ...f, requiresSignature: e.target.checked }))
+                }
                 className="h-4 w-4"
               />
-              <Label htmlFor="req-sig" className="cursor-pointer">Requires employee signature</Label>
+              <Label htmlFor="req-sig" className="cursor-pointer">
+                Requires employee signature
+              </Label>
             </div>
           </div>
           <DialogFooter>
@@ -278,7 +328,7 @@ function DocumentsPage() {
       </Dialog>
 
       {/* Sign Sheet */}
-      <Sheet open={!!signDoc} onOpenChange={o => !o && setSignDoc(null)}>
+      <Sheet open={!!signDoc} onOpenChange={(o) => !o && setSignDoc(null)}>
         <SheetContent side="bottom" className="rounded-t-[20px]">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
@@ -296,7 +346,7 @@ function DocumentsPage() {
                 className="text-base md:text-sm"
                 placeholder="Your full name"
                 value={sigName}
-                onChange={e => setSigName(e.target.value)}
+                onChange={(e) => setSigName(e.target.value)}
               />
             </div>
             <p className="text-xs text-muted-foreground">
@@ -326,18 +376,30 @@ function DocumentsPage() {
         <div className="flex flex-col items-center gap-3 py-20 text-center">
           <FolderOpen className="h-14 w-14 text-muted-foreground/30" />
           <p className="text-base font-medium text-muted-foreground">No documents yet</p>
-          {isManager && <p className="text-sm text-muted-foreground">Upload the first document for your team.</p>}
+          {isManager && (
+            <p className="text-sm text-muted-foreground">
+              Upload the first document for your team.
+            </p>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {myDocs.map(doc => (
-            <Card key={doc.id} className="p-5 space-y-3 hover:shadow-md transition-shadow flex flex-col">
+          {myDocs.map((doc) => (
+            <Card
+              key={doc.id}
+              className="p-5 space-y-3 hover:shadow-md transition-shadow flex flex-col"
+            >
               {/* Icon + type badge */}
               <div className="flex items-start justify-between">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
                   <FileText className="h-5 w-5 text-primary" />
                 </div>
-                <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide", DOC_TYPE_COLOR[doc.doc_type])}>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                    DOC_TYPE_COLOR[doc.doc_type],
+                  )}
+                >
                   {DOC_TYPE_LABEL[doc.doc_type]}
                 </span>
               </div>
@@ -352,11 +414,21 @@ function DocumentsPage() {
 
               {/* Signature status */}
               {doc.requires_signature && (
-                <div className={cn("flex items-center gap-1.5 text-xs font-medium", doc.signed_at ? "text-success" : "text-warning")}>
+                <div
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs font-medium",
+                    doc.signed_at ? "text-success" : "text-warning",
+                  )}
+                >
                   {doc.signed_at ? (
-                    <><Lock className="h-3.5 w-3.5" /> Signed {doc.signature_text ? `by ${doc.signature_text}` : ""}</>
+                    <>
+                      <Lock className="h-3.5 w-3.5" /> Signed{" "}
+                      {doc.signature_text ? `by ${doc.signature_text}` : ""}
+                    </>
                   ) : (
-                    <><PenLine className="h-3.5 w-3.5" /> Signature required</>
+                    <>
+                      <PenLine className="h-3.5 w-3.5" /> Signature required
+                    </>
                   )}
                 </div>
               )}
@@ -372,7 +444,14 @@ function DocumentsPage() {
                   <ExternalLink className="mr-1.5 h-3.5 w-3.5" /> View
                 </Button>
                 {doc.requires_signature && !doc.signed_at && doc.user_id === user?.id && (
-                  <Button size="sm" className="flex-1" onClick={() => { setSignDoc(doc); setSigName(""); }}>
+                  <Button
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setSignDoc(doc);
+                      setSigName("");
+                    }}
+                  >
                     <PenLine className="mr-1.5 h-3.5 w-3.5" /> Sign
                   </Button>
                 )}

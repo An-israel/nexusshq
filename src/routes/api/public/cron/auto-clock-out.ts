@@ -24,9 +24,7 @@ export const Route = createFileRoute("/api/public/cron/auto-clock-out")({
         for (const row of rows ?? []) {
           const minutes = Math.max(
             0,
-            Math.round(
-              (autoOut.getTime() - new Date(row.clock_in!).getTime()) / 60000,
-            ),
+            Math.round((autoOut.getTime() - new Date(row.clock_in!).getTime()) / 60000),
           );
           await supabaseAdmin
             .from("attendance")

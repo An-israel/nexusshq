@@ -93,7 +93,9 @@ function PublicTracker() {
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="text-center">
           <p className="text-4xl font-bold mb-3">404</p>
-          <p className="text-muted-foreground text-sm">Project not found. Check the link with your team.</p>
+          <p className="text-muted-foreground text-sm">
+            Project not found. Check the link with your team.
+          </p>
         </div>
       </div>
     );
@@ -115,7 +117,9 @@ function PublicTracker() {
               <p className="text-sm font-semibold">Project Tracker</p>
             </div>
           </div>
-          <span className={`text-xs uppercase tracking-wide rounded border px-2 py-1 ${statusInfo.cls}`}>
+          <span
+            className={`text-xs uppercase tracking-wide rounded border px-2 py-1 ${statusInfo.cls}`}
+          >
             {statusInfo.text}
           </span>
         </div>
@@ -138,7 +142,9 @@ function PublicTracker() {
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between text-sm mb-3">
               <span className="font-medium">Overall progress</span>
-              <span className="text-muted-foreground">{done} of {tasks.length} milestones complete</span>
+              <span className="text-muted-foreground">
+                {done} of {tasks.length} milestones complete
+              </span>
             </div>
             <div className="h-2.5 rounded-full bg-muted overflow-hidden">
               <div
@@ -166,11 +172,13 @@ function PublicTracker() {
                 <div
                   key={task.id}
                   className={`flex items-start gap-3 rounded-xl border px-4 py-3 transition-colors
-                    ${task.status === "completed"
-                      ? "border-success/20 bg-success/5"
-                      : task.status === "in_progress"
-                      ? "border-primary/20 bg-primary/5"
-                      : "border-border bg-card"}`}
+                    ${
+                      task.status === "completed"
+                        ? "border-success/20 bg-success/5"
+                        : task.status === "in_progress"
+                          ? "border-primary/20 bg-primary/5"
+                          : "border-border bg-card"
+                    }`}
                 >
                   <div className="mt-0.5 shrink-0">{TASK_ICON[task.status]}</div>
                   <div className="flex-1 min-w-0">
@@ -190,10 +198,15 @@ function PublicTracker() {
                       </p>
                     )}
                   </div>
-                  <span className={`shrink-0 text-[10px] uppercase tracking-wide font-medium mt-0.5
-                    ${task.status === "completed" ? "text-success"
-                      : task.status === "in_progress" ? "text-primary"
-                      : "text-muted-foreground"}`}
+                  <span
+                    className={`shrink-0 text-[10px] uppercase tracking-wide font-medium mt-0.5
+                    ${
+                      task.status === "completed"
+                        ? "text-success"
+                        : task.status === "in_progress"
+                          ? "text-primary"
+                          : "text-muted-foreground"
+                    }`}
                   >
                     {task.status.replace("_", " ")}
                   </span>

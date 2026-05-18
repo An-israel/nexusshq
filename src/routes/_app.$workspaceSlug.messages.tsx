@@ -43,8 +43,17 @@ function MessagesLayout() {
   const workspaceId = workspace?.id ?? null;
   const currentUserId = user?.id ?? null;
 
-  const { channels, joinedChannels, loading: channelsLoading, refetch: refetchChannels } = useChannels(workspaceId, currentUserId);
-  const { conversations, startDm, refetch: refetchDms } = useDmConversations(workspaceId, currentUserId);
+  const {
+    channels,
+    joinedChannels,
+    loading: channelsLoading,
+    refetch: refetchChannels,
+  } = useChannels(workspaceId, currentUserId);
+  const {
+    conversations,
+    startDm,
+    refetch: refetchDms,
+  } = useDmConversations(workspaceId, currentUserId);
   const { presence, updateMyPresence } = usePresence(workspaceId);
 
   const [mobileShowSidebar, setMobileShowSidebar] = React.useState(true);
@@ -63,9 +72,7 @@ function MessagesLayout() {
         .select("user_id")
         .eq("workspace_id", workspaceId);
 
-      const userIds = Array.from(
-        new Set((membershipRows ?? []).map((row) => row.user_id))
-      );
+      const userIds = Array.from(new Set((membershipRows ?? []).map((row) => row.user_id)));
 
       if (userIds.length === 0) {
         setWorkspaceMembers([]);
@@ -134,7 +141,7 @@ function MessagesLayout() {
       updateMyPresence,
       onMobileBack: () => setMobileShowSidebar(true),
     }),
-    [workspaceMembers, presence, updateMyPresence]
+    [workspaceMembers, presence, updateMyPresence],
   );
 
   return (
@@ -235,8 +242,14 @@ function MessagesLayout() {
         onClose={() => setSearchOpen(false)}
         workspaceId={workspaceId ?? ""}
         currentUserId={currentUserId ?? ""}
-        onSelectChannel={(id) => { goToChannel(id); setSearchOpen(false); }}
-        onSelectDm={(id) => { goToDm(id); setSearchOpen(false); }}
+        onSelectChannel={(id) => {
+          goToChannel(id);
+          setSearchOpen(false);
+        }}
+        onSelectDm={(id) => {
+          goToDm(id);
+          setSearchOpen(false);
+        }}
       />
     </MessagingCtx.Provider>
   );

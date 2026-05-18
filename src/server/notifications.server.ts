@@ -24,9 +24,9 @@ export async function sendWhatsAppMessage(phone: string, message: string): Promi
   const resp = await fetch("https://api.africastalking.com/version1/messaging", {
     method: "POST",
     headers: {
-      "Accept": "application/json",
+      Accept: "application/json",
       "Content-Type": "application/x-www-form-urlencoded",
-      "apiKey": apiKey,
+      apiKey: apiKey,
     },
     body: params.toString(),
   });
@@ -46,6 +46,8 @@ export async function notifyUserWhatsApp(userId: string, message: string): Promi
 
   if (!profile?.whatsapp_opt_in || !profile?.phone) return;
 
-  const phone = profile.phone.startsWith("+") ? profile.phone : `+234${profile.phone.replace(/^0/, "")}`;
+  const phone = profile.phone.startsWith("+")
+    ? profile.phone
+    : `+234${profile.phone.replace(/^0/, "")}`;
   await sendWhatsAppMessage(phone, message);
 }

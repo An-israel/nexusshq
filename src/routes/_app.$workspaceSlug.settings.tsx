@@ -30,14 +30,21 @@ class FeatureErrorBoundary extends React.Component<
     super(props);
     this.state = { error: null };
   }
-  static getDerivedStateFromError(error: Error) { return { error }; }
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
   render() {
     if (this.state.error) {
       return (
         <Card className="max-w-2xl p-6">
           <p className="text-sm text-destructive font-medium">Failed to load feature toggles.</p>
           <p className="text-xs text-muted-foreground mt-1">{this.state.error.message}</p>
-          <Button variant="outline" size="sm" className="mt-3" onClick={() => this.setState({ error: null })}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-3"
+            onClick={() => this.setState({ error: null })}
+          >
             Retry
           </Button>
         </Card>
@@ -82,7 +89,7 @@ function OfficeLocationSettings() {
     setDetecting(true);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setForm(f => ({
+        setForm((f) => ({
           ...f,
           office_lat: pos.coords.latitude.toFixed(7),
           office_lng: pos.coords.longitude.toFixed(7),
@@ -93,7 +100,7 @@ function OfficeLocationSettings() {
       () => {
         toast.error("Could not detect location");
         setDetecting(false);
-      }
+      },
     );
   }
 
@@ -109,11 +116,13 @@ function OfficeLocationSettings() {
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm font-medium">Enforce GPS clock-in</p>
-          <p className="text-xs text-muted-foreground">Employees must be within the set radius to clock in</p>
+          <p className="text-xs text-muted-foreground">
+            Employees must be within the set radius to clock in
+          </p>
         </div>
         <Switch
           checked={form.enforce_gps_clockin}
-          onCheckedChange={v => setForm(f => ({ ...f, enforce_gps_clockin: v }))}
+          onCheckedChange={(v) => setForm((f) => ({ ...f, enforce_gps_clockin: v }))}
         />
       </div>
 
@@ -124,7 +133,7 @@ function OfficeLocationSettings() {
             className="text-base md:text-sm font-mono"
             placeholder="6.5244"
             value={form.office_lat}
-            onChange={e => setForm(f => ({ ...f, office_lat: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, office_lat: e.target.value }))}
           />
         </div>
         <div>
@@ -133,7 +142,7 @@ function OfficeLocationSettings() {
             className="text-base md:text-sm font-mono"
             placeholder="3.3792"
             value={form.office_lng}
-            onChange={e => setForm(f => ({ ...f, office_lng: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, office_lng: e.target.value }))}
           />
         </div>
         <div className="col-span-2">
@@ -144,7 +153,7 @@ function OfficeLocationSettings() {
             min={50}
             max={5000}
             value={form.clock_in_radius_m}
-            onChange={e => setForm(f => ({ ...f, clock_in_radius_m: e.target.value }))}
+            onChange={(e) => setForm((f) => ({ ...f, clock_in_radius_m: e.target.value }))}
           />
         </div>
       </div>
@@ -179,7 +188,10 @@ interface ProfileRow {
   whatsapp_opt_in: boolean;
 }
 
-interface RoleRow { user_id: string; role: "admin" | "manager" | "employee"; }
+interface RoleRow {
+  user_id: string;
+  role: "admin" | "manager" | "employee";
+}
 
 function SettingsPage() {
   const { profile, refresh, isAdmin } = useAuth();
@@ -188,29 +200,48 @@ function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground">Manage your profile{isAdmin ? " and team" : ""}.</p>
+        <p className="text-sm text-muted-foreground">
+          Manage your profile{isAdmin ? " and team" : ""}.
+        </p>
       </div>
 
       <Tabs defaultValue="profile">
         <TabsList>
-          <TabsTrigger value="profile"><UserCog className="mr-2 h-4 w-4" /> Profile</TabsTrigger>
-          {isAdmin && <TabsTrigger value="team"><UsersIcon className="mr-2 h-4 w-4" /> Team</TabsTrigger>}
-          {isAdmin && <TabsTrigger value="roles"><Shield className="mr-2 h-4 w-4" /> Roles</TabsTrigger>}
-          {isAdmin && <TabsTrigger value="features"><ToggleRight className="mr-2 h-4 w-4" /> Features</TabsTrigger>}
-          {isAdmin && <TabsTrigger value="location"><MapPin className="mr-2 h-4 w-4" /> Office</TabsTrigger>}
+          <TabsTrigger value="profile">
+            <UserCog className="mr-2 h-4 w-4" /> Profile
+          </TabsTrigger>
+          {isAdmin && (
+            <TabsTrigger value="team">
+              <UsersIcon className="mr-2 h-4 w-4" /> Team
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="roles">
+              <Shield className="mr-2 h-4 w-4" /> Roles
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="features">
+              <ToggleRight className="mr-2 h-4 w-4" /> Features
+            </TabsTrigger>
+          )}
+          {isAdmin && (
+            <TabsTrigger value="location">
+              <MapPin className="mr-2 h-4 w-4" /> Office
+            </TabsTrigger>
+          )}
         </TabsList>
         <TabsContent value="profile" className="mt-4">
-          {profile
-            ? <ProfileForm profile={profile as unknown as ProfileRow} onSaved={refresh} />
-            : (
-              <div className="flex flex-col gap-3 max-w-2xl">
-                <p className="text-sm text-muted-foreground">Profile is loading…</p>
-                <Button variant="outline" className="w-fit" onClick={() => void refresh()}>
-                  Retry
-                </Button>
-              </div>
-            )
-          }
+          {profile ? (
+            <ProfileForm profile={profile as unknown as ProfileRow} onSaved={refresh} />
+          ) : (
+            <div className="flex flex-col gap-3 max-w-2xl">
+              <p className="text-sm text-muted-foreground">Profile is loading…</p>
+              <Button variant="outline" className="w-fit" onClick={() => void refresh()}>
+                Retry
+              </Button>
+            </div>
+          )}
         </TabsContent>
         {isAdmin && (
           <TabsContent value="team" className="mt-4">
@@ -262,7 +293,8 @@ function FeatureToggles() {
       <div>
         <h3 className="font-semibold">Page visibility</h3>
         <p className="text-sm text-muted-foreground">
-          Turn pages off for everyone. Admins can still see disabled pages in the sidebar (greyed in normal use) so you can toggle them back on.
+          Turn pages off for everyone. Admins can still see disabled pages in the sidebar (greyed in
+          normal use) so you can toggle them back on.
         </p>
       </div>
       <div className="divide-y divide-border">
@@ -287,7 +319,13 @@ function FeatureToggles() {
   );
 }
 
-function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () => void | Promise<void> }) {
+function ProfileForm({
+  profile,
+  onSaved,
+}: {
+  profile: ProfileRow;
+  onSaved: () => void | Promise<void>;
+}) {
   const [form, setForm] = React.useState<ProfileRow>(profile);
   const [saving, setSaving] = React.useState(false);
 
@@ -304,7 +342,10 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
       })
       .eq("id", form.id);
     if (error) toast.error(error.message);
-    else { toast.success("Profile saved"); await onSaved(); }
+    else {
+      toast.success("Profile saved");
+      await onSaved();
+    }
     setSaving(false);
   }
 
@@ -319,7 +360,10 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
             .from("profiles")
             .update({ avatar_url: url })
             .eq("id", form.id);
-          if (error) { toast.error(error.message); return; }
+          if (error) {
+            toast.error(error.message);
+            return;
+          }
           setForm({ ...form, avatar_url: url });
           await onSaved();
         }}
@@ -327,7 +371,10 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
       <div className="grid grid-cols-2 gap-3">
         <div>
           <Label>Full name</Label>
-          <Input value={form.full_name ?? ""} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
+          <Input
+            value={form.full_name ?? ""}
+            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+          />
         </div>
         <div>
           <Label>Email</Label>
@@ -335,28 +382,45 @@ function ProfileForm({ profile, onSaved }: { profile: ProfileRow; onSaved: () =>
         </div>
         <div>
           <Label>Job title</Label>
-          <Input value={form.job_title ?? ""} onChange={(e) => setForm({ ...form, job_title: e.target.value })} />
+          <Input
+            value={form.job_title ?? ""}
+            onChange={(e) => setForm({ ...form, job_title: e.target.value })}
+          />
         </div>
         <div>
           <Label>Phone</Label>
-          <Input value={form.phone ?? ""} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <Input
+            value={form.phone ?? ""}
+            onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          />
         </div>
         <div className="col-span-2 flex items-center justify-between rounded-xl bg-muted/30 p-3">
           <div>
             <p className="text-sm font-medium">WhatsApp notifications</p>
-            <p className="text-xs text-muted-foreground">Receive leave approvals, task assignments and alerts via SMS/WhatsApp</p>
+            <p className="text-xs text-muted-foreground">
+              Receive leave approvals, task assignments and alerts via SMS/WhatsApp
+            </p>
           </div>
           <Switch
             checked={form.whatsapp_opt_in ?? false}
-            onCheckedChange={v => setForm(f => ({ ...f, whatsapp_opt_in: v }))}
+            onCheckedChange={(v) => setForm((f) => ({ ...f, whatsapp_opt_in: v }))}
           />
         </div>
         <div className="col-span-2">
           <Label>Department</Label>
-          <Select value={form.department ?? "other"} onValueChange={(v) => setForm({ ...form, department: v as Dept })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
+          <Select
+            value={form.department ?? "other"}
+            onValueChange={(v) => setForm({ ...form, department: v as Dept })}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
-              {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>)}
+              {DEPARTMENTS.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {deptLabel(d)}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -374,21 +438,23 @@ function TeamAdmin() {
 
   const load = React.useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .order("full_name");
+    const { data, error } = await supabase.from("profiles").select("*").order("full_name");
     if (error) toast.error(error.message);
     else setProfiles((data ?? []) as ProfileRow[]);
     setLoading(false);
   }, []);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   async function update(id: string, patch: Partial<ProfileRow>) {
     const { error } = await supabase.from("profiles").update(patch).eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("Updated"); void load(); }
+    else {
+      toast.success("Updated");
+      void load();
+    }
   }
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
@@ -405,10 +471,19 @@ function TeamAdmin() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end w-full sm:w-auto">
               <div>
                 <Label className="text-xs">Department</Label>
-                <Select value={p.department ?? "other"} onValueChange={(v) => update(p.id, { department: v as Dept })}>
-                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <Select
+                  value={p.department ?? "other"}
+                  onValueChange={(v) => update(p.id, { department: v as Dept })}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {DEPARTMENTS.map((d) => <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>)}
+                    {DEPARTMENTS.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {deptLabel(d)}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -426,8 +501,13 @@ function TeamAdmin() {
               </div>
               <div>
                 <Label className="text-xs">Active</Label>
-                <Select value={p.is_active ? "true" : "false"} onValueChange={(v) => update(p.id, { is_active: v === "true" })}>
-                  <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                <Select
+                  value={p.is_active ? "true" : "false"}
+                  onValueChange={(v) => update(p.id, { is_active: v === "true" })}
+                >
+                  <SelectTrigger className="h-8">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="true">Active</SelectItem>
                     <SelectItem value="false">Inactive</SelectItem>
@@ -458,21 +538,29 @@ function RolesAdmin() {
     ((rs ?? []) as RoleRow[]).forEach((r) => {
       const cur = map[r.user_id];
       // pick highest role
-      const rank = (x: RoleRow["role"]) => x === "admin" ? 0 : x === "manager" ? 1 : 2;
+      const rank = (x: RoleRow["role"]) => (x === "admin" ? 0 : x === "manager" ? 1 : 2);
       if (!cur || rank(r.role) < rank(cur)) map[r.user_id] = r.role;
     });
     setRoles(map);
     setLoading(false);
   }, []);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   async function setRole(userId: string, role: RoleRow["role"]) {
     // Remove existing roles, then insert new
     const del = await supabase.from("user_roles").delete().eq("user_id", userId);
-    if (del.error) { toast.error(del.error.message); return; }
+    if (del.error) {
+      toast.error(del.error.message);
+      return;
+    }
     const ins = await supabase.from("user_roles").insert({ user_id: userId, role });
-    if (ins.error) { toast.error(ins.error.message); return; }
+    if (ins.error) {
+      toast.error(ins.error.message);
+      return;
+    }
     toast.success(`Role set to ${role}`);
     void load();
   }
@@ -488,8 +576,13 @@ function RolesAdmin() {
               <p className="font-medium text-sm">{p.full_name ?? p.email}</p>
               <p className="text-xs text-muted-foreground">{p.email}</p>
             </div>
-            <Select value={roles[p.id] ?? "employee"} onValueChange={(v) => setRole(p.id, v as RoleRow["role"])}>
-              <SelectTrigger className="w-36 h-8"><SelectValue /></SelectTrigger>
+            <Select
+              value={roles[p.id] ?? "employee"}
+              onValueChange={(v) => setRole(p.id, v as RoleRow["role"])}
+            >
+              <SelectTrigger className="w-36 h-8">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>

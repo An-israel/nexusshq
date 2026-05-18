@@ -37,7 +37,7 @@ export interface DateRange {
 export function getDateRange(
   preset: DateRangePreset,
   customStart?: Date,
-  customEnd?: Date
+  customEnd?: Date,
 ): DateRange {
   const now = new Date();
 
@@ -124,10 +124,7 @@ export function getDateRange(
 export function formatDateRangeLabel(range: DateRange): string {
   const { start, end } = range;
   if (start.getFullYear() === end.getFullYear()) {
-    if (
-      start.getMonth() === end.getMonth() &&
-      start.getDate() === end.getDate()
-    ) {
+    if (start.getMonth() === end.getMonth() && start.getDate() === end.getDate()) {
       return format(start, "MMM d, yyyy");
     }
     return `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;

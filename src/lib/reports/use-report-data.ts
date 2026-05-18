@@ -16,8 +16,8 @@ export interface DailyChartPoint {
 }
 
 export interface HeatmapCell {
-  day: number;   // 0=Mon … 4=Fri
-  hour: number;  // 0=9AM … 7=4PM
+  day: number; // 0=Mon … 4=Fri
+  hour: number; // 0=9AM … 7=4PM
   count: number;
 }
 
@@ -83,8 +83,8 @@ export interface WeeklyVelocityPoint {
 // ---- Section 4: Performance Trends ----
 
 export interface PerformanceStats {
-  avgScore: number;        // 0-100
-  prevAvgScore: number;    // 0-100
+  avgScore: number; // 0-100
+  prevAvgScore: number; // 0-100
   exceptionalCount: number; // score >= 90
   needsImprovementCount: number; // score < 65
 }
@@ -96,7 +96,7 @@ export interface PerformanceTrendPoint {
 }
 
 export interface ScoreDistribution {
-  band: string;  // e.g. "Exceptional (90-100)"
+  band: string; // e.g. "Exceptional (90-100)"
   count: number;
   color: string; // hex
 }
@@ -127,9 +127,9 @@ export interface StaffAttentionEmployee {
 
 export interface StaffAttentionRow {
   employee: StaffAttentionEmployee;
-  score: number;          // 0-100
-  completionPct: number;  // 0-100
-  attendancePct: number;  // 0-100
+  score: number; // 0-100
+  completionPct: number; // 0-100
+  attendancePct: number; // 0-100
   activeFlags: number;
   overdueTaskCount: number;
   trend: "improving" | "stable" | "declining";
@@ -145,10 +145,10 @@ export interface TopPerformer {
     avatarUrl?: string | null;
   };
   rank: number;
-  score: number;          // 0-100
+  score: number; // 0-100
   tasksCompleted: number;
-  kpiPct: number;         // 0-100
-  attendancePct: number;  // 0-100
+  kpiPct: number; // 0-100
+  attendancePct: number; // 0-100
 }
 
 // ---- Section 8: Correlation ----
@@ -157,10 +157,10 @@ export interface ScatterPoint {
   id: string;
   name: string;
   department: string;
-  attendancePct: number;    // 0-100 (x axis)
-  completionPct: number;    // 0-100 (y axis)
-  tasksAssigned: number;    // dot size
-  score: number;            // 0-100 (dot colour)
+  attendancePct: number; // 0-100 (x axis)
+  completionPct: number; // 0-100 (y axis)
+  tasksAssigned: number; // dot size
+  score: number; // 0-100 (dot colour)
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -168,7 +168,16 @@ export interface ScatterPoint {
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useState, useCallback, useRef } from "react";
-import { format, eachWeekOfInterval, startOfWeek, endOfWeek, eachDayOfInterval, isWeekend, differenceInCalendarDays, getDay } from "date-fns";
+import {
+  format,
+  eachWeekOfInterval,
+  startOfWeek,
+  endOfWeek,
+  eachDayOfInterval,
+  isWeekend,
+  differenceInCalendarDays,
+  getDay,
+} from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import type { DateRange } from "@/lib/reports/date-ranges";
 import { toISODate, dayOfWeekMon0 } from "@/lib/reports/date-ranges";
@@ -233,11 +242,7 @@ export function useReportData(workspaceId: string | null) {
   const runRef = useRef(0);
 
   const generate = useCallback(
-    async (
-      dateRange: DateRange,
-      deptFilter: string | null,
-      employeeFilter: string | null,
-    ) => {
+    async (dateRange: DateRange, deptFilter: string | null, employeeFilter: string | null) => {
       if (!workspaceId) return;
       const run = ++runRef.current;
       setLoading(true);
@@ -248,41 +253,40 @@ export function useReportData(workspaceId: string | null) {
 
         // ── Fetch base data in parallel ───────────────────────────────────
 
-        const [profilesRes, tasksRes, attendanceRes, flagsRes, kpisRes] =
-          await Promise.all([
-            supabase
-              .from("profiles")
-              .select("id, full_name, department, avatar_url, is_active")
-              .eq("workspace_id", workspaceId)
-              .eq("is_active", true),
+        const [profilesRes, tasksRes, attendanceRes, flagsRes, kpisRes] = await Promise.all([
+          supabase
+            .from("profiles")
+            .select("id, full_name, department, avatar_url, is_active")
+            .eq("workspace_id", workspaceId)
+            .eq("is_active", true),
 
-            supabase
-              .from("tasks")
-              .select(
-                "id, assigned_to, status, priority, task_type, due_date, completed_at, created_at",
-              )
-              .eq("workspace_id", workspaceId)
-              .gte("created_at", dateRange.start.toISOString())
-              .lte("created_at", dateRange.end.toISOString()),
+          supabase
+            .from("tasks")
+            .select(
+              "id, assigned_to, status, priority, task_type, due_date, completed_at, created_at",
+            )
+            .eq("workspace_id", workspaceId)
+            .gte("created_at", dateRange.start.toISOString())
+            .lte("created_at", dateRange.end.toISOString()),
 
-            supabase
-              .from("attendance")
-              .select("user_id, date, clock_in, clock_out, total_minutes, status")
-              .eq("workspace_id", workspaceId)
-              .gte("date", startStr)
-              .lte("date", endStr),
+          supabase
+            .from("attendance")
+            .select("user_id, date, clock_in, clock_out, total_minutes, status")
+            .eq("workspace_id", workspaceId)
+            .gte("date", startStr)
+            .lte("date", endStr),
 
-            supabase
-              .from("flags")
-              .select("flagged_user_id, severity, is_resolved, created_at")
-              .eq("workspace_id", workspaceId)
-              .eq("is_resolved", false),
+          supabase
+            .from("flags")
+            .select("flagged_user_id, severity, is_resolved, created_at")
+            .eq("workspace_id", workspaceId)
+            .eq("is_resolved", false),
 
-            supabase
-              .from("kpis")
-              .select("id, title, department, target_value, unit, period")
-              .eq("workspace_id", workspaceId),
-          ]);
+          supabase
+            .from("kpis")
+            .select("id, title, department, target_value, unit, period")
+            .eq("workspace_id", workspaceId),
+        ]);
 
         if (run !== runRef.current) return;
 
@@ -311,31 +315,19 @@ export function useReportData(workspaceId: string | null) {
         // ── Section 1: Daily Productivity ────────────────────────────────
 
         const today = toISODate(new Date());
-        const yesterday = toISODate(
-          new Date(Date.now() - 86400000),
-        );
+        const yesterday = toISODate(new Date(Date.now() - 86400000));
 
         const completedToday = tasks.filter(
-          (t) =>
-            t.status === "completed" &&
-            t.completed_at &&
-            t.completed_at.startsWith(today),
+          (t) => t.status === "completed" && t.completed_at && t.completed_at.startsWith(today),
         ).length;
 
         const completedYesterday = tasks.filter(
-          (t) =>
-            t.status === "completed" &&
-            t.completed_at &&
-            t.completed_at.startsWith(yesterday),
+          (t) => t.status === "completed" && t.completed_at && t.completed_at.startsWith(yesterday),
         ).length;
 
-        const assignedToday = tasks.filter((t) =>
-          t.created_at.startsWith(today),
-        ).length;
+        const assignedToday = tasks.filter((t) => t.created_at.startsWith(today)).length;
 
-        const overdueCount = tasks.filter(
-          (t) => t.status === "overdue",
-        ).length;
+        const overdueCount = tasks.filter((t) => t.status === "overdue").length;
 
         const prodStats: DailyProductivityStats = {
           completedToday,
@@ -419,35 +411,24 @@ export function useReportData(workspaceId: string | null) {
         );
         const totalExpected = totalWorkDays * empCount;
         const avgAttendanceRate =
-          totalExpected > 0
-            ? Math.min(100, (presentDayCount / totalExpected) * 100)
-            : 0;
+          totalExpected > 0 ? Math.min(100, (presentDayCount / totalExpected) * 100) : 0;
 
         const totalLateArrivals = Array.from(dateToLate.values()).reduce(
           (s, set) => s + set.size,
           0,
         );
-        const totalAbsentDays = Math.max(
-          0,
-          totalExpected - presentDayCount,
-        );
+        const totalAbsentDays = Math.max(0, totalExpected - presentDayCount);
 
         // Per-employee punctuality
-        const empPunctMap = new Map<
-          string,
-          { onTime: number; total: number }
-        >();
+        const empPunctMap = new Map<string, { onTime: number; total: number }>();
         att.forEach((a) => {
-          if (!empPunctMap.has(a.user_id))
-            empPunctMap.set(a.user_id, { onTime: 0, total: 0 });
+          if (!empPunctMap.has(a.user_id)) empPunctMap.set(a.user_id, { onTime: 0, total: 0 });
           const e = empPunctMap.get(a.user_id)!;
           e.total++;
           if (a.status === "present") e.onTime++;
         });
 
-        const attPunctuality: EmployeePunctuality[] = Array.from(
-          empPunctMap.entries(),
-        )
+        const attPunctuality: EmployeePunctuality[] = Array.from(empPunctMap.entries())
           .map(([id, e]) => ({
             id,
             name: profileMap.get(id)?.full_name ?? id,
@@ -483,18 +464,12 @@ export function useReportData(workspaceId: string | null) {
           const expected = daysInWeek * empCount;
           return {
             date: format(ws, "MMM d"),
-            rate:
-              expected > 0
-                ? Math.min(100, (presentInWeek / expected) * 100)
-                : 0,
+            rate: expected > 0 ? Math.min(100, (presentInWeek / expected) * 100) : 0,
           };
         });
 
         // Attendance matrix (first 35 calendar days, all employees)
-        const rangeDays = differenceInCalendarDays(
-          dateRange.end,
-          dateRange.start,
-        ) + 1;
+        const rangeDays = differenceInCalendarDays(dateRange.end, dateRange.start) + 1;
         const matrixDays =
           rangeDays <= 35
             ? eachDayOfInterval({
@@ -512,9 +487,7 @@ export function useReportData(workspaceId: string | null) {
               days: matrixDays.map((d) => {
                 if (isWeekend(d)) return { day: d.getDate(), status: "weekend" as const };
                 const key = format(d, "yyyy-MM-dd");
-                const dayAtt = att.find(
-                  (a) => a.user_id === uid && a.date === key,
-                );
+                const dayAtt = att.find((a) => a.user_id === uid && a.date === key);
                 let status: AttendanceCellStatus = "absent";
                 if (dayAtt) {
                   if (dayAtt.status === "present") status = "present";
@@ -532,18 +505,14 @@ export function useReportData(workspaceId: string | null) {
 
         const completedTasks = tasks.filter((t) => t.status === "completed");
         const total = tasks.length;
-        const overallCompletionRate =
-          total > 0 ? (completedTasks.length / total) * 100 : 0;
+        const overallCompletionRate = total > 0 ? (completedTasks.length / total) * 100 : 0;
 
         let totalDaysSum = 0;
         let onTimeCount = 0;
         completedTasks.forEach((t) => {
           if (t.completed_at && t.created_at) {
             const days =
-              differenceInCalendarDays(
-                new Date(t.completed_at),
-                new Date(t.created_at),
-              ) + 1;
+              differenceInCalendarDays(new Date(t.completed_at), new Date(t.created_at)) + 1;
             totalDaysSum += Math.max(1, days);
           }
           if (t.completed_at && t.due_date) {
@@ -551,21 +520,15 @@ export function useReportData(workspaceId: string | null) {
           }
         });
         const avgCompletionDays =
-          completedTasks.length > 0
-            ? totalDaysSum / completedTasks.length
-            : 0;
+          completedTasks.length > 0 ? totalDaysSum / completedTasks.length : 0;
         const onTimePct =
-          completedTasks.length > 0
-            ? (onTimeCount / completedTasks.length) * 100
-            : 0;
+          completedTasks.length > 0 ? (onTimeCount / completedTasks.length) * 100 : 0;
 
         const typeCounts: Record<string, number> = {};
         completedTasks.forEach((t) => {
           typeCounts[t.task_type] = (typeCounts[t.task_type] ?? 0) + 1;
         });
-        const topTaskType =
-          Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ??
-          null;
+        const topTaskType = Object.entries(typeCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
 
         const taskStats: TaskCompletionStats = {
           overallCompletionRate,
@@ -604,22 +567,16 @@ export function useReportData(workspaceId: string | null) {
               e.onTimeCount++;
             }
             if (t.completed_at && t.created_at) {
-              e.daysSum +=
-                Math.max(
-                  1,
-                  differenceInCalendarDays(
-                    new Date(t.completed_at),
-                    new Date(t.created_at),
-                  ) + 1,
-                );
+              e.daysSum += Math.max(
+                1,
+                differenceInCalendarDays(new Date(t.completed_at), new Date(t.created_at)) + 1,
+              );
             }
           }
           if (t.status === "overdue") e.overdue++;
         });
 
-        const taskEmployeeRows: EmployeeTaskRow[] = Array.from(
-          empTaskMap.entries(),
-        )
+        const taskEmployeeRows: EmployeeTaskRow[] = Array.from(empTaskMap.entries())
           .map(([id, e]) => ({
             id,
             name: profileMap.get(id)?.full_name ?? id,
@@ -640,9 +597,7 @@ export function useReportData(workspaceId: string | null) {
           e.total++;
           if (t.status === "completed") e.done++;
         });
-        const taskDeptPoints: DeptCompletionPoint[] = Array.from(
-          deptTaskMap.entries(),
-        )
+        const taskDeptPoints: DeptCompletionPoint[] = Array.from(deptTaskMap.entries())
           .map(([dept, e]) => ({
             department: deptLabel(dept),
             completionRate: e.total > 0 ? (e.done / e.total) * 100 : 0,
@@ -655,10 +610,7 @@ export function useReportData(workspaceId: string | null) {
           const count = completedTasks.filter((t) => {
             if (!t.completed_at) return false;
             const d = t.completed_at.slice(0, 10);
-            return (
-              d >= format(ws, "yyyy-MM-dd") &&
-              d <= format(we, "yyyy-MM-dd")
-            );
+            return d >= format(ws, "yyyy-MM-dd") && d <= format(we, "yyyy-MM-dd");
           }).length;
           return { week: `W${i + 1} ${format(ws, "MMM d")}`, completed: count };
         });
@@ -668,16 +620,8 @@ export function useReportData(workspaceId: string | null) {
         // Score = weighted: completionPct*0.5 + onTimePct*0.3 + attendancePct*0.2
         function computeScore(uid: string) {
           const e = empTaskMap.get(uid);
-          const comp = e
-            ? e.assigned > 0
-              ? (e.completed / e.assigned) * 100
-              : 0
-            : 0;
-          const onTime = e
-            ? e.completed > 0
-              ? (e.onTimeCount / e.completed) * 100
-              : 0
-            : 0;
+          const comp = e ? (e.assigned > 0 ? (e.completed / e.assigned) * 100 : 0) : 0;
+          const onTime = e ? (e.completed > 0 ? (e.onTimeCount / e.completed) * 100 : 0) : 0;
           const empAtt = att.filter((a) => a.user_id === uid);
           const wdCount = totalWorkDays || 1;
           const presentDays = empAtt.filter(
@@ -693,9 +637,7 @@ export function useReportData(workspaceId: string | null) {
         }));
 
         const avgScore =
-          uidScores.length > 0
-            ? uidScores.reduce((s, e) => s + e.score, 0) / uidScores.length
-            : 0;
+          uidScores.length > 0 ? uidScores.reduce((s, e) => s + e.score, 0) / uidScores.length : 0;
 
         const perfStats: PerformanceStats = {
           avgScore: Math.round(avgScore),
@@ -709,17 +651,10 @@ export function useReportData(workspaceId: string | null) {
           const we = endOfWeek(ws, { weekStartsOn: 1 });
           const weekTasks = allTasks.filter((t) => {
             const d = t.created_at.slice(0, 10);
-            return (
-              d >= format(ws, "yyyy-MM-dd") && d <= format(we, "yyyy-MM-dd")
-            );
+            return d >= format(ws, "yyyy-MM-dd") && d <= format(we, "yyyy-MM-dd");
           });
-          const weekDone = weekTasks.filter(
-            (t) => t.status === "completed",
-          ).length;
-          const score =
-            weekTasks.length > 0
-              ? Math.round((weekDone / weekTasks.length) * 100)
-              : 0;
+          const weekDone = weekTasks.filter((t) => t.status === "completed").length;
+          const score = weekTasks.length > 0 ? Math.round((weekDone / weekTasks.length) * 100) : 0;
           return { week: `W${i + 1} ${format(ws, "MMM d")}`, score };
         });
 
@@ -732,9 +667,7 @@ export function useReportData(workspaceId: string | null) {
         ];
         const perfDistribution: ScoreDistribution[] = bands.map((b) => ({
           band: b.label,
-          count: uidScores.filter(
-            (e) => e.score >= b.min && e.score <= b.max,
-          ).length,
+          count: uidScores.filter((e) => e.score >= b.min && e.score <= b.max).length,
           color: b.color,
         }));
 
@@ -745,13 +678,8 @@ export function useReportData(workspaceId: string | null) {
             const p = profileMap.get(t.assigned_to);
             return p?.department === kpi.department;
           });
-          const completedLinked = linked.filter(
-            (t) => t.status === "completed",
-          ).length;
-          const pct =
-            kpi.target_value > 0
-              ? (completedLinked / kpi.target_value) * 100
-              : 0;
+          const completedLinked = linked.filter((t) => t.status === "completed").length;
+          const pct = kpi.target_value > 0 ? (completedLinked / kpi.target_value) * 100 : 0;
           let status: KpiRow["status"] = "behind";
           if (pct >= 100) status = "complete";
           else if (pct >= 70) status = "on_track";
@@ -777,9 +705,7 @@ export function useReportData(workspaceId: string | null) {
           .filter((e) => {
             const empTaskData = empTaskMap.get(e.uid);
             const overdueCount = empTaskData?.overdue ?? 0;
-            const activeFlags = flags.filter(
-              (f) => f.flagged_user_id === e.uid,
-            ).length;
+            const activeFlags = flags.filter((f) => f.flagged_user_id === e.uid).length;
             return e.score < 65 || overdueCount > 0 || activeFlags > 0;
           })
           .map((e) => {
@@ -798,9 +724,7 @@ export function useReportData(workspaceId: string | null) {
               100,
               totalWorkDays > 0 ? (presentDays / totalWorkDays) * 100 : 0,
             );
-            const activeFlags = flags.filter(
-              (f) => f.flagged_user_id === e.uid,
-            ).length;
+            const activeFlags = flags.filter((f) => f.flagged_user_id === e.uid).length;
 
             return {
               employee: {
@@ -814,7 +738,10 @@ export function useReportData(workspaceId: string | null) {
               attendancePct: Math.round(attPct),
               activeFlags,
               overdueTaskCount: empTaskData?.overdue ?? 0,
-              trend: (e.score >= 65 ? "stable" : "declining") as "improving" | "stable" | "declining",
+              trend: (e.score >= 65 ? "stable" : "declining") as
+                | "improving"
+                | "stable"
+                | "declining",
             };
           })
           .sort((a, b) => a.score - b.score);
@@ -833,13 +760,10 @@ export function useReportData(workspaceId: string | null) {
               100,
               totalWorkDays > 0 ? (presentDays / totalWorkDays) * 100 : 0,
             );
-            const kpiMatch = kpiRows.filter(
-              (k) => k.department === p?.department,
-            );
+            const kpiMatch = kpiRows.filter((k) => k.department === p?.department);
             const kpiPct =
               kpiMatch.length > 0
-                ? kpiMatch.reduce((s, k) => s + k.pctAchieved, 0) /
-                  kpiMatch.length
+                ? kpiMatch.reduce((s, k) => s + k.pctAchieved, 0) / kpiMatch.length
                 : 0;
             return {
               uid: e.uid,

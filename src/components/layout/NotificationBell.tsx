@@ -1,14 +1,19 @@
 import * as React from "react";
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock, Target, MessageSquare, Users } from "lucide-react";
+import {
+  Bell,
+  AlertCircle,
+  AlertTriangle,
+  CheckSquare,
+  Clock,
+  Target,
+  MessageSquare,
+  Users,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/nexus";
 import type { Database } from "@/integrations/supabase/types";
@@ -18,15 +23,23 @@ type Notif = Database["public"]["Tables"]["notifications"]["Row"];
 function iconFor(type: string) {
   switch (type) {
     case "task_assigned":
-    case "task_due_soon": return CheckSquare;
-    case "task_overdue": return AlertTriangle;
+    case "task_due_soon":
+      return CheckSquare;
+    case "task_overdue":
+      return AlertTriangle;
     case "warning":
-    case "flag": return AlertCircle;
-    case "clock_reminder": return Clock;
-    case "kpi_reminder": return Target;
-    case "direct_message": return MessageSquare;
-    case "group_message": return Users;
-    default: return Bell;
+    case "flag":
+      return AlertCircle;
+    case "clock_reminder":
+      return Clock;
+    case "kpi_reminder":
+      return Target;
+    case "direct_message":
+      return MessageSquare;
+    case "group_message":
+      return Users;
+    default:
+      return Bell;
   }
 }
 
@@ -34,10 +47,13 @@ function colorFor(type: string) {
   switch (type) {
     case "warning":
     case "flag":
-    case "task_overdue": return "text-destructive bg-destructive/15";
+    case "task_overdue":
+      return "text-destructive bg-destructive/15";
     case "task_due_soon":
-    case "clock_reminder": return "text-warning bg-warning/15";
-    default: return "text-primary bg-primary/15";
+    case "clock_reminder":
+      return "text-warning bg-warning/15";
+    default:
+      return "text-primary bg-primary/15";
   }
 }
 
@@ -75,7 +91,9 @@ export function NotificationBell() {
         () => void load(),
       )
       .subscribe();
-    return () => { void supabase.removeChannel(ch); };
+    return () => {
+      void supabase.removeChannel(ch);
+    };
   }, [user, load]);
 
   async function markRead(id: string) {
@@ -118,10 +136,7 @@ export function NotificationBell() {
             </p>
           </div>
           {count > 0 && (
-            <button
-              onClick={markAllRead}
-              className="text-[11px] text-primary hover:underline"
-            >
+            <button onClick={markAllRead} className="text-[11px] text-primary hover:underline">
               Mark all read
             </button>
           )}
@@ -141,13 +156,19 @@ export function NotificationBell() {
                     className="flex cursor-pointer items-start gap-3 p-3 hover:bg-accent/50 transition-colors"
                     onClick={() => void markRead(n.id)}
                   >
-                    <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${colorFor(n.type)}`}>
+                    <div
+                      className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${colorFor(n.type)}`}
+                    >
                       <Icon className="h-3.5 w-3.5" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-medium leading-snug">{n.title}</p>
-                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{n.message}</p>
-                      <p className="mt-1 text-[10px] text-muted-foreground">{timeAgo(n.created_at)}</p>
+                      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">
+                        {n.message}
+                      </p>
+                      <p className="mt-1 text-[10px] text-muted-foreground">
+                        {timeAgo(n.created_at)}
+                      </p>
                     </div>
                   </li>
                 );

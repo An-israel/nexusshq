@@ -37,9 +37,7 @@ type WorkspaceMembership = {
     | null;
 };
 
-function firstWorkspace(
-  value: WorkspaceMembership["workspaces"],
-): {
+function firstWorkspace(value: WorkspaceMembership["workspaces"]): {
   id: string;
   name: string;
   slug: string;
@@ -47,7 +45,7 @@ function firstWorkspace(
   is_active: boolean;
 } | null {
   if (!value) return null;
-  return Array.isArray(value) ? value[0] ?? null : value;
+  return Array.isArray(value) ? (value[0] ?? null) : value;
 }
 
 function WorkspacesPage() {
@@ -113,7 +111,9 @@ function WorkspacesPage() {
             </div>
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold">No workspace yet</h1>
-              <p className="text-sm text-muted-foreground">Create your first workspace and start inviting your team.</p>
+              <p className="text-sm text-muted-foreground">
+                Create your first workspace and start inviting your team.
+              </p>
             </div>
             <Button onClick={() => navigate({ to: "/create-workspace" })}>Create workspace</Button>
           </Card>
@@ -121,7 +121,9 @@ function WorkspacesPage() {
           <>
             <div className="space-y-1">
               <h1 className="text-2xl font-semibold">Choose a workspace</h1>
-              <p className="text-sm text-muted-foreground">One account can belong to multiple companies, brands, or internal teams.</p>
+              <p className="text-sm text-muted-foreground">
+                One account can belong to multiple companies, brands, or internal teams.
+              </p>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
@@ -150,11 +152,17 @@ function WorkspacesPage() {
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
                               <h2 className="text-lg font-semibold">{workspace.name}</h2>
-                              <Badge variant="secondary" className="capitalize">{entry.role}</Badge>
+                              <Badge variant="secondary" className="capitalize">
+                                {entry.role}
+                              </Badge>
                             </div>
-                            <p className="text-sm text-muted-foreground">nexus.skryveai.com/{workspace.slug}</p>
+                            <p className="text-sm text-muted-foreground">
+                              nexus.skryveai.com/{workspace.slug}
+                            </p>
                           </div>
-                          <Badge variant="outline" className="capitalize">{workspace.plan}</Badge>
+                          <Badge variant="outline" className="capitalize">
+                            {workspace.plan}
+                          </Badge>
                         </div>
 
                         <ChevronRight className="mt-1 h-5 w-5 text-muted-foreground transition-transform group-hover:translate-x-1 group-hover:text-foreground" />

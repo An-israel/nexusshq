@@ -39,7 +39,11 @@ function heatColor(count: number): string {
 
 // ---- Custom dark tooltip for recharts ----
 
-function DarkTooltip({ active, payload, label }: {
+function DarkTooltip({
+  active,
+  payload,
+  label,
+}: {
   active?: boolean;
   payload?: Array<{ name: string; value: number; color: string }>;
   label?: string;
@@ -61,7 +65,9 @@ function DarkTooltip({ active, payload, label }: {
 
 function StatCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-1">{children}</div>
+    <div className="rounded-xl border border-border bg-card p-4 flex flex-col gap-1">
+      {children}
+    </div>
   );
 }
 
@@ -101,7 +107,9 @@ export function Section1DailyProductivity({ stats, chartData, heatmap, loading }
                   }
                 >
                   {stats.completedToday >= stats.completedYesterday ? "↑" : "↓"}{" "}
-                  {Math.abs(stats.completedToday - stats.completedYesterday)} {stats.completedToday >= stats.completedYesterday ? "more" : "fewer"} than yesterday
+                  {Math.abs(stats.completedToday - stats.completedYesterday)}{" "}
+                  {stats.completedToday >= stats.completedYesterday ? "more" : "fewer"} than
+                  yesterday
                 </p>
               )}
             </>
@@ -163,7 +171,9 @@ export function Section1DailyProductivity({ stats, chartData, heatmap, loading }
 
       {/* Bar chart */}
       <div className="bg-[#111] rounded-xl p-4 mb-6">
-        <p className="text-sm font-semibold text-white mb-4">Daily Output — Assigned vs Completed</p>
+        <p className="text-sm font-semibold text-white mb-4">
+          Daily Output — Assigned vs Completed
+        </p>
         {loading ? (
           <Skeleton className="h-64 w-full rounded-lg" />
         ) : (
@@ -173,9 +183,7 @@ export function Section1DailyProductivity({ stats, chartData, heatmap, loading }
               <XAxis dataKey="date" tick={{ fill: "#fff", fontSize: 11 }} />
               <YAxis tick={{ fill: "#fff", fontSize: 11 }} />
               <Tooltip content={<DarkTooltip />} />
-              <Legend
-                wrapperStyle={{ fontSize: 11, color: "#fff" }}
-              />
+              <Legend wrapperStyle={{ fontSize: 11, color: "#fff" }} />
               <Bar dataKey="assigned" name="Assigned" fill="#374151" radius={[2, 2, 0, 0]} />
               <Bar dataKey="completed" name="Completed" fill="#3b82f6" radius={[2, 2, 0, 0]} />
             </BarChart>

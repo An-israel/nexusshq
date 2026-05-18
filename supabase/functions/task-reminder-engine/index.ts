@@ -93,11 +93,7 @@ function buildDueTodayEmail(task: Task, profile: Profile): string {
 
 // ── Step processors ───────────────────────────────────────────────────────────
 
-async function processDueToday(
-  task: Task,
-  profile: Profile,
-  workspaceId: string
-): Promise<void> {
+async function processDueToday(task: Task, profile: Profile, workspaceId: string): Promise<void> {
   // In-app notification
   await sendNotification(
     profile.id,
@@ -105,20 +101,20 @@ async function processDueToday(
     "task_due_soon",
     `⏰ Due today: ${task.title}`,
     `This task is due today. Current progress: ${task.progress_percent}%`,
-    task.id
+    task.id,
   );
 
   // Email
   await enqueueEmail(
     profile.email,
     `⏰ Due Today: ${task.title}`,
-    buildDueTodayEmail(task, profile)
+    buildDueTodayEmail(task, profile),
   );
 
   // WhatsApp (if opted-in)
   await notifyUserWhatsApp(
     profile.id,
-    `⏰ *Nexus HQ Reminder*\nYour task "*${task.title}*" is due today.\nCurrent progress: ${task.progress_percent}%\nLog in to update: ${APP_URL}`
+    `⏰ *Nexus HQ Reminder*\nYour task "*${task.title}*" is due today.\nCurrent progress: ${task.progress_percent}%\nLog in to update: ${APP_URL}`,
   );
 
   await logAutomation(
@@ -126,14 +122,14 @@ async function processDueToday(
     "task_reminder_engine",
     profile.id,
     { task_id: task.id, task_title: task.title, step: "due_today" },
-    "success"
+    "success",
   );
 }
 
 async function processDueTomorrow(
   task: Task,
   profile: Profile,
-  workspaceId: string
+  workspaceId: string,
 ): Promise<void> {
   await sendNotification(
     profile.id,
@@ -141,7 +137,7 @@ async function processDueTomorrow(
     "task_due_soon",
     `📅 Due tomorrow: ${task.title}`,
     `This task is due tomorrow. Current progress: ${task.progress_percent}%`,
-    task.id
+    task.id,
   );
 
   await logAutomation(
@@ -149,22 +145,18 @@ async function processDueTomorrow(
     "task_reminder_engine",
     profile.id,
     { task_id: task.id, task_title: task.title, step: "due_tomorrow" },
-    "success"
+    "success",
   );
 }
 
-async function processDueIn3Days(
-  task: Task,
-  profile: Profile,
-  workspaceId: string
-): Promise<void> {
+async function processDueIn3Days(task: Task, profile: Profile, workspaceId: string): Promise<void> {
   await sendNotification(
     profile.id,
     workspaceId,
     "task_due_soon",
     `📌 Due in 3 days: ${task.title}`,
     `This ${task.priority}-priority task is due in 3 days. Current progress: ${task.progress_percent}%`,
-    task.id
+    task.id,
   );
 
   await logAutomation(
@@ -172,7 +164,7 @@ async function processDueIn3Days(
     "task_reminder_engine",
     profile.id,
     { task_id: task.id, task_title: task.title, step: "due_in_3_days", priority: task.priority },
-    "success"
+    "success",
   );
 }
 
@@ -191,7 +183,9 @@ Deno.serve(async (_req) => {
     const inThreeDays = dateOffsetWAT(3);
 
     const workspaces = await getActiveWorkspaces();
-    console.log(`[task-reminder-engine] Processing ${workspaces.length} workspace(s). Date: ${today}`);
+    console.log(
+      `[task-reminder-engine] Processing ${workspaces.length} workspace(s). Date: ${today}`,
+    );
 
     const summary = {
       workspaces_processed: 0,
@@ -209,8 +203,16 @@ Deno.serve(async (_req) => {
       const settings = await getAutomationSettings(workspaceId);
 
       if (!settings?.task_reminders_enabled) {
-        console.log(`[task-reminder-engine] [${workspace.name}] task_reminders_enabled=false — skipping.`);
-        await logAutomation(workspaceId, "task_reminder_engine", null, { reason: "task_reminders_disabled" }, "skipped");
+        console.log(
+          `[task-reminder-engine] [${workspace.name}] task_reminders_enabled=false — skipping.`,
+        );
+        await logAutomation(
+          workspaceId,
+          "task_reminder_engine",
+          null,
+          { reason: "task_reminders_disabled" },
+          "skipped",
+        );
         summary.workspaces_skipped++;
         continue;
       }
@@ -224,14 +226,23 @@ Deno.serve(async (_req) => {
           `user_id,
            profiles!workspace_members_user_id_fkey (
              id, full_name, email, whatsapp_opt_in, phone
-           )`
+           )`,
         )
         .eq("workspace_id", workspaceId)
         .eq("role", "employee");
 
       if (membersErr) {
-        console.error(`[task-reminder-engine] [${workspace.name}] Failed to fetch members:`, membersErr.message);
-        await logAutomation(workspaceId, "task_reminder_engine", null, { error: membersErr.message, step: "fetch_members" }, "failed");
+        console.error(
+          `[task-reminder-engine] [${workspace.name}] Failed to fetch members:`,
+          membersErr.message,
+        );
+        await logAutomation(
+          workspaceId,
+          "task_reminder_engine",
+          null,
+          { error: membersErr.message, step: "fetch_members" },
+          "failed",
+        );
         summary.errors++;
         continue;
       }
@@ -240,22 +251,35 @@ Deno.serve(async (_req) => {
         .map((m: any) => m.profiles as Profile | null)
         .filter((p): p is Profile => p !== null && Boolean(p.email));
 
-      console.log(`[task-reminder-engine] [${workspace.name}] ${employees.length} active employee(s).`);
+      console.log(
+        `[task-reminder-engine] [${workspace.name}] ${employees.length} active employee(s).`,
+      );
 
       // ── 3. Process each employee ──────────────────────────────────────────
       for (const profile of employees) {
         // Fetch this employee's relevant tasks in one query
         const { data: tasks, error: tasksErr } = await supabase
           .from("tasks")
-          .select("id, title, description, due_date, priority, status, progress_percent, assigned_to, workspace_id")
+          .select(
+            "id, title, description, due_date, priority, status, progress_percent, assigned_to, workspace_id",
+          )
           .eq("workspace_id", workspaceId)
           .eq("assigned_to", profile.id)
           .neq("status", "completed")
           .in("due_date", [today, tomorrow, inThreeDays]);
 
         if (tasksErr) {
-          console.error(`[task-reminder-engine] [${workspace.name}] Task fetch error for user ${profile.id}:`, tasksErr.message);
-          await logAutomation(workspaceId, "task_reminder_engine", profile.id, { error: tasksErr.message, step: "fetch_tasks" }, "failed");
+          console.error(
+            `[task-reminder-engine] [${workspace.name}] Task fetch error for user ${profile.id}:`,
+            tasksErr.message,
+          );
+          await logAutomation(
+            workspaceId,
+            "task_reminder_engine",
+            profile.id,
+            { error: tasksErr.message, step: "fetch_tasks" },
+            "failed",
+          );
           summary.errors++;
           continue;
         }
@@ -270,7 +294,10 @@ Deno.serve(async (_req) => {
               // Step 2 — Due Tomorrow
               await processDueTomorrow(task as Task, profile, workspaceId);
               summary.due_tomorrow++;
-            } else if (task.due_date === inThreeDays && ["high", "urgent"].includes(task.priority)) {
+            } else if (
+              task.due_date === inThreeDays &&
+              ["high", "urgent"].includes(task.priority)
+            ) {
               // Step 3 — Due in 3 Days (high/urgent only)
               await processDueIn3Days(task as Task, profile, workspaceId);
               summary.due_in_3_days++;
@@ -278,14 +305,19 @@ Deno.serve(async (_req) => {
           } catch (taskErr) {
             console.error(
               `[task-reminder-engine] [${workspace.name}] Error processing task ${task.id} for user ${profile.id}:`,
-              taskErr
+              taskErr,
             );
             await logAutomation(
               workspaceId,
               "task_reminder_engine",
               profile.id,
-              { task_id: task.id, task_title: task.title, error: String(taskErr), step: "process_task" },
-              "failed"
+              {
+                task_id: task.id,
+                task_title: task.title,
+                error: String(taskErr),
+                step: "process_task",
+              },
+              "failed",
             );
             summary.errors++;
           }
@@ -302,7 +334,7 @@ Deno.serve(async (_req) => {
           date: today,
           employees_processed: employees.length,
         },
-        "success"
+        "success",
       );
     }
 

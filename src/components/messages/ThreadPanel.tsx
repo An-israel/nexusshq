@@ -79,14 +79,10 @@ function ParentMessageDisplay({ message }: { message: Message }) {
               {sender.job_title}
             </span>
           )}
-          <span className="text-[11px] text-[#6B7280]">
-            {formatTimestamp(message.created_at)}
-          </span>
+          <span className="text-[11px] text-[#6B7280]">{formatTimestamp(message.created_at)}</span>
         </div>
         {message.is_deleted ? (
-          <p className="text-sm text-[#6B7280] italic">
-            This message was deleted
-          </p>
+          <p className="text-sm text-[#6B7280] italic">This message was deleted</p>
         ) : (
           <p className="text-sm text-[#E5E7EB] leading-relaxed break-words whitespace-pre-wrap">
             {message.body}
@@ -154,10 +150,7 @@ export function ThreadPanel({
 
       if (files && files.length > 0 && msgData) {
         const insertedId = (msgData as { id: string }).id;
-        const containerId =
-          parentMessage.channel_id ??
-          parentMessage.conversation_id ??
-          "misc";
+        const containerId = parentMessage.channel_id ?? parentMessage.conversation_id ?? "misc";
 
         const attachmentInserts = await Promise.all(
           files.map(async (file) => {
@@ -182,16 +175,12 @@ export function ThreadPanel({
               storage_path: storagePath,
               thumbnail_url: urlData?.publicUrl ?? null,
             };
-          })
+          }),
         );
 
-        const valid = attachmentInserts.filter(
-          (a): a is NonNullable<typeof a> => a !== null
-        );
+        const valid = attachmentInserts.filter((a): a is NonNullable<typeof a> => a !== null);
         if (valid.length > 0) {
-          const { error: attErr } = await supabase
-            .from("message_attachments")
-            .insert(valid);
+          const { error: attErr } = await supabase.from("message_attachments").insert(valid);
           if (attErr) console.error("Thread attachment insert error:", attErr);
         }
       }
@@ -216,7 +205,7 @@ export function ThreadPanel({
     <aside
       className={cn(
         "flex flex-col h-full w-80 xl:w-96 bg-[#111111]",
-        "border-l border-[#2A2A2A] shrink-0"
+        "border-l border-[#2A2A2A] shrink-0",
       )}
       aria-label="Thread panel"
     >
@@ -244,22 +233,14 @@ export function ThreadPanel({
         </p>
       </div>
 
-      <div
-        ref={scrollRef}
-        className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5"
-      >
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2
-              className="w-5 h-5 text-[#6B7280] animate-spin"
-              aria-label="Loading replies"
-            />
+            <Loader2 className="w-5 h-5 text-[#6B7280] animate-spin" aria-label="Loading replies" />
           </div>
         ) : replies.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
-            <p className="text-sm text-[#6B7280]">
-              Be the first to reply in this thread
-            </p>
+            <p className="text-sm text-[#6B7280]">Be the first to reply in this thread</p>
           </div>
         ) : (
           replies.map((reply, i) => (

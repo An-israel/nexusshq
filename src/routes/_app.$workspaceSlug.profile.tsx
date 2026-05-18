@@ -42,7 +42,12 @@ const STATUS_OPTIONS: {
   { value: "active", label: "Active", dotClass: "bg-green-400", textClass: "text-green-400" },
   { value: "away", label: "Away", dotClass: "bg-yellow-400", textClass: "text-yellow-400" },
   { value: "dnd", label: "Do Not Disturb", dotClass: "bg-red-400", textClass: "text-red-400" },
-  { value: "offline", label: "Offline", dotClass: "bg-muted-foreground", textClass: "text-muted-foreground" },
+  {
+    value: "offline",
+    label: "Offline",
+    dotClass: "bg-muted-foreground",
+    textClass: "text-muted-foreground",
+  },
 ];
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
@@ -63,7 +68,9 @@ function ProfilePage() {
     <div className="max-w-2xl mx-auto space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-bold">My Profile</h1>
-        <p className="text-sm text-muted-foreground">Manage your personal info, status and security settings.</p>
+        <p className="text-sm text-muted-foreground">
+          Manage your personal info, status and security settings.
+        </p>
       </div>
 
       <AvatarSection user={user} profile={profile} refresh={refresh} />
@@ -271,10 +278,7 @@ function ProfileDetailsSection({
 
           <div className="space-y-1.5">
             <Label htmlFor="department">Department</Label>
-            <Select
-              value={department}
-              onValueChange={(v) => setDepartment(v as Department)}
-            >
+            <Select value={department} onValueChange={(v) => setDepartment(v as Department)}>
               <SelectTrigger id="department">
                 <SelectValue />
               </SelectTrigger>
@@ -302,11 +306,7 @@ function ProfileDetailsSection({
 
 /* ─── Section 3: Status & Presence ───────────────────────────────────── */
 
-function StatusSection({
-  user,
-}: {
-  user: NonNullable<ReturnType<typeof useAuth>["user"]>;
-}) {
+function StatusSection({ user }: { user: NonNullable<ReturnType<typeof useAuth>["user"]> }) {
   const [presence, setPresence] = React.useState<PresenceRow | null>(null);
   const [status, setStatus] = React.useState<PresenceStatus>("offline");
   const [statusText, setStatusText] = React.useState("");
@@ -388,10 +388,9 @@ function StatusSection({
                     ].join(" ")}
                   >
                     <span
-                      className={[
-                        "inline-block h-2 w-2 rounded-full shrink-0",
-                        opt.dotClass,
-                      ].join(" ")}
+                      className={["inline-block h-2 w-2 rounded-full shrink-0", opt.dotClass].join(
+                        " ",
+                      )}
                     />
                     <span className={status === opt.value ? opt.textClass : "text-foreground"}>
                       {opt.label}

@@ -199,20 +199,28 @@ Deno.serve(async (_req) => {
         // ── Fetch overdue tasks with assignee + assigner profiles ──────────
         const { data: tasks, error: tasksErr } = await supabase
           .from("tasks")
-          .select(`
+          .select(
+            `
             id, title, due_date, progress_percent, priority,
             assigned_to, assigned_by,
             assignee:profiles!tasks_assigned_to_fkey(id, full_name, email),
             assigner:profiles!tasks_assigned_by_fkey(id, full_name)
-          `)
+          `,
+          )
           .eq("status", "overdue")
           .eq("workspace_id", workspaceId);
 
         if (tasksErr) {
           console.error(`Workspace ${workspaceId}: tasks query error:`, tasksErr.message);
-          await logAutomation(workspaceId, "overdue_escalation_engine", null, {
-            error: tasksErr.message,
-          }, "failed");
+          await logAutomation(
+            workspaceId,
+            "overdue_escalation_engine",
+            null,
+            {
+              error: tasksErr.message,
+            },
+            "failed",
+          );
           summary.errors++;
           continue;
         }
@@ -360,7 +368,10 @@ Deno.serve(async (_req) => {
                 .update({ priority: "urgent" })
                 .eq("id", task.id);
               if (priorityErr) {
-                console.error(`Failed to escalate priority for task ${task.id}:`, priorityErr.message);
+                console.error(
+                  `Failed to escalate priority for task ${task.id}:`,
+                  priorityErr.message,
+                );
               }
             }
 
@@ -388,7 +399,10 @@ Deno.serve(async (_req) => {
                   workspace_id: workspaceId,
                 });
                 if (flagErr) {
-                  console.error(`Failed to insert flag for user ${task.assigned_to}:`, flagErr.message);
+                  console.error(
+                    `Failed to insert flag for user ${task.assigned_to}:`,
+                    flagErr.message,
+                  );
                 }
               }
             }

@@ -54,7 +54,9 @@ export const Route = createFileRoute("/api/public/cron/late-task-report")({
           .in("id", userIds);
 
         const profileMap: Record<string, { full_name: string | null; email: string | null }> = {};
-        (profiles ?? []).forEach((p) => { profileMap[p.id] = p; });
+        (profiles ?? []).forEach((p) => {
+          profileMap[p.id] = p;
+        });
 
         const summary = userIds.map((uid) => ({
           user: profileMap[uid]?.full_name ?? profileMap[uid]?.email ?? uid,

@@ -5,7 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
 function todayISO(): string {
@@ -62,7 +62,9 @@ Deno.serve(async (_req) => {
     // Fetch all active (non-completed) tasks with assignee profile
     const { data: tasks, error: tasksErr } = await supabase
       .from("tasks")
-      .select("id, title, status, due_date, assigned_to, workspace_id, profiles!tasks_assigned_to_fkey(full_name, email)")
+      .select(
+        "id, title, status, due_date, assigned_to, workspace_id, profiles!tasks_assigned_to_fkey(full_name, email)",
+      )
       .not("status", "eq", "completed");
 
     if (tasksErr) {
@@ -73,7 +75,10 @@ Deno.serve(async (_req) => {
     const results = { dueToday: 0, dueTomorrow: 0, markedOverdue: 0, errors: 0 };
 
     for (const task of tasks ?? []) {
-      const profile = (task as any).profiles as { full_name: string | null; email: string | null } | null;
+      const profile = (task as any).profiles as {
+        full_name: string | null;
+        email: string | null;
+      } | null;
       const assigneeName = profile?.full_name ?? "there";
       const assigneeEmail = profile?.email;
       const workspaceId = task.workspace_id;
@@ -91,10 +96,16 @@ Deno.serve(async (_req) => {
           });
 
           if (assigneeEmail) {
-            await supabase.rpc("enqueue_email", {
-              queue_name: "transactional_emails",
-              payload: { to: assigneeEmail, subject: `⏰ Task Due Today — ${task.title}`, html: buildDueTodayHtml(task.title, assigneeName) },
-            }).catch(() => {});
+            await supabase
+              .rpc("enqueue_email", {
+                queue_name: "transactional_emails",
+                payload: {
+                  to: assigneeEmail,
+                  subject: `⏰ Task Due Today — ${task.title}`,
+                  html: buildDueTodayHtml(task.title, assigneeName),
+                },
+              })
+              .catch(() => {});
           }
 
           results.dueToday++;
@@ -117,10 +128,7 @@ Deno.serve(async (_req) => {
         // ── OVERDUE ───────────────────────────────────────────────────────────
         else if (task.due_date < today && task.status !== "overdue") {
           // Update status to overdue
-          await supabase
-            .from("tasks")
-            .update({ status: "overdue" })
-            .eq("id", task.id);
+          await supabase.from("tasks").update({ status: "overdue" }).eq("id", task.id);
 
           await supabase.from("notifications").insert({
             user_id: task.assigned_to,
@@ -132,10 +140,16 @@ Deno.serve(async (_req) => {
           });
 
           if (assigneeEmail) {
-            await supabase.rpc("enqueue_email", {
-              queue_name: "transactional_emails",
-              payload: { to: assigneeEmail, subject: `🔴 Overdue Task — ${task.title}`, html: buildOverdueHtml(task.title, assigneeName) },
-            }).catch(() => {});
+            await supabase
+              .rpc("enqueue_email", {
+                queue_name: "transactional_emails",
+                payload: {
+                  to: assigneeEmail,
+                  subject: `🔴 Overdue Task — ${task.title}`,
+                  html: buildOverdueHtml(task.title, assigneeName),
+                },
+              })
+              .catch(() => {});
           }
 
           results.markedOverdue++;

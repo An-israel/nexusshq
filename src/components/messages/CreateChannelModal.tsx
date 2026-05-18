@@ -76,7 +76,10 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
 
       if (!rows) return;
       const userIds = rows.map((r) => r.user_id).filter((id) => id !== userId);
-      if (userIds.length === 0) { setAllMembers([]); return; }
+      if (userIds.length === 0) {
+        setAllMembers([]);
+        return;
+      }
 
       const { data: profs } = await supabase
         .from("profiles")
@@ -97,7 +100,7 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
     return allMembers.filter(
       (m) =>
         m.profile?.full_name?.toLowerCase().includes(q) ||
-        m.profile?.email?.toLowerCase().includes(q)
+        m.profile?.email?.toLowerCase().includes(q),
     );
   }, [allMembers, memberSearch]);
 
@@ -120,7 +123,10 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
 
   async function handleCreate() {
     const err = validate();
-    if (err) { setError(err); return; }
+    if (err) {
+      setError(err);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -140,13 +146,21 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
 
       if (chErr) throw chErr;
 
-      const memberInserts: { channel_id: string; user_id: string; workspace_id: string; role: string }[] = [
-        { channel_id: channel.id, user_id: userId, workspace_id: workspaceId, role: "admin" },
-      ];
+      const memberInserts: {
+        channel_id: string;
+        user_id: string;
+        workspace_id: string;
+        role: string;
+      }[] = [{ channel_id: channel.id, user_id: userId, workspace_id: workspaceId, role: "admin" }];
 
       if (type === "private") {
         for (const uid of selectedUserIds) {
-          memberInserts.push({ channel_id: channel.id, user_id: uid, workspace_id: workspaceId, role: "member" });
+          memberInserts.push({
+            channel_id: channel.id,
+            user_id: uid,
+            workspace_id: workspaceId,
+            role: "member",
+          });
         }
       }
 
@@ -164,7 +178,12 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
   }
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => {
+        if (!v) onClose();
+      }}
+    >
       <DialogContent className="bg-[#1A1A1A] border border-[#2A2A2A] text-white max-w-md p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b border-[#2A2A2A]">
           <DialogTitle className="text-white text-base font-semibold">Create a channel</DialogTitle>
@@ -180,11 +199,7 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
               maxLength={80}
               className="bg-[#111111] border-[#2A2A2A] text-white placeholder:text-[#4B5563] h-9"
             />
-            {name && (
-              <p className="text-xs text-[#6B7280]">
-                # {name || "channel-name"}
-              </p>
-            )}
+            {name && <p className="text-xs text-[#6B7280]"># {name || "channel-name"}</p>}
           </div>
 
           <div className="flex flex-col gap-1.5">
@@ -199,7 +214,7 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
               className={cn(
                 "resize-none rounded-md px-3 py-2 text-sm bg-[#111111] border border-[#2A2A2A]",
                 "text-white placeholder:text-[#4B5563] outline-none focus:ring-1 focus:ring-[#3B3B3B]",
-                "transition-colors"
+                "transition-colors",
               )}
             />
           </div>
@@ -216,7 +231,7 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
                     "flex-1 py-2 rounded-md text-sm font-medium border transition-colors",
                     type === t
                       ? "bg-[#2A2A2A] border-[#4B5563] text-white"
-                      : "bg-transparent border-[#2A2A2A] text-[#9CA3AF] hover:bg-[#1E1E1E] hover:text-white"
+                      : "bg-transparent border-[#2A2A2A] text-[#9CA3AF] hover:bg-[#1E1E1E] hover:text-white",
                   )}
                 >
                   {t === "public" ? "Public" : "Private"}
@@ -250,7 +265,7 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
                         key={m.user_id}
                         className={cn(
                           "flex items-center gap-3 px-3 py-2 cursor-pointer",
-                          "hover:bg-[#1E1E1E] transition-colors"
+                          "hover:bg-[#1E1E1E] transition-colors",
                         )}
                       >
                         <input
@@ -276,7 +291,9 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
                         <div className="flex flex-col min-w-0">
                           <span className="text-xs text-white truncate">{displayName}</span>
                           {m.profile?.department && (
-                            <span className="text-[10px] text-[#6B7280] truncate">{m.profile.department}</span>
+                            <span className="text-[10px] text-[#6B7280] truncate">
+                              {m.profile.department}
+                            </span>
                           )}
                         </div>
                       </label>
@@ -292,9 +309,7 @@ export function CreateChannelModal({ open, onClose, workspaceId, userId, onCreat
             </div>
           )}
 
-          {error && (
-            <p className="text-xs text-red-400">{error}</p>
-          )}
+          {error && <p className="text-xs text-red-400">{error}</p>}
         </div>
 
         <div className="px-6 pb-6 flex justify-end gap-2">

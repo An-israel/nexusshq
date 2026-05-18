@@ -47,7 +47,9 @@ function readCache<T>(key: string): T | null {
 
 function writeCache(key: string, value: unknown) {
   if (typeof window === "undefined") return;
-  try { window.localStorage.setItem(key, JSON.stringify(value)); } catch {}
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {}
 }
 
 function clearProfileCache() {
@@ -63,12 +65,10 @@ const AuthContext = React.createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
   // Initialise from cache so returning users never see the loading spinner
-  const [profile, setProfile] = React.useState<NexusProfile | null>(
-    () => readCache<NexusProfile>(CACHE_PROFILE),
+  const [profile, setProfile] = React.useState<NexusProfile | null>(() =>
+    readCache<NexusProfile>(CACHE_PROFILE),
   );
-  const [role, setRole] = React.useState<AppRole | null>(
-    () => readCache<AppRole>(CACHE_ROLE),
-  );
+  const [role, setRole] = React.useState<AppRole | null>(() => readCache<AppRole>(CACHE_ROLE));
   // Skip loading state if we already have cached data
   const [loading, setLoading] = React.useState(
     () => readCache<NexusProfile>(CACHE_PROFILE) === null,

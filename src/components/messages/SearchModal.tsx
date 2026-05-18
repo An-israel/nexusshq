@@ -44,13 +44,7 @@ function initialsOf(name: string | null): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function HighlightedText({
-  text,
-  query,
-}: {
-  text: string;
-  query: string;
-}) {
+function HighlightedText({ text, query }: { text: string; query: string }) {
   if (!query) return <span>{text}</span>;
 
   const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
@@ -65,7 +59,7 @@ function HighlightedText({
           </strong>
         ) : (
           <span key={i}>{part}</span>
-        )
+        ),
       )}
     </span>
   );
@@ -121,9 +115,7 @@ export function SearchModal({
     (async () => {
       const { data: msgs, error } = await supabase
         .from("messages")
-        .select(
-          "id, body, created_at, channel_id, conversation_id, sender_id"
-        )
+        .select("id, body, created_at, channel_id, conversation_id, sender_id")
         .eq("workspace_id", workspaceId)
         .eq("is_deleted", false)
         .ilike("body", `%${debouncedQuery}%`)
@@ -139,7 +131,7 @@ export function SearchModal({
       }
 
       const senderIds = Array.from(
-        new Set((msgs ?? []).map((m) => m.sender_id).filter((id): id is string => !!id))
+        new Set((msgs ?? []).map((m) => m.sender_id).filter((id): id is string => !!id)),
       );
       let profileMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
       if (senderIds.length) {
@@ -154,7 +146,10 @@ export function SearchModal({
 
       if (cancelled) return;
       setResults(
-        (msgs ?? []).map((m) => ({ ...m, profiles: m.sender_id ? profileMap[m.sender_id] ?? null : null })) as SearchResult[]
+        (msgs ?? []).map((m) => ({
+          ...m,
+          profiles: m.sender_id ? (profileMap[m.sender_id] ?? null) : null,
+        })) as SearchResult[],
       );
       setLoading(false);
     })();
@@ -195,9 +190,7 @@ export function SearchModal({
   // Scroll active item into view
   React.useEffect(() => {
     if (!listRef.current) return;
-    const activeEl = listRef.current.querySelector<HTMLElement>(
-      `[data-index="${activeIndex}"]`
-    );
+    const activeEl = listRef.current.querySelector<HTMLElement>(`[data-index="${activeIndex}"]`);
     activeEl?.scrollIntoView({ block: "nearest" });
   }, [activeIndex]);
 
@@ -230,8 +223,7 @@ export function SearchModal({
     const initials = initialsOf(senderName);
     const senderId = result.sender_id;
 
-    const snippet =
-      result.body.length > 200 ? result.body.slice(0, 200) + "…" : result.body;
+    const snippet = result.body.length > 200 ? result.body.slice(0, 200) + "…" : result.body;
 
     let timeStr = "";
     try {
@@ -242,9 +234,7 @@ export function SearchModal({
       timeStr = "";
     }
 
-    const context = result.channel_id
-      ? `#channel`
-      : `DM`;
+    const context = result.channel_id ? `#channel` : `DM`;
 
     return (
       <button
@@ -254,17 +244,13 @@ export function SearchModal({
         onMouseEnter={() => setActiveIndex(globalIdx)}
         className={cn(
           "w-full flex items-start gap-3 px-3 py-2.5 rounded-lg text-left transition-colors",
-          isActive ? "bg-[#2A2A2A]" : "hover:bg-[#222222]"
+          isActive ? "bg-[#2A2A2A]" : "hover:bg-[#222222]",
         )}
       >
         {/* Avatar */}
         <div className="shrink-0 mt-0.5">
           {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt={senderName}
-              className="w-7 h-7 rounded-full object-cover"
-            />
+            <img src={avatarUrl} alt={senderName} className="w-7 h-7 rounded-full object-cover" />
           ) : (
             <div
               className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[11px] font-semibold"
@@ -278,9 +264,7 @@ export function SearchModal({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-0.5">
-            <span className="text-white text-sm font-medium truncate">
-              {senderName}
-            </span>
+            <span className="text-white text-sm font-medium truncate">{senderName}</span>
             {result.channel_id ? (
               <span className="flex items-center gap-0.5 text-[#6B7280] text-xs shrink-0">
                 <Hash className="w-3 h-3" />
@@ -323,9 +307,7 @@ export function SearchModal({
             autoComplete="off"
             spellCheck={false}
           />
-          {loading && (
-            <Loader2 className="w-4 h-4 text-[#6B7280] animate-spin shrink-0" />
-          )}
+          {loading && <Loader2 className="w-4 h-4 text-[#6B7280] animate-spin shrink-0" />}
           {!loading && query.length > 0 && (
             <button
               type="button"

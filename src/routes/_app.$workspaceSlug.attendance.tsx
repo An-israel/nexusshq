@@ -100,7 +100,10 @@ function AttendancePage() {
   const [rows, setRows] = React.useState<AttendanceRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [statusFilter, setStatusFilter] = React.useState<string>("all");
-  const [selectedDay, setSelectedDay] = React.useState<{ iso: string; row: AttendanceRow | null } | null>(null);
+  const [selectedDay, setSelectedDay] = React.useState<{
+    iso: string;
+    row: AttendanceRow | null;
+  } | null>(null);
 
   React.useEffect(() => {
     if (!isManager) return;
@@ -118,10 +121,7 @@ function AttendancePage() {
   }, [deptFilter]);
 
   const filteredEmployees = React.useMemo(
-    () =>
-      deptFilter === "all"
-        ? employees
-        : employees.filter((e) => e.department === deptFilter),
+    () => (deptFilter === "all" ? employees : employees.filter((e) => e.department === deptFilter)),
     [employees, deptFilter],
   );
 
@@ -192,9 +192,12 @@ function AttendancePage() {
     // Weekly overtime: current ISO week (Mon–Sun) intersected with rows
     const now = new Date();
     const day = (now.getDay() + 6) % 7; // 0=Mon
-    const weekStart = new Date(now); weekStart.setDate(now.getDate() - day); weekStart.setHours(0,0,0,0);
+    const weekStart = new Date(now);
+    weekStart.setDate(now.getDate() - day);
+    weekStart.setHours(0, 0, 0, 0);
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const toIso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    const toIso = (d: Date) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     const weekStartISO = toIso(weekStart);
     const monthStartISO = toIso(monthStart);
     const today = todayISO();
@@ -205,7 +208,16 @@ function AttendancePage() {
       .filter((r) => r.date >= monthStartISO && r.date <= today)
       .reduce((s, r) => s + (r.overtime_minutes ?? 0), 0);
 
-    return { present, late, absent, totalMins, overtimeMins, weeklyOT, monthlyOT, count: rows.length };
+    return {
+      present,
+      late,
+      absent,
+      totalMins,
+      overtimeMins,
+      weeklyOT,
+      monthlyOT,
+      count: rows.length,
+    };
   }, [rows]);
 
   function fmtHours(mins: number): string {
@@ -228,8 +240,12 @@ function AttendancePage() {
     ];
     const lines = [header.join(",")];
     for (const r of filteredRows) {
-      const inT = r.clock_in ? new Date(r.clock_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
-      const outT = r.clock_out ? new Date(r.clock_out).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
+      const inT = r.clock_in
+        ? new Date(r.clock_in).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "";
+      const outT = r.clock_out
+        ? new Date(r.clock_out).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+        : "";
       const inIso = r.clock_in ?? "";
       const outIso = r.clock_out ?? "";
       const totalH = ((r.total_minutes ?? 0) / 60).toFixed(2);
@@ -418,33 +434,43 @@ function AttendancePage() {
             <SheetTitle className="text-base">{selectedDay?.iso}</SheetTitle>
           </SheetHeader>
           <div className="px-4 py-4 space-y-3">
-            {selectedDay?.row ? (() => {
-              const r = selectedDay.row;
-              const s = STATUS_STYLE[r.status];
-              return (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
-                    <span className={`font-medium ${s.text} capitalize`}>{s.label}</span>
+            {selectedDay?.row ? (
+              (() => {
+                const r = selectedDay.row;
+                const s = STATUS_STYLE[r.status];
+                return (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />
+                      <span className={`font-medium ${s.text} capitalize`}>{s.label}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="rounded-xl bg-muted/40 p-3 text-center">
+                        <p className="text-xs text-muted-foreground">Clock in</p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums">
+                          {fmtTime(r.clock_in)}
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-muted/40 p-3 text-center">
+                        <p className="text-xs text-muted-foreground">Clock out</p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums">
+                          {fmtTime(r.clock_out)}
+                        </p>
+                      </div>
+                      <div className="rounded-xl bg-muted/40 p-3 text-center">
+                        <p className="text-xs text-muted-foreground">Duration</p>
+                        <p className="mt-1 text-sm font-semibold tabular-nums">
+                          {fmtDuration(r.total_minutes)}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="rounded-xl bg-muted/40 p-3 text-center">
-                      <p className="text-xs text-muted-foreground">Clock in</p>
-                      <p className="mt-1 text-sm font-semibold tabular-nums">{fmtTime(r.clock_in)}</p>
-                    </div>
-                    <div className="rounded-xl bg-muted/40 p-3 text-center">
-                      <p className="text-xs text-muted-foreground">Clock out</p>
-                      <p className="mt-1 text-sm font-semibold tabular-nums">{fmtTime(r.clock_out)}</p>
-                    </div>
-                    <div className="rounded-xl bg-muted/40 p-3 text-center">
-                      <p className="text-xs text-muted-foreground">Duration</p>
-                      <p className="mt-1 text-sm font-semibold tabular-nums">{fmtDuration(r.total_minutes)}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })() : (
-              <p className="text-sm text-muted-foreground text-center py-4">No record for this day.</p>
+                );
+              })()
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No record for this day.
+              </p>
             )}
           </div>
         </SheetContent>
@@ -498,7 +524,9 @@ function AttendancePage() {
         ) : filteredRows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 py-10 text-center">
             <ClockIcon className="h-10 w-10 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground">No attendance records match this filter.</p>
+            <p className="text-sm text-muted-foreground">
+              No attendance records match this filter.
+            </p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -546,7 +574,11 @@ function StatCard({
   );
 }
 
-function CalendarGrid({ month, rows, onDayClick }: {
+function CalendarGrid({
+  month,
+  rows,
+  onDayClick,
+}: {
   month: Date;
   rows: AttendanceRow[];
   onDayClick: (day: { iso: string; row: AttendanceRow | null }) => void;

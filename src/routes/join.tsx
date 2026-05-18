@@ -84,12 +84,11 @@ function JoinPage() {
             className="font-mono text-base md:text-sm"
           />
           {token ? (
-            <p className="text-xs text-success">
-              ✓ Invite token detected from your link
-            </p>
+            <p className="text-xs text-success">✓ Invite token detected from your link</p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Your manager sent you a link like <code>/join?token=…</code> or a short passcode (e.g. <code>NXS7KP</code>).
+              Your manager sent you a link like <code>/join?token=…</code> or a short passcode (e.g.{" "}
+              <code>NXS7KP</code>).
             </p>
           )}
         </div>

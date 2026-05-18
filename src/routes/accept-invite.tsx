@@ -28,7 +28,9 @@ function AcceptInvitePage() {
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [redeeming, setRedeeming] = useState(false);
-  const [inviteInfo, setInviteInfo] = useState<{ email: string; workspaceName: string } | null>(null);
+  const [inviteInfo, setInviteInfo] = useState<{ email: string; workspaceName: string } | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   // Track session
@@ -119,7 +121,9 @@ function AcceptInvitePage() {
     toast.success("Password set");
     if (token) return; // useEffect will redeem
     // No token → resolve via existing membership
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session) {
       const { data: mem } = await supabase
         .from("workspace_members")
@@ -131,7 +135,10 @@ function AcceptInvitePage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const slug = (mem as any)?.workspaces?.slug;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      if (slug) { navigate({ to: `/${slug}/dashboard` as any }); return; }
+      if (slug) {
+        navigate({ to: `/${slug}/dashboard` as any });
+        return;
+      }
     }
     navigate({ to: "/login" });
   };
@@ -156,17 +163,27 @@ function AcceptInvitePage() {
             <p className="font-medium">Couldn't accept invite</p>
             <p className="mt-1 text-destructive/80">{error}</p>
             <div className="mt-4 flex gap-2">
-              <Link to="/login" className="text-primary hover:underline">Sign in</Link>
+              <Link to="/login" className="text-primary hover:underline">
+                Sign in
+              </Link>
               <span className="text-muted-foreground">·</span>
-              <Link to="/signup" className="text-primary hover:underline">Create account</Link>
+              <Link to="/signup" className="text-primary hover:underline">
+                Create account
+              </Link>
             </div>
           </div>
         ) : token && sessionReady === false ? (
           <div className="space-y-4 rounded-2xl border border-border bg-card p-6 text-sm">
             <p>
-              {inviteInfo
-                ? <>To accept this invite, sign in as <span className="font-medium">{inviteInfo.email}</span> or create an account with that email.</>
-                : "Sign in or create an account to accept this invite."}
+              {inviteInfo ? (
+                <>
+                  To accept this invite, sign in as{" "}
+                  <span className="font-medium">{inviteInfo.email}</span> or create an account with
+                  that email.
+                </>
+              ) : (
+                "Sign in or create an account to accept this invite."
+              )}
             </p>
             <div className="flex gap-2">
               <Button asChild className="flex-1">
@@ -178,10 +195,7 @@ function AcceptInvitePage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="flex-1">
-                <Link
-                  to="/login"
-                  search={{ invite: token } as never}
-                >
+                <Link to="/login" search={{ invite: token } as never}>
                   Sign in
                 </Link>
               </Button>
@@ -198,11 +212,27 @@ function AcceptInvitePage() {
           >
             <div className="space-y-2">
               <Label htmlFor="password">New password</Label>
-              <Input id="password" type="password" required minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} className="bg-input" />
+              <Input
+                id="password"
+                type="password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="bg-input"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="confirm">Confirm password</Label>
-              <Input id="confirm" type="password" required minLength={8} value={confirm} onChange={(e) => setConfirm(e.target.value)} className="bg-input" />
+              <Input
+                id="confirm"
+                type="password"
+                required
+                minLength={8}
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="bg-input"
+              />
             </div>
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? "Saving…" : "Set password & continue"}

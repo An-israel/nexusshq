@@ -137,7 +137,8 @@ function getRelatedDiagnostics(matchers: string[]) {
     .filter((entry) => {
       if (!loweredMatchers.length) return true;
 
-      const haystack = `${entry.url} ${entry.path} ${entry.query} ${entry.responseBodySnippet ?? ""}`.toLowerCase();
+      const haystack =
+        `${entry.url} ${entry.path} ${entry.query} ${entry.responseBodySnippet ?? ""}`.toLowerCase();
       return loweredMatchers.some((matcher) => haystack.includes(matcher));
     })
     .slice(0, 5);

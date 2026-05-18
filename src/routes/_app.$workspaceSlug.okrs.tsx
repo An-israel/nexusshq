@@ -23,11 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import {
@@ -115,23 +111,23 @@ function deriveStatus(progress: number): Objective["status"] {
 }
 
 const STATUS_STYLE: Record<Objective["status"], string> = {
-  on_track:  "bg-success/15 text-success border-success/30",
-  at_risk:   "bg-warning/15 text-warning border-warning/30",
-  behind:    "bg-destructive/15 text-destructive border-destructive/30",
+  on_track: "bg-success/15 text-success border-success/30",
+  at_risk: "bg-warning/15 text-warning border-warning/30",
+  behind: "bg-destructive/15 text-destructive border-destructive/30",
   completed: "bg-primary/15 text-primary border-primary/30",
 };
 
 const STATUS_ICON: Record<Objective["status"], React.ReactNode> = {
-  on_track:  <TrendingUp className="h-3 w-3" />,
-  at_risk:   <AlertTriangle className="h-3 w-3" />,
-  behind:    <XCircle className="h-3 w-3" />,
+  on_track: <TrendingUp className="h-3 w-3" />,
+  at_risk: <AlertTriangle className="h-3 w-3" />,
+  behind: <XCircle className="h-3 w-3" />,
   completed: <CheckCircle2 className="h-3 w-3" />,
 };
 
 const STATUS_LABEL: Record<Objective["status"], string> = {
-  on_track:  "On track",
-  at_risk:   "At risk",
-  behind:    "Behind",
+  on_track: "On track",
+  at_risk: "At risk",
+  behind: "Behind",
   completed: "Completed",
 };
 
@@ -151,43 +147,66 @@ function OkrsPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [{ data: objs }, { data: krs }] = await Promise.all([
-      supabase.from("objectives").select("*").eq("workspace_id", workspace.id).order("created_at", { ascending: false }),
+      supabase
+        .from("objectives")
+        .select("*")
+        .eq("workspace_id", workspace.id)
+        .order("created_at", { ascending: false }),
       supabase.from("key_results").select("*").eq("workspace_id", workspace.id).order("created_at"),
     ]);
 
     const objRows = (objs ?? []) as Objective[];
-    const krRows  = (krs  ?? []) as KeyResult[];
+    const krRows = (krs ?? []) as KeyResult[];
 
     setObjectives(objRows);
     setKeyResults(krRows);
 
     // Load profiles for owners
-    const ids = Array.from(new Set([
-      ...objRows.map((o) => o.owner_id),
-      ...krRows.map((kr) => kr.owner_id).filter((x): x is string => !!x),
-    ]));
+    const ids = Array.from(
+      new Set([
+        ...objRows.map((o) => o.owner_id),
+        ...krRows.map((kr) => kr.owner_id).filter((x): x is string => !!x),
+      ]),
+    );
     if (ids.length) {
       const { data: profs } = await supabase
         .from("profiles")
         .select("id, full_name, email")
         .in("id", ids);
       const map: Record<string, ProfileMini> = {};
-      (profs ?? []).forEach((p) => { map[p.id] = p as ProfileMini; });
+      (profs ?? []).forEach((p) => {
+        map[p.id] = p as ProfileMini;
+      });
       setProfiles(map);
     }
 
     setLoading(false);
   }, []);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
-  function openNew() { setEditObj(null); setObjDialogOpen(true); }
-  function openEdit(o: Objective) { setEditObj(o); setObjDialogOpen(true); }
+  function openNew() {
+    setEditObj(null);
+    setObjDialogOpen(true);
+  }
+  function openEdit(o: Objective) {
+    setEditObj(o);
+    setObjDialogOpen(true);
+  }
 
   async function deleteObj(id: string) {
-    const { error } = await supabase.from("objectives").delete().eq("id", id).eq("workspace_id", workspace.id);
+    const { error } = await supabase
+      .from("objectives")
+      .delete()
+      .eq("id", id)
+      .eq("workspace_id", workspace.id);
     if (error) toast.error(error.message);
-    else { toast.success("Objective deleted"); void load(); }
+    else {
+      toast.success("Objective deleted");
+      void load();
+    }
   }
 
   return (
@@ -214,7 +233,9 @@ function OkrsPage() {
             const count = objectives.filter((o) => o.status === s).length;
             return (
               <Card key={s} className="p-3">
-                <div className={`inline-flex items-center gap-1.5 rounded border px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[s]}`}>
+                <div
+                  className={`inline-flex items-center gap-1.5 rounded border px-2 py-0.5 text-xs font-medium ${STATUS_STYLE[s]}`}
+                >
                   {STATUS_ICON[s]}
                   {STATUS_LABEL[s]}
                 </div>
@@ -266,7 +287,10 @@ function OkrsPage() {
         userId={user?.id ?? ""}
         workspaceId={workspace.id}
         profiles={profiles}
-        onSaved={() => { setObjDialogOpen(false); void load(); }}
+        onSaved={() => {
+          setObjDialogOpen(false);
+          void load();
+        }}
       />
     </div>
   );
@@ -335,10 +359,14 @@ function ObjectiveCard({
                     {STATUS_LABEL[status]}
                   </Badge>
                   {objective.period && (
-                    <Badge variant="outline" className="text-xs">{objective.period}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {objective.period}
+                    </Badge>
                   )}
                   {objective.department && (
-                    <Badge variant="outline" className="text-xs">{deptLabel(objective.department)}</Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {deptLabel(objective.department)}
+                    </Badge>
                   )}
                 </div>
                 {objective.description && (
@@ -355,7 +383,9 @@ function ObjectiveCard({
             <div className="flex shrink-0 items-center gap-3">
               <div className="text-right">
                 <p className="text-2xl font-bold tabular-nums">{progress}%</p>
-                <p className="text-xs text-muted-foreground">{keyResults.length} key result{keyResults.length !== 1 ? "s" : ""}</p>
+                <p className="text-xs text-muted-foreground">
+                  {keyResults.length} key result{keyResults.length !== 1 ? "s" : ""}
+                </p>
               </div>
               {isManager && (
                 <div className="flex gap-1">
@@ -379,9 +409,13 @@ function ObjectiveCard({
           <div className="mt-4 h-2 rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full transition-all ${
-                status === "completed" ? "bg-primary" :
-                status === "on_track"  ? "bg-success" :
-                status === "at_risk"   ? "bg-warning" : "bg-destructive"
+                status === "completed"
+                  ? "bg-primary"
+                  : status === "on_track"
+                    ? "bg-success"
+                    : status === "at_risk"
+                      ? "bg-warning"
+                      : "bg-destructive"
               }`}
               style={{ width: `${progress}%` }}
             />
@@ -400,7 +434,11 @@ function ObjectiveCard({
                 isLast={idx === keyResults.length - 1 && !isManager}
                 onUpdate={() => setUpdateKr(kr)}
                 onDelete={async () => {
-                  await supabase.from("key_results").delete().eq("id", kr.id).eq("workspace_id", workspaceId);
+                  await supabase
+                    .from("key_results")
+                    .delete()
+                    .eq("id", kr.id)
+                    .eq("workspace_id", workspaceId);
                   onRefresh();
                 }}
               />
@@ -429,7 +467,10 @@ function ObjectiveCard({
         objectiveId={objective.id}
         workspaceId={workspaceId}
         profiles={profiles}
-        onSaved={() => { setAddKrOpen(false); onRefresh(); }}
+        onSaved={() => {
+          setAddKrOpen(false);
+          onRefresh();
+        }}
       />
 
       {/* Update KR dialog */}
@@ -440,7 +481,10 @@ function ObjectiveCard({
           workspaceId={workspaceId}
           open={!!updateKr}
           onOpenChange={(o) => !o && setUpdateKr(null)}
-          onSaved={() => { setUpdateKr(null); onRefresh(); }}
+          onSaved={() => {
+            setUpdateKr(null);
+            onRefresh();
+          }}
         />
       )}
     </Card>
@@ -468,7 +512,9 @@ function KeyResultRow({
   const owner = kr.owner_id ? profiles[kr.owner_id] : null;
 
   return (
-    <div className={`flex items-center gap-4 px-5 py-3 ${!isLast ? "border-b border-border/60" : ""}`}>
+    <div
+      className={`flex items-center gap-4 px-5 py-3 ${!isLast ? "border-b border-border/60" : ""}`}
+    >
       {/* Tree connector */}
       <div className="flex shrink-0 flex-col items-center self-stretch pt-1">
         <div className="w-px flex-1 bg-border/60" />
@@ -487,10 +533,7 @@ function KeyResultRow({
         </div>
         <div className="flex items-center gap-3">
           <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-            <div
-              className="h-full bg-primary transition-all"
-              style={{ width: `${progress}%` }}
-            />
+            <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
           </div>
           <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
             {kr.current_value}/{kr.target_value} {kr.unit}
@@ -541,7 +584,10 @@ function UpdateKrDialog({
 
   async function save() {
     const val = parseFloat(newValue);
-    if (isNaN(val)) { toast.error("Enter a valid number"); return; }
+    if (isNaN(val)) {
+      toast.error("Enter a valid number");
+      return;
+    }
     setSaving(true);
 
     const { error: updateErr } = await supabase
@@ -550,7 +596,11 @@ function UpdateKrDialog({
       .eq("id", kr.id)
       .eq("workspace_id", workspaceId);
 
-    if (updateErr) { toast.error(updateErr.message); setSaving(false); return; }
+    if (updateErr) {
+      toast.error(updateErr.message);
+      setSaving(false);
+      return;
+    }
 
     await supabase.from("key_result_updates").insert({
       key_result_id: kr.id,
@@ -566,9 +616,10 @@ function UpdateKrDialog({
     onSaved();
   }
 
-  const progress = kr.target_value > 0
-    ? Math.min(100, Math.round((parseFloat(newValue) / kr.target_value) * 100))
-    : 0;
+  const progress =
+    kr.target_value > 0
+      ? Math.min(100, Math.round((parseFloat(newValue) / kr.target_value) * 100))
+      : 0;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -606,13 +657,18 @@ function UpdateKrDialog({
                 <span className="font-medium">{progress}%</span>
               </div>
               <div className="h-2 rounded-full bg-muted overflow-hidden">
-                <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                <div
+                  className="h-full bg-primary transition-all"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
             </div>
           )}
 
           <div className="space-y-1.5">
-            <Label>Note <span className="text-muted-foreground">(optional)</span></Label>
+            <Label>
+              Note <span className="text-muted-foreground">(optional)</span>
+            </Label>
             <Textarea
               rows={2}
               placeholder="What changed? Any blockers?"
@@ -623,7 +679,9 @@ function UpdateKrDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
           <Button onClick={save} disabled={saving}>
             {saving ? "Saving…" : "Save progress"}
           </Button>
@@ -661,7 +719,10 @@ function KeyResultDialog({
   const [saving, setSaving] = React.useState(false);
 
   async function save() {
-    if (!form.title.trim()) { toast.error("Title required"); return; }
+    if (!form.title.trim()) {
+      toast.error("Title required");
+      return;
+    }
     setSaving(true);
     const { error } = await supabase.from("key_results").insert({
       objective_id: objectiveId,
@@ -673,10 +734,21 @@ function KeyResultDialog({
       unit: form.unit.trim() || "%",
       workspace_id: workspaceId,
     });
-    if (error) { toast.error(error.message); setSaving(false); return; }
+    if (error) {
+      toast.error(error.message);
+      setSaving(false);
+      return;
+    }
     toast.success("Key result added");
     setSaving(false);
-    setForm({ title: "", description: "", owner_id: "", target_value: "100", current_value: "0", unit: "%" });
+    setForm({
+      title: "",
+      description: "",
+      owner_id: "",
+      target_value: "100",
+      current_value: "0",
+      unit: "%",
+    });
     onSaved();
   }
 
@@ -696,12 +768,21 @@ function KeyResultDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Owner <span className="text-muted-foreground">(optional)</span></Label>
-            <Select value={form.owner_id} onValueChange={(v) => setForm((f) => ({ ...f, owner_id: v }))}>
-              <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
+            <Label>
+              Owner <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Select
+              value={form.owner_id}
+              onValueChange={(v) => setForm((f) => ({ ...f, owner_id: v }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Unassigned" />
+              </SelectTrigger>
               <SelectContent>
                 {Object.values(profiles).map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.full_name ?? p.email}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.full_name ?? p.email}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -709,21 +790,37 @@ function KeyResultDialog({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1.5">
               <Label>Start value</Label>
-              <Input type="number" value={form.current_value} onChange={(e) => setForm((f) => ({ ...f, current_value: e.target.value }))} />
+              <Input
+                type="number"
+                value={form.current_value}
+                onChange={(e) => setForm((f) => ({ ...f, current_value: e.target.value }))}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Target</Label>
-              <Input type="number" value={form.target_value} onChange={(e) => setForm((f) => ({ ...f, target_value: e.target.value }))} />
+              <Input
+                type="number"
+                value={form.target_value}
+                onChange={(e) => setForm((f) => ({ ...f, target_value: e.target.value }))}
+              />
             </div>
             <div className="space-y-1.5">
               <Label>Unit</Label>
-              <Input placeholder="%, $, users…" value={form.unit} onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))} />
+              <Input
+                placeholder="%, $, users…"
+                value={form.unit}
+                onChange={(e) => setForm((f) => ({ ...f, unit: e.target.value }))}
+              />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save} disabled={saving}>{saving ? "Saving…" : "Add key result"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={save} disabled={saving}>
+            {saving ? "Saving…" : "Add key result"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -757,7 +854,9 @@ function ObjectiveDialog({
     description: existing?.description ?? "",
     owner_id: existing?.owner_id ?? userId,
     department: existing?.department ?? "",
-    period: existing?.period ?? `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`,
+    period:
+      existing?.period ??
+      `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`,
     start_date: existing?.start_date ?? today,
     end_date: existing?.end_date ?? "",
   });
@@ -770,7 +869,9 @@ function ObjectiveDialog({
         description: existing?.description ?? "",
         owner_id: existing?.owner_id ?? userId,
         department: existing?.department ?? "",
-        period: existing?.period ?? `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`,
+        period:
+          existing?.period ??
+          `Q${Math.ceil((new Date().getMonth() + 1) / 3)} ${new Date().getFullYear()}`,
         start_date: existing?.start_date ?? today,
         end_date: existing?.end_date ?? "",
       });
@@ -778,7 +879,10 @@ function ObjectiveDialog({
   }, [open, existing, userId, today]);
 
   async function save() {
-    if (!form.title.trim()) { toast.error("Title required"); return; }
+    if (!form.title.trim()) {
+      toast.error("Title required");
+      return;
+    }
     setSaving(true);
     const payload = {
       title: form.title.trim(),
@@ -790,10 +894,23 @@ function ObjectiveDialog({
       end_date: form.end_date || null,
     };
     const { error } = isEdit
-      ? await supabase.from("objectives").update(payload).eq("id", existing!.id).eq("workspace_id", workspaceId)
-      : await supabase.from("objectives").insert({ ...payload, status: "on_track", progress_percent: 0, workspace_id: workspaceId });
+      ? await supabase
+          .from("objectives")
+          .update(payload)
+          .eq("id", existing!.id)
+          .eq("workspace_id", workspaceId)
+      : await supabase.from("objectives").insert({
+          ...payload,
+          status: "on_track",
+          progress_percent: 0,
+          workspace_id: workspaceId,
+        });
 
-    if (error) { toast.error(error.message); setSaving(false); return; }
+    if (error) {
+      toast.error(error.message);
+      setSaving(false);
+      return;
+    }
     toast.success(isEdit ? "Objective updated" : "Objective created");
     setSaving(false);
     onSaved();
@@ -815,45 +932,81 @@ function ObjectiveDialog({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Description <span className="text-muted-foreground">(optional)</span></Label>
-            <Textarea rows={2} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+            <Label>
+              Description <span className="text-muted-foreground">(optional)</span>
+            </Label>
+            <Textarea
+              rows={2}
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Owner</Label>
-              <Select value={form.owner_id} onValueChange={(v) => setForm((f) => ({ ...f, owner_id: v }))}>
-                <SelectTrigger><SelectValue placeholder="Pick owner" /></SelectTrigger>
+              <Select
+                value={form.owner_id}
+                onValueChange={(v) => setForm((f) => ({ ...f, owner_id: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pick owner" />
+                </SelectTrigger>
                 <SelectContent>
                   {Object.values(profiles).map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.full_name ?? p.email}</SelectItem>
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.full_name ?? p.email}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Department <span className="text-muted-foreground">(optional)</span></Label>
-              <Select value={form.department} onValueChange={(v) => setForm((f) => ({ ...f, department: v }))}>
-                <SelectTrigger><SelectValue placeholder="All" /></SelectTrigger>
+              <Label>
+                Department <span className="text-muted-foreground">(optional)</span>
+              </Label>
+              <Select
+                value={form.department}
+                onValueChange={(v) => setForm((f) => ({ ...f, department: v }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
                 <SelectContent>
                   {DEPARTMENTS.map((d) => (
-                    <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>
+                    <SelectItem key={d} value={d}>
+                      {deptLabel(d)}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-1.5">
               <Label>Period</Label>
-              <Input placeholder="Q2 2026" value={form.period} onChange={(e) => setForm((f) => ({ ...f, period: e.target.value }))} />
+              <Input
+                placeholder="Q2 2026"
+                value={form.period}
+                onChange={(e) => setForm((f) => ({ ...f, period: e.target.value }))}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label>End date <span className="text-muted-foreground">(optional)</span></Label>
-              <Input type="date" value={form.end_date} onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))} />
+              <Label>
+                End date <span className="text-muted-foreground">(optional)</span>
+              </Label>
+              <Input
+                type="date"
+                value={form.end_date}
+                onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+              />
             </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save} disabled={saving}>{saving ? "Saving…" : isEdit ? "Save changes" : "Create objective"}</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Cancel
+          </Button>
+          <Button onClick={save} disabled={saving}>
+            {saving ? "Saving…" : isEdit ? "Save changes" : "Create objective"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

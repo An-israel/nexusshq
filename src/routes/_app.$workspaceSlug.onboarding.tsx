@@ -5,16 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import {
-  Hash,
-  Megaphone,
-  Shuffle,
-  Check,
-  Users,
-  Zap,
-  Loader2,
-  ArrowRight,
-} from "lucide-react";
+import { Hash, Megaphone, Shuffle, Check, Users, Zap, Loader2, ArrowRight } from "lucide-react";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/onboarding")({
   component: OnboardingPage,
@@ -115,9 +106,7 @@ function OnboardingPage() {
       setSentCount(raw.length);
       toast.success(`${raw.length} invite${raw.length !== 1 ? "s" : ""} sent!`);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to send invites — please try again"
-      );
+      toast.error(err instanceof Error ? err.message : "Failed to send invites — please try again");
     } finally {
       setSending(false);
     }
@@ -154,10 +143,7 @@ function OnboardingPage() {
             onSkip={goToStep2}
           />
         ) : (
-          <Step2
-            workspaceSlug={workspaceSlug}
-            onNavigate={(to) => navigate({ to: to as any })}
-          />
+          <Step2 workspaceSlug={workspaceSlug} onNavigate={(to) => navigate({ to: to as any })} />
         )}
       </div>
     </div>
@@ -223,11 +209,7 @@ function Step1({ emails, onEmailsChange, sending, sentCount, onSend, onSkip }: S
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
-        <Button
-          onClick={onSend}
-          disabled={sending || !emails.trim()}
-          className="w-full gap-2"
-        >
+        <Button onClick={onSend} disabled={sending || !emails.trim()} className="w-full gap-2">
           {sending ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" /> Sending invites…
@@ -305,10 +287,7 @@ function Step2({ workspaceSlug, onNavigate }: Step2Props) {
 
       {/* Actions */}
       <div className="flex flex-col gap-3">
-        <Button
-          onClick={() => onNavigate(`/${workspaceSlug}/messages`)}
-          className="w-full gap-2"
-        >
+        <Button onClick={() => onNavigate(`/${workspaceSlug}/messages`)} className="w-full gap-2">
           Take me to messages <ArrowRight className="h-4 w-4" />
         </Button>
         <button

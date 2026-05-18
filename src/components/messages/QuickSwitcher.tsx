@@ -22,10 +22,7 @@ function initialsOf(name: string | null): string {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-function dmDisplayName(
-  conv: DmConversationWithMeta,
-  currentUserId: string
-): string {
+function dmDisplayName(conv: DmConversationWithMeta, currentUserId: string): string {
   if (conv.type === "direct") {
     const other = conv.members.find((m) => m.user_id !== currentUserId);
     return other?.profile?.full_name ?? other?.profile?.email ?? "Unknown";
@@ -40,7 +37,7 @@ function dmDisplayName(
 
 function sortedItems<T extends { unread_count: number; name?: string | null }>(
   items: T[],
-  getName: (i: T) => string
+  getName: (i: T) => string,
 ): T[] {
   return [...items].sort((a, b) => {
     if (b.unread_count !== a.unread_count) return b.unread_count - a.unread_count;
@@ -86,16 +83,14 @@ export function QuickSwitcher({
 
   const joinedChannels = sortedItems(
     channels.filter((c) => c.is_member),
-    (c) => c.name
+    (c) => c.name,
   );
-  const sortedConvs = sortedItems(
-    conversations,
-    (c) => dmDisplayName(c, currentUserId)
-  );
+  const sortedConvs = sortedItems(conversations, (c) => dmDisplayName(c, currentUserId));
 
   function ChannelIcon({ type }: { type: ChannelWithMeta["type"] }) {
     if (type === "private") return <Lock className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />;
-    if (type === "announcement") return <Megaphone className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />;
+    if (type === "announcement")
+      return <Megaphone className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />;
     return <Hash className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />;
   }
 
@@ -114,7 +109,7 @@ export function QuickSwitcher({
               autoFocus
               className={cn(
                 "flex-1 bg-transparent text-white text-sm outline-none",
-                "placeholder:text-[#6B7280]"
+                "placeholder:text-[#6B7280]",
               )}
             />
           </div>
@@ -142,7 +137,7 @@ export function QuickSwitcher({
                       "text-[#9CA3AF] text-sm",
                       "data-[selected=true]:bg-[#2A2A2A] data-[selected=true]:text-white",
                       "hover:bg-[#2A2A2A] hover:text-white",
-                      "transition-colors"
+                      "transition-colors",
                     )}
                   >
                     <ChannelIcon type={ch.type} />
@@ -162,7 +157,7 @@ export function QuickSwitcher({
                 heading="Direct Messages"
                 className={cn(
                   joinedChannels.length > 0 && "mt-2",
-                  "[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:text-[#6B7280] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide"
+                  "[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-[10px] [&_[cmdk-group-heading]]:text-[#6B7280] [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wide",
                 )}
               >
                 {sortedConvs.map((conv) => {
@@ -188,7 +183,7 @@ export function QuickSwitcher({
                         "text-[#9CA3AF] text-sm",
                         "data-[selected=true]:bg-[#2A2A2A] data-[selected=true]:text-white",
                         "hover:bg-[#2A2A2A] hover:text-white",
-                        "transition-colors"
+                        "transition-colors",
                       )}
                     >
                       <div className="shrink-0">

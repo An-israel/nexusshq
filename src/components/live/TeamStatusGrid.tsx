@@ -1,22 +1,22 @@
-import React from 'react';
-import { format } from 'date-fns';
-import { cn } from '@/lib/utils';
-import { initialsOf } from '@/lib/nexus';
-import type { LiveEmployee } from '@/lib/live/types';
+import React from "react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { initialsOf } from "@/lib/nexus";
+import type { LiveEmployee } from "@/lib/live/types";
 
 interface StatusDotProps {
-  status: LiveEmployee['status'];
+  status: LiveEmployee["status"];
 }
 
 const StatusDot = React.memo(function StatusDot({ status }: StatusDotProps) {
   return (
     <span
       className={cn(
-        'absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-2 ring-[#111]',
-        status === 'active' && 'bg-green-500 animate-pulse',
-        status === 'away' && 'bg-amber-500',
-        status === 'dnd' && 'bg-red-500',
-        status === 'offline' && 'bg-gray-600',
+        "absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full ring-2 ring-[#111]",
+        status === "active" && "bg-green-500 animate-pulse",
+        status === "away" && "bg-amber-500",
+        status === "dnd" && "bg-red-500",
+        status === "offline" && "bg-gray-600",
       )}
     />
   );
@@ -36,13 +36,9 @@ const EmployeeCard = React.memo(function EmployeeCard({
   now,
 }: EmployeeCardProps) {
   const clockedIn = employee.clock_in !== null && employee.clock_out === null;
-  const clockInDisplay = employee.clock_in
-    ? format(new Date(employee.clock_in), 'h:mm a')
-    : null;
+  const clockInDisplay = employee.clock_in ? format(new Date(employee.clock_in), "h:mm a") : null;
 
-  const durationMs = clockedIn
-    ? Math.max(0, now - new Date(employee.clock_in!).getTime())
-    : 0;
+  const durationMs = clockedIn ? Math.max(0, now - new Date(employee.clock_in!).getTime()) : 0;
   const durationHours = Math.floor(durationMs / 3_600_000);
   const durationMins = Math.floor((durationMs % 3_600_000) / 60_000);
 
@@ -51,12 +47,12 @@ const EmployeeCard = React.memo(function EmployeeCard({
       type="button"
       onClick={() => onSelect(employee.id)}
       className={cn(
-        'relative flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-all',
-        'bg-[#1A1A1A] border-[#2A2A2A] hover:border-[#3A3A3A]',
-        employee.status === 'active' &&
-          'ring-1 ring-green-500/30 shadow-[0_0_12px_rgba(34,197,94,0.1)]',
-        employee.status === 'offline' && 'opacity-70',
-        isSelected && 'ring-2 ring-primary border-transparent',
+        "relative flex flex-col items-start gap-1 rounded-xl border p-3 text-left transition-all",
+        "bg-[#1A1A1A] border-[#2A2A2A] hover:border-[#3A3A3A]",
+        employee.status === "active" &&
+          "ring-1 ring-green-500/30 shadow-[0_0_12px_rgba(34,197,94,0.1)]",
+        employee.status === "offline" && "opacity-70",
+        isSelected && "ring-2 ring-primary border-transparent",
       )}
     >
       <div className="flex w-full items-center gap-2">
@@ -64,7 +60,7 @@ const EmployeeCard = React.memo(function EmployeeCard({
           {employee.avatar_url ? (
             <img
               src={employee.avatar_url}
-              alt={employee.full_name ?? ''}
+              alt={employee.full_name ?? ""}
               className="h-10 w-10 rounded-full object-cover"
             />
           ) : (
@@ -76,10 +72,10 @@ const EmployeeCard = React.memo(function EmployeeCard({
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium text-white">
-            {employee.full_name ?? employee.email ?? 'Unknown'}
+            {employee.full_name ?? employee.email ?? "Unknown"}
           </p>
           <p className="truncate text-xs text-gray-400">
-            {employee.job_title ?? employee.department ?? '—'}
+            {employee.job_title ?? employee.department ?? "—"}
           </p>
         </div>
       </div>
@@ -87,9 +83,7 @@ const EmployeeCard = React.memo(function EmployeeCard({
       <div className="w-full border-t border-[#2A2A2A] pt-1.5">
         {clockInDisplay ? (
           <>
-            <p className="text-xs text-gray-400">
-              Clocked in {clockInDisplay}
-            </p>
+            <p className="text-xs text-gray-400">Clocked in {clockInDisplay}</p>
             {clockedIn && (
               <p className="text-xs text-green-400">
                 {durationHours}h {durationMins}m online
@@ -123,20 +117,16 @@ export function TeamStatusGrid({ employees, onSelectEmployee, selectedEmployeeId
 
   const sorted = React.useMemo(
     () =>
-      [...employees].sort(
-        (a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3),
-      ),
+      [...employees].sort((a, b) => (STATUS_ORDER[a.status] ?? 3) - (STATUS_ORDER[b.status] ?? 3)),
     [employees],
   );
 
   const hasMany = sorted.length >= 50;
   const visible = hasMany && !showAll ? sorted.slice(0, 20) : sorted;
 
-  const activeCount = employees.filter((e) => e.status === 'active').length;
-  const awayCount = employees.filter((e) => e.status === 'away').length;
-  const offlineCount = employees.filter(
-    (e) => e.status === 'offline' || e.status === 'dnd',
-  ).length;
+  const activeCount = employees.filter((e) => e.status === "active").length;
+  const awayCount = employees.filter((e) => e.status === "away").length;
+  const offlineCount = employees.filter((e) => e.status === "offline" || e.status === "dnd").length;
 
   return (
     <div className="flex flex-col gap-3">

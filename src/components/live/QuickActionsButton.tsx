@@ -1,11 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Plus, ClipboardList, AlertTriangle, Flag, Megaphone, X } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -89,11 +84,7 @@ function SendWarningModal({
               </SelectTrigger>
               <SelectContent className="bg-[#1a1a1a] border-[#2f2f2f]">
                 {employees.map((emp) => (
-                  <SelectItem
-                    key={emp.id}
-                    value={emp.id}
-                    className="text-white focus:bg-[#2f2f2f]"
-                  >
+                  <SelectItem key={emp.id} value={emp.id} className="text-white focus:bg-[#2f2f2f]">
                     {emp.full_name ?? "Unknown"}{" "}
                     {emp.department ? `(${deptLabel(emp.department)})` : ""}
                   </SelectItem>
@@ -195,11 +186,7 @@ function FlagEmployeeModal({
               </SelectTrigger>
               <SelectContent className="bg-[#1a1a1a] border-[#2f2f2f]">
                 {employees.map((emp) => (
-                  <SelectItem
-                    key={emp.id}
-                    value={emp.id}
-                    className="text-white focus:bg-[#2f2f2f]"
-                  >
+                  <SelectItem key={emp.id} value={emp.id} className="text-white focus:bg-[#2f2f2f]">
                     {emp.full_name ?? "Unknown"}{" "}
                     {emp.department ? `(${deptLabel(emp.department)})` : ""}
                   </SelectItem>
@@ -285,9 +272,7 @@ function BroadcastModal({
     setLoading(true);
 
     const targets =
-      department === "__all__"
-        ? employees
-        : employees.filter((e) => e.department === department);
+      department === "__all__" ? employees : employees.filter((e) => e.department === department);
 
     const insertions = targets.map((emp) => ({
       user_id: emp.id,
@@ -310,7 +295,9 @@ function BroadcastModal({
       toast.error("Failed to broadcast message.");
       return;
     }
-    toast.success(`Broadcast sent to ${insertions.length} employee${insertions.length !== 1 ? "s" : ""}.`);
+    toast.success(
+      `Broadcast sent to ${insertions.length} employee${insertions.length !== 1 ? "s" : ""}.`,
+    );
     setTitle("");
     setMessage("");
     setDepartment("__all__");
@@ -356,11 +343,7 @@ function BroadcastModal({
                   All Departments
                 </SelectItem>
                 {DEPARTMENTS.map((dept) => (
-                  <SelectItem
-                    key={dept}
-                    value={dept}
-                    className="text-white focus:bg-[#2f2f2f]"
-                  >
+                  <SelectItem key={dept} value={dept} className="text-white focus:bg-[#2f2f2f]">
                     {deptLabel(dept)}
                   </SelectItem>
                 ))}
@@ -407,7 +390,7 @@ function ActionBtn({
     <div
       className={cn(
         "flex items-center gap-3 transition-all duration-200",
-        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4",
       )}
       style={{ transitionDelay: visible ? `${index * 40}ms` : "0ms" }}
     >
@@ -426,12 +409,7 @@ function ActionBtn({
 }
 
 // ─── Main Component ────────────────────────────────────────────────────────────
-export function QuickActionsButton({
-  workspaceId,
-  currentUserId,
-  employees,
-  onAssignTask,
-}: Props) {
+export function QuickActionsButton({ workspaceId, currentUserId, employees, onAssignTask }: Props) {
   const [open, setOpen] = useState(false);
   const [modal, setModal] = useState<ModalType>(null);
   const [actionsVisible, setActionsVisible] = useState(false);
@@ -499,15 +477,12 @@ export function QuickActionsButton({
       )}
 
       {/* FAB container */}
-      <div
-        ref={containerRef}
-        className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3"
-      >
+      <div ref={containerRef} className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
         {/* Action buttons (rendered above FAB when open) */}
         <div
           className={cn(
             "flex flex-col-reverse items-end gap-3 transition-all duration-200",
-            open ? "pointer-events-auto" : "pointer-events-none"
+            open ? "pointer-events-auto" : "pointer-events-none",
           )}
         >
           {actions.map((action, i) => (
@@ -527,17 +502,12 @@ export function QuickActionsButton({
           onClick={() => setOpen((v) => !v)}
           className={cn(
             "h-14 w-14 rounded-full bg-primary shadow-lg hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center text-white",
-            open && "bg-primary/90"
+            open && "bg-primary/90",
           )}
           aria-label={open ? "Close quick actions" : "Open quick actions"}
           aria-expanded={open}
         >
-          <Plus
-            className={cn(
-              "w-6 h-6 transition-transform duration-200",
-              open && "rotate-45"
-            )}
-          />
+          <Plus className={cn("w-6 h-6 transition-transform duration-200", open && "rotate-45")} />
         </button>
       </div>
 

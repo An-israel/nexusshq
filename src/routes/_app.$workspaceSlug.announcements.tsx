@@ -69,19 +69,27 @@ function AnnouncementsPage() {
         .order("created_at", { ascending: false }),
       supabase.from("profiles").select("id, full_name, email"),
     ]);
-    if (error) { toast.error(error.message); setLoading(false); return; }
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
     const rows = (data ?? []) as Announcement[];
     const visible = rows.filter(
       (r) => !r.department || r.department === profile?.department || isManager,
     );
     setItems(visible);
     const map: Record<string, AuthorMini> = {};
-    (profs ?? []).forEach((p) => { map[p.id] = p as AuthorMini; });
+    (profs ?? []).forEach((p) => {
+      map[p.id] = p as AuthorMini;
+    });
     setAuthors(map);
     setLoading(false);
   }, [profile?.department, isManager]);
 
-  React.useEffect(() => { void load(); }, [load]);
+  React.useEffect(() => {
+    void load();
+  }, [load]);
 
   useRealtime({
     table: "announcements",
@@ -120,14 +128,21 @@ function AnnouncementsPage() {
         <div className="flex flex-col items-center gap-3 py-16 text-center">
           <Megaphone className="h-12 w-12 text-muted-foreground/30" />
           <p className="text-sm font-medium text-muted-foreground">No announcements yet</p>
-          {isManager && <p className="text-xs text-muted-foreground">Create the first announcement for your team.</p>}
+          {isManager && (
+            <p className="text-xs text-muted-foreground">
+              Create the first announcement for your team.
+            </p>
+          )}
         </div>
       ) : (
         <div className="space-y-3 overscroll-contain">
           {items.map((a) => {
             const author = a.author_id ? authors[a.author_id] : null;
             return (
-              <Card key={a.id} className={`p-5 ${a.is_pinned ? "border-primary/40 bg-primary/5" : ""}`}>
+              <Card
+                key={a.id}
+                className={`p-5 ${a.is_pinned ? "border-primary/40 bg-primary/5" : ""}`}
+              >
                 <div className="flex items-start gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/15">
                     <Megaphone className="h-4 w-4 text-primary" />
@@ -142,15 +157,24 @@ function AnnouncementsPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{a.body}</p>
+                    <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">
+                      {a.body}
+                    </p>
                     <p className="text-xs text-muted-foreground mt-2">
                       {author?.full_name ?? author?.email ?? "Team"} · {timeAgo(a.created_at)}
                     </p>
                   </div>
                   {isManager && (
                     <div className="flex gap-1 shrink-0">
-                      <Button size="sm" variant="ghost" onClick={() => togglePin(a)} title={a.is_pinned ? "Unpin" : "Pin"}>
-                        <Pin className={`h-3.5 w-3.5 ${a.is_pinned ? "text-primary" : "text-muted-foreground"}`} />
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => togglePin(a)}
+                        title={a.is_pinned ? "Unpin" : "Pin"}
+                      >
+                        <Pin
+                          className={`h-3.5 w-3.5 ${a.is_pinned ? "text-primary" : "text-muted-foreground"}`}
+                        />
                       </Button>
                       <Button size="sm" variant="ghost" onClick={() => del(a.id)} title="Delete">
                         <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -165,20 +189,38 @@ function AnnouncementsPage() {
       )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <ComposeDialog onSaved={() => { setOpen(false); void load(); }} authorId={user?.id ?? ""} workspaceId={workspace.id} />
+        <ComposeDialog
+          onSaved={() => {
+            setOpen(false);
+            void load();
+          }}
+          authorId={user?.id ?? ""}
+          workspaceId={workspace.id}
+        />
       </Dialog>
     </div>
   );
 }
 
-function ComposeDialog({ onSaved, authorId, workspaceId }: { onSaved: () => void; authorId: string; workspaceId: string }) {
+function ComposeDialog({
+  onSaved,
+  authorId,
+  workspaceId,
+}: {
+  onSaved: () => void;
+  authorId: string;
+  workspaceId: string;
+}) {
   const [title, setTitle] = React.useState("");
   const [body, setBody] = React.useState("");
   const [dept, setDept] = React.useState<string>("all");
   const [saving, setSaving] = React.useState(false);
 
   async function save() {
-    if (!title.trim() || !body.trim()) { toast.error("Title and body are required"); return; }
+    if (!title.trim() || !body.trim()) {
+      toast.error("Title and body are required");
+      return;
+    }
     setSaving(true);
     const payload: Database["public"]["Tables"]["announcements"]["Insert"] = {
       title: title.trim(),
@@ -189,22 +231,36 @@ function ComposeDialog({ onSaved, authorId, workspaceId }: { onSaved: () => void
     };
     const { error } = await supabase.from("announcements").insert(payload);
     setSaving(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Announcement posted");
     onSaved();
   }
 
   return (
     <DialogContent className="max-w-lg">
-      <DialogHeader><DialogTitle>New Announcement</DialogTitle></DialogHeader>
+      <DialogHeader>
+        <DialogTitle>New Announcement</DialogTitle>
+      </DialogHeader>
       <div className="space-y-3">
         <div>
           <Label>Title</Label>
-          <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Q2 Goals update…" />
+          <Input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Q2 Goals update…"
+          />
         </div>
         <div>
           <Label>Message</Label>
-          <Textarea rows={5} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Write your announcement…" />
+          <Textarea
+            rows={5}
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            placeholder="Write your announcement…"
+          />
         </div>
         <div>
           <Label>Audience</Label>
@@ -215,14 +271,18 @@ function ComposeDialog({ onSaved, authorId, workspaceId }: { onSaved: () => void
             <SelectContent>
               <SelectItem value="all">Whole company</SelectItem>
               {DEPARTMENTS.map((d) => (
-                <SelectItem key={d} value={d}>{deptLabel(d)}</SelectItem>
+                <SelectItem key={d} value={d}>
+                  {deptLabel(d)}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
       </div>
       <DialogFooter>
-        <Button onClick={save} disabled={saving}>{saving ? "Posting…" : "Post"}</Button>
+        <Button onClick={save} disabled={saving}>
+          {saving ? "Posting…" : "Post"}
+        </Button>
       </DialogFooter>
     </DialogContent>
   );
