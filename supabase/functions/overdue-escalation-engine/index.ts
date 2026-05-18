@@ -1,27 +1,24 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
 // Overdue Escalation Engine
 // Schedule: 0 9 * * 1-5  (09:00 UTC weekdays = 10:00 WAT)
 //
-// Day 1 overdue → skipped (handled by auto-status-engine)
+// Day 1 overdue → skipped (handled by auto-status-engine on day 1)
 // Day 2 overdue → notify employee + managers, email managers
 // Day 3+ overdue → notify employee + managers + admins, email admins,
 //                  escalate priority to 'urgent', auto-flag employee
 
-const supabase = createClient(
-  Deno.env.get("SUPABASE_URL")!,
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-);
+import {
+  supabase,
+  todayWAT,
+  isWeekday,
+  getActiveWorkspaces,
+  getAutomationSettings,
+  logAutomation,
+  sendNotification,
+  enqueueEmail,
+  notifyUserWhatsApp,
+} from "../_shared/helpers.ts";
 
-const APP_URL = Deno.env.get("APP_URL") ?? "https://app.nexushq.io";
-
-// ── Date helpers ────────────────────────────────────────────────────────────
-
-/** Returns today's date string in WAT (UTC+1) as YYYY-MM-DD */
-function todayWAT(): string {
-  const d = new Date(Date.now() + 60 * 60 * 1000); // shift +1h
-  return d.toISOString().slice(0, 10);
-}
+const APP_URL = Deno.env.get("APP_URL") ?? "https://nexus.skryveai.com";
 
 // ── Email HTML builders ─────────────────────────────────────────────────────
 
@@ -32,6 +29,7 @@ function emailWrap(headerBg: string, headerText: string, body: string): string {
 <body style="margin:0;padding:16px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.06);">
     <div style="background:${headerBg};padding:28px 24px;text-align:center;">
+      <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Nexus HQ</p>
       <h1 style="color:#ffffff;margin:0;font-size:20px;font-weight:700;letter-spacing:-0.3px;">${headerText}</h1>
     </div>
     <div style="padding:28px 24px;">${body}</div>
@@ -79,7 +77,12 @@ function buildManagerEmail(
         <td style="padding:10px 14px;border:1px solid #fde68a;color:#d97706;font-weight:700;">${daysOverdue}</td>
       </tr>
     </table>
-    <a href="${APP_URL}" style="display:inline-block;background:#d97706;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;">View Dashboard →</a>`;
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${APP_URL}"
+         style="display:inline-block;background:#d97706;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;">
+        View Dashboard &rarr;
+      </a>
+    </div>`;
   return emailWrap("#d97706", `⚠ ${employeeName} — Task 2 Days Overdue`, body);
 }
 
@@ -125,7 +128,12 @@ function buildAdminEmail(
         <td style="padding:10px 14px;border:1px solid #e5e7eb;color:#dc2626;font-weight:700;">${daysOverdue}</td>
       </tr>
     </table>
-    <a href="${APP_URL}" style="display:inline-block;background:#dc2626;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;">Take Action →</a>`;
+    <div style="text-align:center;margin:24px 0;">
+      <a href="${APP_URL}"
+         style="display:inline-block;background:#dc2626;color:#ffffff;padding:12px 28px;border-radius:6px;text-decoration:none;font-weight:600;font-size:14px;">
+        Take Action &rarr;
+      </a>
+    </div>`;
   return emailWrap(
     "#dc2626",
     `🔴 Critical: ${employeeName} — Task ${daysOverdue} Days Overdue`,
@@ -133,99 +141,68 @@ function buildAdminEmail(
   );
 }
 
-// ── Supabase helpers ────────────────────────────────────────────────────────
+// ── Type helpers ────────────────────────────────────────────────────────────
 
-async function sendNotification(
-  userId: string,
-  workspaceId: string,
-  type: string,
-  title: string,
-  message: string,
-  taskId?: string,
-): Promise<void> {
-  const payload: Record<string, unknown> = {
-    user_id: userId,
-    workspace_id: workspaceId,
-    type,
-    title,
-    message,
-    is_read: false,
-  };
-  if (taskId) payload.related_task_id = taskId;
-  await supabase.from("notifications").insert(payload);
+interface Profile {
+  id: string;
+  full_name: string | null;
+  email: string | null;
 }
 
-async function enqueueEmail(
-  to: string,
-  subject: string,
-  html: string,
-): Promise<void> {
-  await supabase
-    .rpc("enqueue_email", {
-      queue_name: "transactional_emails",
-      payload: { to, subject, html },
-    })
-    .catch((e: unknown) =>
-      console.error(`enqueue_email failed for ${to}:`, e)
-    );
-}
-
-async function logAutomation(
-  workspaceId: string,
-  automationType: string,
-  status: "success" | "failed" | "skipped",
-  triggeredFor: string | null,
-  details: Record<string, unknown>,
-): Promise<void> {
-  await supabase.from("automation_logs").insert({
-    workspace_id: workspaceId,
-    automation_type: automationType,
-    status,
-    triggered_for: triggeredFor,
-    details,
-  });
+interface OverdueTask {
+  id: string;
+  title: string;
+  due_date: string;
+  progress_percent: number | null;
+  priority: string;
+  assigned_to: string | null;
+  assigned_by: string | null;
+  assignee: Profile | null;
+  assigner: Profile | null;
 }
 
 // ── Main handler ────────────────────────────────────────────────────────────
 
 Deno.serve(async (_req) => {
+  if (!isWeekday()) {
+    console.log("Not a weekday — skipping overdue escalation engine.");
+    return new Response(JSON.stringify({ ok: true, skipped: "not_weekday" }), {
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   const today = todayWAT();
   const todayMs = new Date(today).getTime();
-  const summary = { workspaces: 0, tasksProcessed: 0, escalations2d: 0, escalations3d: 0, errors: 0 };
+  const summary = {
+    workspaces: 0,
+    tasksProcessed: 0,
+    escalations2d: 0,
+    escalations3d: 0,
+    errors: 0,
+  };
 
   try {
-    // Fetch all active workspaces
-    const { data: workspaces, error: wsErr } = await supabase
-      .from("workspaces")
-      .select("id")
-      .eq("is_active", true);
+    const workspaces = await getActiveWorkspaces();
 
-    if (wsErr) throw new Error(`Failed to fetch workspaces: ${wsErr.message}`);
-
-    for (const workspace of workspaces ?? []) {
-      const workspaceId: string = workspace.id;
+    for (const workspace of workspaces) {
+      const workspaceId = workspace.id;
       summary.workspaces++;
 
       try {
-        // Check automation settings
-        const { data: settings } = await supabase
-          .from("automation_settings")
-          .select("overdue_escalation_enabled")
-          .eq("workspace_id", workspaceId)
-          .single();
-
+        // ── Check automation settings ──────────────────────────────────────
+        const settings = await getAutomationSettings(workspaceId);
         if (!settings?.overdue_escalation_enabled) {
           console.log(`Workspace ${workspaceId}: overdue_escalation_enabled=false, skipping`);
           continue;
         }
 
-        // Fetch overdue tasks with assignee and assigner profiles
+        // ── Fetch overdue tasks with assignee + assigner profiles ──────────
         const { data: tasks, error: tasksErr } = await supabase
           .from("tasks")
           .select(`
             id, title, due_date, progress_percent, priority,
             assigned_to, assigned_by,
-            assignee:profiles!tasks_assigned_to_fkey(id, full_name, email, whatsapp_opt_in),
+            assignee:profiles!tasks_assigned_to_fkey(id, full_name, email),
             assigner:profiles!tasks_assigned_by_fkey(id, full_name)
           `)
           .eq("status", "overdue")
@@ -233,47 +210,53 @@ Deno.serve(async (_req) => {
 
         if (tasksErr) {
           console.error(`Workspace ${workspaceId}: tasks query error:`, tasksErr.message);
+          await logAutomation(workspaceId, "overdue_escalation_engine", null, {
+            error: tasksErr.message,
+          }, "failed");
           summary.errors++;
           continue;
         }
 
-        // Fetch workspace managers
-        const { data: managerMembers } = await supabase
+        // ── Fetch managers ─────────────────────────────────────────────────
+        const { data: managerRows } = await supabase
           .from("workspace_members")
           .select("user_id, profiles(id, full_name, email)")
           .eq("workspace_id", workspaceId)
           .eq("role", "manager");
 
-        // Fetch workspace admins (includes owners)
-        const { data: adminMembers } = await supabase
+        // ── Fetch admins (admin + owner) ───────────────────────────────────
+        const { data: adminRows } = await supabase
           .from("workspace_members")
           .select("user_id, profiles(id, full_name, email)")
           .eq("workspace_id", workspaceId)
           .in("role", ["admin", "owner"]);
 
-        const managers = (managerMembers ?? []).map((m) => (m as any).profiles as { id: string; full_name: string | null; email: string | null } | null).filter(Boolean) as { id: string; full_name: string | null; email: string | null }[];
-        const admins = (adminMembers ?? []).map((m) => (m as any).profiles as { id: string; full_name: string | null; email: string | null } | null).filter(Boolean) as { id: string; full_name: string | null; email: string | null }[];
+        const managers: Profile[] = (managerRows ?? [])
+          .map((m) => (m as any).profiles as Profile | null)
+          .filter((p): p is Profile => p !== null);
 
-        for (const task of tasks ?? []) {
+        const admins: Profile[] = (adminRows ?? [])
+          .map((m) => (m as any).profiles as Profile | null)
+          .filter((p): p is Profile => p !== null);
+
+        // ── Process each overdue task ──────────────────────────────────────
+        for (const rawTask of tasks ?? []) {
+          const task = rawTask as unknown as OverdueTask;
           summary.tasksProcessed++;
 
           const dueMs = new Date(task.due_date).getTime();
           const daysOverdue = Math.floor((todayMs - dueMs) / 86_400_000);
 
-          if (daysOverdue <= 1) {
-            // Day 1: handled by auto-status-engine on the day it goes overdue
-            continue;
-          }
+          // Day 1: handled by auto-status-engine
+          if (daysOverdue <= 1) continue;
 
-          const assignee = (task as any).assignee as { id: string; full_name: string | null; email: string | null; whatsapp_opt_in: boolean } | null;
-          const assigner = (task as any).assigner as { id: string; full_name: string | null } | null;
-          const employeeName = assignee?.full_name ?? "Unknown Employee";
-          const assignedByName = assigner?.full_name ?? "Unknown";
+          const employeeName = task.assignee?.full_name ?? "Unknown Employee";
+          const assignedByName = task.assigner?.full_name ?? "Unknown";
           const progress = task.progress_percent ?? 0;
           const dueDate = task.due_date;
 
           if (daysOverdue === 2) {
-            // ── 2 days overdue ───────────────────────────────────────────
+            // ── 2 days overdue ─────────────────────────────────────────────
 
             // Notify employee
             if (task.assigned_to) {
@@ -289,8 +272,6 @@ Deno.serve(async (_req) => {
 
             // Notify each manager + send manager email
             for (const manager of managers) {
-              if (!manager?.id) continue;
-
               await sendNotification(
                 manager.id,
                 workspaceId,
@@ -309,15 +290,17 @@ Deno.serve(async (_req) => {
               }
             }
 
-            await logAutomation(workspaceId, "overdue_escalation_2d", "success", task.assigned_to ?? null, {
-              days_overdue: daysOverdue,
-              task_id: task.id,
-              task_title: task.title,
-            });
+            await logAutomation(
+              workspaceId,
+              "overdue_escalation_2d",
+              task.assigned_to ?? null,
+              { days_overdue: daysOverdue, task_id: task.id, task_title: task.title },
+              "success",
+            );
 
             summary.escalations2d++;
           } else {
-            // ── 3+ days overdue ──────────────────────────────────────────
+            // ── 3+ days overdue ────────────────────────────────────────────
 
             // Notify employee
             if (task.assigned_to) {
@@ -333,7 +316,6 @@ Deno.serve(async (_req) => {
 
             // Notify all managers
             for (const manager of managers) {
-              if (!manager?.id) continue;
               await sendNotification(
                 manager.id,
                 workspaceId,
@@ -346,14 +328,12 @@ Deno.serve(async (_req) => {
 
             // Notify all admins + email each admin
             for (const admin of admins) {
-              if (!admin?.id) continue;
-
               await sendNotification(
                 admin.id,
                 workspaceId,
                 "task_overdue",
                 `🔴 Critical: ${employeeName} — task ${daysOverdue} days overdue`,
-                `${employeeName}'s task "${task.title}" is ${daysOverdue} days overdue. Priority has been escalated to urgent.`,
+                `${employeeName}'s task "${task.title}" is ${daysOverdue} days overdue. Priority escalated to urgent.`,
                 task.id,
               );
 
@@ -361,7 +341,14 @@ Deno.serve(async (_req) => {
                 await enqueueEmail(
                   admin.email,
                   `🔴 Critical: ${employeeName} — task ${daysOverdue} days overdue`,
-                  buildAdminEmail(employeeName, task.title, dueDate, progress, daysOverdue, assignedByName),
+                  buildAdminEmail(
+                    employeeName,
+                    task.title,
+                    dueDate,
+                    progress,
+                    daysOverdue,
+                    assignedByName,
+                  ),
                 );
               }
             }
@@ -377,7 +364,7 @@ Deno.serve(async (_req) => {
               }
             }
 
-            // Auto-flag employee if no unresolved flag exists for this task
+            // Auto-flag employee if no unresolved flag already exists for this task
             if (task.assigned_to) {
               const flagReason = `Task overdue for ${daysOverdue} days: ${task.title}`;
               const flagReasonPattern = `Task overdue for%: ${task.title}`;
@@ -386,6 +373,7 @@ Deno.serve(async (_req) => {
                 .from("flags")
                 .select("id")
                 .eq("flagged_user_id", task.assigned_to)
+                .eq("workspace_id", workspaceId)
                 .eq("is_resolved", false)
                 .like("reason", flagReasonPattern)
                 .limit(1);
@@ -405,20 +393,26 @@ Deno.serve(async (_req) => {
               }
             }
 
-            await logAutomation(workspaceId, "overdue_escalation_critical", "success", task.assigned_to ?? null, {
-              days_overdue: daysOverdue,
-              task_id: task.id,
-              task_title: task.title,
-            });
+            await logAutomation(
+              workspaceId,
+              "overdue_escalation_critical",
+              task.assigned_to ?? null,
+              { days_overdue: daysOverdue, task_id: task.id, task_title: task.title },
+              "success",
+            );
 
             summary.escalations3d++;
           }
         }
       } catch (wsError: unknown) {
         console.error(`Error processing workspace ${workspaceId}:`, wsError);
-        await logAutomation(workspaceId, "overdue_escalation_engine", "failed", null, {
-          error: String(wsError),
-        }).catch(() => {});
+        await logAutomation(
+          workspaceId,
+          "overdue_escalation_engine",
+          null,
+          { error: String(wsError) },
+          "failed",
+        ).catch(() => {});
         summary.errors++;
       }
     }
