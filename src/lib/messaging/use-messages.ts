@@ -1,6 +1,7 @@
 import React from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { notifyMentions, notifyPinChange } from "./notify";
 import type {
   Message,
   MsgProfile,
@@ -346,12 +347,26 @@ export function useMessages(params: {
         if (parentMessageId)
           insertPayload["parent_message_id"] = parentMessageId;
 
-        const { data: msgData, error: msgErr } = await supabase
-          .from("messages")
-          .insert(insertPayload)
-          .select()
-          .single();
-        if (msgErr) throw msgErr;
+        // Retry with exponential backoff on transient errors (network blips,
+        // 5xx). Workspace-scoped RLS still applies — a true permission denial
+        // is not retried (PostgREST returns 4xx with code starting "42" or
+        // "PGRST"). This prevents silent cross-workspace exposure.
+        let msgData: unknown = null;
+        let lastErr: { message?: string; code?: string } | null = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const res = await supabase
+            .from("messages")
+            .insert(insertPayload as never)
+            .select()
+            .single();
+          if (!res.error) { msgData = res.data; lastErr = null; break; }
+          lastErr = res.error;
+          const code = res.error.code ?? "";
+          const isPermOrValidation = code.startsWith("42") || code.startsWith("PGRST") || code === "23514";
+          if (isPermOrValidation) break;
+          await new Promise((r) => setTimeout(r, 250 * Math.pow(2, attempt)));
+        }
+        if (lastErr) throw lastErr;
 
         const insertedMsg = msgData as unknown as RawMessage;
 
@@ -399,6 +414,17 @@ export function useMessages(params: {
           setMessages((prev) =>
             prev.map((m) => (m.id === optimisticId ? real : m))
           );
+        }
+
+        // Fire-and-forget: in-app notifications for @mentions in channel messages.
+        if (channelId && body.includes("@")) {
+          void notifyMentions({
+            workspaceId,
+            channelId,
+            messageId: insertedMsg.id,
+            senderId: user.id,
+            body,
+          });
         }
       } catch (err) {
         console.error("sendMessage error:", err);
@@ -465,6 +491,8 @@ export function useMessages(params: {
         toast.error("Failed to pin message");
         return;
       }
+      toast.success(pinned ? "Message pinned" : "Message unpinned");
+      const target = messages.find((m) => m.id === id);
       setMessages((prev) =>
         prev.map((m) =>
           m.id === id
@@ -472,8 +500,19 @@ export function useMessages(params: {
             : m
         )
       );
+      if (workspaceId && user && target) {
+        void notifyPinChange({
+          workspaceId,
+          channelId: channelId ?? null,
+          conversationId: conversationId ?? null,
+          messageId: id,
+          actorId: user.id,
+          pinned,
+          body: target.body,
+        });
+      }
     },
-    []
+    [workspaceId, channelId, conversationId, messages]
   );
 
   return {

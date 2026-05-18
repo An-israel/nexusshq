@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { redeemInvitationFn } from "@/lib/admin.functions";
-import { KeyRound, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/join")({
   validateSearch: (s: Record<string, unknown>) => ({
@@ -59,11 +60,9 @@ function JoinPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
-      <div className="mb-8 text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-          <KeyRound className="h-6 w-6" />
-        </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-12">
+      <div className="mb-8 flex flex-col items-center text-center">
+        <BrandMark size="lg" className="mb-5" />
         <h1 className="text-2xl font-bold tracking-tight">Join your workspace</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Use the invite link or passcode your manager shared with you
@@ -85,7 +84,7 @@ function JoinPage() {
             className="font-mono text-base md:text-sm"
           />
           {token ? (
-            <p className="text-xs text-green-600 dark:text-green-400">
+            <p className="text-xs text-success">
               ✓ Invite token detected from your link
             </p>
           ) : (

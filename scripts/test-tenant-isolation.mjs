@@ -1,0 +1,163 @@
+#!/usr/bin/env node
+/**
+ * Tenant-isolation smoke test.
+ *
+ * Usage:
+ *   SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... SUPABASE_PUBLISHABLE_KEY=... \
+ *   node scripts/test-tenant-isolation.mjs
+ *
+ * Creates two throwaway users in two separate workspaces, signs in as each,
+ * and verifies they cannot read or write data belonging to the other workspace.
+ * Exits non-zero on any leak. Cleans up everything on success.
+ */
+import { createClient } from "@supabase/supabase-js";
+
+const URL = process.env.SUPABASE_URL;
+const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const PUB = process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY;
+if (!URL || !SERVICE || !PUB) {
+  console.error("Missing SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY / SUPABASE_PUBLISHABLE_KEY");
+  process.exit(2);
+}
+const admin = createClient(URL, SERVICE, { auth: { persistSession: false } });
+const stamp = Date.now();
+const failures = [];
+const cleanup = { users: [], workspaces: [] };
+
+function fail(msg) { failures.push(msg); console.error("✗ " + msg); }
+function ok(msg) { console.log("✓ " + msg); }
+
+async function makeUser(label) {
+  const email = `iso-${label}-${stamp}@example.test`;
+  const password = "TestPassword!" + stamp;
+  const { data, error } = await admin.auth.admin.createUser({ email, password, email_confirm: true });
+  if (error) throw error;
+  cleanup.users.push(data.user.id);
+  return { id: data.user.id, email, password };
+}
+
+async function makeWorkspace(slug, ownerId) {
+  const { data: ws, error } = await admin.from("workspaces").insert({ name: slug, slug, plan: "business" }).select("id, slug").single();
+  if (error) throw error;
+  cleanup.workspaces.push(ws.id);
+  await admin.from("profiles").upsert({ id: ownerId, full_name: slug, email: `iso-${slug}@example.test` });
+  await admin.from("workspace_members").insert({ workspace_id: ws.id, user_id: ownerId, role: "owner", is_active: true });
+  return ws;
+}
+
+async function asUser(email, password) {
+  const c = createClient(URL, PUB, { auth: { persistSession: false } });
+  const { error } = await c.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+  return c;
+}
+
+try {
+  console.log("Setting up two tenants...");
+  const userA = await makeUser("a");
+  const userB = await makeUser("b");
+  const wsA = await makeWorkspace(`iso-a-${stamp}`, userA.id);
+  const wsB = await makeWorkspace(`iso-b-${stamp}`, userB.id);
+
+  // Seed channels in each
+  const { data: chA } = await admin.from("channels").insert({ workspace_id: wsA.id, name: "general-a", type: "public", created_by: userA.id }).select().single();
+  const { data: chB } = await admin.from("channels").insert({ workspace_id: wsB.id, name: "general-b", type: "public", created_by: userB.id }).select().single();
+
+  const cA = await asUser(userA.email, userA.password);
+  const cB = await asUser(userB.email, userB.password);
+
+  // 1. Workspaces visibility
+  const { data: wsListA } = await cA.from("workspaces").select("id");
+  if ((wsListA ?? []).some(w => w.id === wsB.id)) fail("User A can see workspace B"); else ok("Workspace isolation A");
+  const { data: wsListB } = await cB.from("workspaces").select("id");
+  if ((wsListB ?? []).some(w => w.id === wsA.id)) fail("User B can see workspace A"); else ok("Workspace isolation B");
+
+  // 2. Channels
+  const { data: chListA } = await cA.from("channels").select("id");
+  if ((chListA ?? []).some(c => c.id === chB.id)) fail("User A can see channel B"); else ok("Channel isolation A");
+
+  // 3. Cross-tenant write rejection
+  const { error: insErr } = await cA.from("messages").insert({ workspace_id: wsB.id, sender_id: userA.id, body: "leak", channel_id: chB.id });
+  if (!insErr) fail("User A could insert message into workspace B"); else ok("Cross-tenant message insert blocked");
+
+  // 4. Member listing
+  const { data: memList } = await cA.from("workspace_members").select("workspace_id");
+  if ((memList ?? []).some(m => m.workspace_id === wsB.id)) fail("User A can see workspace B members"); else ok("Membership isolation");
+
+  // 5. Direct messages — A cannot insert into B's workspace, cannot read B's DMs
+  await admin.from("direct_messages").insert({
+    workspace_id: wsB.id, from_id: userB.id, to_id: userB.id, body: "secret-b-dm",
+  });
+  const { data: dmListA } = await cA.from("direct_messages").select("body, workspace_id");
+  if ((dmListA ?? []).some(d => d.workspace_id === wsB.id)) fail("User A can read workspace B DMs"); else ok("DM read isolation");
+  const { error: dmInsErr } = await cA.from("direct_messages").insert({
+    workspace_id: wsB.id, from_id: userA.id, to_id: userB.id, body: "leak-dm",
+  });
+  if (!dmInsErr) fail("User A could insert DM into workspace B"); else ok("DM cross-tenant insert blocked");
+
+  // 6. Group messages — seed in B, ensure A cannot read or write
+  const { data: grpB } = await admin.from("message_groups").insert({
+    workspace_id: wsB.id, name: "grp-b", created_by: userB.id,
+  }).select().single();
+  await admin.from("message_group_members").insert({ group_id: grpB.id, user_id: userB.id, workspace_id: wsB.id });
+  await admin.from("group_messages").insert({
+    workspace_id: wsB.id, group_id: grpB.id, from_id: userB.id, body: "secret-grp",
+  });
+  const { data: grpListA } = await cA.from("group_messages").select("id, workspace_id");
+  if ((grpListA ?? []).some(g => g.workspace_id === wsB.id)) fail("User A can read workspace B group messages"); else ok("Group message read isolation");
+  const { error: grpInsErr } = await cA.from("group_messages").insert({
+    workspace_id: wsB.id, group_id: grpB.id, from_id: userA.id, body: "leak-grp",
+  });
+  if (!grpInsErr) fail("User A could insert group message into workspace B"); else ok("Group message cross-tenant insert blocked");
+
+  // 7. Standups — A should not see B's standups; A should not be able to write into B
+  const today = new Date().toISOString().slice(0, 10);
+  await admin.from("standups").insert({
+    user_id: userB.id, workspace_id: wsB.id, date: today,
+    yesterday: "b-yesterday", today: "b-today",
+  });
+  const { data: stListA } = await cA.from("standups").select("id, workspace_id");
+  if ((stListA ?? []).some(s => s.workspace_id === wsB.id)) fail("User A can read workspace B standups"); else ok("Standup read isolation");
+  const { error: stInsErr } = await cA.from("standups").insert({
+    user_id: userB.id, workspace_id: wsB.id, date: today,
+    yesterday: "leak", today: "leak",
+  });
+  if (!stInsErr) fail("User A could insert standup for user B"); else ok("Standup cross-user insert blocked");
+
+  // 8. Workspace invites — A should not see B's invites or create one for B
+  await admin.from("workspace_invites").insert({
+    workspace_id: wsB.id, email: `target-${stamp}@example.test`,
+    role: "employee", token: `tok-b-${stamp}`, invited_by: userB.id,
+    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  });
+  const { data: invListA } = await cA.from("workspace_invites").select("id, workspace_id");
+  if ((invListA ?? []).some(i => i.workspace_id === wsB.id)) fail("User A can read workspace B invites"); else ok("Invite read isolation");
+  const { error: invInsErr } = await cA.from("workspace_invites").insert({
+    workspace_id: wsB.id, email: `leak-${stamp}@example.test`,
+    role: "employee", token: `tok-leak-${stamp}`, invited_by: userA.id,
+    expires_at: new Date(Date.now() + 7 * 86400000).toISOString(),
+  });
+  if (!invInsErr) fail("User A could create invite into workspace B"); else ok("Invite cross-tenant insert blocked");
+
+  // 9. Standups history (positive) — user B sees their own latest entry in their workspace
+  const { data: stOwn } = await cB.from("standups")
+    .select("id, today, workspace_id")
+    .eq("workspace_id", wsB.id)
+    .order("date", { ascending: false })
+    .limit(1);
+  if (!stOwn?.length || stOwn[0].today !== "b-today") fail("User B cannot read their own latest standup");
+  else ok("Standups history (Mine) returns latest entry for current workspace");
+
+} catch (e) {
+  fail("Setup error: " + (e.message || e));
+} finally {
+  console.log("\nCleaning up...");
+  for (const wid of cleanup.workspaces) await admin.from("workspaces").delete().eq("id", wid);
+  for (const uid of cleanup.users) await admin.auth.admin.deleteUser(uid);
+}
+
+if (failures.length) {
+  console.error(`\n${failures.length} failure(s)`);
+  process.exit(1);
+}
+console.log("\nAll tenant-isolation checks passed.");

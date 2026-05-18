@@ -1,85 +1,77 @@
-## Nexus HQ — Internal Team Management Platform
+&nbsp;
 
-A full-stack ops platform for managing your team: tasks, attendance, KPIs, warnings, flags, and notifications. Three roles (admin, manager, employee) with role-aware navigation and permissions. Premium dark UI on your exact palette.
+&nbsp;
 
-### Stack translation (since this project is locked to TanStack Start, not Next.js)
-- **Routing/SSR**: TanStack Start v1 + React 19 + Vite 7 (replaces Next.js App Router)
-- **DB/Auth/Storage**: Supabase via Lovable Cloud (auto-wired)
-- **Email**: Lovable Emails (built-in, replaces Resend — no API key needed)
-- **Scheduled jobs**: Public TanStack server routes (`/api/public/*`) called by Supabase `pg_cron` with a shared secret header (replaces Supabase Edge Functions)
-- **Timezone**: Fixed work window 09:00–16:00 WAT, late threshold 09:15 WAT, all storage in UTC
-- **UI**: shadcn/ui (already installed), Tailwind, Inter font, your exact dark palette
+## Goal
 
----
+Lock in multi-tenancy: signup creates a clean workspace, super admins can create/disable/manage every workspace and invite people into specific workspaces with a role, and an automated test proves RLS keeps tenants isolated.
 
-### Build phases
+## Current state (verified)
 
-**Phase 1 — Foundation**
-- Database schema: `profiles`, `kpis`, `tasks`, `task_updates`, `attendance`, `flags`, `notifications` (+ `user_roles` table for safe role storage, separate from `profiles`)
-- RLS policies on every table using a `has_role()` SECURITY DEFINER function (prevents RLS recursion and privilege escalation)
-- Auto-create `profiles` row + default `employee` role on signup via trigger
-- Seed your admin account
-- Apply your dark theme palette to Tailwind/CSS variables
-- Inter font, base layout shell
+- Signup at `/signup` already creates the user, workspace, and `workspace_members` row as `owner` — works correctly.
+- `super_admin_users` table + `is_super_admin()` exist; the two designated emails are seeded.
+- `/super-admin` route is gated, lists workspaces, and supports suspend / activate / extend trial.
+- `workspaces` and `workspace_members` RLS scope reads/writes to members + super admins.
+- `ensure_skryve_seed` no longer dumps every new user into Skryve.
+- **Missing**: `workspace_invites` table, invite UI, super-admin "create workspace" + "manage members/roles", and any automated isolation check.
 
-**Phase 2 — Auth & shell**
-- `/login` (email + password) and `/accept-invite` (set password from invite link)
-- `_authenticated` route guard with Supabase session hydration
-- Dashboard layout: collapsible sidebar (role-aware nav) + topbar with the live clock-in/out widget
-- Stub pages for Dashboard, Notifications, Settings
+## Changes
 
-**Phase 3 — Task management** (the bulk of the build)
-- Employee `/tasks` page: summary bar (totals, completed, in-progress, overdue, weekly KPI ring), filter tabs, task list with priority/warning/overdue styling, detail panel with status change + progress slider + note → writes to `task_updates`
-- KPI link block in detail panel when `kpi_id` is set
-- Manager/Admin `/tasks/assign` form: employee picker, type/priority/due/KPI/warning, on submit → insert task, insert notification, send Lovable email
-- Three-dot action menu on Team-view task cards: Escalate to Urgent, Add/Remove Warning, Flag Employee (writes to `flags`, sends notification + email)
-- Realtime: `supabase.channel()` subscriptions so updates appear live
+### 1. Database migration
 
-**Phase 4 — Attendance**
-- Topbar clock widget: live clock, Clock In/Out buttons, elapsed time, late detection at 09:15 WAT, toast feedback
-- Employee `/attendance` page: monthly summary cards, color-coded calendar with day popovers, paginated history table
-- Admin/Manager `/admin/attendance`: all-employees overview table with department/month/status filters, expandable per-employee calendar, CSV export
+- Create `workspace_invites` table: `id`, `workspace_id`, `email`, `role` (`workspace_member_role`), `token` (unique, default `gen_random_bytes`), `invited_by`, `expires_at` (default `now() + 7d`), `accepted_at`, `created_at`. RLS: workspace admins + super admins can manage rows for their workspace; anyone with a valid token can `SELECT` their own row by token (via security-definer function), no public table read.
+- `redeem_workspace_invite(_token text)` security-definer function: validates token + expiry + email match, inserts `workspace_members` row, marks invite accepted, returns the workspace slug.
+- `create_workspace_as_super_admin(_name, _slug, _plan, _owner_email)` security-definer function: super-admin only; creates workspace + (if owner email matches an existing user) member row.
 
-**Phase 5 — Team Overview & KPIs**
-- `/team` (manager + admin): roster, per-employee task/attendance/flag stats, jump-in to assign tasks or view profile
-- `/kpis` (admin): create/edit/delete KPIs per department with target, unit, period
-- `/notifications`: list, mark read, deep-link to related task
+### 2. Super admin dashboard additions
 
-**Phase 6 — Scheduled jobs (pg_cron + public server routes)**
-- `auto-overdue-tasks` (daily 23:01 UTC): mark overdue tasks, notify employees
-- `task-reminders` (daily 07:00 UTC): due-today / due-tomorrow / overdue notifications + emails
-- `clock-reminders` (08:30 UTC + 15:15 UTC, weekdays): missing clock-in / missing clock-out emails
-- All routes protected by HMAC-style shared secret header; pg_cron jobs configured to call the stable `project--{id}.lovable.app` URLs
+In `src/routes/super-admin.tsx`:
 
-**Phase 7 — Email templates (Lovable Emails)**
-React Email templates, branded to match the app:
-- `task-assigned`, `task-due-soon`, `task-overdue`, `warning-issued`, `flag-issued`, `clock-reminder-missed-in`, `clock-reminder-missed-out`, `invite-employee`
+- **New "Create workspace" button** in the Workspaces tab → dialog (name, slug, plan, optional owner email).
+- **Workspace detail sheet → Members section**: list members with role + active flag; super admin can change role (owner/admin/manager/employee), deactivate/reactivate, or remove. Uses direct table writes under `is_super_admin()` RLS.
+- **Invites section in detail sheet**: list pending invites for the workspace; "Invite user" form (email + role) inserts into `workspace_invites` and shows a copyable invite URL `…/accept-invite?token=…`.
 
----
+### 3. Invite acceptance flow
 
-### Visual design
-- Background `#0F0F0F`, cards `#1A1A1A`, borders `#2A2A2A`, secondary text `#9CA3AF`
-- Accent blue `#3B82F6`, danger `#EF4444`, warning amber `#F59E0B`, success green `#10B981`
-- Overdue cards: `border-l-4 border-red-500`; urgent: red-400; high: amber-400
-- Warning badge: `animate-pulse` amber
-- Completed: 60% opacity + strikethrough title
-- Empty states with clean illustrations, no lorem ipsum anywhere
+Update `src/routes/accept-invite.tsx` so it also handles `?token=…` invites:
 
----
+- If token present and user is signed in: call `redeem_workspace_invite(token)`, then redirect to `/{slug}/dashboard`.
+- If token present and not signed in: prompt to sign up / sign in first, preserving the token.
+- Existing Supabase-invite-link flow (hash tokens) is preserved.
 
-### Security notes
-- Roles live in a separate `user_roles` table (NEVER on `profiles`) to prevent privilege escalation
-- All role checks use a `has_role(uid, role)` SECURITY DEFINER function
-- Service-role key only used in server functions; never shipped to browser
-- Public cron routes verified with shared-secret header before any DB write
-- Form inputs validated with Zod both client and server side
+### 4. Workspace creation during onboarding
 
----
+Defensive: if a signed-in user has zero `workspace_members` rows (e.g. legacy account, failed signup), `_app.tsx` redirects them to a small `/create-workspace` page that runs the same insert chain as signup step 2 (workspace + member as owner). This guarantees every user has a workspace path.
 
-### What I'll deliver in stages
-Because of the scope, I'll build it in the 7 phases above and verify each one works before moving on. After phase 1 (schema + auth + shell), you'll see the app shape immediately and can give feedback. Each subsequent phase ships working features end-to-end.
+### 5. Automated RLS isolation test
 
-### What you'll need to do (only at the very end)
-Lovable Cloud auto-wires Supabase, so you don't manage env vars manually. The only manual step: when we reach the email phase, you'll be prompted in chat to verify a sender email domain (one click, ~2 min). I'll walk you through it then.
+Add `scripts/test-tenant-isolation.mjs` (run with `node scripts/test-tenant-isolation.mjs`):
 
-Ready to build phase 1?
+- Uses service-role to create two throwaway test users in two separate workspaces with seed data (one task, one channel, one direct message each).
+- Signs in as User A with the publishable key and asserts:
+  - `workspaces` query returns only workspace A.
+  - `workspace_members`, `tasks`, `channels`, `messages`, `direct_messages`, `documents`, `announcements`, `kpis`, `okrs`/`objectives` queries return zero rows from workspace B.
+  - INSERT into workspace B's `messages` / `tasks` is rejected by RLS.
+- Repeats for User B.
+- Cleans up test users + workspaces.
+- Exits non-zero on any leak. README documents how to run it.
+
+## Technical notes
+
+- All super-admin writes rely on existing RLS (`is_super_admin()` already permits UPDATE on `workspaces`); we'll add equivalent policies on `workspace_members` (super-admin manage) and `workspace_invites`.
+- Invite tokens are URL-safe base64 from `gen_random_bytes(24)`.
+- Frontend keeps using the browser `supabase` client; no new server functions needed except optional `acceptInvite` wrapper for nicer error handling.
+- `ensure_skryve_seed` is left alone — already fixed.
+
+## Out of scope
+
+- Email delivery for invites (we surface the URL; existing transactional-email infra can be wired later).
+- Billing changes for super-admin-created workspaces (defaults to `business`, no subscription row — matches today's manual workspaces).
+
+I need to be able to see previous standups the one I was sent a week ago the one that was sent yesterday and a few days back like all standups I should be able to see them and go back to be able to track what my employees are doing
+
+I still cannot send DM’s to users
+
+AI task is not working
+
+As an admin, I realize that the invitation link is not working when user tried to login with it to my workspace. It keeps telling them that the link is expired so fix that and then the code is not also showing. It’s just showing nothing there.

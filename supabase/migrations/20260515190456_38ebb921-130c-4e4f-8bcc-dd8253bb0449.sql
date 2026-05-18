@@ -1,0 +1,1 @@
+ALTER TABLE public.attendance ADD COLUMN IF NOT EXISTS overtime_minutes integer NOT NULL DEFAULT 0;

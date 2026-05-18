@@ -12,8 +12,8 @@ import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { setEmployeeActiveFn } from "@/lib/admin.functions";
-import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck, ClipboardList } from "lucide-react";
+import { setEmployeeActiveFn, removeWorkspaceMemberFn } from "@/lib/admin.functions";
+import { Users, CheckCircle2, AlertTriangle, Clock, Shield, UserX, UserCheck, ClipboardList, Trash2 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
@@ -56,11 +56,17 @@ function TeamPage() {
       setLoading(true);
       const today = todayISO();
 
-      const { data: profilesData } = await supabase
-        .from("profiles")
-        .select("*")
-        .order("full_name");
-      const profiles = (profilesData as Profile[]) ?? [];
+      // Scope to current workspace members only
+      const { data: memberRows } = await supabase
+        .from("workspace_members")
+        .select("user_id, profiles:user_id(*)")
+        .eq("workspace_id", workspace.id)
+        .eq("is_active", true);
+      const profiles = ((memberRows ?? [])
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .map((r: any) => r.profiles)
+        .filter(Boolean) as Profile[])
+        .sort((a, b) => (a.full_name ?? "").localeCompare(b.full_name ?? ""));
 
       const userIds = profiles.map((p) => p.id);
       const [tasksRes, attRes, flagsRes, overdueRes, completedTodayRes, rolesRes] = await Promise.all([
@@ -270,7 +276,10 @@ function MemberCard({
   onActivationChanged: () => void;
 }) {
   const setActive = useServerFn(setEmployeeActiveFn);
+  const removeMember = useServerFn(removeWorkspaceMemberFn);
+  const { workspace } = useWorkspace();
   const [toggling, setToggling] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   async function toggleActive() {
     setToggling(true);
@@ -282,6 +291,21 @@ function MemberCard({
       toast.error(err instanceof Error ? err.message : "Failed to update account");
     } finally {
       setToggling(false);
+    }
+  }
+
+  async function removeFromWorkspace() {
+    const name = m.profile.full_name ?? m.profile.email ?? "this employee";
+    if (!confirm(`Remove ${name} from this workspace? They will lose access immediately.`)) return;
+    setRemoving(true);
+    try {
+      await removeMember({ data: { workspaceId: workspace.id, userId: m.profile.id } });
+      toast.success(`${name} removed from workspace`);
+      onActivationChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to remove employee");
+    } finally {
+      setRemoving(false);
     }
   }
 
@@ -363,6 +387,18 @@ function MemberCard({
                 </Button>
               }
             />
+          )}
+          {isAdmin && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs text-destructive hover:text-destructive"
+              onClick={removeFromWorkspace}
+              disabled={removing}
+              title="Remove from workspace (terminate employment)"
+            >
+              <Trash2 className="mr-1.5 h-3 w-3" /> Remove
+            </Button>
           )}
         </div>
       )}

@@ -286,19 +286,18 @@ export function useDmConversations(
         }
       }
 
-      const { data: convData, error: convErr } = await supabase
+      const newConvId = crypto.randomUUID();
+
+      const { error: convErr } = await supabase
         .from("dm_conversations")
         .insert({
+          id: newConvId,
           workspace_id: workspaceId,
           type: isDirect ? "direct" : "group",
           created_by: userId,
-        })
-        .select()
-        .single();
+        });
 
       if (convErr) throw convErr;
-
-      const newConvId = (convData as unknown as { id: string }).id;
 
       const memberInserts = allUserIds.map((uid) => ({
         conversation_id: newConvId,
@@ -309,7 +308,10 @@ export function useDmConversations(
         .from("dm_members")
         .insert(memberInserts);
 
-      if (membersErr) throw membersErr;
+      if (membersErr) {
+        await supabase.from("dm_conversations").delete().eq("id", newConvId);
+        throw membersErr;
+      }
 
       await fetchConversations();
       return newConvId;

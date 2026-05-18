@@ -170,6 +170,7 @@ function MessagesLayout() {
             onOpenCreateChannel={() => setCreateChannelOpen(true)}
             onOpenNewDm={() => setNewDmOpen(true)}
             onOpenSearch={() => setSearchOpen(true)}
+            updateMyPresence={updateMyPresence}
           />
         </div>
 

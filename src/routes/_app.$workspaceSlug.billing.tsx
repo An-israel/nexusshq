@@ -596,7 +596,7 @@ function CurrentPlanCard({
             </div>
 
             {/* Upgrade CTA */}
-            {workspace.plan !== "unlimited" && (
+            {(workspace.plan as string) !== "unlimited" && (
               <div className="pt-1">
                 <Button
                   size="sm"

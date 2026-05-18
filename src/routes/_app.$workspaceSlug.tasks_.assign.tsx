@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { todayISO, initialsOf } from "@/lib/nexus";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 
-export const Route = createFileRoute("/_app/$workspaceSlug/tasks/assign")({
+export const Route = createFileRoute("/_app/$workspaceSlug/tasks_/assign")({
   beforeLoad: () => requireAnyRole(["admin", "manager"]),
   component: AssignTaskPage,
 });
@@ -89,7 +89,7 @@ function AssignTaskPage() {
       const [membersResult, kpisResult] = await Promise.all([
         supabase
           .from("workspace_members")
-          .select("user_id, role, profiles(id, full_name, email, department, job_title)")
+          .select("user_id, role")
           .eq("workspace_id", workspace.id)
           .eq("is_active", true),
         supabase
@@ -98,17 +98,23 @@ function AssignTaskPage() {
           .eq("workspace_id", workspace.id),
       ]);
 
-      if (membersResult.data) {
+      if (membersResult.data && membersResult.data.length > 0) {
+        const userIds = membersResult.data.map((m) => m.user_id);
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("id, full_name, email, department, job_title")
+          .in("id", userIds);
+        const profileMap = new Map((profilesData ?? []).map((p) => [p.id, p]));
         const mapped: MemberRow[] = membersResult.data.flatMap((m) => {
-          const p = Array.isArray(m.profiles) ? m.profiles[0] : m.profiles;
+          const p = profileMap.get(m.user_id);
           if (!p) return [];
           return [
             {
-              id: (p as { id: string }).id,
-              full_name: (p as { full_name: string | null }).full_name,
-              email: (p as { email: string | null }).email,
-              department: (p as { department: string | null }).department,
-              job_title: (p as { job_title: string | null }).job_title,
+              id: p.id,
+              full_name: p.full_name,
+              email: p.email,
+              department: p.department,
+              job_title: p.job_title,
               role: m.role,
             },
           ];
@@ -235,12 +241,12 @@ function AssignTaskPage() {
         <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">You're receiving this because you're a member of your workspace on Nexus HQ.</div>
       </div>`;
 
-      await supabase
-        .rpc("enqueue_email", {
+      try {
+        await supabase.rpc("enqueue_email", {
           queue_name: "transactional_emails",
           payload: { to: assignee.email, subject: `New Task Assigned — ${taskTitle}`, html },
-        })
-        .catch(() => {}); // non-fatal
+        } as never);
+      } catch { /* non-fatal */ }
     }
 
     toast.success("Task assigned successfully");

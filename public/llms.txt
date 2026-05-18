@@ -1,0 +1,10 @@
+# Nexus HQ
+
+> Nexus HQ is an all-in-one workspace for team operations — attendance, tasks, standups, OKRs, KPIs, deliverables, and AI-powered insights for modern teams.
+
+## Pages
+
+- [Home](/): Overview of Nexus HQ — the unified workspace for team operations.
+- [Pricing](/pricing): Plans (Basic, Enterprise, Unlimited), pricing, 7-day free trial and 30% annual discount.
+- [Sign up](/signup): Create a new workspace and start the 7-day free trial.
+- [Log in](/login): Sign in to an existing Nexus HQ workspace.

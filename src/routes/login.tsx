@@ -7,24 +7,41 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import { getLastWorkspaceSlug } from "@/lib/last-workspace";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/login")({
+  head: () => ({
+    meta: [
+      { title: "Log In — Access Your Nexus HQ Workspace" },
+      { name: "description", content: "Log in to your Nexus HQ workspace to manage attendance, tasks, standups, OKRs and team operations." },
+      { property: "og:title", content: "Log In — Access Your Nexus HQ Workspace" },
+      { property: "og:description", content: "Log in to manage attendance, tasks, standups and team operations." },
+      { property: "og:url", content: "https://nexus.skryveai.com/login" },
+    ],
+    links: [{ rel: "canonical", href: "https://nexus.skryveai.com/login" }],
+  }),
   component: LoginPage,
 });
 
 async function resolveWorkspace(userId: string): Promise<string | null> {
-  // Try workspace_members first (post-migration path)
-  const { data } = await supabase
+  const { data: memberships } = await supabase
     .from("workspace_members")
     .select("workspace_id, workspaces(slug)")
     .eq("user_id", userId)
-    .eq("is_active", true)
-    .limit(1)
-    .maybeSingle();
-  if (data) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data as any).workspaces?.slug ?? null;
+    .eq("is_active", true);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const slugs = (memberships ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
+
+  if (slugs.length > 1) {
+    // Prefer the user's last selected workspace if still valid.
+    const last = getLastWorkspaceSlug();
+    if (last && slugs.includes(last)) return last;
+    return "__multi__";
   }
+
+  if (slugs.length === 1) return slugs[0];
 
   // Fall back: check legacy user_roles — existing team members before migration
   const { data: legacyRole } = await supabase
@@ -34,7 +51,6 @@ async function resolveWorkspace(userId: string): Promise<string | null> {
     .maybeSingle();
   if (!legacyRole) return null;
 
-  // Has a legacy role — try to find any active workspace, default to "skryve"
   const { data: ws } = await supabase
     .from("workspaces")
     .select("slug")
@@ -58,6 +74,10 @@ function LoginPage() {
   useEffect(() => {
     if (!session || !user) return;
     void resolveWorkspace(user.id).then((slug) => {
+      if (slug === "__multi__") {
+        navigate({ to: "/workspaces" });
+        return;
+      }
       if (slug) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         navigate({ to: `/${slug}/dashboard` as any });
@@ -81,10 +101,8 @@ function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary/15 text-primary">
-            <span className="text-xl font-bold">N</span>
-          </div>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <BrandMark size="lg" showWordmark={false} className="mb-4" />
           <h1 className="text-2xl font-bold tracking-tight">Nexus HQ</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to your workspace</p>
         </div>

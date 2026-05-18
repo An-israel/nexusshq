@@ -74,8 +74,9 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
       // First try workspace_members join; fall back to profiles directly if empty
       const { data: wmData } = await supabase
         .from("workspace_members")
-        .select("user_id, profiles(id, full_name, email, avatar_url, department, job_title, is_active)")
-        .eq("workspace_id", workspaceId);
+        .select("user_id, is_active, profiles(id, full_name, email, avatar_url, department, job_title)")
+        .eq("workspace_id", workspaceId)
+        .eq("is_active", true);
 
       if (cancelled) { setSearching(false); return; }
 
@@ -84,11 +85,11 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
 
       if (wmData && wmData.length > 0) {
         profiles = wmData
-          .filter((row) => !selectedIds.has(row.user_id))
+          .filter((row) => row.is_active !== false && !selectedIds.has(row.user_id))
           .map((row) =>
-            Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as MsgProfile | null)
+            Array.isArray(row.profiles) ? (row.profiles[0] ?? null) : (row.profiles as unknown as MsgProfile | null)
           )
-          .filter((p): p is MsgProfile & { is_active?: boolean } => !!p && p.is_active !== false)
+          .filter((p): p is MsgProfile => !!p)
           .filter(
             (p) =>
               p.full_name?.toLowerCase().includes(lowerQ) ||
@@ -101,7 +102,6 @@ export function NewDmModal({ open, onClose, workspaceId, currentUserId, onStarte
         const { data: profData } = await supabase
           .from("profiles")
           .select("id, full_name, email, avatar_url, department, job_title")
-          .eq("is_active", true)
           .or(`full_name.ilike.%${q}%,email.ilike.%${q}%`)
           .limit(20);
         if (cancelled) { setSearching(false); return; }

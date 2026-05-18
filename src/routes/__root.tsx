@@ -33,17 +33,41 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Nexus HQ — Internal Team Management" },
-      { name: "description", content: "Premium internal ops platform for SkryveAI." },
+      { title: "Nexus HQ — Unified Workspace for Team Operations" },
+      { name: "description", content: "Nexus HQ is the all-in-one workspace for team operations — attendance, tasks, standups, OKRs, KPIs and AI-powered insights for modern teams." },
+      { name: "robots", content: "index,follow" },
+      { property: "og:site_name", content: "Nexus HQ" },
       { name: "theme-color", content: "#0F0F0F" },
-      { property: "og:title", content: "Nexus HQ — Internal Team Management" },
-      { name: "twitter:title", content: "Nexus HQ — Internal Team Management" },
-      { property: "og:description", content: "Premium internal ops platform for SkryveAI." },
-      { name: "twitter:description", content: "Premium internal ops platform for SkryveAI." },
+      { property: "og:title", content: "Nexus HQ — Unified Workspace for Team Operations" },
+      { name: "twitter:title", content: "Nexus HQ — Unified Workspace for Team Operations" },
+      { property: "og:description", content: "All-in-one workspace for attendance, tasks, standups, OKRs, KPIs and AI insights." },
+      { name: "twitter:description", content: "All-in-one workspace for attendance, tasks, standups, OKRs, KPIs and AI insights." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/afa32301-7082-4dd2-8c0e-9cf686ba64f7/id-preview-e4c67354--1a191282-4857-4af0-8b72-38cc1bac2a29.lovable.app-1777587824959.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/afa32301-7082-4dd2-8c0e-9cf686ba64f7/id-preview-e4c67354--1a191282-4857-4af0-8b72-38cc1bac2a29.lovable.app-1777587824959.png" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://nexus.skryveai.com/" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Nexus HQ",
+          url: "https://nexus.skryveai.com/",
+          logo: "https://nexus.skryveai.com/icons/icon.svg",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "Nexus HQ",
+          url: "https://nexus.skryveai.com/",
+        }),
+      },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
@@ -88,7 +112,9 @@ function RootComponent() {
 
   return (
     <AuthProvider>
-      <Outlet />
+      <main id="main">
+        <Outlet />
+      </main>
       <Toaster theme="dark" position="top-right" />
     </AuthProvider>
   );

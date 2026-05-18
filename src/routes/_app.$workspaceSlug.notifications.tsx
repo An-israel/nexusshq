@@ -5,7 +5,9 @@ import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock as ClockIcon, Target } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
+import { Bell, AlertCircle, AlertTriangle, CheckSquare, Clock as ClockIcon, Target, Settings as SettingsIcon } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
@@ -64,6 +66,40 @@ function NotificationsPage() {
   const [loading, setLoading] = useState(true);
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [tab, setTab] = useState("all");
+  const [showSettings, setShowSettings] = useState(false);
+  const [prefs, setPrefs] = useState({ mentions_enabled: true, pins_enabled: true });
+  const [prefsLoading, setPrefsLoading] = useState(false);
+
+  const loadPrefs = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("notification_preferences")
+      .select("mentions_enabled, pins_enabled")
+      .eq("user_id", user.id)
+      .eq("workspace_id", workspace.id)
+      .maybeSingle();
+    if (data) setPrefs({ mentions_enabled: data.mentions_enabled, pins_enabled: data.pins_enabled });
+  };
+
+  const updatePref = async (key: "mentions_enabled" | "pins_enabled", value: boolean) => {
+    if (!user) return;
+    const next = { ...prefs, [key]: value };
+    setPrefs(next);
+    setPrefsLoading(true);
+    const { error } = await supabase
+      .from("notification_preferences")
+      .upsert(
+        { user_id: user.id, workspace_id: workspace.id, ...next, updated_at: new Date().toISOString() },
+        { onConflict: "user_id,workspace_id" },
+      );
+    setPrefsLoading(false);
+    if (error) {
+      toast.error("Failed to save preference");
+      setPrefs(prefs);
+    } else {
+      toast.success("Preference saved");
+    }
+  };
 
   const load = async () => {
     if (!user) return;
@@ -82,6 +118,7 @@ function NotificationsPage() {
 
   useEffect(() => {
     load();
+    loadPrefs();
     if (!user) return;
     const ch = supabase
       .channel(`notifications:${user.id}`)
@@ -137,10 +174,46 @@ function NotificationsPage() {
             {unreadCount > 0 ? `${unreadCount} unread` : "You're all caught up."}
           </p>
         </div>
-        <Button variant="outline" onClick={markAllRead} disabled={unreadCount === 0}>
-          Mark all as read
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowSettings((v) => !v)}>
+            <SettingsIcon className="mr-2 h-4 w-4" /> Settings
+          </Button>
+          <Button variant="outline" onClick={markAllRead} disabled={unreadCount === 0}>
+            Mark all as read
+          </Button>
+        </div>
       </div>
+
+      {showSettings && (
+        <Card className="p-4 space-y-3">
+          <h2 className="font-semibold text-sm">Notification preferences</h2>
+          <p className="text-xs text-muted-foreground">
+            Control which messaging events create notifications for you in this workspace.
+          </p>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">@mention notifications</p>
+              <p className="text-xs text-muted-foreground">Get notified when someone @mentions you in a channel.</p>
+            </div>
+            <Switch
+              checked={prefs.mentions_enabled}
+              disabled={prefsLoading}
+              onCheckedChange={(v) => updatePref("mentions_enabled", v)}
+            />
+          </div>
+          <div className="flex items-center justify-between rounded-lg border border-border p-3">
+            <div>
+              <p className="text-sm font-medium">Pinned message notifications</p>
+              <p className="text-xs text-muted-foreground">Get notified when a message is pinned or unpinned.</p>
+            </div>
+            <Switch
+              checked={prefs.pins_enabled}
+              disabled={prefsLoading}
+              onCheckedChange={(v) => updatePref("pins_enabled", v)}
+            />
+          </div>
+        </Card>
+      )}
 
       <div className="flex gap-1 rounded-lg border border-border bg-card p-1">
         {TABS.map((t) => (

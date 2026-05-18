@@ -9,15 +9,18 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WorkspacesRouteImport } from './routes/workspaces'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as CreateWorkspaceRouteImport } from './routes/create-workspace'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as TrackTokenRouteImport } from './routes/track.$token'
+import { Route as TrackSplatRouteImport } from './routes/track.$'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
 import { Route as AppWorkspaceSlugTeamBoardRouteImport } from './routes/_app.$workspaceSlug.team-board'
@@ -48,7 +51,6 @@ import { Route as AppWorkspaceSlugBurnoutRouteImport } from './routes/_app.$work
 import { Route as AppWorkspaceSlugBillingRouteImport } from './routes/_app.$workspaceSlug.billing'
 import { Route as AppWorkspaceSlugAttendanceRouteImport } from './routes/_app.$workspaceSlug.attendance'
 import { Route as AppWorkspaceSlugAnnouncementsRouteImport } from './routes/_app.$workspaceSlug.announcements'
-import { Route as AppWorkspaceSlugAiTasksRouteImport } from './routes/_app.$workspaceSlug.ai-tasks'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -59,16 +61,26 @@ import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/pub
 import { Route as ApiPublicCronBurnoutDetectionRouteImport } from './routes/api/public/cron/burnout-detection'
 import { Route as ApiPublicCronAutoClockOutRouteImport } from './routes/api/public/cron/auto-clock-out'
 import { Route as AppWorkspaceSlugTeamUserIdRouteImport } from './routes/_app.$workspaceSlug.team.$userId'
-import { Route as AppWorkspaceSlugTasksAssignRouteImport } from './routes/_app.$workspaceSlug.tasks.assign'
-import { Route as AppWorkspaceSlugTasksTaskIdRouteImport } from './routes/_app.$workspaceSlug.tasks.$taskId'
+import { Route as AppWorkspaceSlugTasksAssignRouteImport } from './routes/_app.$workspaceSlug.tasks_.assign'
+import { Route as AppWorkspaceSlugTasksTaskIdRouteImport } from './routes/_app.$workspaceSlug.tasks_.$taskId'
 import { Route as AppWorkspaceSlugSettingsAutomationsRouteImport } from './routes/_app.$workspaceSlug.settings.automations'
 import { Route as AppWorkspaceSlugMessagesActivityRouteImport } from './routes/_app.$workspaceSlug.messages.activity'
 import { Route as AppWorkspaceSlugMessagesDmConversationIdRouteImport } from './routes/_app.$workspaceSlug.messages.dm.$conversationId'
 import { Route as AppWorkspaceSlugMessagesChannelChannelIdRouteImport } from './routes/_app.$workspaceSlug.messages.channel.$channelId'
 
+const WorkspacesRoute = WorkspacesRouteImport.update({
+  id: '/workspaces',
+  path: '/workspaces',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SignupRoute = SignupRouteImport.update({
@@ -91,6 +103,11 @@ const JoinRoute = JoinRouteImport.update({
   path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CreateWorkspaceRoute = CreateWorkspaceRouteImport.update({
+  id: '/create-workspace',
+  path: '/create-workspace',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AcceptInviteRoute = AcceptInviteRouteImport.update({
   id: '/accept-invite',
   path: '/accept-invite',
@@ -105,9 +122,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TrackTokenRoute = TrackTokenRouteImport.update({
-  id: '/track/$token',
-  path: '/track/$token',
+const TrackSplatRoute = TrackSplatRouteImport.update({
+  id: '/track/$',
+  path: '/track/$',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiRoute = ApiAiRouteImport.update({
@@ -276,11 +293,6 @@ const AppWorkspaceSlugAnnouncementsRoute =
     path: '/announcements',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
-const AppWorkspaceSlugAiTasksRoute = AppWorkspaceSlugAiTasksRouteImport.update({
-  id: '/ai-tasks',
-  path: '/ai-tasks',
-  getParentRoute: () => AppWorkspaceSlugRoute,
-} as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
     id: '/lovable/email/queue/process',
@@ -341,15 +353,15 @@ const AppWorkspaceSlugTeamUserIdRoute =
   } as any)
 const AppWorkspaceSlugTasksAssignRoute =
   AppWorkspaceSlugTasksAssignRouteImport.update({
-    id: '/assign',
-    path: '/assign',
-    getParentRoute: () => AppWorkspaceSlugTasksRoute,
+    id: '/tasks_/assign',
+    path: '/tasks/assign',
+    getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
 const AppWorkspaceSlugTasksTaskIdRoute =
   AppWorkspaceSlugTasksTaskIdRouteImport.update({
-    id: '/$taskId',
-    path: '/$taskId',
-    getParentRoute: () => AppWorkspaceSlugTasksRoute,
+    id: '/tasks_/$taskId',
+    path: '/tasks/$taskId',
+    getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
 const AppWorkspaceSlugSettingsAutomationsRoute =
   AppWorkspaceSlugSettingsAutomationsRouteImport.update({
@@ -379,15 +391,17 @@ const AppWorkspaceSlugMessagesChannelChannelIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
-  '/track/$token': typeof TrackTokenRoute
-  '/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
+  '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -413,7 +427,7 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
   '/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRouteWithChildren
   '/$workspaceSlug/standups': typeof AppWorkspaceSlugStandupsRoute
-  '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRouteWithChildren
+  '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
@@ -436,15 +450,17 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
-  '/track/$token': typeof TrackTokenRoute
-  '/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
+  '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -470,7 +486,7 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
   '/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRouteWithChildren
   '/$workspaceSlug/standups': typeof AppWorkspaceSlugStandupsRoute
-  '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRouteWithChildren
+  '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
@@ -495,15 +511,17 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
+  '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
   '/signup': typeof SignupRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/workspaces': typeof WorkspacesRoute
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
-  '/track/$token': typeof TrackTokenRoute
-  '/_app/$workspaceSlug/ai-tasks': typeof AppWorkspaceSlugAiTasksRoute
+  '/track/$': typeof TrackSplatRoute
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/_app/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
   '/_app/$workspaceSlug/billing': typeof AppWorkspaceSlugBillingRoute
@@ -529,13 +547,13 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/reviews': typeof AppWorkspaceSlugReviewsRoute
   '/_app/$workspaceSlug/settings': typeof AppWorkspaceSlugSettingsRouteWithChildren
   '/_app/$workspaceSlug/standups': typeof AppWorkspaceSlugStandupsRoute
-  '/_app/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRouteWithChildren
+  '/_app/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/_app/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
   '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/_app/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
-  '/_app/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
-  '/_app/$workspaceSlug/tasks/assign': typeof AppWorkspaceSlugTasksAssignRoute
+  '/_app/$workspaceSlug/tasks_/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
+  '/_app/$workspaceSlug/tasks_/assign': typeof AppWorkspaceSlugTasksAssignRoute
   '/_app/$workspaceSlug/team/$userId': typeof AppWorkspaceSlugTeamUserIdRoute
   '/api/public/cron/auto-clock-out': typeof ApiPublicCronAutoClockOutRoute
   '/api/public/cron/burnout-detection': typeof ApiPublicCronBurnoutDetectionRoute
@@ -554,15 +572,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invite'
+    | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
     | '/signup'
+    | '/sitemap.xml'
     | '/super-admin'
+    | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
-    | '/track/$token'
-    | '/$workspaceSlug/ai-tasks'
+    | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
     | '/$workspaceSlug/billing'
@@ -611,15 +631,17 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invite'
+    | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
     | '/signup'
+    | '/sitemap.xml'
     | '/super-admin'
+    | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
-    | '/track/$token'
-    | '/$workspaceSlug/ai-tasks'
+    | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
     | '/$workspaceSlug/billing'
@@ -669,15 +691,17 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/accept-invite'
+    | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
     | '/signup'
+    | '/sitemap.xml'
     | '/super-admin'
+    | '/workspaces'
     | '/_app/$workspaceSlug'
     | '/api/ai'
-    | '/track/$token'
-    | '/_app/$workspaceSlug/ai-tasks'
+    | '/track/$'
     | '/_app/$workspaceSlug/announcements'
     | '/_app/$workspaceSlug/attendance'
     | '/_app/$workspaceSlug/billing'
@@ -708,8 +732,8 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/team-board'
     | '/_app/$workspaceSlug/messages/activity'
     | '/_app/$workspaceSlug/settings/automations'
-    | '/_app/$workspaceSlug/tasks/$taskId'
-    | '/_app/$workspaceSlug/tasks/assign'
+    | '/_app/$workspaceSlug/tasks_/$taskId'
+    | '/_app/$workspaceSlug/tasks_/assign'
     | '/_app/$workspaceSlug/team/$userId'
     | '/api/public/cron/auto-clock-out'
     | '/api/public/cron/burnout-detection'
@@ -728,13 +752,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
+  CreateWorkspaceRoute: typeof CreateWorkspaceRoute
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
   SignupRoute: typeof SignupRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRoute
+  WorkspacesRoute: typeof WorkspacesRoute
   ApiAiRoute: typeof ApiAiRoute
-  TrackTokenRoute: typeof TrackTokenRoute
+  TrackSplatRoute: typeof TrackSplatRoute
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
   ApiPublicCronBurnoutDetectionRoute: typeof ApiPublicCronBurnoutDetectionRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
@@ -748,11 +775,25 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/workspaces': {
+      id: '/workspaces'
+      path: '/workspaces'
+      fullPath: '/workspaces'
+      preLoaderRoute: typeof WorkspacesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/super-admin': {
       id: '/super-admin'
       path: '/super-admin'
       fullPath: '/super-admin'
       preLoaderRoute: typeof SuperAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/signup': {
@@ -783,6 +824,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/create-workspace': {
+      id: '/create-workspace'
+      path: '/create-workspace'
+      fullPath: '/create-workspace'
+      preLoaderRoute: typeof CreateWorkspaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/accept-invite': {
       id: '/accept-invite'
       path: '/accept-invite'
@@ -804,11 +852,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/track/$token': {
-      id: '/track/$token'
-      path: '/track/$token'
-      fullPath: '/track/$token'
-      preLoaderRoute: typeof TrackTokenRouteImport
+    '/track/$': {
+      id: '/track/$'
+      path: '/track/$'
+      fullPath: '/track/$'
+      preLoaderRoute: typeof TrackSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ai': {
@@ -1021,13 +1069,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugAnnouncementsRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
     }
-    '/_app/$workspaceSlug/ai-tasks': {
-      id: '/_app/$workspaceSlug/ai-tasks'
-      path: '/ai-tasks'
-      fullPath: '/$workspaceSlug/ai-tasks'
-      preLoaderRoute: typeof AppWorkspaceSlugAiTasksRouteImport
-      parentRoute: typeof AppWorkspaceSlugRoute
-    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -1098,19 +1139,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugTeamUserIdRouteImport
       parentRoute: typeof AppWorkspaceSlugTeamRoute
     }
-    '/_app/$workspaceSlug/tasks/assign': {
-      id: '/_app/$workspaceSlug/tasks/assign'
-      path: '/assign'
+    '/_app/$workspaceSlug/tasks_/assign': {
+      id: '/_app/$workspaceSlug/tasks_/assign'
+      path: '/tasks/assign'
       fullPath: '/$workspaceSlug/tasks/assign'
       preLoaderRoute: typeof AppWorkspaceSlugTasksAssignRouteImport
-      parentRoute: typeof AppWorkspaceSlugTasksRoute
+      parentRoute: typeof AppWorkspaceSlugRoute
     }
-    '/_app/$workspaceSlug/tasks/$taskId': {
-      id: '/_app/$workspaceSlug/tasks/$taskId'
-      path: '/$taskId'
+    '/_app/$workspaceSlug/tasks_/$taskId': {
+      id: '/_app/$workspaceSlug/tasks_/$taskId'
+      path: '/tasks/$taskId'
       fullPath: '/$workspaceSlug/tasks/$taskId'
       preLoaderRoute: typeof AppWorkspaceSlugTasksTaskIdRouteImport
-      parentRoute: typeof AppWorkspaceSlugTasksRoute
+      parentRoute: typeof AppWorkspaceSlugRoute
     }
     '/_app/$workspaceSlug/settings/automations': {
       id: '/_app/$workspaceSlug/settings/automations'
@@ -1179,21 +1220,6 @@ const AppWorkspaceSlugSettingsRouteWithChildren =
     AppWorkspaceSlugSettingsRouteChildren,
   )
 
-interface AppWorkspaceSlugTasksRouteChildren {
-  AppWorkspaceSlugTasksTaskIdRoute: typeof AppWorkspaceSlugTasksTaskIdRoute
-  AppWorkspaceSlugTasksAssignRoute: typeof AppWorkspaceSlugTasksAssignRoute
-}
-
-const AppWorkspaceSlugTasksRouteChildren: AppWorkspaceSlugTasksRouteChildren = {
-  AppWorkspaceSlugTasksTaskIdRoute: AppWorkspaceSlugTasksTaskIdRoute,
-  AppWorkspaceSlugTasksAssignRoute: AppWorkspaceSlugTasksAssignRoute,
-}
-
-const AppWorkspaceSlugTasksRouteWithChildren =
-  AppWorkspaceSlugTasksRoute._addFileChildren(
-    AppWorkspaceSlugTasksRouteChildren,
-  )
-
 interface AppWorkspaceSlugTeamRouteChildren {
   AppWorkspaceSlugTeamUserIdRoute: typeof AppWorkspaceSlugTeamUserIdRoute
 }
@@ -1206,7 +1232,6 @@ const AppWorkspaceSlugTeamRouteWithChildren =
   AppWorkspaceSlugTeamRoute._addFileChildren(AppWorkspaceSlugTeamRouteChildren)
 
 interface AppWorkspaceSlugRouteChildren {
-  AppWorkspaceSlugAiTasksRoute: typeof AppWorkspaceSlugAiTasksRoute
   AppWorkspaceSlugAnnouncementsRoute: typeof AppWorkspaceSlugAnnouncementsRoute
   AppWorkspaceSlugAttendanceRoute: typeof AppWorkspaceSlugAttendanceRoute
   AppWorkspaceSlugBillingRoute: typeof AppWorkspaceSlugBillingRoute
@@ -1232,13 +1257,14 @@ interface AppWorkspaceSlugRouteChildren {
   AppWorkspaceSlugReviewsRoute: typeof AppWorkspaceSlugReviewsRoute
   AppWorkspaceSlugSettingsRoute: typeof AppWorkspaceSlugSettingsRouteWithChildren
   AppWorkspaceSlugStandupsRoute: typeof AppWorkspaceSlugStandupsRoute
-  AppWorkspaceSlugTasksRoute: typeof AppWorkspaceSlugTasksRouteWithChildren
+  AppWorkspaceSlugTasksRoute: typeof AppWorkspaceSlugTasksRoute
   AppWorkspaceSlugTeamRoute: typeof AppWorkspaceSlugTeamRouteWithChildren
   AppWorkspaceSlugTeamBoardRoute: typeof AppWorkspaceSlugTeamBoardRoute
+  AppWorkspaceSlugTasksTaskIdRoute: typeof AppWorkspaceSlugTasksTaskIdRoute
+  AppWorkspaceSlugTasksAssignRoute: typeof AppWorkspaceSlugTasksAssignRoute
 }
 
 const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
-  AppWorkspaceSlugAiTasksRoute: AppWorkspaceSlugAiTasksRoute,
   AppWorkspaceSlugAnnouncementsRoute: AppWorkspaceSlugAnnouncementsRoute,
   AppWorkspaceSlugAttendanceRoute: AppWorkspaceSlugAttendanceRoute,
   AppWorkspaceSlugBillingRoute: AppWorkspaceSlugBillingRoute,
@@ -1264,9 +1290,11 @@ const AppWorkspaceSlugRouteChildren: AppWorkspaceSlugRouteChildren = {
   AppWorkspaceSlugReviewsRoute: AppWorkspaceSlugReviewsRoute,
   AppWorkspaceSlugSettingsRoute: AppWorkspaceSlugSettingsRouteWithChildren,
   AppWorkspaceSlugStandupsRoute: AppWorkspaceSlugStandupsRoute,
-  AppWorkspaceSlugTasksRoute: AppWorkspaceSlugTasksRouteWithChildren,
+  AppWorkspaceSlugTasksRoute: AppWorkspaceSlugTasksRoute,
   AppWorkspaceSlugTeamRoute: AppWorkspaceSlugTeamRouteWithChildren,
   AppWorkspaceSlugTeamBoardRoute: AppWorkspaceSlugTeamBoardRoute,
+  AppWorkspaceSlugTasksTaskIdRoute: AppWorkspaceSlugTasksTaskIdRoute,
+  AppWorkspaceSlugTasksAssignRoute: AppWorkspaceSlugTasksAssignRoute,
 }
 
 const AppWorkspaceSlugRouteWithChildren =
@@ -1286,13 +1314,16 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
+  CreateWorkspaceRoute: CreateWorkspaceRoute,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
   SignupRoute: SignupRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRoute,
+  WorkspacesRoute: WorkspacesRoute,
   ApiAiRoute: ApiAiRoute,
-  TrackTokenRoute: TrackTokenRoute,
+  TrackSplatRoute: TrackSplatRoute,
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
   ApiPublicCronBurnoutDetectionRoute: ApiPublicCronBurnoutDetectionRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,

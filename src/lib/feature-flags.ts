@@ -28,7 +28,6 @@ export const TOGGLEABLE_PAGES: PageFlag[] = [
   { key: "kpis", label: "KPIs", defaultEnabled: true },
   { key: "okrs", label: "Goals & OKRs", defaultEnabled: true },
   { key: "reports", label: "Reports", defaultEnabled: true },
-  { key: "ai-tasks", label: "AI Tasks", defaultEnabled: true },
 ];
 
 export type FlagsMap = Record<string, boolean>;
@@ -62,7 +61,7 @@ export function useFeatureFlags(
         const { data } = await supabase
           .from("feature_flags")
           .select("key, enabled")
-          .eq("workspace_id", workspaceId);
+          .eq("workspace_id", workspaceId!);
         if (!active) return;
         const next = buildDefaults();
         for (const row of data ?? []) next[row.key] = row.enabled;

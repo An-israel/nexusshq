@@ -4,7 +4,7 @@ import {
   LayoutDashboard, CheckSquare, MessageSquare, Bell, Menu, Clock, Users,
   CalendarOff, Flag, BarChart3, Megaphone, Star, Wallet, BookOpen,
   GitBranch, ClipboardList, FolderUp, Kanban, RefreshCw, Briefcase,
-  Target, Sparkles, Settings, LogOut, Heart, FileText, Radio,
+  Target, Sparkles, Settings, LogOut, Heart, FileText, Radio, Building2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,6 @@ const ALL_NAV: NavItem[] = [
   { slug: "client-projects", label: "Client Projects",icon: Briefcase,       roles: ["admin", "manager"] },
   { slug: "live",            label: "Live",           icon: Radio,           roles: ["admin", "manager"] },
   { slug: "reports",         label: "Reports",        icon: BarChart3,       roles: ["admin", "manager"] },
-  { slug: "ai-tasks",        label: "AI Tasks",       icon: Sparkles,        roles: ["admin", "manager"] },
   { slug: "kpis",            label: "KPIs",           icon: Target,          roles: ["admin"] },
 ];
 
@@ -155,6 +154,16 @@ export function MobileBottomNav({ workspaceSlug }: { workspaceSlug: string }) {
 
           {/* Sign out */}
           <div className="border-t border-[#2A2A2A] px-4 py-3">
+            <button
+              onClick={() => {
+                setMoreOpen(false);
+                navigate({ to: "/workspaces" });
+              }}
+              className="mb-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-white hover:bg-[#1E1E1E] transition-colors"
+            >
+              <Building2 className="h-5 w-5" />
+              Switch workspace
+            </button>
             <button
               onClick={async () => {
                 setMoreOpen(false);

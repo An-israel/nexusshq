@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "@tanstack/react-router";
 import {
   Hash,
   Lock,
@@ -22,6 +23,7 @@ import type {
   MsgProfile,
   UserPresence,
 } from "@/lib/messaging/types";
+import type { usePresence } from "@/lib/messaging/use-presence";
 
 function hashColor(id: string): string {
   let hash = 0;
@@ -144,6 +146,7 @@ interface Props {
   onOpenCreateChannel: () => void;
   onOpenNewDm: () => void;
   onOpenSearch: () => void;
+  updateMyPresence: ReturnType<typeof usePresence>["updateMyPresence"];
 }
 
 export function MessagesSidebar({
@@ -165,9 +168,11 @@ export function MessagesSidebar({
   onOpenCreateChannel,
   onOpenNewDm,
   onOpenSearch,
+  updateMyPresence,
 }: Props) {
   const [statusPopoverOpen, setStatusPopoverOpen] = React.useState(false);
   const [customStatusText, setCustomStatusText] = React.useState("");
+  const [savingStatus, setSavingStatus] = React.useState(false);
 
   const joinedChannels = React.useMemo(
     () => channels.filter((c) => c.is_member && !c.is_archived),
@@ -175,6 +180,29 @@ export function MessagesSidebar({
   );
 
   const myPresence = presence[currentUserId];
+
+  React.useEffect(() => {
+    setCustomStatusText(myPresence?.status_text ?? "");
+  }, [myPresence?.status_text, statusPopoverOpen]);
+
+  async function handleSetStatus(status: UserPresence["status"]) {
+    setSavingStatus(true);
+    try {
+      await updateMyPresence(status, myPresence?.status_emoji ?? undefined, myPresence?.status_text ?? undefined);
+    } finally {
+      setSavingStatus(false);
+    }
+  }
+
+  async function handleSaveCustomStatus() {
+    setSavingStatus(true);
+    try {
+      await updateMyPresence(myPresence?.status ?? "active", undefined, customStatusText.trim() || undefined);
+      setStatusPopoverOpen(false);
+    } finally {
+      setSavingStatus(false);
+    }
+  }
 
   const myProfile = React.useMemo<MsgProfile | null>(() => {
     for (const conv of conversations) {
@@ -232,8 +260,8 @@ export function MessagesSidebar({
       </div>
 
       <div className="px-1 py-1">
-        <a
-          href={`/${workspaceSlug}/dashboard`}
+        <Link
+          to={`/${workspaceSlug}/dashboard` as string}
           className={cn(
             "flex items-center gap-2.5 h-8 px-2 rounded-md mx-1 cursor-pointer",
             "text-[#9CA3AF] hover:bg-[#1A1A1A] hover:text-white transition-colors text-sm"
@@ -241,7 +269,7 @@ export function MessagesSidebar({
         >
           <Home className="w-4 h-4 shrink-0" />
           <span>Home</span>
-        </a>
+        </Link>
 
         <button
           type="button"
@@ -476,8 +504,10 @@ export function MessagesSidebar({
                   <button
                     key={opt.status}
                     type="button"
+                    disabled={savingStatus}
+                    onClick={() => { void handleSetStatus(opt.status); setStatusPopoverOpen(false); }}
                     className={cn(
-                      "flex items-center gap-2.5 px-2 py-2 rounded-md text-sm transition-colors w-full text-left",
+                      "flex items-center gap-2.5 px-2 py-2 rounded-md text-sm transition-colors w-full text-left disabled:opacity-50",
                       isActive
                         ? "bg-[#2A2A2A] text-white"
                         : "text-[#9CA3AF] hover:bg-[#1E1E1E] hover:text-white"
@@ -498,6 +528,7 @@ export function MessagesSidebar({
                   type="text"
                   value={customStatusText}
                   onChange={(e) => setCustomStatusText(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") void handleSaveCustomStatus(); }}
                   placeholder="What's your status?"
                   maxLength={100}
                   className={cn(
@@ -506,6 +537,14 @@ export function MessagesSidebar({
                     "focus:ring-1 focus:ring-[#3B3B3B] transition-colors"
                   )}
                 />
+                <button
+                  type="button"
+                  onClick={() => void handleSaveCustomStatus()}
+                  disabled={savingStatus}
+                  className="mt-2 w-full bg-white text-[#111111] text-xs font-medium rounded-md py-1.5 hover:bg-[#E5E7EB] disabled:opacity-50"
+                >
+                  Save status
+                </button>
               </div>
             </div>
           </PopoverContent>

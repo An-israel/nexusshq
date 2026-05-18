@@ -117,6 +117,18 @@ export async function setEmployeeActive(
   if (error) throw new Error(error.message);
 }
 
+export async function removeWorkspaceMember(
+  workspaceId: string,
+  userId: string,
+  callerClient: DbClient,
+) {
+  const { error } = await callerClient.rpc("remove_workspace_member", {
+    _workspace_id: workspaceId,
+    _user_id: userId,
+  });
+  if (error) throw new Error(error.message);
+}
+
 export async function setEmployeeRole(
   userId: string,
   role: AppRole,
@@ -197,6 +209,7 @@ export interface RedeemInvitationInput {
 
 export async function redeemInvitation(input: RedeemInvitationInput): Promise<{
   workspaceSlug: string;
+  email: string;
 }> {
   const adminClient = requireAdminClient();
   const key = input.tokenOrPasscode.trim();

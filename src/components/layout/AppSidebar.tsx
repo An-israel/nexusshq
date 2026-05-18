@@ -5,7 +5,7 @@ import {
   LogOut, ChevronLeft, ChevronRight, Star, Wallet, FolderUp, Kanban,
   Megaphone, MessageSquare, GitBranch, BookOpen, ClipboardList, RefreshCw,
   Briefcase, Sparkles, CalendarOff, Flag, BarChart3, UserCircle, CreditCard,
-  Heart, FileText, Brain, Zap, Radio,
+  Heart, FileText, Brain, Zap, Radio, Building2,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
@@ -23,16 +23,16 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { slug: "dashboard",       label: "Dashboard",       icon: LayoutDashboard, roles: ["admin", "manager", "employee"] },
+  { slug: "messages",        label: "Messages",        icon: MessageSquare,   roles: ["admin", "manager", "employee"], flagKey: "messages" },
+  { slug: "standups",        label: "Standups",        icon: ClipboardList,   roles: ["admin", "manager", "employee"], flagKey: "standups" },
   { slug: "tasks",           label: "Tasks",           icon: CheckSquare,     roles: ["admin", "manager", "employee"] },
+  { slug: "kudos",           label: "Appreciation",    icon: Heart,           roles: ["admin", "manager", "employee"] },
+  { slug: "reviews",         label: "Reviews",         icon: Star,            roles: ["admin", "manager", "employee"], flagKey: "reviews" },
   { slug: "attendance",      label: "Attendance",      icon: Clock,           roles: ["admin", "manager", "employee"] },
   { slug: "leave",           label: "Leave",           icon: CalendarOff,     roles: ["admin", "manager", "employee"], flagKey: "leave" },
-  { slug: "standups",        label: "Standups",        icon: ClipboardList,   roles: ["admin", "manager", "employee"], flagKey: "standups" },
   { slug: "deliverables",    label: "Deliverables",    icon: FolderUp,        roles: ["admin", "manager", "employee"], flagKey: "deliverables" },
-  { slug: "reviews",         label: "Reviews",         icon: Star,            roles: ["admin", "manager", "employee"], flagKey: "reviews" },
   { slug: "payslips",        label: "Payslips",        icon: Wallet,          roles: ["admin", "manager", "employee"], flagKey: "payslips" },
   { slug: "announcements",   label: "Announcements",   icon: Megaphone,       roles: ["admin", "manager", "employee"], flagKey: "announcements" },
-  { slug: "kudos",           label: "Recognition",     icon: Heart,           roles: ["admin", "manager", "employee"] },
-  { slug: "messages",        label: "Messages",        icon: MessageSquare,   roles: ["admin", "manager", "employee"], flagKey: "messages" },
   { slug: "handbook",        label: "Handbook",        icon: BookOpen,        roles: ["admin", "manager", "employee"], flagKey: "handbook" },
   { slug: "documents",       label: "Documents",       icon: FileText,        roles: ["admin", "manager", "employee"] },
   { slug: "org-chart",       label: "Org Chart",       icon: GitBranch,       roles: ["admin", "manager", "employee"], flagKey: "org-chart" },
@@ -46,7 +46,6 @@ const NAV: NavItem[] = [
   { slug: "client-projects", label: "Client Projects", icon: Briefcase,       roles: ["admin", "manager"], flagKey: "client-projects" },
   { slug: "live",            label: "Live",            icon: Radio,           roles: ["admin", "manager"] },
   { slug: "reports",         label: "Reports",         icon: BarChart3,       roles: ["admin", "manager"], flagKey: "reports" },
-  { slug: "ai-tasks",        label: "AI Tasks",        icon: Sparkles,        roles: ["admin", "manager"], flagKey: "ai-tasks" },
   { slug: "burnout",         label: "Wellbeing",       icon: Brain,           roles: ["admin", "manager"] },
   { slug: "kpis",            label: "KPIs",            icon: Target,          roles: ["admin"], flagKey: "kpis" },
   { slug: "billing",         label: "Billing",         icon: CreditCard,      roles: ["admin"] },
@@ -150,6 +149,16 @@ export function AppSidebar({
 
       {/* User card */}
       <div className="border-t border-border p-2">
+        {!collapsed && (
+          <Button
+            variant="outline"
+            className="mb-2 w-full justify-start"
+            onClick={() => navigate({ to: "/workspaces" })}
+          >
+            <Building2 className="h-4 w-4" />
+            Switch workspace
+          </Button>
+        )}
         <div
           className={cn(
             "flex items-center gap-2 rounded-lg p-2",

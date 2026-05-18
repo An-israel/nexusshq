@@ -14,10 +14,22 @@ interface AttendanceRow {
   clock_out: string | null;
   status: "present" | "late" | "absent" | "half_day";
   total_minutes: number | null;
+  overtime_minutes: number | null;
 }
 
-// 9:00 local — anything later is "late"
+// Late if clocked in after 9:05 local time
 const LATE_AFTER_HOUR = 9;
+const LATE_AFTER_MINUTE = 5;
+// Anything worked past 17:00 (5pm) local counts as overtime
+const OVERTIME_HOUR = 17;
+
+function overtimeMinutesBetween(start: Date, end: Date): number {
+  const cutoff = new Date(start);
+  cutoff.setHours(OVERTIME_HOUR, 0, 0, 0);
+  if (end <= cutoff) return 0;
+  const from = start > cutoff ? start : cutoff;
+  return Math.max(0, Math.round((end.getTime() - from.getTime()) / 60000));
+}
 
 export function ClockWidget() {
   const { user } = useAuth();
@@ -32,27 +44,6 @@ export function ClockWidget() {
 
   const load = React.useCallback(async () => {
     if (!user) return;
-
-    // Auto-close any open records from previous days at 17:00 WAT (16:00 UTC) of that day.
-    const { data: stale } = await supabase
-      .from("attendance")
-      .select("*")
-      .eq("user_id", user.id)
-      .not("clock_in", "is", null)
-      .is("clock_out", null)
-      .lt("date", todayISO());
-    for (const row of (stale as AttendanceRow[]) ?? []) {
-      const autoOut = new Date(`${row.date}T16:00:00.000Z`);
-      const minutes = Math.max(
-        0,
-        Math.round((autoOut.getTime() - new Date(row.clock_in!).getTime()) / 60000),
-      );
-      await supabase
-        .from("attendance")
-        .update({ clock_out: autoOut.toISOString(), total_minutes: minutes })
-        .eq("id", row.id);
-    }
-
     const { data } = await supabase
       .from("attendance")
       .select("*")
@@ -73,24 +64,31 @@ export function ClockWidget() {
   });
 
   const clockedIn = !!today?.clock_in && !today?.clock_out;
-  const done = !!today?.clock_in && !!today?.clock_out;
+  const completedSession = !!today?.clock_in && !!today?.clock_out;
 
   async function clockIn() {
     if (!user) return;
     setBusy(true);
     const nowD = new Date();
-    const status: AttendanceRow["status"] = nowD.getHours() >= LATE_AFTER_HOUR ? "late" : "present";
+    const isLate =
+      nowD.getHours() > LATE_AFTER_HOUR ||
+      (nowD.getHours() === LATE_AFTER_HOUR && nowD.getMinutes() > LATE_AFTER_MINUTE);
+    // If a row exists from an earlier session today, start a new session by
+    // clearing clock_out and setting a fresh clock_in. Accumulated total/overtime
+    // minutes are preserved on the row.
+    const status: AttendanceRow["status"] = today?.status === "late" || isLate ? "late" : "present";
     const { error } = await supabase.from("attendance").upsert(
       {
         user_id: user.id,
         date: todayISO(),
         clock_in: nowD.toISOString(),
+        clock_out: null,
         status,
       },
       { onConflict: "user_id,date" },
     );
     if (error) toast.error(error.message);
-    else toast.success(status === "late" ? "Clocked in (late)" : "Clocked in");
+    else toast.success(isLate && !today ? "Clocked in (late)" : "Clocked in");
     await load();
     setBusy(false);
   }
@@ -98,14 +96,27 @@ export function ClockWidget() {
   async function clockOut() {
     if (!user || !today?.clock_in) return;
     setBusy(true);
+    const startD = new Date(today.clock_in);
     const nowD = new Date();
-    const minutes = Math.round((nowD.getTime() - new Date(today.clock_in).getTime()) / 60000);
+    const sessionMins = Math.max(0, Math.round((nowD.getTime() - startD.getTime()) / 60000));
+    const sessionOvertime = overtimeMinutesBetween(startD, nowD);
+    const newTotal = (today.total_minutes ?? 0) + sessionMins;
+    const newOvertime = (today.overtime_minutes ?? 0) + sessionOvertime;
     const { error } = await supabase
       .from("attendance")
-      .update({ clock_out: nowD.toISOString(), total_minutes: minutes })
+      .update({
+        clock_out: nowD.toISOString(),
+        total_minutes: newTotal,
+        overtime_minutes: newOvertime,
+      })
       .eq("id", today.id);
     if (error) toast.error(error.message);
-    else toast.success(`Clocked out — ${Math.floor(minutes / 60)}h ${minutes % 60}m`);
+    else {
+      const h = Math.floor(sessionMins / 60);
+      const m = sessionMins % 60;
+      const otNote = sessionOvertime > 0 ? ` · ${Math.floor(sessionOvertime / 60)}h ${sessionOvertime % 60}m overtime` : "";
+      toast.success(`Clocked out — ${h}h ${m}m${otNote}`);
+    }
     await load();
     setBusy(false);
   }
@@ -117,6 +128,8 @@ export function ClockWidget() {
     const m = Math.floor((ms % 3600000) / 60000);
     elapsed = `${h}h ${m}m`;
   }
+
+  const showClockInButton = !clockedIn; // allow re-clock-in after a clock-out (overtime)
 
   return (
     <div className="flex items-center gap-2">
@@ -132,9 +145,10 @@ export function ClockWidget() {
           <span className="text-xs text-success border-l border-border pl-2">{elapsed}</span>
         )}
       </div>
-      {!done && !clockedIn && (
+      {showClockInButton && (
         <Button size="sm" onClick={clockIn} disabled={busy}>
-          <LogIn className="mr-1.5 h-3.5 w-3.5" /> Clock In
+          <LogIn className="mr-1.5 h-3.5 w-3.5" />
+          {completedSession ? "Clock In Again" : "Clock In"}
         </Button>
       )}
       {clockedIn && (
@@ -142,7 +156,11 @@ export function ClockWidget() {
           <LogOut className="mr-1.5 h-3.5 w-3.5" /> Clock Out
         </Button>
       )}
-      {done && <span className="text-xs text-muted-foreground">Done for the day</span>}
+      {completedSession && !clockedIn && (today.overtime_minutes ?? 0) > 0 && (
+        <span className="text-xs text-muted-foreground">
+          OT: {Math.floor((today.overtime_minutes ?? 0) / 60)}h {(today.overtime_minutes ?? 0) % 60}m
+        </span>
+      )}
     </div>
   );
 }

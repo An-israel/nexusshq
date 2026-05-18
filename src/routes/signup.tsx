@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { getLastWorkspaceSlug } from "@/lib/last-workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,8 +25,19 @@ import {
   ArrowRight,
   ChevronRight,
 } from "lucide-react";
+import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/signup")({
+  head: () => ({
+    meta: [
+      { title: "Sign Up — Start Your Free Nexus HQ Workspace" },
+      { name: "description", content: "Create your Nexus HQ workspace in minutes and start a 7-day free trial — no credit card required." },
+      { property: "og:title", content: "Sign Up — Start Your Free Nexus HQ Workspace" },
+      { property: "og:description", content: "Create a workspace and start a 7-day free trial — no credit card required." },
+      { property: "og:url", content: "https://nexus.skryveai.com/signup" },
+    ],
+    links: [{ rel: "canonical", href: "https://nexus.skryveai.com/signup" }],
+  }),
   component: SignupPage,
 });
 
@@ -140,13 +152,22 @@ function SignupPage() {
         .from("workspace_members")
         .select("workspace_id, workspaces(slug)")
         .eq("user_id", session.user.id)
-        .eq("is_active", true)
-        .limit(1)
-        .maybeSingle();
+        .eq("is_active", true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const slug = (data as any)?.workspaces?.slug;
+      const slugs = (data ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
+      if (slugs.length > 1) {
+        const last = getLastWorkspaceSlug();
+        if (last && slugs.includes(last)) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          navigate({ to: `/${last}/dashboard` as any });
+          return;
+        }
+        navigate({ to: "/workspaces" });
+        return;
+      }
+      const slug = slugs[0];
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      navigate({ to: slug ? `/${slug}/dashboard` as any : "/" });
+      navigate({ to: slug ? `/${slug}/dashboard` as any : "/create-workspace" });
     })();
   }, [session, navigate]);
 
@@ -271,14 +292,17 @@ function SignupPage() {
 
       if (wsError) throw wsError;
 
-      // 3. Create profile
+      // 3. Upsert profile (handle_new_user trigger may have already created it)
       const { error: profileError } = await supabase
         .from("profiles")
-        .insert({
-          id: user.id,
-          full_name: fullName.trim(),
-          email: email.trim().toLowerCase(),
-        });
+        .upsert(
+          {
+            id: user.id,
+            full_name: fullName.trim(),
+            email: email.trim().toLowerCase(),
+          },
+          { onConflict: "id" },
+        );
 
       if (profileError) throw profileError;
 
@@ -324,12 +348,7 @@ function SignupPage() {
       {/* ── Top nav ─────────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-40 border-b border-border/50 bg-background/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
-              <Zap className="h-4 w-4" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">Nexus HQ</span>
-          </Link>
+          <BrandMark size="md" />
           <Link
             to="/login"
             className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"

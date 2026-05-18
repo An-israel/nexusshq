@@ -118,26 +118,46 @@ export function SearchModal({
     let cancelled = false;
     setLoading(true);
 
-    supabase
-      .from("messages")
-      .select(
-        "id, body, created_at, channel_id, conversation_id, sender_id, profiles(full_name, avatar_url)"
-      )
-      .eq("workspace_id", workspaceId)
-      .eq("is_deleted", false)
-      .ilike("body", `%${debouncedQuery}%`)
-      .order("created_at", { ascending: false })
-      .limit(30)
-      .then(({ data, error }) => {
-        if (cancelled) return;
+    (async () => {
+      const { data: msgs, error } = await supabase
+        .from("messages")
+        .select(
+          "id, body, created_at, channel_id, conversation_id, sender_id"
+        )
+        .eq("workspace_id", workspaceId)
+        .eq("is_deleted", false)
+        .ilike("body", `%${debouncedQuery}%`)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      if (cancelled) return;
+      if (error) {
+        console.error("[SearchModal] search error:", error);
+        setResults([]);
         setLoading(false);
-        if (error) {
-          console.error("[SearchModal] search error:", error);
-          setResults([]);
-          return;
+        return;
+      }
+
+      const senderIds = Array.from(
+        new Set((msgs ?? []).map((m) => m.sender_id).filter((id): id is string => !!id))
+      );
+      let profileMap: Record<string, { full_name: string | null; avatar_url: string | null }> = {};
+      if (senderIds.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id, full_name, avatar_url")
+          .in("id", senderIds);
+        for (const p of profs ?? []) {
+          profileMap[p.id] = { full_name: p.full_name, avatar_url: p.avatar_url };
         }
-        setResults((data ?? []) as SearchResult[]);
-      });
+      }
+
+      if (cancelled) return;
+      setResults(
+        (msgs ?? []).map((m) => ({ ...m, profiles: m.sender_id ? profileMap[m.sender_id] ?? null : null })) as SearchResult[]
+      );
+      setLoading(false);
+    })();
 
     return () => {
       cancelled = true;

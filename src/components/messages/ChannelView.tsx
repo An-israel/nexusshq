@@ -5,7 +5,9 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "@tanstack/react-router";
 import { useMessagingCtx } from "@/routes/_app.$workspaceSlug.messages";
+import { useWorkspace } from "@/lib/workspace-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +51,8 @@ export function ChannelView({
   presence,
 }: ChannelViewProps) {
   const { onMobileBack } = useMessagingCtx();
+  const { workspace } = useWorkspace();
+  const navigate = useNavigate();
   const [activeThread, setActiveThread] = React.useState<Message | null>(null);
   const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
   const [newMessagesBanner, setNewMessagesBanner] = React.useState(0);
@@ -159,8 +163,11 @@ export function ChannelView({
       .eq("user_id", currentUserId);
     if (error) {
       toast.error("Failed to leave channel");
-    } else {
-      toast.success(`Left #${channel.name}`);
+      return;
+    }
+    toast.success(`Left #${channel.name}`);
+    if (workspace?.slug) {
+      navigate({ to: `/${workspace.slug}/messages` as string });
     }
   }
 
