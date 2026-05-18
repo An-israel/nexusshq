@@ -577,48 +577,60 @@ export function useLiveData(workspaceId: string | null): {
           filter: `workspace_id=eq.${workspaceId}`,
         },
         (payload) => {
-          scheduleBatch(() => {
-            if (payload.eventType === "DELETE") return;
-            const row = payload.new as RawAttendance;
-            if (row.date !== today) return;
+          if (payload.eventType === "DELETE") return;
+          const row = payload.new as RawAttendance;
+          if (row.date !== today) return;
 
-            attendanceMapRef.current.set(row.user_id, row);
-            rebuildDerived();
-
-            const profile = profileMapRef.current.get(row.user_id);
-            if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
-              setAttendanceEvents((prev) => {
-                const filtered = prev.filter((e) => e.userId !== row.user_id);
-                const next = [...filtered];
-                if (row.clock_in) {
-                  const clockInDate = new Date(row.clock_in);
-                  const nineAM = new Date(clockInDate);
-                  nineAM.setHours(9, 0, 0, 0);
-                  next.push({
-                    id: `${row.id}-in`,
-                    userId: row.user_id,
-                    userName: profile?.full_name ?? row.user_id,
-                    avatarUrl: profile?.avatar_url ?? null,
-                    action: "clock_in",
-                    time: row.clock_in,
-                    isLate: clockInDate > nineAM,
-                  });
-                }
-                if (row.clock_out) {
-                  next.push({
-                    id: `${row.id}-out`,
-                    userId: row.user_id,
-                    userName: profile?.full_name ?? row.user_id,
-                    avatarUrl: profile?.avatar_url ?? null,
-                    action: "clock_out",
-                    time: row.clock_out,
-                    isLate: false,
-                  });
-                }
-                return next.filter((e) => e.time.startsWith(today));
-              });
+          void (async () => {
+            // Fetch profile on the fly if not already in map (covers legacy users)
+            if (!profileMapRef.current.has(row.user_id)) {
+              const { data: p } = await supabase
+                .from("profiles")
+                .select("id, full_name, email, department, job_title, avatar_url")
+                .eq("id", row.user_id)
+                .maybeSingle();
+              if (p) profileMapRef.current.set(p.id, p as RawProfile);
             }
-          });
+
+            scheduleBatch(() => {
+              attendanceMapRef.current.set(row.user_id, row);
+              rebuildDerived();
+
+              const profile = profileMapRef.current.get(row.user_id);
+              if (payload.eventType === "INSERT" || payload.eventType === "UPDATE") {
+                setAttendanceEvents((prev) => {
+                  const filtered = prev.filter((e) => e.userId !== row.user_id);
+                  const next = [...filtered];
+                  if (row.clock_in) {
+                    const clockInDate = new Date(row.clock_in);
+                    const nineAM = new Date(clockInDate);
+                    nineAM.setHours(9, 0, 0, 0);
+                    next.push({
+                      id: `${row.id}-in`,
+                      userId: row.user_id,
+                      userName: profile?.full_name ?? "Unknown",
+                      avatarUrl: profile?.avatar_url ?? null,
+                      action: "clock_in",
+                      time: row.clock_in,
+                      isLate: clockInDate > nineAM,
+                    });
+                  }
+                  if (row.clock_out) {
+                    next.push({
+                      id: `${row.id}-out`,
+                      userId: row.user_id,
+                      userName: profile?.full_name ?? "Unknown",
+                      avatarUrl: profile?.avatar_url ?? null,
+                      action: "clock_out",
+                      time: row.clock_out,
+                      isLate: false,
+                    });
+                  }
+                  return next.filter((e) => e.time.startsWith(today));
+                });
+              }
+            });
+          })();
         },
       )
       .on(

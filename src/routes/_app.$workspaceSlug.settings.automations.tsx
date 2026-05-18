@@ -38,6 +38,7 @@ import {
   ChevronDown,
   Zap,
   ShieldAlert,
+  Play,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/settings/automations")({
@@ -306,6 +307,7 @@ function AutomationCard({
   toggling,
   recentLogs,
   workspaceId,
+  onRun,
 }: {
   def: AutomationDef;
   enabled: boolean;
@@ -313,10 +315,18 @@ function AutomationCard({
   toggling: boolean;
   recentLogs: AutomationLog[];
   workspaceId: string;
+  onRun: (automationType: string, label: string) => Promise<void>;
 }) {
   const [logsOpen, setLogsOpen] = React.useState(false);
+  const [running, setRunning] = React.useState(false);
   const { status, log } = lastRunStatus(recentLogs, def.automationType);
   const Icon = def.icon;
+
+  async function handleRun() {
+    setRunning(true);
+    await onRun(def.automationType, def.label);
+    setRunning(false);
+  }
 
   return (
     <>
@@ -362,14 +372,27 @@ function AutomationCard({
                   </>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={() => setLogsOpen(true)}
-              >
-                View Logs
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => void handleRun()}
+                  disabled={running || toggling}
+                  title="Manually trigger this automation now"
+                >
+                  <Play className="mr-1 h-3 w-3" />
+                  {running ? "Running…" : "Run Now"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setLogsOpen(true)}
+                >
+                  View Logs
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -547,6 +570,26 @@ function AutomationsPage() {
     void load();
   }, [load]);
 
+  // ── Run Now handler ──────────────────────────────────────────────────────
+  async function runAutomation(automationType: string, label: string) {
+    const toastId = toast.loading(`Running ${label}…`);
+    const { data, error } = await supabase.functions.invoke(automationType);
+    if (error) {
+      toast.error(`${label} failed: ${error.message}`, { id: toastId });
+    } else {
+      const result = data as Record<string, unknown> | null;
+      const summary =
+        typeof result?.employees_clocked_out === "number"
+          ? `${result.employees_clocked_out} employees processed`
+          : typeof result?.processed === "number"
+            ? `${result.processed} records processed`
+            : "Completed successfully";
+      toast.success(`${label}: ${summary}`, { id: toastId });
+      // Refresh logs to show the new run
+      void load();
+    }
+  }
+
   // ── Toggle handler ───────────────────────────────────────────────────────
   async function toggle(key: keyof AutomationSettings, value: boolean) {
     setToggling(key);
@@ -629,6 +672,7 @@ function AutomationsPage() {
                 toggling={toggling === def.key}
                 recentLogs={recentLogs}
                 workspaceId={workspace.id}
+                onRun={runAutomation}
               />
             ))}
       </div>
