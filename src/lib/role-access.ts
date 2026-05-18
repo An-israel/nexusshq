@@ -127,6 +127,6 @@ export async function requireAnyRole(allowedRoles: AppRole[]) {
   }
 
   if (!roles.some((row) => allowedRoles.includes(row.role))) {
-    throw redirect({ to: "/dashboard" });
+    throw redirect({ to: "/workspaces" });
   }
 }

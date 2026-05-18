@@ -40,7 +40,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug/team/$userId")({
 });
 
 function EmployeeDetailPage() {
-  const { userId } = Route.useParams();
+  const { userId, workspaceSlug } = Route.useParams();
   const { isAdmin } = useAuth();
   const { workspace } = useWorkspace();
   const setActive = useServerFn(setEmployeeActiveFn);
@@ -218,7 +218,7 @@ function EmployeeDetailPage() {
 
   return (
     <div className="space-y-6">
-      <Link to="/team" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+      <Link to="/$workspaceSlug/team" params={{ workspaceSlug }} className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="h-4 w-4" /> Back to Team
       </Link>
 

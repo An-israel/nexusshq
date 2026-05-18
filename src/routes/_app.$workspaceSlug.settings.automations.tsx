@@ -565,9 +565,11 @@ function AutomationsPage() {
     // Optimistic update
     setSettings((prev) => ({ ...prev, [key]: value }));
 
+    const patch = { workspace_id: workspace.id, [key]: value };
     const { error } = await supabase
       .from("automation_settings")
-      .upsert({ workspace_id: workspace.id, [key]: value });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .upsert(patch as any);
 
     if (error) {
       toast.error(error.message);

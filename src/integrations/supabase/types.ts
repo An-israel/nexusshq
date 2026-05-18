@@ -62,6 +62,101 @@ export type Database = {
           },
         ]
       }
+      automation_logs: {
+        Row: {
+          automation_type: string
+          details: Json
+          id: string
+          ran_at: string
+          status: string
+          triggered_for: string | null
+          workspace_id: string | null
+        }
+        Insert: {
+          automation_type: string
+          details?: Json
+          id?: string
+          ran_at?: string
+          status: string
+          triggered_for?: string | null
+          workspace_id?: string | null
+        }
+        Update: {
+          automation_type?: string
+          details?: Json
+          id?: string
+          ran_at?: string
+          status?: string
+          triggered_for?: string | null
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_logs_triggered_for_fkey"
+            columns: ["triggered_for"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "automation_logs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      automation_settings: {
+        Row: {
+          auto_clockout_enabled: boolean
+          auto_status_enabled: boolean
+          clock_reminders_enabled: boolean
+          daily_report_time: string
+          overdue_escalation_enabled: boolean
+          report_recipients: string[] | null
+          scheduled_reports_enabled: boolean
+          task_reminders_enabled: boolean
+          updated_at: string
+          weekly_report_day: string
+          workspace_id: string
+        }
+        Insert: {
+          auto_clockout_enabled?: boolean
+          auto_status_enabled?: boolean
+          clock_reminders_enabled?: boolean
+          daily_report_time?: string
+          overdue_escalation_enabled?: boolean
+          report_recipients?: string[] | null
+          scheduled_reports_enabled?: boolean
+          task_reminders_enabled?: boolean
+          updated_at?: string
+          weekly_report_day?: string
+          workspace_id: string
+        }
+        Update: {
+          auto_clockout_enabled?: boolean
+          auto_status_enabled?: boolean
+          clock_reminders_enabled?: boolean
+          daily_report_time?: string
+          overdue_escalation_enabled?: boolean
+          report_recipients?: string[] | null
+          scheduled_reports_enabled?: boolean
+          task_reminders_enabled?: boolean
+          updated_at?: string
+          weekly_report_day?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "automation_settings_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance: {
         Row: {
           clock_in: string | null
