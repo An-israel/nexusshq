@@ -673,7 +673,7 @@ export type Database = {
           signature_text: string | null
           signed_at: string | null
           title: string
-          uploaded_by: string
+          uploaded_by: string | null
           user_id: string
           workspace_id: string
         }
@@ -688,7 +688,7 @@ export type Database = {
           signature_text?: string | null
           signed_at?: string | null
           title: string
-          uploaded_by: string
+          uploaded_by?: string | null
           user_id: string
           workspace_id: string
         }
@@ -703,7 +703,7 @@ export type Database = {
           signature_text?: string | null
           signed_at?: string | null
           title?: string
-          uploaded_by?: string
+          uploaded_by?: string | null
           user_id?: string
           workspace_id?: string
         }
@@ -963,7 +963,7 @@ export type Database = {
           new_value: number
           note: string | null
           previous_value: number
-          updated_by: string
+          updated_by: string | null
           workspace_id: string | null
         }
         Insert: {
@@ -973,7 +973,7 @@ export type Database = {
           new_value: number
           note?: string | null
           previous_value: number
-          updated_by: string
+          updated_by?: string | null
           workspace_id?: string | null
         }
         Update: {
@@ -983,7 +983,7 @@ export type Database = {
           new_value?: number
           note?: string | null
           previous_value?: number
-          updated_by?: string
+          updated_by?: string | null
           workspace_id?: string | null
         }
         Relationships: [
@@ -1487,7 +1487,7 @@ export type Database = {
           parent_message_id: string | null
           pinned: boolean
           pinned_by: string | null
-          sender_id: string
+          sender_id: string | null
           thread_last_reply_at: string | null
           thread_reply_count: number
           workspace_id: string
@@ -1506,7 +1506,7 @@ export type Database = {
           parent_message_id?: string | null
           pinned?: boolean
           pinned_by?: string | null
-          sender_id: string
+          sender_id?: string | null
           thread_last_reply_at?: string | null
           thread_reply_count?: number
           workspace_id: string
@@ -1525,7 +1525,7 @@ export type Database = {
           parent_message_id?: string | null
           pinned?: boolean
           pinned_by?: string | null
-          sender_id?: string
+          sender_id?: string | null
           thread_last_reply_at?: string | null
           thread_reply_count?: number
           workspace_id?: string
@@ -1673,7 +1673,7 @@ export type Database = {
           description: string | null
           end_date: string | null
           id: string
-          owner_id: string
+          owner_id: string | null
           period: string
           progress_percent: number
           start_date: string | null
@@ -1687,7 +1687,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
-          owner_id: string
+          owner_id?: string | null
           period?: string
           progress_percent?: number
           start_date?: string | null
@@ -1701,7 +1701,7 @@ export type Database = {
           description?: string | null
           end_date?: string | null
           id?: string
-          owner_id?: string
+          owner_id?: string | null
           period?: string
           progress_percent?: number
           start_date?: string | null
