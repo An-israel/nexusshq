@@ -214,7 +214,8 @@ function LogsSheet({
     if (!open) return;
     setLoading(true);
     void supabase
-      .from("automation_logs")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .from("automation_logs" as any)
       .select("*, profiles(full_name, email)")
       .eq("workspace_id", workspaceId)
       .eq("automation_type", automationType)
@@ -222,7 +223,8 @@ function LogsSheet({
       .limit(50)
       .then(({ data, error }) => {
         if (error) toast.error(error.message);
-        else setLogs((data ?? []) as AutomationLog[]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        else setLogs((data ?? []) as any as AutomationLog[]);
         setLoading(false);
       });
   }, [open, workspaceId, automationType]);
@@ -433,7 +435,8 @@ function ReportSettingsCard({
 
   async function save() {
     setSaving(true);
-    const { error } = await supabase.from("automation_settings").upsert({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from("automation_settings" as any) as any).upsert({
       workspace_id: workspaceId,
       daily_report_time: dailyTime,
       weekly_report_day: weeklyDay,
@@ -540,13 +543,13 @@ function AutomationsPage() {
   const load = React.useCallback(async () => {
     setLoading(true);
     const [settingsRes, logsRes] = await Promise.all([
-      supabase
-        .from("automation_settings")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from("automation_settings" as any) as any)
         .select("*")
         .eq("workspace_id", workspace.id)
         .maybeSingle(),
-      supabase
-        .from("automation_logs")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (supabase.from("automation_logs" as any) as any)
         .select("*, profiles(full_name, email)")
         .eq("workspace_id", workspace.id)
         .order("ran_at", { ascending: false })
@@ -556,7 +559,8 @@ function AutomationsPage() {
     if (settingsRes.error) toast.error(settingsRes.error.message);
     setSettings(
       settingsRes.data
-        ? (settingsRes.data as AutomationSettings)
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (settingsRes.data as any as AutomationSettings)
         : { workspace_id: workspace.id, updated_at: new Date().toISOString(), ...defaultSettings },
     );
 
@@ -597,10 +601,8 @@ function AutomationsPage() {
     setSettings((prev) => ({ ...prev, [key]: value }));
 
     const patch = { workspace_id: workspace.id, [key]: value };
-    const { error } = await supabase
-      .from("automation_settings")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .upsert(patch as any);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from("automation_settings" as any) as any).upsert(patch);
 
     if (error) {
       toast.error(error.message);

@@ -499,7 +499,6 @@ function LandingPage() {
       {/* ── Pricing teaser ───────────────────────────────────────────────── */}
       <PricingTeaser />
 
-
       {/* ── Desktop app ──────────────────────────────────────────────────── */}
       <section className="border-t border-border/40 py-20">
         <div className="mx-auto max-w-5xl px-6">
@@ -605,12 +604,48 @@ const NGN_PRICES = { basic: 15000, enterprise: 25000, unlimited: 45000 };
 
 // Map country code → currency code (common ones; falls back to NGN)
 const COUNTRY_CURRENCY: Record<string, string> = {
-  US: "USD", CA: "CAD", GB: "GBP", IE: "EUR", DE: "EUR", FR: "EUR", ES: "EUR",
-  IT: "EUR", NL: "EUR", BE: "EUR", PT: "EUR", AT: "EUR", FI: "EUR", GR: "EUR",
-  AU: "AUD", NZ: "NZD", JP: "JPY", CN: "CNY", IN: "INR", BR: "BRL", MX: "MXN",
-  ZA: "ZAR", KE: "KES", GH: "GHS", EG: "EGP", AE: "AED", SA: "SAR", CH: "CHF",
-  SE: "SEK", NO: "NOK", DK: "DKK", PL: "PLN", TR: "TRY", RU: "RUB", KR: "KRW",
-  SG: "SGD", HK: "HKD", PH: "PHP", ID: "IDR", MY: "MYR", TH: "THB", VN: "VND",
+  US: "USD",
+  CA: "CAD",
+  GB: "GBP",
+  IE: "EUR",
+  DE: "EUR",
+  FR: "EUR",
+  ES: "EUR",
+  IT: "EUR",
+  NL: "EUR",
+  BE: "EUR",
+  PT: "EUR",
+  AT: "EUR",
+  FI: "EUR",
+  GR: "EUR",
+  AU: "AUD",
+  NZ: "NZD",
+  JP: "JPY",
+  CN: "CNY",
+  IN: "INR",
+  BR: "BRL",
+  MX: "MXN",
+  ZA: "ZAR",
+  KE: "KES",
+  GH: "GHS",
+  EG: "EGP",
+  AE: "AED",
+  SA: "SAR",
+  CH: "CHF",
+  SE: "SEK",
+  NO: "NOK",
+  DK: "DKK",
+  PL: "PLN",
+  TR: "TRY",
+  RU: "RUB",
+  KR: "KRW",
+  SG: "SGD",
+  HK: "HKD",
+  PH: "PHP",
+  ID: "IDR",
+  MY: "MYR",
+  TH: "THB",
+  VN: "VND",
   NG: "NGN",
 };
 
@@ -623,12 +658,16 @@ function PricingTeaser(): React.JSX.Element {
     async function load() {
       try {
         // Detect country (free, no key)
-        const geo = await fetch("https://ipapi.co/json/").then((r) => r.json()).catch(() => null);
+        const geo = await fetch("https://ipapi.co/json/")
+          .then((r) => r.json())
+          .catch(() => null);
         const cc = geo?.country_code as string | undefined;
         const cur = (cc && COUNTRY_CURRENCY[cc]) || "NGN";
         if (cur === "NGN") return;
         // Get conversion rate from NGN base
-        const fx = await fetch("https://open.er-api.com/v6/latest/NGN").then((r) => r.json()).catch(() => null);
+        const fx = await fetch("https://open.er-api.com/v6/latest/NGN")
+          .then((r) => r.json())
+          .catch(() => null);
         const r = fx?.rates?.[cur];
         if (cancelled || !r) return;
         setCurrency(cur);
@@ -638,7 +677,9 @@ function PricingTeaser(): React.JSX.Element {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const fmt = (ngn: number): string => {
@@ -658,9 +699,27 @@ function PricingTeaser(): React.JSX.Element {
   };
 
   const tiers = [
-    { tier: "Basic", price: fmt(NGN_PRICES.basic), suffix: "/mo", users: "Up to 7 members", highlight: false },
-    { tier: "Enterprise", price: fmt(NGN_PRICES.enterprise), suffix: "/mo", users: "Up to 15 members", highlight: true },
-    { tier: "Unlimited", price: fmt(NGN_PRICES.unlimited), suffix: "/mo", users: "Unlimited members", highlight: false },
+    {
+      tier: "Basic",
+      price: fmt(NGN_PRICES.basic),
+      suffix: "/mo",
+      users: "Up to 7 members",
+      highlight: false,
+    },
+    {
+      tier: "Enterprise",
+      price: fmt(NGN_PRICES.enterprise),
+      suffix: "/mo",
+      users: "Up to 15 members",
+      highlight: true,
+    },
+    {
+      tier: "Unlimited",
+      price: fmt(NGN_PRICES.unlimited),
+      suffix: "/mo",
+      users: "Unlimited members",
+      highlight: false,
+    },
   ];
 
   return (
@@ -718,4 +777,3 @@ function PricingTeaser(): React.JSX.Element {
     </section>
   );
 }
-
