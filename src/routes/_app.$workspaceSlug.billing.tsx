@@ -89,6 +89,17 @@ const PLANS = [
   },
 ] as const;
 
+const SUPPORT_EMAIL = "hello@nexushq.io";
+const SUPPORT_WHATSAPP = "https://wa.me/2349000000000";
+
+function openUpgradeEmail(planLabel?: string) {
+  const subject = encodeURIComponent(`Nexus HQ — Upgrade to ${planLabel ?? "a higher"} plan`);
+  const body = encodeURIComponent(
+    `Hi Nexus HQ team,\n\nI'd like to upgrade my workspace plan.\n\nPlease get in touch to discuss options.\n\nThanks`,
+  );
+  window.open(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`, "_blank");
+}
+
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatDate(iso: string | null | undefined): string {
@@ -102,7 +113,19 @@ function formatDate(iso: string | null | undefined): string {
 
 function formatDateRange(start: string | null, end: string | null): string {
   if (!start && !end) return "—";
-  return `${formatDate(start)} – ${formatDate(end)}`;
+  // BUG 4: if period end is >2 years from start, cap at start+1yr for display
+  let displayEnd = end;
+  if (start && end) {
+    const startMs = new Date(start).getTime();
+    const endMs = new Date(end).getTime();
+    const twoYearsMs = 2 * 365 * 24 * 60 * 60 * 1000;
+    if (endMs - startMs > twoYearsMs) {
+      const corrected = new Date(startMs);
+      corrected.setFullYear(corrected.getFullYear() + 1);
+      displayEnd = corrected.toISOString();
+    }
+  }
+  return `${formatDate(start)} – ${formatDate(displayEnd)}`;
 }
 
 function daysUntil(iso: string | null | undefined): number {
@@ -201,12 +224,10 @@ function PlanCard({
 }) {
   const isCurrent = plan.id === currentPlan;
   const monthly = PLAN_MONTHLY[plan.id] ?? 0;
-  const price = billing === "annual" ? Math.round(monthly * (1 - ANNUAL_DISCOUNT)) : monthly;
-  const annualTotal = price * 12;
-
-  function handleUpgrade() {
-    toast.info("Contact hello@nexushq.io to upgrade your plan");
-  }
+  const annualMonthly = Math.round(monthly * (1 - ANNUAL_DISCOUNT));
+  const price = billing === "annual" ? annualMonthly : monthly;
+  const annualTotal = annualMonthly * 12;
+  const annualSavings = (monthly - annualMonthly) * 12;
 
   return (
     <Card
@@ -232,9 +253,15 @@ function PlanCard({
           <span className="text-sm font-normal text-muted-foreground">/mo</span>
         </p>
         {billing === "annual" && (
-          <p className="text-xs text-green-500">
-            ₦{annualTotal.toLocaleString("en-NG")}/yr · 30% off
-          </p>
+          <div className="flex flex-col gap-0.5 mt-0.5">
+            <p className="text-xs text-muted-foreground">
+              ₦{annualTotal.toLocaleString("en-NG")}/yr · ₦{annualMonthly.toLocaleString("en-NG")}
+              /mo equivalent
+            </p>
+            <p className="text-xs text-green-500 font-medium">
+              Save ₦{annualSavings.toLocaleString("en-NG")} vs monthly
+            </p>
+          </div>
         )}
       </div>
 
@@ -264,10 +291,25 @@ function PlanCard({
 
       {/* CTA */}
       {!isCurrent && (
-        <Button variant="outline" size="sm" className="w-full" onClick={handleUpgrade}>
-          <Mail className="mr-2 h-3.5 w-3.5" />
-          Contact us to upgrade
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={() => openUpgradeEmail(plan.label)}
+          >
+            <Mail className="mr-1.5 h-3.5 w-3.5" />
+            Email us
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1 border-green-500/40 text-green-400 hover:bg-green-500/10"
+            onClick={() => window.open(SUPPORT_WHATSAPP, "_blank")}
+          >
+            WhatsApp
+          </Button>
+        </div>
       )}
     </Card>
   );
@@ -297,8 +339,7 @@ function BillingPage() {
         supabase
           .from("workspace_members")
           .select("id", { count: "exact", head: true })
-          .eq("workspace_id", workspace.id)
-          .eq("is_active", true),
+          .eq("workspace_id", workspace.id),
       ]);
 
       if (subRes.error) {
@@ -598,14 +639,18 @@ function CurrentPlanCard({
 
             {/* Upgrade CTA */}
             {(workspace.plan as string) !== "unlimited" && (
-              <div className="pt-1">
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" variant="outline" onClick={() => openUpgradeEmail()}>
+                  <Mail className="mr-1.5 h-3.5 w-3.5" />
+                  Email us
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  onClick={() => toast.info("Contact hello@nexushq.io to upgrade your plan")}
+                  className="border-green-500/40 text-green-400 hover:bg-green-500/10"
+                  onClick={() => window.open(SUPPORT_WHATSAPP, "_blank")}
                 >
-                  <Mail className="mr-2 h-3.5 w-3.5" />
-                  Upgrade plan
+                  WhatsApp
                 </Button>
               </div>
             )}

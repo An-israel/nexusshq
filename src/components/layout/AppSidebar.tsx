@@ -22,7 +22,6 @@ import {
   ClipboardList,
   RefreshCw,
   Briefcase,
-  Sparkles,
   CalendarOff,
   Flag,
   BarChart3,
@@ -34,7 +33,17 @@ import {
   Zap,
   Radio,
   Building2,
+  Check,
+  ChevronDown,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { cn } from "@/lib/utils";
@@ -188,10 +197,53 @@ export function AppSidebar({
   collapsed: boolean;
   onToggle: () => void;
 }) {
-  const { role, profile, signOut } = useAuth();
+  const { role, profile, signOut, user } = useAuth();
   const { workspace } = useWorkspace();
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+
+  const [userWorkspaces, setUserWorkspaces] = React.useState<
+    {
+      id: string;
+      name: string;
+      slug: string;
+      logo_url: string | null;
+      primary_color: string | null;
+    }[]
+  >([]);
+
+  React.useEffect(() => {
+    if (!user?.id) return;
+    void supabase
+      .from("workspace_members")
+      .select("workspace:workspaces(id,name,slug,logo_url,primary_color)")
+      .eq("user_id", user.id)
+      .then(({ data }) => {
+        const ws = (data ?? [])
+          .map(
+            (r) =>
+              (
+                r as {
+                  workspace: {
+                    id: string;
+                    name: string;
+                    slug: string;
+                    logo_url: string | null;
+                    primary_color: string | null;
+                  } | null;
+                }
+              ).workspace,
+          )
+          .filter(Boolean) as {
+          id: string;
+          name: string;
+          slug: string;
+          logo_url: string | null;
+          primary_color: string | null;
+        }[];
+        setUserWorkspaces(ws);
+      });
+  }, [user?.id]);
 
   const { flags } = useFeatureFlags(workspace?.id ?? null);
 
@@ -283,14 +335,42 @@ export function AppSidebar({
       {/* User card */}
       <div className="border-t border-border p-2">
         {!collapsed && (
-          <Button
-            variant="outline"
-            className="mb-2 w-full justify-start"
-            onClick={() => navigate({ to: "/workspaces" })}
-          >
-            <Building2 className="h-4 w-4" />
-            Switch workspace
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="mb-2 w-full justify-between">
+                <span className="flex items-center gap-2 min-w-0">
+                  <Building2 className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Switch workspace</span>
+                </span>
+                <ChevronDown className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-52">
+              {userWorkspaces.map((ws) => (
+                <DropdownMenuItem
+                  key={ws.id}
+                  className="flex items-center justify-between gap-2 cursor-pointer"
+                  onClick={() => {
+                    localStorage.setItem("nexus_active_workspace", ws.slug);
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    navigate({ to: `/${ws.slug}/dashboard` as any });
+                  }}
+                >
+                  <span className="truncate">{ws.name}</span>
+                  {ws.slug === workspaceSlug && (
+                    <Check className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  )}
+                </DropdownMenuItem>
+              ))}
+              {userWorkspaces.length > 0 && <DropdownMenuSeparator />}
+              <DropdownMenuItem
+                className="cursor-pointer"
+                onClick={() => navigate({ to: "/workspaces" })}
+              >
+                All workspaces…
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
         <div className={cn("flex items-center gap-2 rounded-lg p-2", !collapsed && "bg-accent/40")}>
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">

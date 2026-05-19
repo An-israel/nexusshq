@@ -184,22 +184,43 @@ function DashboardPage() {
   async function handleClockIn() {
     if (!user) return;
     setClockBusy(true);
+    const today = todayISO();
+
+    // Block double clock-in
+    const { data: existing } = await supabase
+      .from("attendance")
+      .select("id, clock_in")
+      .eq("user_id", user.id)
+      .eq("workspace_id", workspace.id)
+      .eq("date", today)
+      .not("clock_in", "is", null)
+      .maybeSingle();
+    if (existing?.clock_in) {
+      const t = new Date(existing.clock_in).toLocaleTimeString("en-NG", {
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+        timeZone: "Africa/Lagos",
+      });
+      toast.error(`Already clocked in today at ${t}`);
+      setClockBusy(false);
+      return;
+    }
+
     const nowD = new Date();
+    const watTime = new Date(nowD.toLocaleString("en-US", { timeZone: "Africa/Lagos" }));
     const isLate =
-      nowD.getHours() > LATE_AFTER_HOUR ||
-      (nowD.getHours() === LATE_AFTER_HOUR && nowD.getMinutes() > LATE_AFTER_MINUTE);
+      watTime.getHours() > LATE_AFTER_HOUR ||
+      (watTime.getHours() === LATE_AFTER_HOUR && watTime.getMinutes() > LATE_AFTER_MINUTE);
     const status: Attendance["status"] = isLate ? "late" : "present";
-    const { error } = await supabase.from("attendance").upsert(
-      {
-        user_id: user.id,
-        workspace_id: workspace.id,
-        date: todayISO(),
-        clock_in: nowD.toISOString(),
-        clock_out: null,
-        status,
-      },
-      { onConflict: "user_id,date" },
-    );
+    const { error } = await supabase.from("attendance").insert({
+      user_id: user.id,
+      workspace_id: workspace.id,
+      date: today,
+      clock_in: nowD.toISOString(),
+      clock_out: null,
+      status,
+    });
     if (error) toast.error(error.message);
     else toast.success(isLate ? "Clocked in (late)" : "Clocked in ✓");
     await load();
@@ -339,10 +360,30 @@ function DashboardPage() {
   });
 
   const greeting = (() => {
-    const h = new Date().getHours();
-    if (h < 12) return "Good morning";
-    if (h < 17) return "Good afternoon";
-    return "Good evening";
+    const watHour = new Date(
+      new Date(now).toLocaleString("en-US", { timeZone: "Africa/Lagos" }),
+    ).getHours();
+    if (watHour >= 5 && watHour < 12) return "Good morning";
+    if (watHour >= 12 && watHour < 17) return "Good afternoon";
+    if (watHour >= 17 && watHour < 21) return "Good evening";
+    return "Good night";
+  })();
+
+  const greetingSubtitle = (() => {
+    const watHour = new Date(
+      new Date(now).toLocaleString("en-US", { timeZone: "Africa/Lagos" }),
+    ).getHours();
+    const clockedIn = !!att?.clock_in && !att?.clock_out;
+    if (watHour >= 5 && watHour < 12) {
+      if (!clockedIn) return "You haven't clocked in yet. Work starts at 9:00 AM.";
+      return "You're clocked in. Here's what's on your plate today.";
+    }
+    if (watHour >= 12 && watHour < 17) return "Here's where things stand today.";
+    if (watHour >= 17 && watHour < 21) {
+      if (!clockedIn) return "Good work today. Here's a summary of what you accomplished.";
+      return "Don't forget to clock out before you leave.";
+    }
+    return "Working late? Here's your current status.";
   })();
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
@@ -392,13 +433,15 @@ function DashboardPage() {
     <div className="space-y-6 px-4 py-4 md:px-6 md:py-6">
       <div>
         <h1 className="text-lg font-semibold md:text-2xl md:font-bold">
-          {greeting}, {firstName}. Here's your day.
+          {greeting}, {firstName}.
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {new Date().toLocaleDateString(undefined, {
+        <p className="mt-0.5 text-sm text-muted-foreground">{greetingSubtitle}</p>
+        <p className="mt-0.5 text-xs text-muted-foreground/60">
+          {new Date(now).toLocaleDateString("en-NG", {
             weekday: "long",
             month: "long",
             day: "numeric",
+            timeZone: "Africa/Lagos",
           })}
         </p>
       </div>

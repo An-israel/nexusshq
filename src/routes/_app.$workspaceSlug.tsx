@@ -333,6 +333,44 @@ function WorkspaceShell() {
     };
   }, [workspaceSlug, user, setWorkspaceData, navigate]);
 
+  // BUG 2: presence heartbeat — upsert every 5 min + on visibility change
+  React.useEffect(() => {
+    if (!user || !workspace?.id) return;
+
+    async function upsertPresence(status: "online" | "away" | "offline") {
+      await supabase.from("user_presence").upsert(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        {
+          user_id: user!.id,
+          workspace_id: workspace!.id,
+          status: status as string,
+          last_seen: new Date().toISOString(),
+        } as any,
+        { onConflict: "user_id,workspace_id" },
+      );
+    }
+
+    void upsertPresence("online");
+    const interval = setInterval(
+      () => {
+        const status = document.visibilityState === "visible" ? "online" : "away";
+        void upsertPresence(status);
+      },
+      5 * 60 * 1000,
+    );
+
+    function handleVisibility() {
+      void upsertPresence(document.visibilityState === "visible" ? "online" : "away");
+    }
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      void upsertPresence("offline");
+    };
+  }, [user, workspace?.id]);
+
   if (loading || !workspace) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">

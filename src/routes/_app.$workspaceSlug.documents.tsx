@@ -101,6 +101,7 @@ function DocumentsPage() {
     file: null as File | null,
   });
   const [uploading, setUploading] = React.useState(false);
+  const [uploadProgress, setUploadProgress] = React.useState(0);
 
   const load = React.useCallback(async () => {
     setLoading(true);
@@ -133,20 +134,52 @@ function DocumentsPage() {
   }, [isManager]);
 
   async function handleUpload() {
-    if (!uploadForm.file) return toast.error("Select a file");
+    if (!uploadForm.file) return toast.error("Select a file first");
     if (!uploadForm.userId) return toast.error("Pick an employee");
-    if (!uploadForm.title.trim()) return toast.error("Enter a title");
+    if (!uploadForm.title.trim()) return toast.error("Enter a document title");
+
+    const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
+    if (uploadForm.file.size > MAX_BYTES) {
+      return toast.error(
+        `File is too large (${fmtBytes(uploadForm.file.size)}). Maximum is 20 MB.`,
+      );
+    }
+
     setUploading(true);
+    setUploadProgress(0);
+    const uploadToastId = toast.loading("Uploading document…");
     try {
       const ext = uploadForm.file.name.split(".").pop() ?? "bin";
       const path = `${workspace.id}/${uploadForm.userId}/${Date.now()}.${ext}`;
+
+      // Simulate progress steps since Supabase storage doesn't expose upload progress
+      const progressTick = setInterval(() => {
+        setUploadProgress((p) => Math.min(p + 10, 80));
+      }, 200);
+
       const { error: upErr } = await supabase.storage
         .from("documents")
-        .upload(path, uploadForm.file);
-      if (upErr) throw upErr;
+        .upload(path, uploadForm.file, { upsert: false });
+
+      clearInterval(progressTick);
+      setUploadProgress(90);
+
+      if (upErr) {
+        if (upErr.message.includes("Bucket not found")) {
+          throw new Error(
+            'Storage bucket "documents" not found. Ask your admin to create it in Supabase Storage.',
+          );
+        }
+        if (upErr.message.includes("row-level security")) {
+          throw new Error("Upload blocked by storage policy. Contact your admin.");
+        }
+        throw upErr;
+      }
+
       const {
         data: { publicUrl },
       } = supabase.storage.from("documents").getPublicUrl(path);
+
       const { error: dbErr } = await supabase.from("documents").insert({
         workspace_id: workspace.id,
         user_id: uploadForm.userId,
@@ -159,15 +192,19 @@ function DocumentsPage() {
         requires_signature: uploadForm.requiresSignature,
       });
       if (dbErr) throw dbErr;
-      // Notify employee
-      await supabase.from("notifications").insert({
+
+      // Notify employee (non-blocking — don't fail upload if notification fails)
+      void supabase.from("notifications").insert({
         user_id: uploadForm.userId,
         workspace_id: workspace.id,
         type: "flag",
         title: "📄 New document",
         message: `"${uploadForm.title}" has been added to your document vault.`,
       });
-      toast.success("Document uploaded");
+
+      setUploadProgress(100);
+      toast.dismiss(uploadToastId);
+      toast.success(`"${uploadForm.title.trim()}" uploaded successfully`);
       setUploadOpen(false);
       setUploadForm({
         userId: "",
@@ -178,9 +215,11 @@ function DocumentsPage() {
       });
       void load();
     } catch (err) {
-      toast.error((err as Error).message);
+      toast.dismiss(uploadToastId);
+      toast.error((err as Error).message ?? "Upload failed. Please try again.");
     } finally {
       setUploading(false);
+      setUploadProgress(0);
     }
   }
 
@@ -318,8 +357,19 @@ function DocumentsPage() {
               </Label>
             </div>
           </div>
-          <DialogFooter>
-            <Button onClick={handleUpload} disabled={uploading}>
+          <DialogFooter className="flex-col gap-2">
+            {uploading && uploadProgress > 0 && (
+              <div className="w-full">
+                <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div
+                    className="h-full bg-primary transition-all duration-300 rounded-full"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 text-right">{uploadProgress}%</p>
+              </div>
+            )}
+            <Button onClick={handleUpload} disabled={uploading} className="w-full sm:w-auto">
               <Upload className="mr-2 h-4 w-4" />
               {uploading ? "Uploading…" : "Upload"}
             </Button>
