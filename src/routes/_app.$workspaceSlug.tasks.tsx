@@ -32,14 +32,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
-import {
-  PRIORITY_BADGE,
-  STATUS_BADGE,
-  PRIORITY_RANK,
-  todayISO,
-  startOfWeekISO,
-  endOfWeekISO,
-} from "@/lib/nexus";
+import { PRIORITY_BADGE, STATUS_BADGE, PRIORITY_RANK, todayISO } from "@/lib/nexus";
 import {
   MoreVertical,
   X,
@@ -221,18 +214,12 @@ function TasksPage() {
   });
 
   const today = todayISO();
-  const weekStart = startOfWeekISO();
-  const weekEnd = endOfWeekISO();
 
-  // Weekly stats for summary bar
-  const weekTasks = React.useMemo(
-    () => tasks.filter((t) => t.due_date >= weekStart && t.due_date <= weekEnd),
-    [tasks, weekStart, weekEnd],
-  );
-  const weekTotal = weekTasks.length;
-  const weekCompleted = weekTasks.filter((t) => t.status === "completed").length;
-  const weekInProgress = weekTasks.filter((t) => t.status === "in_progress").length;
-  const weekOverdue = weekTasks.filter(
+  // Summary bar stats — use all tasks so counts are never 0 due to date filters
+  const weekTotal = tasks.length;
+  const weekCompleted = tasks.filter((t) => t.status === "completed").length;
+  const weekInProgress = tasks.filter((t) => t.status === "in_progress").length;
+  const weekOverdue = tasks.filter(
     (t) => t.status === "overdue" || (t.status !== "completed" && t.due_date < today),
   ).length;
   const ringPercent = Math.round((weekCompleted / Math.max(weekTotal, 1)) * 100);
@@ -294,7 +281,7 @@ function TasksPage() {
             {/* Chips */}
             <div className="flex flex-wrap gap-2 flex-1 min-w-0">
               <StatChip
-                label="Total this week"
+                label="Total tasks"
                 value={weekTotal}
                 className="text-foreground bg-muted/50 border-border"
               />

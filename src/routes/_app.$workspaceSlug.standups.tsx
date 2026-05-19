@@ -138,28 +138,28 @@ function StandupsPage() {
       toast.error("Please fill in yesterday and today fields");
       return;
     }
-    if (!screenshot) {
-      toast.error("Please attach a screenshot of yesterday's work");
-      return;
-    }
-    if (screenshot.size > SCREENSHOT_MAX) {
+    if (screenshot && screenshot.size > SCREENSHOT_MAX) {
       toast.error("Screenshot must be under 10MB");
       return;
     }
     setSubmitting(true);
 
-    // Upload screenshot
-    const ext = screenshot.name.split(".").pop() ?? "png";
-    const path = `${user!.id}/${todayISO()}.${ext}`;
-    const { error: upErr } = await supabase.storage
-      .from("standup-screenshots")
-      .upload(path, screenshot, { upsert: true, contentType: screenshot.type });
-    if (upErr) {
-      toast.error(upErr.message);
-      setSubmitting(false);
-      return;
+    // Upload screenshot (optional)
+    let screenshotUrl: string | null = null;
+    if (screenshot) {
+      const ext = screenshot.name.split(".").pop() ?? "png";
+      const path = `${user!.id}/${todayISO()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("standup-screenshots")
+        .upload(path, screenshot, { upsert: true, contentType: screenshot.type });
+      if (upErr) {
+        toast.error(upErr.message);
+        setSubmitting(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from("standup-screenshots").getPublicUrl(path);
+      screenshotUrl = urlData.publicUrl;
     }
-    const { data: urlData } = supabase.storage.from("standup-screenshots").getPublicUrl(path);
 
     const isoToday = todayISO();
     const { error } = await supabase.from("standups").upsert(
@@ -170,7 +170,7 @@ function StandupsPage() {
         yesterday: yesterday.trim(),
         today: today.trim(),
         blockers: blockers.trim() || null,
-        screenshot_url: urlData.publicUrl,
+        screenshot_url: screenshotUrl,
         submitted_at: new Date().toISOString(),
       } as never,
       { onConflict: "user_id,date" },
@@ -266,7 +266,7 @@ function StandupsPage() {
               <Label className="text-sm font-medium flex items-center gap-1.5">
                 <ImageIcon className="h-4 w-4" />
                 Screenshot of yesterday's work{" "}
-                <span className="font-normal text-destructive text-xs">(required)</span>
+                <span className="font-normal text-muted-foreground text-xs">(optional)</span>
               </Label>
               <Input
                 className="mt-1.5"
