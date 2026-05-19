@@ -1,6 +1,8 @@
+import * as React from "react";
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getLastWorkspaceSlug } from "@/lib/last-workspace";
+
 import {
   Clock,
   CheckSquare,
