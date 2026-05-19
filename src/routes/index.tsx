@@ -1,6 +1,8 @@
+import * as React from "react";
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getLastWorkspaceSlug } from "@/lib/last-workspace";
+
 import {
   Clock,
   CheckSquare,
@@ -495,63 +497,8 @@ function LandingPage() {
       </section>
 
       {/* ── Pricing teaser ───────────────────────────────────────────────── */}
-      <section className="border-t border-border/40 py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="mb-12 max-w-2xl">
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
-              Pricing
-            </p>
-            <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
-              Fair pricing.
-              <span className="text-muted-foreground"> No surprises.</span>
-            </h2>
-          </div>
-          <div className="mb-8 grid gap-3 sm:grid-cols-3">
-            {[
-              { tier: "Starter", price: "Free", users: "Up to 10 users", highlight: false },
-              {
-                tier: "Growth",
-                price: "$49",
-                suffix: "/mo",
-                users: "Up to 100 users",
-                highlight: true,
-              },
-              { tier: "Enterprise", price: "Custom", users: "Unlimited users", highlight: false },
-            ].map(({ tier, price, suffix, users, highlight }) => (
-              <div
-                key={tier}
-                className={`rounded-xl border p-5 transition-colors ${
-                  highlight
-                    ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] to-transparent"
-                    : "border-border/60 bg-card/30"
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    {tier}
-                  </p>
-                  {highlight && (
-                    <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-                      Popular
-                    </span>
-                  )}
-                </div>
-                <p className="mt-3 flex items-baseline gap-1">
-                  <span className="text-2xl font-semibold tracking-tight">{price}</span>
-                  {suffix && <span className="text-[12px] text-muted-foreground">{suffix}</span>}
-                </p>
-                <p className="mt-1 text-[12px] text-muted-foreground">{users}</p>
-              </div>
-            ))}
-          </div>
-          <Link
-            to="/pricing"
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-primary"
-          >
-            See full pricing <ChevronRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </section>
+      <PricingTeaser />
+
 
       {/* ── Desktop app ──────────────────────────────────────────────────── */}
       <section className="border-t border-border/40 py-20">
@@ -652,3 +599,123 @@ function LandingPage() {
     </div>
   );
 }
+
+// Base prices in NGN (Naira)
+const NGN_PRICES = { basic: 15000, enterprise: 25000, unlimited: 45000 };
+
+// Map country code → currency code (common ones; falls back to NGN)
+const COUNTRY_CURRENCY: Record<string, string> = {
+  US: "USD", CA: "CAD", GB: "GBP", IE: "EUR", DE: "EUR", FR: "EUR", ES: "EUR",
+  IT: "EUR", NL: "EUR", BE: "EUR", PT: "EUR", AT: "EUR", FI: "EUR", GR: "EUR",
+  AU: "AUD", NZ: "NZD", JP: "JPY", CN: "CNY", IN: "INR", BR: "BRL", MX: "MXN",
+  ZA: "ZAR", KE: "KES", GH: "GHS", EG: "EGP", AE: "AED", SA: "SAR", CH: "CHF",
+  SE: "SEK", NO: "NOK", DK: "DKK", PL: "PLN", TR: "TRY", RU: "RUB", KR: "KRW",
+  SG: "SGD", HK: "HKD", PH: "PHP", ID: "IDR", MY: "MYR", TH: "THB", VN: "VND",
+  NG: "NGN",
+};
+
+function PricingTeaser(): React.JSX.Element {
+  const [currency, setCurrency] = React.useState<string>("NGN");
+  const [rate, setRate] = React.useState<number>(1); // NGN → currency
+
+  React.useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        // Detect country (free, no key)
+        const geo = await fetch("https://ipapi.co/json/").then((r) => r.json()).catch(() => null);
+        const cc = geo?.country_code as string | undefined;
+        const cur = (cc && COUNTRY_CURRENCY[cc]) || "NGN";
+        if (cur === "NGN") return;
+        // Get conversion rate from NGN base
+        const fx = await fetch("https://open.er-api.com/v6/latest/NGN").then((r) => r.json()).catch(() => null);
+        const r = fx?.rates?.[cur];
+        if (cancelled || !r) return;
+        setCurrency(cur);
+        setRate(r);
+      } catch {
+        /* keep NGN */
+      }
+    }
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  const fmt = (ngn: number): string => {
+    const value = ngn * rate;
+    // Round nicely: whole numbers for big values, 2 decimals for small
+    const fractionDigits = value >= 100 ? 0 : 2;
+    try {
+      return new Intl.NumberFormat(undefined, {
+        style: "currency",
+        currency,
+        maximumFractionDigits: fractionDigits,
+        minimumFractionDigits: 0,
+      }).format(value);
+    } catch {
+      return `${value.toFixed(fractionDigits)} ${currency}`;
+    }
+  };
+
+  const tiers = [
+    { tier: "Basic", price: fmt(NGN_PRICES.basic), suffix: "/mo", users: "Up to 7 members", highlight: false },
+    { tier: "Enterprise", price: fmt(NGN_PRICES.enterprise), suffix: "/mo", users: "Up to 15 members", highlight: true },
+    { tier: "Unlimited", price: fmt(NGN_PRICES.unlimited), suffix: "/mo", users: "Unlimited members", highlight: false },
+  ];
+
+  return (
+    <section className="border-t border-border/40 py-24">
+      <div className="mx-auto max-w-5xl px-6">
+        <div className="mb-12 max-w-2xl">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+            Pricing
+          </p>
+          <h2 className="text-3xl font-semibold tracking-[-0.02em] sm:text-[40px] sm:leading-[1.1]">
+            Fair pricing.
+            <span className="text-muted-foreground"> No surprises.</span>
+          </h2>
+          {currency !== "NGN" && (
+            <p className="mt-3 text-[12px] text-muted-foreground">
+              Showing prices in {currency} (converted from ₦). Billed in NGN.
+            </p>
+          )}
+        </div>
+        <div className="mb-8 grid gap-3 sm:grid-cols-3">
+          {tiers.map(({ tier, price, suffix, users, highlight }) => (
+            <div
+              key={tier}
+              className={`rounded-xl border p-5 transition-colors ${
+                highlight
+                  ? "border-primary/50 bg-gradient-to-b from-primary/[0.08] to-transparent"
+                  : "border-border/60 bg-card/30"
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {tier}
+                </p>
+                {highlight && (
+                  <span className="rounded-full border border-primary/40 bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                    Popular
+                  </span>
+                )}
+              </div>
+              <p className="mt-3 flex items-baseline gap-1">
+                <span className="text-2xl font-semibold tracking-tight">{price}</span>
+                {suffix && <span className="text-[12px] text-muted-foreground">{suffix}</span>}
+              </p>
+              <p className="mt-1 text-[12px] text-muted-foreground">{users}</p>
+            </div>
+          ))}
+        </div>
+        <Link
+          to="/pricing"
+          className="inline-flex items-center gap-1.5 text-[13px] font-medium text-foreground hover:text-primary"
+        >
+          See full pricing <ChevronRight className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
