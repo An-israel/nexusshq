@@ -33,6 +33,10 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      {
+        name: "google-site-verification",
+        content: "a7Et3UPOwggV8QhWsn9Ia-4i38Ql1spAbuH2WqIBHG8",
+      },
       { title: "Nexus HQ — Unified Workspace for Team Operations" },
       {
         name: "description",
