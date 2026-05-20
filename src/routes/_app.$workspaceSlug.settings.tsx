@@ -16,7 +16,16 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
-import { Save, UserCog, Shield, Users as UsersIcon, ToggleRight, MapPin } from "lucide-react";
+import {
+  Save,
+  UserCog,
+  Shield,
+  Users as UsersIcon,
+  ToggleRight,
+  MapPin,
+  Building2,
+  Palette,
+} from "lucide-react";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { Switch } from "@/components/ui/switch";
 import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
@@ -193,6 +202,164 @@ interface RoleRow {
   role: "admin" | "manager" | "employee";
 }
 
+// ─── Workspace Settings ───────────────────────────────────────────────────────
+
+const PRESET_COLORS = [
+  "#3B82F6", // blue
+  "#8B5CF6", // violet
+  "#EC4899", // pink
+  "#10B981", // emerald
+  "#F59E0B", // amber
+  "#EF4444", // red
+  "#06B6D4", // cyan
+  "#F97316", // orange
+  "#6366F1", // indigo
+  "#14B8A6", // teal
+];
+
+function WorkspaceSettings() {
+  const { workspace } = useWorkspace();
+  const [name, setName] = React.useState(workspace?.name ?? "");
+  const [color, setColor] = React.useState(workspace?.primary_color ?? "#3B82F6");
+  const [saving, setSaving] = React.useState(false);
+
+  async function save() {
+    if (!name.trim()) return toast.error("Workspace name cannot be empty");
+    setSaving(true);
+    const { error } = await supabase
+      .from("workspaces")
+      .update({ name: name.trim(), primary_color: color })
+      .eq("id", workspace!.id);
+    if (error) toast.error(error.message);
+    else toast.success("Workspace updated — refresh to see the new name in the sidebar");
+    setSaving(false);
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* Logo */}
+      <Card className="p-6 space-y-4">
+        <div>
+          <h3 className="font-semibold">Workspace logo</h3>
+          <p className="text-sm text-muted-foreground">
+            Shown in the sidebar and header. Square image recommended.
+          </p>
+        </div>
+        <AvatarUploader
+          pathPrefix={`workspace-logos/${workspace!.id}`}
+          currentUrl={workspace?.logo_url ?? null}
+          fallbackName={workspace?.name}
+          onUploaded={async (url) => {
+            const { error } = await supabase
+              .from("workspaces")
+              .update({ logo_url: url })
+              .eq("id", workspace!.id);
+            if (error) toast.error(error.message);
+            else toast.success("Logo updated — refresh to see it in the sidebar");
+          }}
+        />
+      </Card>
+
+      {/* Name + color */}
+      <Card className="p-6 space-y-5">
+        <div>
+          <h3 className="font-semibold">Workspace name</h3>
+          <p className="text-sm text-muted-foreground">The display name shown to all members.</p>
+        </div>
+        <div>
+          <Label>Name</Label>
+          <Input
+            className="text-base md:text-sm"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="e.g. Skryve HQ"
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <Palette className="h-4 w-4 text-muted-foreground" />
+            <Label>Accent colour</Label>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {PRESET_COLORS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setColor(c)}
+                className="h-8 w-8 rounded-full border-2 transition-transform hover:scale-110"
+                style={{
+                  backgroundColor: c,
+                  borderColor: color === c ? "white" : "transparent",
+                  outline: color === c ? `2px solid ${c}` : "none",
+                  outlineOffset: "2px",
+                }}
+                title={c}
+              />
+            ))}
+            <input
+              type="color"
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="h-8 w-8 cursor-pointer rounded-full border-2 border-border bg-transparent p-0"
+              title="Custom colour"
+            />
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Used in the sidebar, avatars, and accent elements.
+          </p>
+        </div>
+
+        <Button onClick={save} disabled={saving}>
+          <Save className="mr-2 h-4 w-4" />
+          {saving ? "Saving…" : "Save changes"}
+        </Button>
+      </Card>
+
+      {/* Danger zone */}
+      <Card className="p-6 space-y-4 border-destructive/40">
+        <div>
+          <h3 className="font-semibold text-destructive">Danger zone</h3>
+          <p className="text-sm text-muted-foreground">
+            These actions affect the entire workspace and cannot easily be undone.
+          </p>
+        </div>
+        <div className="flex items-center justify-between rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium">Deactivate workspace</p>
+            <p className="text-xs text-muted-foreground">
+              Suspends access for all members. Contact support to restore.
+            </p>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={async () => {
+              if (
+                !confirm(
+                  "Deactivate this workspace? All members will lose access immediately. Type OK to confirm.",
+                )
+              )
+                return;
+              const { error } = await supabase
+                .from("workspaces")
+                .update({ is_active: false })
+                .eq("id", workspace!.id);
+              if (error) toast.error(error.message);
+              else {
+                toast.success("Workspace deactivated");
+                window.location.href = "/workspaces";
+              }
+            }}
+          >
+            Deactivate
+          </Button>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 function SettingsPage() {
   const { profile, refresh, isAdmin } = useAuth();
 
@@ -201,36 +368,43 @@ function SettingsPage() {
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
         <p className="text-sm text-muted-foreground">
-          Manage your profile{isAdmin ? " and team" : ""}.
+          Manage your profile{isAdmin ? " and workspace" : ""}.
         </p>
       </div>
 
       <Tabs defaultValue="profile">
-        <TabsList>
-          <TabsTrigger value="profile">
-            <UserCog className="mr-2 h-4 w-4" /> Profile
-          </TabsTrigger>
-          {isAdmin && (
-            <TabsTrigger value="team">
-              <UsersIcon className="mr-2 h-4 w-4" /> Team
+        <div className="overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0">
+          <TabsList className="flex-nowrap">
+            <TabsTrigger value="profile">
+              <UserCog className="mr-2 h-4 w-4" /> Profile
             </TabsTrigger>
-          )}
-          {isAdmin && (
-            <TabsTrigger value="roles">
-              <Shield className="mr-2 h-4 w-4" /> Roles
-            </TabsTrigger>
-          )}
-          {isAdmin && (
-            <TabsTrigger value="features">
-              <ToggleRight className="mr-2 h-4 w-4" /> Features
-            </TabsTrigger>
-          )}
-          {isAdmin && (
-            <TabsTrigger value="location">
-              <MapPin className="mr-2 h-4 w-4" /> Office
-            </TabsTrigger>
-          )}
-        </TabsList>
+            {isAdmin && (
+              <TabsTrigger value="workspace">
+                <Building2 className="mr-2 h-4 w-4" /> Workspace
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="team">
+                <UsersIcon className="mr-2 h-4 w-4" /> Team
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="roles">
+                <Shield className="mr-2 h-4 w-4" /> Roles
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="features">
+                <ToggleRight className="mr-2 h-4 w-4" /> Pages
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="location">
+                <MapPin className="mr-2 h-4 w-4" /> Office
+              </TabsTrigger>
+            )}
+          </TabsList>
+        </div>
         <TabsContent value="profile" className="mt-4">
           {profile ? (
             <ProfileForm profile={profile as unknown as ProfileRow} onSaved={refresh} />
@@ -243,6 +417,11 @@ function SettingsPage() {
             </div>
           )}
         </TabsContent>
+        {isAdmin && (
+          <TabsContent value="workspace" className="mt-4">
+            <WorkspaceSettings />
+          </TabsContent>
+        )}
         {isAdmin && (
           <TabsContent value="team" className="mt-4">
             <TeamAdmin />

@@ -106,7 +106,6 @@ function CreateWorkspacePage() {
     }
   }
 
-
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="border-b border-border/50 bg-background/90 backdrop-blur">

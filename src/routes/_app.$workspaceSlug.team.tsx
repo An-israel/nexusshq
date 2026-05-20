@@ -10,9 +10,7 @@ import { requireAnyRole } from "@/lib/role-access";
 import { useAuth } from "@/lib/auth-context";
 import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { setEmployeeActiveFn, removeWorkspaceMemberFn } from "@/lib/admin.functions";
 import {
   Users,
   CheckCircle2,
@@ -330,38 +328,42 @@ function MemberCard({
   onRoleChanged: () => void;
   onActivationChanged: () => void;
 }) {
-  const setActive = useServerFn(setEmployeeActiveFn);
-  const removeMember = useServerFn(removeWorkspaceMemberFn);
   const { workspace } = useWorkspace();
   const [toggling, setToggling] = useState(false);
   const [removing, setRemoving] = useState(false);
 
   async function toggleActive() {
     setToggling(true);
-    try {
-      await setActive({ data: { userId: m.profile.id, isActive: !m.profile.is_active } });
-      toast.success(m.profile.is_active ? "Account deactivated" : "Account reactivated");
+    const nextActive = !m.profile.is_active;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_active: nextActive })
+      .eq("id", m.profile.id);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success(nextActive ? "Account reactivated" : "Account deactivated");
       onActivationChanged();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to update account");
-    } finally {
-      setToggling(false);
     }
+    setToggling(false);
   }
 
   async function removeFromWorkspace() {
     const name = m.profile.full_name ?? m.profile.email ?? "this employee";
     if (!confirm(`Remove ${name} from this workspace? They will lose access immediately.`)) return;
     setRemoving(true);
-    try {
-      await removeMember({ data: { workspaceId: workspace.id, userId: m.profile.id } });
+    const { error } = await supabase
+      .from("workspace_members")
+      .delete()
+      .eq("workspace_id", workspace.id)
+      .eq("user_id", m.profile.id);
+    if (error) {
+      toast.error(error.message);
+    } else {
       toast.success(`${name} removed from workspace`);
       onActivationChanged();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to remove employee");
-    } finally {
-      setRemoving(false);
     }
+    setRemoving(false);
   }
 
   const todayPct = m.todayTotal ? Math.round((m.todayDone / m.todayTotal) * 100) : 0;
