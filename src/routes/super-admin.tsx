@@ -41,10 +41,10 @@ import {
 
 export const Route = createFileRoute("/super-admin")({
   beforeLoad: async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user?.id;
-
-    if (!userId) throw redirect({ to: "/" });
+    // Use getUser() for a verified server-round-trip auth check
+    const { data: userData } = await supabase.auth.getUser();
+    const userId = userData.user?.id;
+    if (!userId) throw redirect({ to: "/login" });
 
     const { data, error } = await supabase
       .from("super_admin_users")
@@ -52,7 +52,8 @@ export const Route = createFileRoute("/super-admin")({
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (error || !data) throw redirect({ to: "/" });
+    // Return context so the component can show a diagnostic UI instead of silently redirecting
+    return { superAdminOk: !!data && !error, userId, accessError: error?.message ?? null };
   },
   component: SuperAdminPage,
 });
@@ -1273,6 +1274,46 @@ function Th({ children }: { children: React.ReactNode }) {
 
 function SuperAdminPage() {
   const { user } = useAuth();
+  const { superAdminOk, userId, accessError } = Route.useRouteContext();
+
+  if (!superAdminOk) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 text-center">
+        <div className="max-w-md space-y-4 rounded-xl border border-border bg-card p-8">
+          <Shield className="mx-auto h-10 w-10 text-destructive" />
+          <h1 className="text-xl font-bold">Super-admin access denied</h1>
+          <p className="text-sm text-muted-foreground">
+            Your user ID is not in the{" "}
+            <code className="rounded bg-muted px-1">super_admin_users</code> table, or the row could
+            not be read.
+          </p>
+          {userId && (
+            <div className="rounded-lg bg-muted px-4 py-3 text-left">
+              <p className="text-xs text-muted-foreground mb-1">Your user ID (copy this):</p>
+              <p className="font-mono text-xs break-all select-all text-foreground">{userId}</p>
+            </div>
+          )}
+          {accessError && (
+            <div className="rounded-lg bg-destructive/10 px-4 py-3 text-left">
+              <p className="text-xs text-muted-foreground mb-1">Error from Supabase:</p>
+              <p className="font-mono text-xs break-all text-destructive">{accessError}</p>
+            </div>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Run this in the <strong>Supabase SQL editor</strong> (replace the UUID if it differs):
+          </p>
+          <pre className="rounded-lg bg-muted px-4 py-3 text-left text-xs text-foreground overflow-x-auto whitespace-pre-wrap select-all">
+            {`INSERT INTO public.super_admin_users (user_id)
+VALUES ('${userId ?? "<your-user-id>"}')
+ON CONFLICT (user_id) DO NOTHING;`}
+          </pre>
+          <p className="text-xs text-muted-foreground">
+            After running that, hard-refresh this page (Ctrl+Shift+R).
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
