@@ -143,14 +143,18 @@ function SignupPage() {
   const { session } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect already-signed-in users to their workspace
+  // Redirect already-signed-in users with a VERIFIED session to their workspace.
+  // We call getUser() (server-round-trip) not just checking session from localStorage,
+  // so stale/expired sessions don't cause a redirect loop to /create-workspace.
   React.useEffect(() => {
     if (!session) return;
     void (async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) return; // stale session — stay on signup
       const { data } = await supabase
         .from("workspace_members")
         .select("workspace_id, workspaces(slug)")
-        .eq("user_id", session.user.id)
+        .eq("user_id", userData.user.id)
         .eq("is_active", true);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const slugs = (data ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
@@ -164,9 +168,13 @@ function SignupPage() {
         navigate({ to: "/workspaces" });
         return;
       }
-      const slug = slugs[0];
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      navigate({ to: slug ? (`/${slug}/dashboard` as any) : "/create-workspace" });
+      if (slugs.length === 1) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        navigate({ to: `/${slugs[0]}/dashboard` as any });
+        return;
+      }
+      // Signed in but no workspace yet — let them create one
+      navigate({ to: "/create-workspace" });
     })();
   }, [session, navigate]);
 
@@ -276,60 +284,30 @@ function SignupPage() {
       const user = signUpData.user;
       if (!user) throw new Error("Signup did not return a user");
 
-      const now = new Date();
-      const thirtyDaysOut = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-      const fourteenDaysOut = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+      // If email confirmation is required, session will be null.
+      // Show a message and stop — the user must verify email before creating a workspace.
+      if (!signUpData.session) {
+        toast.success(
+          "Check your email! Click the confirmation link, then come back to sign in and create your workspace.",
+          { duration: 10000 },
+        );
+        void navigate({ to: "/login" });
+        return;
+      }
 
-      // 2. Create workspace
-      const { data: workspace, error: wsError } = await supabase
-        .from("workspaces")
-        .insert({
-          name: companyName.trim(),
-          slug,
-          plan: selectedPlan,
-          plan_seats: PLAN_SEATS[selectedPlan],
-        })
-        .select("id")
-        .single();
-
-      if (wsError) throw wsError;
-
-      // 3. Upsert profile (handle_new_user trigger may have already created it)
-      const { error: profileError } = await supabase.from("profiles").upsert(
-        {
-          id: user.id,
-          full_name: fullName.trim(),
-          email: email.trim().toLowerCase(),
-        },
-        { onConflict: "id" },
+      // Session is live — create the workspace via the SECURITY DEFINER RPC
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: wsData, error: wsError } = await (supabase.rpc as any)(
+        "create_workspace_with_owner",
+        { _name: companyName.trim(), _slug: slug },
       );
-
-      if (profileError) throw profileError;
-
-      // 4. Add as workspace owner
-      const { error: memberError } = await supabase.from("workspace_members").insert({
-        workspace_id: workspace.id,
-        user_id: user.id,
-        role: "owner",
-      });
-
-      if (memberError) throw memberError;
-
-      // 5. Create subscription
-      const { error: subError } = await supabase.from("subscriptions").insert({
-        workspace_id: workspace.id,
-        plan: selectedPlan,
-        status: selectedPlan === "starter" ? "trialing" : "active",
-        current_period_start: now.toISOString(),
-        current_period_end: thirtyDaysOut.toISOString(),
-        ...(selectedPlan === "starter" ? { trial_ends_at: fourteenDaysOut.toISOString() } : {}),
-      });
-
-      if (subError) throw subError;
+      if (wsError) throw wsError;
+      const wsRow = Array.isArray(wsData) ? wsData[0] : wsData;
+      if (!wsRow?.slug) throw new Error("Failed to create workspace");
 
       toast.success("Workspace created! Let's get you set up…");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      void navigate({ to: `/${slug}/onboarding` as any });
+      void navigate({ to: `/${wsRow.slug}/onboarding` as any });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong. Please try again.");
     } finally {
