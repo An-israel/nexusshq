@@ -2681,6 +2681,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      create_workspace_with_owner: {
+        Args: { _name: string; _slug: string }
+        Returns: {
+          id: string
+          slug: string
+        }[]
+      }
       current_user_role: {
         Args: never
         Returns: Database["public"]["Enums"]["app_role"]

@@ -82,21 +82,18 @@ function CreateWorkspacePage() {
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Not signed in");
 
-      const { data: ws, error: wsErr } = await supabase
-        .from("workspaces")
-        .insert({ name: name.trim(), slug, plan: "starter" as const })
-        .select("id, slug")
-        .single();
-      if (wsErr) throw wsErr;
-
-      const { error: memErr } = await supabase
-        .from("workspace_members")
-        .insert({ workspace_id: ws.id, user_id: user.id, role: "owner" as const, is_active: true });
-      if (memErr) throw memErr;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase.rpc as any)("create_workspace_with_owner", {
+        _name: name.trim(),
+        _slug: slug,
+      });
+      if (error) throw error;
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row?.slug) throw new Error("Failed to create workspace");
 
       toast.success("Workspace created!");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      navigate({ to: `/${ws.slug}/dashboard` as any });
+      navigate({ to: `/${row.slug}/dashboard` as any });
     } catch (err) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const e = err as any;
@@ -108,6 +105,7 @@ function CreateWorkspacePage() {
       setSubmitting(false);
     }
   }
+
 
   return (
     <div className="flex min-h-screen flex-col bg-background text-foreground">
