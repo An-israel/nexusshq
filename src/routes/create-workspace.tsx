@@ -10,8 +10,9 @@ import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/create-workspace")({
   beforeLoad: async () => {
-    const { data } = await supabase.auth.getSession();
-    if (!data.session) throw redirect({ to: "/login" });
+    // Use getUser() (server-verified) not getSession() (stale localStorage)
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) throw redirect({ to: "/signup" });
   },
   component: CreateWorkspacePage,
 });
@@ -77,11 +78,6 @@ function CreateWorkspacePage() {
 
     setSubmitting(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not signed in");
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)("create_workspace_with_owner", {
         _name: name.trim(),

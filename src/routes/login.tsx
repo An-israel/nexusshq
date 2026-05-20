@@ -90,8 +90,10 @@ function LoginPage() {
       if (slug) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         navigate({ to: `/${slug}/dashboard` as any });
+        return;
       }
-      // If no workspace found at all, stay on login — they may need to sign up
+      // No workspace yet — send them to create one
+      navigate({ to: "/create-workspace" });
     });
   }, [session, user, navigate]);
 
