@@ -194,12 +194,12 @@ export async function enqueueEmail(to: string, subject: string, html: string): P
 /**
  * Sends an SMS/WhatsApp message via Africa's Talking.
  * Requires env vars: WHATSAPP_API_KEY, WHATSAPP_USERNAME (default "sandbox"),
- * WHATSAPP_SENDER_ID (default "NexusHQ").
+ * WHATSAPP_SENDER_ID (default "NexxosHQ").
  */
 export async function sendWhatsApp(phone: string, message: string): Promise<void> {
   const apiKey = Deno.env.get("WHATSAPP_API_KEY");
   const username = Deno.env.get("WHATSAPP_USERNAME") ?? "sandbox";
-  const senderId = Deno.env.get("WHATSAPP_SENDER_ID") ?? "NexusHQ";
+  const senderId = Deno.env.get("WHATSAPP_SENDER_ID") ?? "NexxosHQ";
 
   if (!apiKey) {
     // Dev mode — no API key configured, just log
@@ -267,7 +267,7 @@ export async function notifyUserWhatsApp(userId: string, message: string): Promi
 // ── Branded HTML email blocks ────────────────────────────────────────────────
 
 /**
- * Returns the top header block for a Nexus HQ branded email.
+ * Returns the top header block for a Nexxos HQ branded email.
  * @param title - The heading text displayed in the header bar.
  * @param color - Background colour of the header (default #111111).
  */
@@ -275,7 +275,7 @@ export function emailHeader(title: string, color = "#111111"): string {
   return `
     <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
       <div style="background:${color};padding:28px 32px;text-align:center;">
-        <p style="margin:0 0 6px;color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Nexus HQ</p>
+        <p style="margin:0 0 6px;color:rgba(255,255,255,0.7);font-size:12px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Nexxos HQ</p>
         <h1 style="margin:0;color:#ffffff;font-size:22px;font-weight:700;line-height:1.3;">${title}</h1>
       </div>
       <div style="padding:28px 32px;">
@@ -283,7 +283,7 @@ export function emailHeader(title: string, color = "#111111"): string {
 }
 
 /**
- * Returns the closing footer block for a Nexus HQ branded email.
+ * Returns the closing footer block for a Nexxos HQ branded email.
  * Closes the inner padding div opened by emailHeader.
  */
 export function emailFooter(): string {
@@ -291,12 +291,12 @@ export function emailFooter(): string {
       </div>
       <div style="padding:16px 32px;border-top:1px solid #e5e7eb;background:#f9fafb;text-align:center;">
         <p style="margin:0 0 4px;color:#6b7280;font-size:12px;">
-          Nexus HQ &mdash; Automated notification
+          Nexxos HQ &mdash; Automated notification
         </p>
         <p style="margin:0;font-size:11px;color:#9ca3af;">
-          You received this email because you are a member of a Nexus HQ workspace.
+          You received this email because you are a member of a Nexxos HQ workspace.
           <br>
-          <a href="${APP_URL}" style="color:#6b7280;text-decoration:underline;">Visit Nexus HQ</a>
+          <a href="${APP_URL}" style="color:#6b7280;text-decoration:underline;">Visit Nexxos HQ</a>
         </p>
       </div>
     </div>

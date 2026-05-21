@@ -8,7 +8,7 @@ export const Route = createFileRoute("/api/public/cron/message-email")({
     handlers: {
       POST: async () => {
         const apiKey = process.env.RESEND_API_KEY;
-        const fromEmail = process.env.RESEND_FROM_EMAIL ?? "notifications@nexushq.app";
+        const fromEmail = process.env.RESEND_FROM_EMAIL ?? "notifications@nexxoshq.app";
 
         if (!apiKey) {
           return Response.json({
@@ -56,7 +56,7 @@ export const Route = createFileRoute("/api/public/cron/message-email")({
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: `Nexus HQ <${fromEmail}>`,
+              from: `Nexxos HQ <${fromEmail}>`,
               to: [recipient.email],
               subject: notif.title,
               html: `

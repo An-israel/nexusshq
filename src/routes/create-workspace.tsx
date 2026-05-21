@@ -147,7 +147,7 @@ function CreateWorkspacePage() {
             <div className="space-y-2">
               <Label htmlFor="slug">Workspace URL</Label>
               <div className="flex items-center gap-2 text-sm">
-                <span className="text-muted-foreground">nexushq.app/</span>
+                <span className="text-muted-foreground">nexxoshq.app/</span>
                 <Input
                   id="slug"
                   value={slug}

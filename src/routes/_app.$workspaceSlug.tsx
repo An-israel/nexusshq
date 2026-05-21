@@ -413,7 +413,7 @@ function WorkspaceShell() {
               : "This workspace has been suspended. Contact support to restore access."}
           </p>
           <a
-            href="mailto:support@nexushq.io"
+            href="mailto:support@nexxoshq.io"
             className="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Contact support →

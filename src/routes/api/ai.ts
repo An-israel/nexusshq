@@ -84,7 +84,7 @@ function buildPrompt(
   ctx: Record<string, unknown>,
 ): PromptSpec & { userPrompt: string | null } {
   const base =
-    "You are an AI assistant for Nexus HQ, an internal team management platform. Be concise, practical, and action-oriented.";
+    "You are an AI assistant for Nexxos HQ, an internal team management platform. Be concise, practical, and action-oriented.";
 
   switch (action) {
     // ── Feature 1: performance insights ─────────────────────────────────────
@@ -159,7 +159,7 @@ Write the description only. No bullet points, no headers.`,
       };
       return {
         systemPrompt: base,
-        userPrompt: `Write a friendly, motivating 3-paragraph weekly summary email body for the Nexus HQ team.
+        userPrompt: `Write a friendly, motivating 3-paragraph weekly summary email body for the Nexxos HQ team.
 
 Last week's stats:
 - Tasks completed: ${stats.completedTasks} / ${stats.totalTasks}

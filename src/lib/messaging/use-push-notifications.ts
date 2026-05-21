@@ -37,7 +37,7 @@ export function usePushNotifications(
           if (Notification.permission !== "granted") return;
 
           const row = payload.new as { title: string | null; body: string | null };
-          const n = new Notification(row.title ?? "New notification in Nexus HQ", {
+          const n = new Notification(row.title ?? "New notification in Nexxos HQ", {
             body: row.body ?? "",
             icon: "/favicon.ico",
           });

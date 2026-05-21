@@ -89,13 +89,13 @@ const PLANS = [
   },
 ] as const;
 
-const SUPPORT_EMAIL = "hello@nexushq.io";
+const SUPPORT_EMAIL = "hello@nexxoshq.io";
 const SUPPORT_WHATSAPP = "https://wa.me/2349000000000";
 
 function openUpgradeEmail(planLabel?: string) {
-  const subject = encodeURIComponent(`Nexus HQ — Upgrade to ${planLabel ?? "a higher"} plan`);
+  const subject = encodeURIComponent(`Nexxos HQ — Upgrade to ${planLabel ?? "a higher"} plan`);
   const body = encodeURIComponent(
-    `Hi Nexus HQ team,\n\nI'd like to upgrade my workspace plan.\n\nPlease get in touch to discuss options.\n\nThanks`,
+    `Hi Nexxos HQ team,\n\nI'd like to upgrade my workspace plan.\n\nPlease get in touch to discuss options.\n\nThanks`,
   );
   window.open(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`, "_blank");
 }
@@ -516,10 +516,10 @@ function BillingPage() {
             <p className="text-xs text-muted-foreground max-w-sm">
               Contact{" "}
               <a
-                href="mailto:hello@nexushq.io"
+                href="mailto:hello@nexxoshq.io"
                 className="text-foreground underline underline-offset-4 hover:text-primary"
               >
-                hello@nexushq.io
+                hello@nexxoshq.io
               </a>{" "}
               for billing records, receipts, or any payment-related queries.
             </p>

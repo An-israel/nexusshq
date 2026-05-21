@@ -30,10 +30,10 @@ interface DiagnosticsStore {
 
 declare global {
   interface Window {
-    __NEXUS_SUPABASE_DIAGNOSTICS__?: DiagnosticsStore;
+    __NEXXOS_SUPABASE_DIAGNOSTICS__?: DiagnosticsStore;
   }
 
-  var __NEXUS_SUPABASE_DIAGNOSTICS__: DiagnosticsStore | undefined;
+  var __NEXXOS_SUPABASE_DIAGNOSTICS__: DiagnosticsStore | undefined;
 }
 
 const DIAGNOSTIC_LIMIT = 40;
@@ -48,12 +48,12 @@ function getStore(): DiagnosticsStore | null {
   if (!isBrowser()) return null;
 
   const scope = window as Window;
-  scope.__NEXUS_SUPABASE_DIAGNOSTICS__ ??= {
+  scope.__NEXXOS_SUPABASE_DIAGNOSTICS__ ??= {
     entries: [],
     installed: false,
   };
 
-  return scope.__NEXUS_SUPABASE_DIAGNOSTICS__;
+  return scope.__NEXXOS_SUPABASE_DIAGNOSTICS__;
 }
 
 function createClientRequestId() {

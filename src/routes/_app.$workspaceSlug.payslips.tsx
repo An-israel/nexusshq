@@ -105,7 +105,7 @@ function PayslipsPage() {
   function downloadPayslip(p: PayslipRow) {
     const subj = profiles[p.user_id];
     const lines = [
-      "NEXUS HQ — PAYSLIP",
+      "NEXXOS HQ — PAYSLIP",
       "=========================================",
       `Employee: ${subj?.full_name ?? subj?.email ?? p.user_id}`,
       `Period:   ${MONTHS[p.period_month - 1]} ${p.period_year}`,

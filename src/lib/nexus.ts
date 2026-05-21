@@ -1,4 +1,4 @@
-// Shared helpers for Nexus HQ
+// Shared helpers for Nexxos HQ
 
 export const DEPARTMENTS = [
   "management",

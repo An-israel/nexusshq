@@ -1,6 +1,9 @@
 import * as React from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Check, Zap, ArrowRight, HelpCircle, Users, Headphones, Star } from "lucide-react";
+import { Check, ArrowRight, HelpCircle, Users, Headphones, Star } from "lucide-react";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import { CookieBanner } from "@/components/marketing/CookieBanner";
 
 const FAQ_DATA = [
   {
@@ -25,20 +28,20 @@ const FAQ_DATA = [
   },
   {
     q: "What does 'dedicated account manager' mean?",
-    a: "Unlimited plan customers get a named contact at Nexus HQ for onboarding, training, and ongoing support via phone or WhatsApp.",
+    a: "Unlimited plan customers get a named contact at Nexxos HQ for onboarding, training, and ongoing support via phone or WhatsApp.",
   },
 ];
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Nexus HQ Plans for Every Team Size" },
+      { title: "Pricing — Nexxos HQ Plans for Every Team Size" },
       {
         name: "description",
         content:
-          "Transparent Nexus HQ pricing: Basic, Enterprise and Unlimited plans with a 7-day free trial and 30% annual discount.",
+          "Transparent Nexxos HQ pricing: Basic, Enterprise and Unlimited plans with a 7-day free trial and 30% annual discount.",
       },
-      { property: "og:title", content: "Pricing — Nexus HQ Plans for Every Team Size" },
+      { property: "og:title", content: "Pricing — Nexxos HQ Plans for Every Team Size" },
       {
         property: "og:description",
         content: "Transparent plans with a 7-day free trial and 30% annual discount.",
@@ -146,38 +149,7 @@ function PricingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* ── Nav ──────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
-              <Zap className="h-4 w-4" />
-            </div>
-            <span className="text-lg font-bold tracking-tight">Nexus HQ</span>
-          </Link>
-          <nav className="hidden items-center gap-6 text-sm text-muted-foreground md:flex">
-            <Link to="/" className="transition-colors hover:text-foreground">
-              Features
-            </Link>
-            <Link to="/pricing" className="font-medium text-foreground">
-              Pricing
-            </Link>
-          </nav>
-          <div className="flex items-center gap-3">
-            <Link
-              to="/login"
-              className="rounded-lg px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Sign in
-            </Link>
-            <Link
-              to="/login"
-              className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              Get started
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingNav />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden py-20 text-center">
@@ -436,7 +408,7 @@ function PricingPage() {
         </div>
         <div className="relative mx-auto max-w-xl px-6 text-center">
           <h2 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">
-            Try Nexus HQ free for 7 days
+            Try Nexxos HQ free for 7 days
           </h2>
           <p className="mb-8 text-muted-foreground">
             No credit card required. Full access to every feature. Cancel any time.
@@ -451,32 +423,8 @@ function PricingPage() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-border/40 py-10">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/20 text-primary">
-                <Zap className="h-3.5 w-3.5" />
-              </div>
-              <span className="font-bold">Nexus HQ</span>
-            </Link>
-            <nav className="flex items-center gap-6 text-sm text-muted-foreground">
-              <Link to="/" className="transition-colors hover:text-foreground">
-                Home
-              </Link>
-              <Link to="/pricing" className="transition-colors hover:text-foreground">
-                Pricing
-              </Link>
-              <Link to="/login" className="transition-colors hover:text-foreground">
-                Sign in
-              </Link>
-            </nav>
-            <p className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} Nexus HQ. All rights reserved.
-            </p>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
+      <CookieBanner />
     </div>
   );
 }

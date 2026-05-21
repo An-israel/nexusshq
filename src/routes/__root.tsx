@@ -37,17 +37,17 @@ export const Route = createRootRoute({
         name: "google-site-verification",
         content: "a7Et3UPOwggV8QhWsn9Ia-4i38Ql1spAbuH2WqIBHG8",
       },
-      { title: "Nexus HQ — Unified Workspace for Team Operations" },
+      { title: "Nexxos HQ — Unified Workspace for Team Operations" },
       {
         name: "description",
         content:
-          "Nexus HQ is the all-in-one workspace for team operations — attendance, tasks, standups, OKRs, KPIs and AI-powered insights for modern teams.",
+          "Nexxos HQ is the all-in-one workspace for team operations — attendance, tasks, standups, OKRs, KPIs and AI-powered insights for modern teams.",
       },
       { name: "robots", content: "index,follow" },
-      { property: "og:site_name", content: "Nexus HQ" },
+      { property: "og:site_name", content: "Nexxos HQ" },
       { name: "theme-color", content: "#0F0F0F" },
-      { property: "og:title", content: "Nexus HQ — Unified Workspace for Team Operations" },
-      { name: "twitter:title", content: "Nexus HQ — Unified Workspace for Team Operations" },
+      { property: "og:title", content: "Nexxos HQ — Unified Workspace for Team Operations" },
+      { name: "twitter:title", content: "Nexxos HQ — Unified Workspace for Team Operations" },
       {
         property: "og:description",
         content:
@@ -78,7 +78,7 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "Organization",
-          name: "Nexus HQ",
+          name: "Nexxos HQ",
           url: "https://nexus.skryveai.com/",
           logo: "https://nexus.skryveai.com/icons/icon.svg",
         }),
@@ -88,7 +88,7 @@ export const Route = createRootRoute({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "WebSite",
-          name: "Nexus HQ",
+          name: "Nexxos HQ",
           url: "https://nexus.skryveai.com/",
         }),
       },

@@ -2,6 +2,9 @@ import * as React from "react";
 import { createFileRoute, redirect, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { getLastWorkspaceSlug } from "@/lib/last-workspace";
+import { MarketingNav } from "@/components/marketing/MarketingNav";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
+import { CookieBanner } from "@/components/marketing/CookieBanner";
 
 import {
   Clock,
@@ -11,7 +14,6 @@ import {
   Users,
   Shield,
   ArrowRight,
-  Zap,
   Monitor,
   Download,
   Star,
@@ -25,18 +27,18 @@ import {
 } from "lucide-react";
 
 const TIMEOUT_SENTINEL = Symbol("timeout");
-const DOWNLOAD_URL = "https://github.com/An-israel/nexusshq/releases/latest";
+const DOWNLOAD_URL = "https://github.com/An-israel/nexxoshq/releases/latest";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Nexus HQ — All-in-One Workspace for Team Operations" },
+      { title: "Nexxos HQ — All-in-One Workspace for Team Operations" },
       {
         name: "description",
         content:
           "Run attendance, tasks, standups, OKRs, KPIs and AI insights from one workspace built for modern teams.",
       },
-      { property: "og:title", content: "Nexus HQ — All-in-One Workspace for Team Operations" },
+      { property: "og:title", content: "Nexxos HQ — All-in-One Workspace for Team Operations" },
       {
         property: "og:description",
         content:
@@ -166,7 +168,7 @@ const HOW_IT_WORKS = [
   {
     step: "02",
     title: "Set up your operations",
-    desc: "Configure attendance rules, create task templates, add KPIs and OKRs. Nexus HQ adapts to how you work.",
+    desc: "Configure attendance rules, create task templates, add KPIs and OKRs. Nexxos HQ adapts to how you work.",
   },
   {
     step: "03",
@@ -178,7 +180,7 @@ const HOW_IT_WORKS = [
 const TESTIMONIALS = [
   {
     quote:
-      "We replaced four separate apps with Nexus HQ. Attendance, tasks, messaging, and approvals all in one place. Our team actually uses it.",
+      "We replaced four separate apps with Nexxos HQ. Attendance, tasks, messaging, and approvals all in one place. Our team actually uses it.",
     name: "Amara O.",
     role: "Operations Manager",
   },
@@ -200,45 +202,7 @@ function LandingPage() {
   return (
     <div className="min-h-screen bg-background text-foreground antialiased selection:bg-primary/30">
       {/* ── Nav ──────────────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="relative flex h-7 w-7 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground shadow-sm shadow-primary/30">
-              <Zap className="h-3.5 w-3.5" />
-            </div>
-            <span className="text-[15px] font-semibold tracking-tight">Nexus HQ</span>
-            <span className="ml-2 hidden rounded-full border border-border/60 bg-card/40 px-2 py-0.5 text-[10px] font-medium text-muted-foreground sm:inline-block">
-              v1.0
-            </span>
-          </div>
-          <nav className="hidden items-center gap-7 text-[13px] text-muted-foreground md:flex">
-            <a href="#features" className="hover:text-foreground transition-colors">
-              Features
-            </a>
-            <a href="#workflow" className="hover:text-foreground transition-colors">
-              Workflow
-            </a>
-            <Link to="/pricing" className="hover:text-foreground transition-colors">
-              Pricing
-            </Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link
-              to="/login"
-              className="hidden rounded-md px-3 py-1.5 text-[13px] font-medium text-muted-foreground transition-colors hover:text-foreground sm:inline-block"
-            >
-              Sign in
-            </Link>
-            <Link
-              to="/signup"
-              className="group inline-flex items-center gap-1.5 rounded-md bg-foreground px-3.5 py-1.5 text-[13px] font-medium text-background transition-all hover:bg-foreground/90"
-            >
-              Get started
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
-        </div>
-      </header>
+      <MarketingNav />
 
       {/* ── Hero ─────────────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden">
@@ -323,7 +287,7 @@ function LandingPage() {
                 <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
                 <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
                 <span className="ml-3 text-[11px] font-mono text-muted-foreground">
-                  nexus.app/dashboard
+                  nexxos.app/dashboard
                 </span>
               </div>
               {/* Faux dashboard */}
@@ -564,37 +528,8 @@ function LandingPage() {
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────────── */}
-      <footer className="border-t border-border/40 py-10">
-        <div className="mx-auto max-w-6xl px-6">
-          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-gradient-to-br from-primary to-primary/60 text-primary-foreground">
-                <Zap className="h-3 w-3" />
-              </div>
-              <span className="text-[13px] font-semibold tracking-tight">Nexus HQ</span>
-            </div>
-            <nav className="flex items-center gap-6 text-[12px] text-muted-foreground">
-              <Link to="/pricing" className="hover:text-foreground transition-colors">
-                Pricing
-              </Link>
-              <Link to="/login" className="hover:text-foreground transition-colors">
-                Sign in
-              </Link>
-              <a
-                href={DOWNLOAD_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors"
-              >
-                Download
-              </a>
-            </nav>
-            <p className="text-[11px] text-muted-foreground">
-              © {new Date().getFullYear()} Nexus HQ
-            </p>
-          </div>
-        </div>
-      </footer>
+      <MarketingFooter />
+      <CookieBanner />
     </div>
   );
 }

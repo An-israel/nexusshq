@@ -154,7 +154,7 @@ function AcceptInvitePage() {
           <p className="mt-1 text-sm text-muted-foreground">
             {inviteInfo
               ? `You've been invited to join ${inviteInfo.workspaceName}.`
-              : "Finish setting up your Nexus HQ account"}
+              : "Finish setting up your Nexxos HQ account"}
           </p>
         </div>
 

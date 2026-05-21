@@ -113,7 +113,7 @@ function PublicTracker() {
               N
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">Nexus HQ</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wider">Nexxos HQ</p>
               <p className="text-sm font-semibold">Project Tracker</p>
             </div>
           </div>
