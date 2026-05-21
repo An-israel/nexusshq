@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Zap, Check, X, Loader2, Building2, ArrowRight, ChevronRight } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
+import { waitForVerifiedUser } from "@/lib/auth-ready";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -291,6 +292,15 @@ function SignupPage() {
           "Check your email! Click the confirmation link, then come back to sign in and create your workspace.",
           { duration: 10000 },
         );
+        void navigate({ to: "/login" });
+        return;
+      }
+
+      const verifiedUser = await waitForVerifiedUser();
+      if (!verifiedUser) {
+        toast.success("Account created. Please sign in to finish creating your workspace.", {
+          duration: 8000,
+        });
         void navigate({ to: "/login" });
         return;
       }
