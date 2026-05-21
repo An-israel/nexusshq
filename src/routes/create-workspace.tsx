@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
+import { waitForVerifiedUser } from "@/lib/auth-ready";
 
 export const Route = createFileRoute("/create-workspace")({
   beforeLoad: async () => {
@@ -78,6 +79,13 @@ function CreateWorkspacePage() {
 
     setSubmitting(true);
     try {
+      const verifiedUser = await waitForVerifiedUser();
+      if (!verifiedUser) {
+        toast.error("Your session is still loading. Please sign in again and try once more.");
+        navigate({ to: "/login" });
+        return;
+      }
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data, error } = await (supabase.rpc as any)("create_workspace_with_owner", {
         _name: name.trim(),
