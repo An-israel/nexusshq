@@ -1331,7 +1331,7 @@ ON CONFLICT (user_id) DO NOTHING;`}
               <Shield className="h-5 w-5" />
             </div>
             <div>
-              <span className="font-bold text-purple-400">⚡ Nexus HQ</span>
+              <span className="font-bold text-purple-400">⚡ Nexxos HQ</span>
               <span className="ml-2 text-sm font-medium text-muted-foreground">— Super Admin</span>
             </div>
           </div>

@@ -93,9 +93,9 @@ const SUPPORT_EMAIL = "hello@nexushq.io";
 const SUPPORT_WHATSAPP = "https://wa.me/2349000000000";
 
 function openUpgradeEmail(planLabel?: string) {
-  const subject = encodeURIComponent(`Nexus HQ — Upgrade to ${planLabel ?? "a higher"} plan`);
+  const subject = encodeURIComponent(`Nexxos HQ — Upgrade to ${planLabel ?? "a higher"} plan`);
   const body = encodeURIComponent(
-    `Hi Nexus HQ team,\n\nI'd like to upgrade my workspace plan.\n\nPlease get in touch to discuss options.\n\nThanks`,
+    `Hi Nexxos HQ team,\n\nI'd like to upgrade my workspace plan.\n\nPlease get in touch to discuss options.\n\nThanks`,
   );
   window.open(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`, "_blank");
 }

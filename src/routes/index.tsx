@@ -32,13 +32,13 @@ const DOWNLOAD_URL = "https://github.com/An-israel/nexusshq/releases/latest";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Nexus HQ — All-in-One Workspace for Team Operations" },
+      { title: "Nexxos HQ — All-in-One Workspace for Team Operations" },
       {
         name: "description",
         content:
           "Run attendance, tasks, standups, OKRs, KPIs and AI insights from one workspace built for modern teams.",
       },
-      { property: "og:title", content: "Nexus HQ — All-in-One Workspace for Team Operations" },
+      { property: "og:title", content: "Nexxos HQ — All-in-One Workspace for Team Operations" },
       {
         property: "og:description",
         content:
@@ -168,7 +168,7 @@ const HOW_IT_WORKS = [
   {
     step: "02",
     title: "Set up your operations",
-    desc: "Configure attendance rules, create task templates, add KPIs and OKRs. Nexus HQ adapts to how you work.",
+    desc: "Configure attendance rules, create task templates, add KPIs and OKRs. Nexxos HQ adapts to how you work.",
   },
   {
     step: "03",
@@ -180,7 +180,7 @@ const HOW_IT_WORKS = [
 const TESTIMONIALS = [
   {
     quote:
-      "We replaced four separate apps with Nexus HQ. Attendance, tasks, messaging, and approvals all in one place. Our team actually uses it.",
+      "We replaced four separate apps with Nexxos HQ. Attendance, tasks, messaging, and approvals all in one place. Our team actually uses it.",
     name: "Amara O.",
     role: "Operations Manager",
   },

@@ -7,7 +7,7 @@ import { ensureSkryveSeed } from "@/lib/seed.functions";
 
 export type AppRole = "admin" | "manager" | "employee";
 
-export interface NexusProfile {
+export interface NexxosProfile {
   id: string;
   full_name: string | null;
   email: string | null;
@@ -21,7 +21,7 @@ interface AuthContextValue {
   loading: boolean;
   session: Session | null;
   user: User | null;
-  profile: NexusProfile | null;
+  profile: NexxosProfile | null;
   role: AppRole | null;
   isAdmin: boolean;
   isManager: boolean;
@@ -65,13 +65,13 @@ const AuthContext = React.createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = React.useState<Session | null>(null);
   // Initialise from cache so returning users never see the loading spinner
-  const [profile, setProfile] = React.useState<NexusProfile | null>(() =>
-    readCache<NexusProfile>(CACHE_PROFILE),
+  const [profile, setProfile] = React.useState<NexxosProfile | null>(() =>
+    readCache<NexxosProfile>(CACHE_PROFILE),
   );
   const [role, setRole] = React.useState<AppRole | null>(() => readCache<AppRole>(CACHE_ROLE));
   // Skip loading state if we already have cached data
   const [loading, setLoading] = React.useState(
-    () => readCache<NexusProfile>(CACHE_PROFILE) === null,
+    () => readCache<NexxosProfile>(CACHE_PROFILE) === null,
   );
   const retryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       console.warn("Failed to load user profile", profileResult.error);
     } else if (profileResult.data) {
-      const p = profileResult.data as NexusProfile;
+      const p = profileResult.data as NexxosProfile;
       setProfile(p);
       writeCache(CACHE_PROFILE, p);
     }
@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         void ensureSkryveSeed().catch((err) => {
           console.warn("ensureSkryveSeed failed", err);
         });
-        const hasCache = readCache<NexusProfile>(CACHE_PROFILE) !== null;
+        const hasCache = readCache<NexxosProfile>(CACHE_PROFILE) !== null;
         if (hasCache) {
           // Show UI immediately; refresh data silently in background
           setLoading(false);

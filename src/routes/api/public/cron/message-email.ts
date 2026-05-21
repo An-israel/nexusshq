@@ -56,7 +56,7 @@ export const Route = createFileRoute("/api/public/cron/message-email")({
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              from: `Nexus HQ <${fromEmail}>`,
+              from: `Nexxos HQ <${fromEmail}>`,
               to: [recipient.email],
               subject: notif.title,
               html: `

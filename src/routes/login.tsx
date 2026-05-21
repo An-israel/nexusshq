@@ -13,13 +13,13 @@ import { BrandMark } from "@/components/BrandMark";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Log In — Access Your Nexus HQ Workspace" },
+      { title: "Log In — Access Your Nexxos HQ Workspace" },
       {
         name: "description",
         content:
-          "Log in to your Nexus HQ workspace to manage attendance, tasks, standups, OKRs and team operations.",
+          "Log in to your Nexxos HQ workspace to manage attendance, tasks, standups, OKRs and team operations.",
       },
-      { property: "og:title", content: "Log In — Access Your Nexus HQ Workspace" },
+      { property: "og:title", content: "Log In — Access Your Nexxos HQ Workspace" },
       {
         property: "og:description",
         content: "Log in to manage attendance, tasks, standups and team operations.",
@@ -114,7 +114,7 @@ function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 flex flex-col items-center text-center">
           <BrandMark size="lg" showWordmark={false} className="mb-4" />
-          <h1 className="text-2xl font-bold tracking-tight">Nexus HQ</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Nexxos HQ</h1>
           <p className="mt-1 text-sm text-muted-foreground">Sign in to your workspace</p>
         </div>
 

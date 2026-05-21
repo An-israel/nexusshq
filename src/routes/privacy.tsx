@@ -7,8 +7,8 @@ import { CookieBanner } from "@/components/marketing/CookieBanner";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Privacy Policy — Nexus HQ" },
-      { name: "description", content: "Read Nexus HQ's Privacy Policy." },
+      { title: "Privacy Policy — Nexxos HQ" },
+      { name: "description", content: "Read Nexxos HQ's Privacy Policy." },
     ],
   }),
   component: PrivacyPage,
@@ -76,10 +76,10 @@ function PrivacyPage() {
           <h1 className="text-4xl font-bold tracking-tight">Privacy Policy</h1>
           <p className="mt-2 text-gray-400">Last updated: May 2026</p>
           <p className="mt-4 text-[15px] text-gray-300 leading-relaxed max-w-3xl">
-            At Nexus HQ, we are committed to protecting your privacy and handling your personal data
-            with transparency and care. This Privacy Policy explains how{" "}
-            <Placeholder>[Nexus HQ Ltd]</Placeholder> ("we", "us", or "our") collects, uses, stores,
-            and shares information when you use our Service.
+            At Nexxos HQ, we are committed to protecting your privacy and handling your personal
+            data with transparency and care. This Privacy Policy explains how{" "}
+            <Placeholder>[Nexxos HQ Ltd]</Placeholder> ("we", "us", or "our") collects, uses,
+            stores, and shares information when you use our Service.
           </p>
         </div>
 
@@ -117,7 +117,7 @@ function PrivacyPage() {
                 1. Who We Are
               </h2>
               <p className="text-[15px] text-gray-300 leading-relaxed">
-                <Placeholder>[Nexus HQ Ltd]</Placeholder> is the data controller responsible for
+                <Placeholder>[Nexxos HQ Ltd]</Placeholder> is the data controller responsible for
                 your personal data. We are registered at{" "}
                 <Placeholder>[Company Address, Lagos, Nigeria]</Placeholder>. If you have questions
                 about how we handle your data, please contact our team at{" "}
@@ -292,7 +292,7 @@ function PrivacyPage() {
                 9. International Transfers
               </h2>
               <p className="text-[15px] text-gray-300 leading-relaxed">
-                Nexus HQ is operated from <Placeholder>[Nigeria]</Placeholder>. If you access the
+                Nexxos HQ is operated from <Placeholder>[Nigeria]</Placeholder>. If you access the
                 Service from outside Nigeria, your data may be transferred to and processed in
                 Nigeria or other countries where our service providers operate. We take steps to
                 ensure that any such transfers comply with applicable data protection laws and that

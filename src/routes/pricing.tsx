@@ -28,20 +28,20 @@ const FAQ_DATA = [
   },
   {
     q: "What does 'dedicated account manager' mean?",
-    a: "Unlimited plan customers get a named contact at Nexus HQ for onboarding, training, and ongoing support via phone or WhatsApp.",
+    a: "Unlimited plan customers get a named contact at Nexxos HQ for onboarding, training, and ongoing support via phone or WhatsApp.",
   },
 ];
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Pricing — Nexus HQ Plans for Every Team Size" },
+      { title: "Pricing — Nexxos HQ Plans for Every Team Size" },
       {
         name: "description",
         content:
-          "Transparent Nexus HQ pricing: Basic, Enterprise and Unlimited plans with a 7-day free trial and 30% annual discount.",
+          "Transparent Nexxos HQ pricing: Basic, Enterprise and Unlimited plans with a 7-day free trial and 30% annual discount.",
       },
-      { property: "og:title", content: "Pricing — Nexus HQ Plans for Every Team Size" },
+      { property: "og:title", content: "Pricing — Nexxos HQ Plans for Every Team Size" },
       {
         property: "og:description",
         content: "Transparent plans with a 7-day free trial and 30% annual discount.",
@@ -408,7 +408,7 @@ function PricingPage() {
         </div>
         <div className="relative mx-auto max-w-xl px-6 text-center">
           <h2 className="mb-4 text-2xl font-bold tracking-tight sm:text-3xl">
-            Try Nexus HQ free for 7 days
+            Try Nexxos HQ free for 7 days
           </h2>
           <p className="mb-8 text-muted-foreground">
             No credit card required. Full access to every feature. Cancel any time.

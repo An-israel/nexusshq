@@ -7,8 +7,8 @@ import { CookieBanner } from "@/components/marketing/CookieBanner";
 export const Route = createFileRoute("/cookies")({
   head: () => ({
     meta: [
-      { title: "Cookie Policy — Nexus HQ" },
-      { name: "description", content: "Learn about the cookies Nexus HQ uses." },
+      { title: "Cookie Policy — Nexxos HQ" },
+      { name: "description", content: "Learn about the cookies Nexxos HQ uses." },
     ],
   }),
   component: CookiesPage,
@@ -64,7 +64,7 @@ function CookiesPage() {
             Cookies we use
           </h2>
           <p className="mb-6 text-[15px] text-gray-300 leading-relaxed">
-            Nexus HQ uses only essential and functional cookies. We do not use tracking cookies,
+            Nexxos HQ uses only essential and functional cookies. We do not use tracking cookies,
             advertising cookies, or analytics cookies that report to third parties.
           </p>
 
@@ -125,8 +125,8 @@ function CookiesPage() {
           </h2>
           <p className="mb-6 text-[15px] text-gray-300 leading-relaxed">
             You can control cookies through your browser settings. Note that disabling essential
-            cookies may prevent Nexus HQ from functioning correctly — in particular, you will not be
-            able to stay signed in.
+            cookies may prevent Nexxos HQ from functioning correctly — in particular, you will not
+            be able to stay signed in.
           </p>
 
           <div className="space-y-6">

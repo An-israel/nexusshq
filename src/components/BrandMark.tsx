@@ -9,7 +9,7 @@ interface BrandMarkProps {
   size?: "sm" | "md" | "lg";
   /** Optional className for the wrapper */
   className?: string;
-  /** Show the "Nexus HQ" wordmark next to the glyph (default true) */
+  /** Show the "Nexxos HQ" wordmark next to the glyph (default true) */
   showWordmark?: boolean;
 }
 
@@ -20,7 +20,7 @@ const SIZE_MAP = {
 } as const;
 
 /**
- * Consistent Nexus HQ brand lockup used across all standalone (non-app-shell)
+ * Consistent Nexxos HQ brand lockup used across all standalone (non-app-shell)
  * pages: login, signup, workspaces, create-workspace, join, accept-invite.
  */
 export function BrandMark({
@@ -36,14 +36,16 @@ export function BrandMark({
         <Zap className={s.icon} />
       </span>
       {showWordmark && (
-        <span className={cn("font-bold tracking-tight text-foreground", s.word)}>Nexus HQ</span>
+        <span className={cn("font-bold tracking-tight text-foreground", s.word)}>
+          Nex<span className="text-blue-400">x</span>os HQ
+        </span>
       )}
     </span>
   );
 
   if (!asLink) return inner;
   return (
-    <Link to="/" aria-label="Nexus HQ home">
+    <Link to="/" aria-label="Nexxos HQ home">
       {inner}
     </Link>
   );

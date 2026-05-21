@@ -278,7 +278,7 @@ export function MarketingNav() {
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-white">
               <Zap className="h-4 w-4" />
             </div>
-            <span className="text-[15px] font-semibold text-white tracking-tight">Nexus HQ</span>
+            <span className="text-[15px] font-semibold text-white tracking-tight">Nexxos HQ</span>
           </Link>
 
           {/* CENTER: Desktop nav links */}
@@ -349,7 +349,7 @@ export function MarketingNav() {
               <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-white">
                 <Zap className="h-4 w-4" />
               </div>
-              <span className="text-[15px] font-semibold text-white tracking-tight">Nexus HQ</span>
+              <span className="text-[15px] font-semibold text-white tracking-tight">Nexxos HQ</span>
             </Link>
             <button
               onClick={() => setMobileOpen(false)}

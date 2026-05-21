@@ -225,7 +225,7 @@ function AssignTaskPage() {
         </div>
         <div style="padding:24px;">
           <p style="color:#374151;margin:0 0 16px;">Hi ${assignee.full_name ?? "there"},</p>
-          <p style="color:#374151;margin:0 0 16px;">A new task has been assigned to you in Nexus HQ.</p>
+          <p style="color:#374151;margin:0 0 16px;">A new task has been assigned to you in Nexxos HQ.</p>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;">
             <h2 style="margin:0 0 8px;font-size:18px;color:#111;">${taskTitle}</h2>
             ${form.description ? `<p style="color:#6b7280;margin:0 0 12px;">${form.description}</p>` : ""}
@@ -236,9 +236,9 @@ function AssignTaskPage() {
             </div>
           </div>
           ${warningSection}
-          <a href="https://app.nexushq.io" style="display:inline-block;background:#111;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">View in Nexus HQ →</a>
+          <a href="https://app.nexushq.io" style="display:inline-block;background:#111;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">View in Nexxos HQ →</a>
         </div>
-        <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">You're receiving this because you're a member of your workspace on Nexus HQ.</div>
+        <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">You're receiving this because you're a member of your workspace on Nexxos HQ.</div>
       </div>`;
 
       try {

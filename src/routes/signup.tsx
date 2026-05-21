@@ -16,13 +16,13 @@ import { waitForVerifiedUser } from "@/lib/auth-ready";
 export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
-      { title: "Sign Up — Start Your Free Nexus HQ Workspace" },
+      { title: "Sign Up — Start Your Free Nexxos HQ Workspace" },
       {
         name: "description",
         content:
-          "Create your Nexus HQ workspace in minutes and start a 7-day free trial — no credit card required.",
+          "Create your Nexxos HQ workspace in minutes and start a 7-day free trial — no credit card required.",
       },
-      { property: "og:title", content: "Sign Up — Start Your Free Nexus HQ Workspace" },
+      { property: "og:title", content: "Sign Up — Start Your Free Nexxos HQ Workspace" },
       {
         property: "og:description",
         content: "Create a workspace and start a 7-day free trial — no credit card required.",

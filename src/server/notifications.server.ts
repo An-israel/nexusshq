@@ -18,7 +18,7 @@ export async function sendWhatsAppMessage(phone: string, message: string): Promi
     username,
     to: phone,
     message,
-    from: process.env.WHATSAPP_SENDER_ID ?? "NexusHQ",
+    from: process.env.WHATSAPP_SENDER_ID ?? "NexxosHQ",
   });
 
   const resp = await fetch("https://api.africastalking.com/version1/messaging", {

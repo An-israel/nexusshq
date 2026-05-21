@@ -7,8 +7,8 @@ import { CookieBanner } from "@/components/marketing/CookieBanner";
 export const Route = createFileRoute("/terms")({
   head: () => ({
     meta: [
-      { title: "Terms of Service — Nexus HQ" },
-      { name: "description", content: "Read Nexus HQ's Terms of Service." },
+      { title: "Terms of Service — Nexxos HQ" },
+      { name: "description", content: "Read Nexxos HQ's Terms of Service." },
     ],
   }),
   component: TermsPage,
@@ -77,9 +77,9 @@ function TermsPage() {
           <h1 className="text-4xl font-bold tracking-tight">Terms of Service</h1>
           <p className="mt-2 text-gray-400">Last updated: May 2026</p>
           <p className="mt-4 text-[15px] text-gray-300 leading-relaxed max-w-3xl">
-            These Terms of Service ("Terms") govern your access to and use of Nexus HQ, a team
+            These Terms of Service ("Terms") govern your access to and use of Nexxos HQ, a team
             operations platform provided by{" "}
-            <Placeholder>[Nexus HQ Ltd / Company Legal Name]</Placeholder>. By accessing or using
+            <Placeholder>[Nexxos HQ Ltd / Company Legal Name]</Placeholder>. By accessing or using
             the Service, you agree to be bound by these Terms. If you do not agree, please do not
             use the Service.
           </p>
@@ -119,7 +119,7 @@ function TermsPage() {
                 1. Acceptance of Terms
               </h2>
               <p className="text-[15px] text-gray-300 leading-relaxed">
-                By creating an account, accessing, or using Nexus HQ (the "Service"), you agree to
+                By creating an account, accessing, or using Nexxos HQ (the "Service"), you agree to
                 these Terms of Service and our Privacy Policy. These Terms apply to all users of the
                 Service, including workspace administrators, managers, and employees. If you are
                 accepting these Terms on behalf of an organisation, you represent that you have the
@@ -133,7 +133,7 @@ function TermsPage() {
                 2. Description of Service
               </h2>
               <p className="text-[15px] text-gray-300 leading-relaxed">
-                Nexus HQ is a cloud-based team operations platform offering attendance tracking,
+                Nexxos HQ is a cloud-based team operations platform offering attendance tracking,
                 task management, messaging, performance reviews, payslip management, leave
                 management, OKRs, KPIs, AI-powered insights, and related tools. The Service is
                 provided on a subscription basis. Features and pricing are subject to change with
@@ -206,7 +206,7 @@ function TermsPage() {
               </h2>
               <div className="space-y-4 text-[15px] text-gray-300 leading-relaxed">
                 <p>
-                  <span className="text-blue-400 font-semibold">5.1</span> Nexus HQ offers several
+                  <span className="text-blue-400 font-semibold">5.1</span> Nexxos HQ offers several
                   subscription plans. Plan details, pricing, and features are listed at{" "}
                   <a href="/pricing" className="text-blue-400 hover:underline">
                     nexushq.io/pricing
@@ -288,7 +288,7 @@ function TermsPage() {
                 <p>
                   <span className="text-blue-400 font-semibold">7.1</span> All intellectual property
                   rights in and to the Service, including software, design, logos, and trademarks,
-                  are owned by <Placeholder>[Nexus HQ Ltd]</Placeholder> or its licensors.
+                  are owned by <Placeholder>[Nexxos HQ Ltd]</Placeholder> or its licensors.
                 </p>
                 <p>
                   <span className="text-blue-400 font-semibold">7.2</span> We grant you a limited,
@@ -338,7 +338,7 @@ function TermsPage() {
                 9. Limitation of Liability
               </h2>
               <p className="text-[15px] text-gray-300 leading-relaxed">
-                To the fullest extent permitted by applicable law, Nexus HQ and its directors,
+                To the fullest extent permitted by applicable law, Nexxos HQ and its directors,
                 employees, partners, and affiliates shall not be liable for any indirect,
                 incidental, special, consequential, or punitive damages, including loss of profits,
                 data, or goodwill, arising from your use of or inability to use the Service. Our

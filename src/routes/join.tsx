@@ -49,7 +49,7 @@ function JoinPage() {
         return;
       }
 
-      toast.success("Welcome to Nexus HQ!");
+      toast.success("Welcome to Nexxos HQ!");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       navigate({ to: `/${workspaceSlug}/dashboard` as any });
     } catch (err) {

@@ -367,14 +367,14 @@ function RequestList({
         void sendWhatsAppFn({
           data: {
             userId: req.user_id,
-            message: `Hi, your leave request (${req.start_date} to ${req.end_date}) has been approved. — NexusHQ`,
+            message: `Hi, your leave request (${req.start_date} to ${req.end_date}) has been approved. — NexxosHQ`,
           },
         }).catch(() => {});
       } else {
         void sendWhatsAppFn({
           data: {
             userId: req.user_id,
-            message: `Hi, your leave request (${req.start_date} to ${req.end_date}) has been declined. Please contact your manager for details. — NexusHQ`,
+            message: `Hi, your leave request (${req.start_date} to ${req.end_date}) has been declined. Please contact your manager for details. — NexxosHQ`,
           },
         }).catch(() => {});
       }

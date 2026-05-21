@@ -123,7 +123,7 @@ function OnboardingPage() {
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/20 text-primary">
           <Zap className="h-4 w-4" />
         </div>
-        <span className="text-lg font-bold tracking-tight">Nexus HQ</span>
+        <span className="text-lg font-bold tracking-tight">Nexxos HQ</span>
       </div>
 
       {/* Progress */}
