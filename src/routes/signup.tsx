@@ -143,6 +143,8 @@ function isValidSlug(slug: string): boolean {
 function SignupPage() {
   const { session } = useAuth();
   const navigate = useNavigate();
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [submitting, setSubmitting] = React.useState(false);
 
   // Redirect already-signed-in users with a VERIFIED session to their workspace.
   // We call getUser() (server-round-trip) not just checking session from localStorage,
@@ -178,9 +180,6 @@ function SignupPage() {
       navigate({ to: "/create-workspace" });
     })();
   }, [session, navigate, submitting]);
-
-  const [step, setStep] = React.useState<1 | 2>(1);
-  const [submitting, setSubmitting] = React.useState(false);
 
   // Step 1 fields
   const [companyName, setCompanyName] = React.useState("");
