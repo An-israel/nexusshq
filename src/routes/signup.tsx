@@ -6,13 +6,6 @@ import { getLastWorkspaceSlug } from "@/lib/last-workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -535,18 +528,18 @@ function Step1({
 
         <div className="space-y-2">
           <Label htmlFor="company_size">Company size</Label>
-          <Select value={companySize} onValueChange={setCompanySize}>
-            <SelectTrigger id="company_size" className="bg-input">
-              <SelectValue placeholder="Select company size" />
-            </SelectTrigger>
-            <SelectContent>
-              {COMPANY_SIZES.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            id="company_size"
+            value={companySize}
+            onChange={(e) => setCompanySize(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            {COMPANY_SIZES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <Button type="submit" className="w-full gap-2">
