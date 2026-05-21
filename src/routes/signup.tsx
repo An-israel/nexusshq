@@ -6,18 +6,12 @@ import { getLastWorkspaceSlug } from "@/lib/last-workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Zap, Check, X, Loader2, Building2, ArrowRight, ChevronRight } from "lucide-react";
 import { BrandMark } from "@/components/BrandMark";
+import { waitForVerifiedUser } from "@/lib/auth-ready";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
@@ -142,12 +136,14 @@ function isValidSlug(slug: string): boolean {
 function SignupPage() {
   const { session } = useAuth();
   const navigate = useNavigate();
+  const [step, setStep] = React.useState<1 | 2>(1);
+  const [submitting, setSubmitting] = React.useState(false);
 
   // Redirect already-signed-in users with a VERIFIED session to their workspace.
   // We call getUser() (server-round-trip) not just checking session from localStorage,
   // so stale/expired sessions don't cause a redirect loop to /create-workspace.
   React.useEffect(() => {
-    if (!session) return;
+    if (!session || submitting) return;
     void (async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return; // stale session — stay on signup
@@ -176,10 +172,7 @@ function SignupPage() {
       // Signed in but no workspace yet — let them create one
       navigate({ to: "/create-workspace" });
     })();
-  }, [session, navigate]);
-
-  const [step, setStep] = React.useState<1 | 2>(1);
-  const [submitting, setSubmitting] = React.useState(false);
+  }, [session, navigate, submitting]);
 
   // Step 1 fields
   const [companyName, setCompanyName] = React.useState("");
@@ -291,6 +284,15 @@ function SignupPage() {
           "Check your email! Click the confirmation link, then come back to sign in and create your workspace.",
           { duration: 10000 },
         );
+        void navigate({ to: "/login" });
+        return;
+      }
+
+      const verifiedUser = await waitForVerifiedUser();
+      if (!verifiedUser) {
+        toast.success("Account created. Please sign in to finish creating your workspace.", {
+          duration: 8000,
+        });
         void navigate({ to: "/login" });
         return;
       }
@@ -538,18 +540,18 @@ function Step1({
 
         <div className="space-y-2">
           <Label htmlFor="company_size">Company size</Label>
-          <Select value={companySize} onValueChange={setCompanySize}>
-            <SelectTrigger id="company_size" className="bg-input">
-              <SelectValue placeholder="Select company size" />
-            </SelectTrigger>
-            <SelectContent>
-              {COMPANY_SIZES.map((s) => (
-                <SelectItem key={s.value} value={s.value}>
-                  {s.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <select
+            id="company_size"
+            value={companySize}
+            onChange={(e) => setCompanySize(e.target.value)}
+            className="flex h-10 w-full rounded-md border border-input bg-input px-3 py-2 text-sm text-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+          >
+            {COMPANY_SIZES.map((s) => (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <Button type="submit" className="w-full gap-2">
