@@ -1,5 +1,5 @@
 -- ============================================================
--- MESSAGING V2: Slack-like channel + DM system for Nexus HQ
+-- MESSAGING V2: Slack-like channel + DM system for Nexxos HQ
 -- ============================================================
 
 -- ── 1. NEW TABLES ────────────────────────────────────────────

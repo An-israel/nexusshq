@@ -3,7 +3,7 @@ export const BRAND = {
   shortName: "Nexxos",
   tagline: "Run your team like a corporation.",
   subTagline: "Built for African teams.",
-  supportEmail: "hello@nexushq.io",
+  supportEmail: "hello@nexxoshq.io",
   whatsappNumber: "+2349000000000",
   domain: "nexus.skryveai.com",
   twitterUrl: "#", // TODO: replace with real social URLs

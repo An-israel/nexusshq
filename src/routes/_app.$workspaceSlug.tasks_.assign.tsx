@@ -236,7 +236,7 @@ function AssignTaskPage() {
             </div>
           </div>
           ${warningSection}
-          <a href="https://app.nexushq.io" style="display:inline-block;background:#111;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">View in Nexxos HQ →</a>
+          <a href="https://app.nexxoshq.io" style="display:inline-block;background:#111;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">View in Nexxos HQ →</a>
         </div>
         <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">You're receiving this because you're a member of your workspace on Nexxos HQ.</div>
       </div>`;

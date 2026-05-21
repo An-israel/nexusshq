@@ -1,5 +1,5 @@
 -- ============================================================
--- MULTI-TENANCY: Full workspace isolation for Nexus HQ SaaS
+-- MULTI-TENANCY: Full workspace isolation for Nexxos HQ SaaS
 -- ============================================================
 
 -- ── 1. CORE WORKSPACE TABLES ────────────────────────────────

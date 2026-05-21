@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
-const FROM_ADDRESS = Deno.env.get("EMAIL_FROM") ?? "Nexus HQ <noreply@nexushq.io>";
+const FROM_ADDRESS = Deno.env.get("EMAIL_FROM") ?? "Nexxos HQ <noreply@nexxoshq.io>";
 const QUEUE_NAME = "transactional_emails";
 const BATCH_SIZE = 10;
 // Visibility timeout: 60s — message reappears in queue if not deleted within this window

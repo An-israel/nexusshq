@@ -309,7 +309,7 @@ export function MarketingNav() {
               Sign In
             </Link>
             <a
-              href="mailto:hello@nexushq.io"
+              href="mailto:hello@nexxoshq.io"
               className="rounded-lg border border-white/20 px-4 py-1.5 text-[13px] text-white hover:border-white/40 hover:bg-white/5 transition-colors"
             >
               Request a Demo

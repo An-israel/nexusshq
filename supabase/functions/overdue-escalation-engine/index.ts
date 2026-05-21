@@ -29,12 +29,12 @@ function emailWrap(headerBg: string, headerText: string, body: string): string {
 <body style="margin:0;padding:16px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.06);">
     <div style="background:${headerBg};padding:28px 24px;text-align:center;">
-      <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Nexus HQ</p>
+      <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Nexxos HQ</p>
       <h1 style="color:#ffffff;margin:0;font-size:20px;font-weight:700;letter-spacing:-0.3px;">${headerText}</h1>
     </div>
     <div style="padding:28px 24px;">${body}</div>
     <div style="padding:16px 24px;border-top:1px solid #f3f4f6;background:#fafafa;color:#9ca3af;font-size:12px;text-align:center;">
-      Nexus HQ &bull; Automated escalation engine &bull; Do not reply to this email
+      Nexxos HQ &bull; Automated escalation engine &bull; Do not reply to this email
     </div>
   </div>
 </body>

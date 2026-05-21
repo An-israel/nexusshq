@@ -27,7 +27,7 @@ import {
 } from "lucide-react";
 
 const TIMEOUT_SENTINEL = Symbol("timeout");
-const DOWNLOAD_URL = "https://github.com/An-israel/nexusshq/releases/latest";
+const DOWNLOAD_URL = "https://github.com/An-israel/nexxoshq/releases/latest";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -287,7 +287,7 @@ function LandingPage() {
                 <span className="h-2.5 w-2.5 rounded-full bg-warning/60" />
                 <span className="h-2.5 w-2.5 rounded-full bg-success/60" />
                 <span className="ml-3 text-[11px] font-mono text-muted-foreground">
-                  nexus.app/dashboard
+                  nexxos.app/dashboard
                 </span>
               </div>
               {/* Faux dashboard */}

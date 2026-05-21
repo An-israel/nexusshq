@@ -121,7 +121,7 @@ function PrivacyPage() {
                 your personal data. We are registered at{" "}
                 <Placeholder>[Company Address, Lagos, Nigeria]</Placeholder>. If you have questions
                 about how we handle your data, please contact our team at{" "}
-                <Placeholder>[privacy@nexushq.io]</Placeholder>.
+                <Placeholder>[privacy@nexxoshq.io]</Placeholder>.
               </p>
             </section>
 
@@ -265,7 +265,7 @@ function PrivacyPage() {
               </ul>
               <p className="mt-4 text-[15px] text-gray-300 leading-relaxed">
                 To exercise any of these rights, please contact us at{" "}
-                <Placeholder>[privacy@nexushq.io]</Placeholder>. We will respond within 30 days. We
+                <Placeholder>[privacy@nexxoshq.io]</Placeholder>. We will respond within 30 days. We
                 may need to verify your identity before processing your request.
               </p>
             </section>
@@ -310,7 +310,7 @@ function PrivacyPage() {
                 protect your data, including encryption in transit (TLS), encrypted storage, access
                 controls, and regular security reviews. However, no method of transmission or
                 storage is 100% secure. If you discover a security vulnerability, please disclose it
-                responsibly by contacting <Placeholder>[security@nexushq.io]</Placeholder>.
+                responsibly by contacting <Placeholder>[security@nexxoshq.io]</Placeholder>.
               </p>
             </section>
 
@@ -325,7 +325,7 @@ function PrivacyPage() {
               </p>
               <div className="mt-4 space-y-2 text-[15px] text-gray-300">
                 <p>
-                  Email: <Placeholder>[privacy@nexushq.io]</Placeholder>
+                  Email: <Placeholder>[privacy@nexxoshq.io]</Placeholder>
                 </p>
                 <p>
                   Phone: <Placeholder>[+234 XXX XXX XXXX]</Placeholder>

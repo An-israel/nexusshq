@@ -1,5 +1,5 @@
 -- ============================================================
--- Storage buckets for Nexus HQ file attachments
+-- Storage buckets for Nexxos HQ file attachments
 -- ============================================================
 
 -- Message attachments bucket (private, 100 MB limit)

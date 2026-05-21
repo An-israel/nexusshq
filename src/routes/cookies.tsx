@@ -179,10 +179,10 @@ function CookiesPage() {
               </Link>
               . If you have questions about cookies or your privacy, contact us at{" "}
               <a
-                href="mailto:privacy@nexushq.io"
+                href="mailto:privacy@nexxoshq.io"
                 className="text-blue-400 hover:text-blue-300 underline underline-offset-2"
               >
-                privacy@nexushq.io
+                privacy@nexxoshq.io
               </a>
               .
             </p>

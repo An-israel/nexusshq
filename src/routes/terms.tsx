@@ -161,7 +161,7 @@ function TermsPage() {
                 <p>
                   <span className="text-blue-400 font-semibold">3.3</span> You are responsible for
                   all activity that occurs under your account. Notify us immediately at{" "}
-                  <Placeholder>[support@nexushq.io]</Placeholder> if you suspect unauthorised
+                  <Placeholder>[support@nexxoshq.io]</Placeholder> if you suspect unauthorised
                   access.
                 </p>
                 <p>
@@ -209,7 +209,7 @@ function TermsPage() {
                   <span className="text-blue-400 font-semibold">5.1</span> Nexxos HQ offers several
                   subscription plans. Plan details, pricing, and features are listed at{" "}
                   <a href="/pricing" className="text-blue-400 hover:underline">
-                    nexushq.io/pricing
+                    nexxoshq.io/pricing
                   </a>
                   . All prices are exclusive of applicable taxes unless stated otherwise.
                 </p>
@@ -387,7 +387,7 @@ function TermsPage() {
               </p>
               <div className="mt-4 space-y-2 text-[15px] text-gray-300">
                 <p>
-                  Email: <Placeholder>[support@nexushq.io]</Placeholder>
+                  Email: <Placeholder>[support@nexxoshq.io]</Placeholder>
                 </p>
                 <p>
                   Phone: <Placeholder>[+234 XXX XXX XXXX]</Placeholder>

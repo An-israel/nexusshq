@@ -86,7 +86,7 @@ function buildDueTodayEmail(task: Task, profile: Profile): string {
       <p style="margin:8px 0 0;font-size:12px;color:#6b7280;text-align:right;">${progress}% complete</p>
     </div>
     ` +
-    emailButton("Open Task in Nexus HQ →", APP_URL, "#d97706") +
+    emailButton("Open Task in Nexxos HQ →", APP_URL, "#d97706") +
     emailFooter()
   );
 }
@@ -114,7 +114,7 @@ async function processDueToday(task: Task, profile: Profile, workspaceId: string
   // WhatsApp (if opted-in)
   await notifyUserWhatsApp(
     profile.id,
-    `⏰ *Nexus HQ Reminder*\nYour task "*${task.title}*" is due today.\nCurrent progress: ${task.progress_percent}%\nLog in to update: ${APP_URL}`,
+    `⏰ *Nexxos HQ Reminder*\nYour task "*${task.title}*" is due today.\nCurrent progress: ${task.progress_percent}%\nLog in to update: ${APP_URL}`,
   );
 
   await logAutomation(

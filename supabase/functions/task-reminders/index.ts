@@ -30,9 +30,9 @@ function buildDueTodayHtml(taskTitle: string, assigneeName: string): string {
         <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:16px;border-radius:4px;margin-bottom:16px;">
           <h2 style="margin:0;font-size:18px;color:#92400e;">${taskTitle}</h2>
         </div>
-        <a href="https://app.nexushq.io" style="display:inline-block;background:#111;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Open Nexus HQ →</a>
+        <a href="https://app.nexxoshq.io" style="display:inline-block;background:#111;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">Open Nexxos HQ →</a>
       </div>
-      <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">Nexus HQ automated reminder</div>
+      <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">Nexxos HQ automated reminder</div>
     </div>`;
 }
 
@@ -48,9 +48,9 @@ function buildOverdueHtml(taskTitle: string, assigneeName: string): string {
         <div style="background:#fef2f2;border-left:4px solid #dc2626;padding:16px;border-radius:4px;margin-bottom:16px;">
           <h2 style="margin:0;font-size:18px;color:#991b1b;">${taskTitle}</h2>
         </div>
-        <a href="https://app.nexushq.io" style="display:inline-block;background:#dc2626;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">View Task →</a>
+        <a href="https://app.nexxoshq.io" style="display:inline-block;background:#dc2626;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;">View Task →</a>
       </div>
-      <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">Nexus HQ automated reminder</div>
+      <div style="padding:16px 24px;border-top:1px solid #e5e7eb;color:#9ca3af;font-size:12px;">Nexxos HQ automated reminder</div>
     </div>`;
 }
 

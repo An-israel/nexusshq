@@ -31,7 +31,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 };
 
 // Configuration
-const SITE_NAME = "nexusshq";
+const SITE_NAME = "nexxoshq";
 const SENDER_DOMAIN = "notify.nexus.skryveai.com";
 const ROOT_DOMAIN = "nexus.skryveai.com";
 const FROM_DOMAIN = "nexus.skryveai.com";

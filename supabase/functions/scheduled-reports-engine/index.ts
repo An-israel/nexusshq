@@ -96,12 +96,12 @@ function emailWrap(headerBg: string, headerText: string, body: string): string {
 <body style="margin:0;padding:16px;background:#f3f4f6;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
   <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb;box-shadow:0 1px 3px rgba(0,0,0,.06);">
     <div style="background:${headerBg};padding:32px 28px;text-align:center;">
-      <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Nexus HQ</p>
+      <p style="margin:0 0 4px;color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:600;">Nexxos HQ</p>
       <h1 style="color:#ffffff;margin:0;font-size:22px;font-weight:700;letter-spacing:-0.4px;line-height:1.3;">${headerText}</h1>
     </div>
     <div style="padding:32px 28px;">${body}</div>
     <div style="padding:18px 28px;border-top:1px solid #f3f4f6;background:#fafafa;text-align:center;">
-      <p style="margin:0 0 6px;color:#6b7280;font-size:12px;">Nexus HQ &bull; Automated report</p>
+      <p style="margin:0 0 6px;color:#6b7280;font-size:12px;">Nexxos HQ &bull; Automated report</p>
       <a href="${APP_URL}" style="color:#6b7280;font-size:12px;text-decoration:underline;">View Full Dashboard</a>
     </div>
   </div>
@@ -340,7 +340,7 @@ async function runDailyReport(workspaceId: string): Promise<void> {
   body += ctaButton("View Full Dashboard", APP_URL, "#111827");
 
   const html = emailWrap("#111827", `📊 Daily Summary — ${fmtDate(today)}`, body);
-  const subject = `📊 Nexus HQ — Daily Summary ${today}`;
+  const subject = `📊 Nexxos HQ — Daily Summary ${today}`;
 
   // Send to all admins and managers
   const { admins, managers } = await getAdminsAndManagers(workspaceId);
@@ -553,7 +553,7 @@ async function runWeeklyReport(workspaceId: string): Promise<void> {
   body += ctaButton("View Full Dashboard", APP_URL, "#111827");
 
   const html = emailWrap("#111827", `📈 Weekly Team Report — w/e ${fmtDate(lf)}`, body);
-  const subject = `📈 Nexus HQ — Weekly Team Report w/e ${lf}`;
+  const subject = `📈 Nexxos HQ — Weekly Team Report w/e ${lf}`;
 
   const admins = await getAdminsOnly(workspaceId);
   const sentTo = new Set<string>();
@@ -706,7 +706,7 @@ async function runMonthlyReport(workspaceId: string): Promise<void> {
   body += ctaButton("View Full Dashboard", APP_URL, "#111827");
 
   const html = emailWrap("#111827", `📋 Monthly Report — ${monthName}`, body);
-  const subject = `📋 Nexus HQ — Monthly Report ${monthName}`;
+  const subject = `📋 Nexxos HQ — Monthly Report ${monthName}`;
 
   const admins = await getAdminsOnly(workspaceId);
   const sentTo = new Set<string>();

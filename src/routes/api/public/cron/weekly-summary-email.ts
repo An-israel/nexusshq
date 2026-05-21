@@ -125,7 +125,7 @@ export const Route = createFileRoute("/api/public/cron/weekly-summary-email")({
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                  from: "Nexxos HQ <noreply@nexushq.app>",
+                  from: "Nexxos HQ <noreply@nexxoshq.app>",
                   to: [p.email!],
                   subject: `Nexxos HQ Weekly Summary — week of ${weekStart}`,
                   text: emailBody,
