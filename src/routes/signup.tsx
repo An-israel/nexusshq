@@ -148,7 +148,7 @@ function SignupPage() {
   // We call getUser() (server-round-trip) not just checking session from localStorage,
   // so stale/expired sessions don't cause a redirect loop to /create-workspace.
   React.useEffect(() => {
-    if (!session) return;
+    if (!session || submitting) return;
     void (async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return; // stale session — stay on signup
@@ -177,7 +177,7 @@ function SignupPage() {
       // Signed in but no workspace yet — let them create one
       navigate({ to: "/create-workspace" });
     })();
-  }, [session, navigate]);
+  }, [session, navigate, submitting]);
 
   const [step, setStep] = React.useState<1 | 2>(1);
   const [submitting, setSubmitting] = React.useState(false);
