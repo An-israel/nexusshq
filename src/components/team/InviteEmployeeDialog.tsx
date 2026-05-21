@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,8 +19,17 @@ import {
 import { toast } from "sonner";
 import { UserPlus, Copy, Check, Link2, KeyRound } from "lucide-react";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
-import { createInvitationFn } from "@/lib/admin.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/workspace-context";
+
+const PASSCODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+function generatePasscode(len = 6): string {
+  const arr = new Uint8Array(len);
+  crypto.getRandomValues(arr);
+  return Array.from(arr)
+    .map((b) => PASSCODE_CHARS[b % PASSCODE_CHARS.length])
+    .join("");
+}
 
 interface Generated {
   token: string;
@@ -72,7 +80,6 @@ export function InviteEmployeeDialog({
   onInvited?: () => void;
   isAdmin?: boolean;
 }) {
-  const create = useServerFn(createInvitationFn);
   const { workspace } = useWorkspace();
 
   const [open, setOpen] = React.useState(false);
@@ -112,19 +119,35 @@ export function InviteEmployeeDialog({
     }
     setSubmitting(true);
     try {
-      const { token, passcode } = await create({
-        data: {
-          workspaceId: workspace.id,
-          email: form.email.trim(),
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not signed in");
+
+      const passcode = generatePasscode();
+
+      const { data, error } = await supabase
+        .from("workspace_invitations")
+        .insert({
+          workspace_id: workspace.id,
+          passcode,
+          email: form.email.trim().toLowerCase(),
           full_name: form.full_name.trim(),
           job_title: form.job_title.trim() || null,
-          department: form.department,
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          department: (form.department || "other") as any,
           phone: form.phone.trim() || null,
-          role: form.role,
-        },
-      });
-      const inviteUrl = `${window.location.origin}/join?token=${token}`;
-      setGenerated({ token, passcode, inviteUrl });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          role: form.role as any,
+          invited_by: user.id,
+        })
+        .select("token, passcode")
+        .single();
+
+      if (error) throw new Error(error.message);
+
+      const inviteUrl = `${window.location.origin}/join?token=${data.token}`;
+      setGenerated({ token: data.token, passcode: data.passcode, inviteUrl });
       onInvited?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to create invitation");
