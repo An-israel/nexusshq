@@ -10,12 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspacesRouteImport } from './routes/workspaces'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as CreateWorkspaceRouteImport } from './routes/create-workspace'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
@@ -73,6 +76,11 @@ const WorkspacesRoute = WorkspacesRouteImport.update({
   path: '/workspaces',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
@@ -88,6 +96,11 @@ const SignupRoute = SignupRouteImport.update({
   path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
@@ -101,6 +114,11 @@ const LoginRoute = LoginRouteImport.update({
 const JoinRoute = JoinRouteImport.update({
   id: '/join',
   path: '/join',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CreateWorkspaceRoute = CreateWorkspaceRouteImport.update({
@@ -391,13 +409,16 @@ const AppWorkspaceSlugMessagesChannelChannelIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
@@ -450,13 +471,16 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
@@ -511,13 +535,16 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
+  '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/super-admin': typeof SuperAdminRoute
+  '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
@@ -572,13 +599,16 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invite'
+    | '/cookies'
     | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
+    | '/privacy'
     | '/signup'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/terms'
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
@@ -631,13 +661,16 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invite'
+    | '/cookies'
     | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
+    | '/privacy'
     | '/signup'
     | '/sitemap.xml'
     | '/super-admin'
+    | '/terms'
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
@@ -691,11 +724,14 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/accept-invite'
+    | '/cookies'
     | '/create-workspace'
     | '/join'
     | '/login'
     | '/pricing'
+    | '/privacy'
     | '/signup'
+    | '/terms'
     | '/sitemap.xml'
     | '/super-admin'
     | '/workspaces'
@@ -752,13 +788,16 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
+  CookiesRoute: typeof CookiesRoute
   CreateWorkspaceRoute: typeof CreateWorkspaceRoute
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SuperAdminRoute: typeof SuperAdminRoute
+  TermsRoute: typeof TermsRoute
   WorkspacesRoute: typeof WorkspacesRoute
   ApiAiRoute: typeof ApiAiRoute
   TrackSplatRoute: typeof TrackSplatRoute
@@ -836,6 +875,27 @@ declare module '@tanstack/react-router' {
       path: '/accept-invite'
       fullPath: '/accept-invite'
       preLoaderRoute: typeof AcceptInviteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -1314,13 +1374,16 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
+  CookiesRoute: CookiesRoute,
   CreateWorkspaceRoute: CreateWorkspaceRoute,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   SuperAdminRoute: SuperAdminRoute,
+  TermsRoute: TermsRoute,
   WorkspacesRoute: WorkspacesRoute,
   ApiAiRoute: ApiAiRoute,
   TrackSplatRoute: TrackSplatRoute,

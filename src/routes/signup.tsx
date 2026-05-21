@@ -370,6 +370,18 @@ function SignupPage() {
           )}
         </div>
 
+        <p className="mt-4 text-center text-xs text-muted-foreground">
+          By signing up, you agree to our{" "}
+          <Link to="/terms" className="text-primary hover:underline">
+            Terms of Service
+          </Link>{" "}
+          and{" "}
+          <Link to="/privacy" className="text-primary hover:underline">
+            Privacy Policy
+          </Link>
+          .
+        </p>
+
         <p className="mt-8 text-center text-sm text-muted-foreground">
           Already have a workspace?{" "}
           <Link to="/login" className="font-medium text-primary hover:underline">

@@ -26,7 +26,11 @@ const FEATURES_LIST = [
   { icon: Clock, label: "Attendance & Clock In", desc: "One-tap clock-in with real-time status" },
   { icon: BarChart3, label: "Performance Tracking", desc: "KPIs, OKRs and review scoring" },
   { icon: FileText, label: "Payslips & HR", desc: "Manage payslips and HR records in one place" },
-  { icon: UserCheck, label: "Employee Onboarding", desc: "Structured onboarding flows for new hires" },
+  {
+    icon: UserCheck,
+    label: "Employee Onboarding",
+    desc: "Structured onboarding flows for new hires",
+  },
   { icon: MessageSquare, label: "Team Messaging", desc: "Channels, DMs and @mentions built in" },
   { icon: ThumbsUp, label: "Deliverable Approvals", desc: "Submit and score work deliverables" },
   { icon: Sparkles, label: "AI Insights", desc: "Claude AI detects burnout and generates tasks" },
@@ -48,12 +52,7 @@ const BY_ROLE = [
   "HR Professionals",
 ];
 
-const BY_INDUSTRY = [
-  "Digital Agencies",
-  "Tech Startups",
-  "Consulting Firms",
-  "Media & Content",
-];
+const BY_INDUSTRY = ["Digital Agencies", "Tech Startups", "Consulting Firms", "Media & Content"];
 
 // ── Resources dropdown data ──────────────────────────────────────────────────
 
@@ -86,11 +85,7 @@ function NavItem({ label, children }: NavItemProps) {
   }
 
   return (
-    <div
-      className="relative"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
+    <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <button
         className="flex items-center gap-1 text-[13px] text-gray-400 hover:text-white transition-colors py-2"
         aria-expanded={open}
@@ -102,9 +97,7 @@ function NavItem({ label, children }: NavItemProps) {
       </button>
 
       {/* Invisible bridge so mouse can move from button to dropdown */}
-      {open && (
-        <div className="absolute left-0 top-full h-2 w-full" />
-      )}
+      {open && <div className="absolute left-0 top-full h-2 w-full" />}
 
       {open && (
         <div className="absolute left-1/2 top-[calc(100%+8px)] -translate-x-1/2">

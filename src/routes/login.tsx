@@ -172,6 +172,16 @@ function LoginPage() {
             Create one free →
           </Link>
         </p>
+
+        <p className="mt-3 text-center text-xs text-muted-foreground">
+          <Link to="/terms" className="hover:underline">
+            Terms
+          </Link>
+          {" · "}
+          <Link to="/privacy" className="hover:underline">
+            Privacy
+          </Link>
+        </p>
       </div>
     </div>
   );
