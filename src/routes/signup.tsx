@@ -2,7 +2,6 @@ import * as React from "react";
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { getLastWorkspaceSlug } from "@/lib/last-workspace";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -139,37 +138,15 @@ function SignupPage() {
   const [step, setStep] = React.useState<1 | 2>(1);
   const [submitting, setSubmitting] = React.useState(false);
 
-  // Redirect already-signed-in users with a VERIFIED session to their workspace.
-  // We call getUser() (server-round-trip) not just checking session from localStorage,
-  // so stale/expired sessions don't cause a redirect loop to /create-workspace.
+  // Redirect already-signed-in users away from the signup page.
+  // We use getUser() (server round-trip) so stale localStorage sessions don't
+  // trigger a spurious redirect. Logged-in users are taken to /create-workspace
+  // so they can either add a new workspace or navigate back to an existing one.
   React.useEffect(() => {
     if (!session || submitting) return;
     void (async () => {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return; // stale session — stay on signup
-      const { data } = await supabase
-        .from("workspace_members")
-        .select("workspace_id, workspaces(slug)")
-        .eq("user_id", userData.user.id)
-        .eq("is_active", true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const slugs = (data ?? []).map((m: any) => m?.workspaces?.slug).filter(Boolean) as string[];
-      if (slugs.length > 1) {
-        const last = getLastWorkspaceSlug();
-        if (last && slugs.includes(last)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          navigate({ to: `/${last}/dashboard` as any });
-          return;
-        }
-        navigate({ to: "/workspaces" });
-        return;
-      }
-      if (slugs.length === 1) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        navigate({ to: `/${slugs[0]}/dashboard` as any });
-        return;
-      }
-      // Signed in but no workspace yet — let them create one
       navigate({ to: "/create-workspace" });
     })();
   }, [session, navigate, submitting]);
@@ -278,12 +255,12 @@ function SignupPage() {
       if (!user) throw new Error("Signup did not return a user");
 
       // If email confirmation is required, session will be null.
-      // Show a message and stop — the user must verify email before creating a workspace.
       if (!signUpData.session) {
         toast.success(
           "Check your email! Click the confirmation link, then come back to sign in and create your workspace.",
           { duration: 10000 },
         );
+        setSubmitting(false);
         void navigate({ to: "/login" });
         return;
       }
@@ -293,6 +270,7 @@ function SignupPage() {
         toast.success("Account created. Please sign in to finish creating your workspace.", {
           duration: 8000,
         });
+        setSubmitting(false);
         void navigate({ to: "/login" });
         return;
       }
@@ -308,11 +286,12 @@ function SignupPage() {
       if (!wsRow?.slug) throw new Error("Failed to create workspace");
 
       toast.success("Workspace created! Let's get you set up…");
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      void navigate({ to: `/${wsRow.slug}/onboarding` as any });
+      // Hard redirect so the page fully reinitialises. This prevents the signup
+      // useEffect from racing with a stale workspace redirect after setSubmitting(false).
+      // submitting is intentionally NOT reset here — the page is navigating away.
+      window.location.href = `/${wsRow.slug}/dashboard`;
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Something went wrong. Please try again.");
-    } finally {
       setSubmitting(false);
     }
   }
