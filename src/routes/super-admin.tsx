@@ -1303,7 +1303,27 @@ function SuperAdminPage() {
             Run this in the <strong>Supabase SQL editor</strong> (replace the UUID if it differs):
           </p>
           <pre className="rounded-lg bg-muted px-4 py-3 text-left text-xs text-foreground overflow-x-auto whitespace-pre-wrap select-all">
-            {`INSERT INTO public.super_admin_users (user_id)
+            {`-- Step 1: create the table and RLS policy (safe to re-run)
+CREATE TABLE IF NOT EXISTS public.super_admin_users (
+  user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE public.super_admin_users ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies
+    WHERE schemaname = 'public'
+      AND tablename  = 'super_admin_users'
+      AND policyname = 'super_admin_self_select'
+  ) THEN
+    CREATE POLICY super_admin_self_select
+      ON public.super_admin_users FOR SELECT
+      USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Step 2: grant yourself access
+INSERT INTO public.super_admin_users (user_id)
 VALUES ('${userId ?? "<your-user-id>"}')
 ON CONFLICT (user_id) DO NOTHING;`}
           </pre>

@@ -352,8 +352,9 @@ export function AppSidebar({
                   className="flex items-center justify-between gap-2 cursor-pointer"
                   onClick={() => {
                     localStorage.setItem("nexus_active_workspace", ws.slug);
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    navigate({ to: `/${ws.slug}/dashboard` as any });
+                    // Hard redirect so the WorkspaceProvider fully reinitialises
+                    // with the new workspace — soft navigate() leaves stale context.
+                    window.location.href = `/${ws.slug}/dashboard`;
                   }}
                 >
                   <span className="truncate">{ws.name}</span>
