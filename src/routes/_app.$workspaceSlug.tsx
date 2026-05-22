@@ -48,20 +48,25 @@ export const Route = createFileRoute("/_app/$workspaceSlug")({
 
     const { data: membership } = await supabase
       .from("workspace_members")
-      .select("id")
+      .select("id, is_active")
       .eq("workspace_id", workspace.id)
       .eq("user_id", session.user.id)
       .maybeSingle();
 
-    if (!membership) {
-      // Not in workspace_members yet — check legacy user_roles as fallback
-      const { data: legacyRole } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-      if (!legacyRole) throw redirect({ to: "/" });
-      // Has legacy role — let them through
+    if (!membership || membership.is_active === false) {
+      if (!membership) {
+        // Not in workspace_members yet — check legacy user_roles as fallback
+        const { data: legacyRole } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        if (!legacyRole) throw redirect({ to: "/" });
+        // Has legacy role — let them through
+      } else {
+        // User was removed from this workspace
+        throw redirect({ to: "/workspaces" });
+      }
     }
   },
   component: WorkspaceRoot,
@@ -300,6 +305,7 @@ function WorkspaceShell() {
         .select("role")
         .eq("workspace_id", ws.id)
         .eq("user_id", user!.id)
+        .eq("is_active", true)
         .maybeSingle();
 
       if (!active) return;

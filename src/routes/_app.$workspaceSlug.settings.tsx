@@ -611,24 +611,58 @@ function ProfileForm({
   );
 }
 
+interface MemberRow {
+  id: string;
+  role: "owner" | "admin" | "manager" | "employee";
+  user_id: string;
+  profiles: {
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    department: Dept | null;
+    job_title: string | null;
+    phone: string | null;
+    hire_date: string | null;
+    base_salary: number | null;
+    is_active: boolean;
+    avatar_url: string | null;
+    whatsapp_opt_in: boolean;
+  } | null;
+}
+
 function TeamAdmin() {
-  const [profiles, setProfiles] = React.useState<ProfileRow[]>([]);
+  const { workspace, isWorkspaceAdmin } = useWorkspace();
+  const { user } = useAuth();
+  const [members, setMembers] = React.useState<MemberRow[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [removeTarget, setRemoveTarget] = React.useState<{
+    id: string;
+    name: string;
+    userId: string;
+  } | null>(null);
 
   const load = React.useCallback(async () => {
+    if (!workspace?.id) return;
     setLoading(true);
-    const { data, error } = await supabase.from("profiles").select("*").order("full_name");
+    const { data, error } = await supabase
+      .from("workspace_members")
+      .select(
+        "id, role, user_id, profiles(id, full_name, email, department, job_title, phone, hire_date, base_salary, is_active, avatar_url, whatsapp_opt_in)",
+      )
+      .eq("workspace_id", workspace.id)
+      .eq("is_active", true)
+      .order("role");
     if (error) toast.error(error.message);
-    else setProfiles((data ?? []) as ProfileRow[]);
+    else setMembers((data ?? []) as unknown as MemberRow[]);
     setLoading(false);
-  }, []);
+  }, [workspace?.id]);
 
   React.useEffect(() => {
     void load();
   }, [load]);
 
-  async function update(id: string, patch: Partial<ProfileRow>) {
-    const { error } = await supabase.from("profiles").update(patch).eq("id", id);
+  async function updateProfile(profileId: string, patch: Partial<ProfileRow>) {
+    const { error } = await supabase.from("profiles").update(patch).eq("id", profileId);
     if (error) toast.error(error.message);
     else {
       toast.success("Updated");
@@ -636,68 +670,158 @@ function TeamAdmin() {
     }
   }
 
+  async function removeMember(memberId: string, targetUserId: string) {
+    const {
+      data: { user: currentUser },
+    } = await supabase.auth.getUser();
+    if (!currentUser) return;
+
+    // Soft-remove: set is_active = false + record who removed + when
+    const { error } = await supabase
+      .from("workspace_members")
+      .update({
+        is_active: false,
+        removed_at: new Date().toISOString(),
+        removed_by: currentUser.id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } as any)
+      .eq("id", memberId)
+      .eq("workspace_id", workspace!.id);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    // Also unassign their pending tasks in this workspace
+    await supabase
+      .from("tasks")
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .update({ assigned_to: null } as any)
+      .eq("workspace_id", workspace!.id)
+      .eq("assigned_to", targetUserId)
+      .in("status", ["todo", "in_progress"]);
+
+    toast.success("Member removed from workspace");
+    void load();
+  }
+
   if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
 
   return (
-    <div className="space-y-3">
-      {profiles.map((p) => (
-        <Card key={p.id} className="p-4">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="min-w-0">
-              <p className="font-medium">{p.full_name ?? p.email}</p>
-              <p className="text-xs text-muted-foreground">{p.email}</p>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end w-full sm:w-auto">
-              <div>
-                <Label className="text-xs">Department</Label>
-                <Select
-                  value={p.department ?? "other"}
-                  onValueChange={(v) => update(p.id, { department: v as Dept })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DEPARTMENTS.map((d) => (
-                      <SelectItem key={d} value={d}>
-                        {deptLabel(d)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+    <>
+      <div className="space-y-3">
+        {members.map((m) => {
+          const p = m.profiles;
+          if (!p) return null;
+          const canRemove = isWorkspaceAdmin && m.role !== "owner" && m.user_id !== user?.id;
+          return (
+            <Card key={m.id} className="p-4">
+              <div className="flex items-center justify-between gap-3 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium">{p.full_name ?? p.email}</p>
+                    <span className="text-xs text-muted-foreground capitalize rounded bg-muted px-1.5 py-0.5">
+                      {m.role}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{p.email}</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 items-end w-full sm:w-auto">
+                  <div>
+                    <Label className="text-xs">Department</Label>
+                    <Select
+                      value={p.department ?? "other"}
+                      onValueChange={(v) => updateProfile(p.id, { department: v as Dept })}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DEPARTMENTS.map((d) => (
+                          <SelectItem key={d} value={d}>
+                            {deptLabel(d)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-xs">Base salary</Label>
+                    <Input
+                      type="number"
+                      className="h-8"
+                      defaultValue={p.base_salary ?? 0}
+                      onBlur={(e) => {
+                        const v = Number(e.target.value);
+                        if (v !== Number(p.base_salary)) updateProfile(p.id, { base_salary: v });
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-xs">Active</Label>
+                    <Select
+                      value={p.is_active ? "true" : "false"}
+                      onValueChange={(v) => updateProfile(p.id, { is_active: v === "true" })}
+                    >
+                      <SelectTrigger className="h-8">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Active</SelectItem>
+                        <SelectItem value="false">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {canRemove ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                    onClick={() =>
+                      setRemoveTarget({
+                        id: m.id,
+                        name: p.full_name ?? p.email ?? "this member",
+                        userId: m.user_id,
+                      })
+                    }
+                  >
+                    Remove
+                  </Button>
+                ) : null}
               </div>
-              <div>
-                <Label className="text-xs">Base salary</Label>
-                <Input
-                  type="number"
-                  className="h-8"
-                  defaultValue={p.base_salary ?? 0}
-                  onBlur={(e) => {
-                    const v = Number(e.target.value);
-                    if (v !== Number(p.base_salary)) update(p.id, { base_salary: v });
-                  }}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Active</Label>
-                <Select
-                  value={p.is_active ? "true" : "false"}
-                  onValueChange={(v) => update(p.id, { is_active: v === "true" })}
-                >
-                  <SelectTrigger className="h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="true">Active</SelectItem>
-                    <SelectItem value="false">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            </Card>
+          );
+        })}
+      </div>
+
+      {removeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-sm rounded-xl border border-border bg-card p-6 shadow-2xl">
+            <h3 className="text-base font-semibold">Remove {removeTarget.name}?</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              They will immediately lose access to this workspace. Their historical data (tasks,
+              attendance, payslips) will be preserved.
+            </p>
+            <div className="mt-5 flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setRemoveTarget(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  void removeMember(removeTarget.id, removeTarget.userId);
+                  setRemoveTarget(null);
+                }}
+              >
+                Remove Member
+              </Button>
             </div>
           </div>
-        </Card>
-      ))}
-    </div>
+        </div>
+      )}
+    </>
   );
 }
 
