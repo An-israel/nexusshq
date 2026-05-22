@@ -117,7 +117,7 @@ function RootShell({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="bg-background text-foreground antialiased">
+      <body suppressHydrationWarning className="bg-background text-foreground antialiased">
         {children}
         <Scripts />
       </body>
@@ -126,9 +126,13 @@ function RootShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootComponent() {
-  installSupabaseDiagnostics();
-
   useEffect(() => {
+    installSupabaseDiagnostics();
+
+    if (typeof document !== "undefined") {
+      document.body.setAttribute("data-app-hydrated", "true");
+    }
+
     if ("serviceWorker" in navigator) {
       void navigator.serviceWorker.register("/sw.js", { scope: "/" });
     }
