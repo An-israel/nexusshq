@@ -48,31 +48,26 @@ function PublicTracker() {
   React.useEffect(() => {
     void (async () => {
       setLoading(true);
-      const { data: proj } = await supabase
-        .from("client_projects")
-        .select("id, name, client_name, description, status, created_at")
-        .eq("access_token", token)
-        .single();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc("get_client_portal_data", {
+        p_token: token,
+      });
 
-      if (!proj) {
+      if (error || !data) {
         setNotFound(true);
         setLoading(false);
         return;
       }
-      setProject(proj as ClientProject);
 
-      const { data: taskData } = await supabase
-        .from("client_project_tasks")
-        .select("id, title, description, status, due_date, order_index")
-        .eq("project_id", proj.id)
-        .order("order_index");
-      setTasks((taskData ?? []) as ProjectTask[]);
+      setProject(data.project as ClientProject);
+      setTasks((data.tasks ?? []) as ProjectTask[]);
       setLoading(false);
 
-      // Log this view (fire-and-forget, no auth needed)
-      void supabase.from("client_portal_views").insert({
-        project_id: proj.id,
-        user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+      // Log this view (fire-and-forget)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      void (supabase as any).from("client_portal_views").insert({
+        project_id: data.project.id,
+        token,
       });
     })();
   }, [token]);
