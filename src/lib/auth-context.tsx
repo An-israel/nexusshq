@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { fetchUserRolesWithRetry, pickTopRole } from "@/lib/role-access";
 import { logSupabaseClientError } from "@/lib/supabase-diagnostics";
-import { ensureSkryveSeed } from "@/lib/seed.functions";
 
 export type AppRole = "admin" | "manager" | "employee";
 
@@ -142,11 +141,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clearTimeout(safetyTimer);
       setSession(s);
       if (s?.user) {
-        // Ensure Skryve workspace + membership exist for this user (idempotent).
-        // Runs server-side via service role; the underlying RPC is locked down.
-        void ensureSkryveSeed().catch((err) => {
-          console.warn("ensureSkryveSeed failed", err);
-        });
         const hasCache = readCache<NexxosProfile>(CACHE_PROFILE) !== null;
         if (hasCache) {
           // Show UI immediately; refresh data silently in background
