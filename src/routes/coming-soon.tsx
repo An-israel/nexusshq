@@ -23,9 +23,7 @@ function ComingSoonPage() {
   const [errorMsg, setErrorMsg] = React.useState("");
 
   const pageName = page
-    ? page
-        .replace(/-/g, " ")
-        .replace(/\b\w/g, (c: string) => c.toUpperCase())
+    ? page.replace(/-/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())
     : null;
 
   async function handleSubmit(e: React.FormEvent) {
@@ -165,9 +163,7 @@ function ComingSoonPage() {
                 {status === "loading" ? "Joining…" : "Notify me"}
               </button>
             </div>
-            {status === "error" && (
-              <p className="mt-2 text-[13px] text-red-400">{errorMsg}</p>
-            )}
+            {status === "error" && <p className="mt-2 text-[13px] text-red-400">{errorMsg}</p>}
             <p className="mt-3 text-[11px] text-gray-600">No spam. Unsubscribe any time.</p>
           </form>
         )}

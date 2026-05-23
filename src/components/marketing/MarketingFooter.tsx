@@ -180,19 +180,10 @@ const SOCIALS = [
 
 // ── Link renderer helper ──────────────────────────────────────────────────────
 
-function FooterLinkItem({
-  link,
-  className,
-}: {
-  link: FooterLink;
-  className: string;
-}) {
+function FooterLinkItem({ link, className }: { link: FooterLink; className: string }) {
   if (link.internal) {
     return (
-      <Link
-        to={link.href as "/terms" | "/privacy" | "/cookies" | "/pricing"}
-        className={className}
-      >
+      <Link to={link.href as "/terms" | "/privacy" | "/cookies" | "/pricing"} className={className}>
         {link.label}
       </Link>
     );

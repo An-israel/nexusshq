@@ -81,8 +81,7 @@ function LoginPage() {
 
   // Check URL params for super admin hint
   const params = new URLSearchParams(window.location.search);
-  const isAdminLogin =
-    params.get("redirect") === "super-admin" || params.get("admin") === "true";
+  const isAdminLogin = params.get("redirect") === "super-admin" || params.get("admin") === "true";
 
   // If already logged in, resolve their workspace (or super-admin) and redirect
   useEffect(() => {
