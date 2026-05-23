@@ -84,17 +84,22 @@ CREATE POLICY "workspace_members_update" ON public.workspace_members
   );
 
 -- 7. Fix profiles SELECT policy
+-- Helper: returns user_ids of all active members across my workspaces (avoids nested RLS eval)
+CREATE OR REPLACE FUNCTION public.get_my_workspace_member_ids()
+RETURNS SETOF uuid LANGUAGE sql SECURITY DEFINER STABLE
+SET search_path = public AS $$
+  SELECT DISTINCT user_id FROM workspace_members
+  WHERE workspace_id IN (SELECT get_my_workspace_ids())
+    AND is_active = true;
+$$;
+
 DROP POLICY IF EXISTS "profiles_select" ON public.profiles;
 DROP POLICY IF EXISTS "Users can view profiles" ON public.profiles;
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone." ON public.profiles;
 CREATE POLICY "profiles_select" ON public.profiles
   FOR SELECT USING (
     id = auth.uid()
-    OR id IN (
-      SELECT wm.user_id FROM public.workspace_members wm
-      WHERE wm.workspace_id IN (SELECT public.get_my_workspace_ids())
-        AND wm.is_active = true
-    )
+    OR id IN (SELECT public.get_my_workspace_member_ids())
   );
 
 -- 8. Profiles UPDATE — users update their own profile only

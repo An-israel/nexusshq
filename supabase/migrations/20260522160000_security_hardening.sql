@@ -10,6 +10,9 @@ GRANT  EXECUTE ON FUNCTION public.get_my_workspace_ids() TO authenticated;
 REVOKE EXECUTE ON FUNCTION public.get_my_admin_workspace_ids() FROM PUBLIC;
 GRANT  EXECUTE ON FUNCTION public.get_my_admin_workspace_ids() TO authenticated;
 
+REVOKE EXECUTE ON FUNCTION public.get_my_workspace_member_ids() FROM PUBLIC;
+GRANT  EXECUTE ON FUNCTION public.get_my_workspace_member_ids() TO authenticated;
+
 -- ── 2. OKRs: require auth + workspace scope (was: USING (true) = unauthenticated read) ──
 DROP POLICY IF EXISTS "all users view objectives"        ON public.objectives;
 DROP POLICY IF EXISTS "managers manage objectives"       ON public.objectives;
