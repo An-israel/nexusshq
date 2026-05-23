@@ -2873,9 +2873,20 @@ export type Database = {
         Returns: number
       }
       ensure_skryve_seed: { Args: never; Returns: undefined }
+      get_client_project_token: {
+        Args: { _project_id: string }
+        Returns: string
+      }
       get_my_admin_workspace_ids: { Args: never; Returns: string[] }
       get_my_workspace_ids: { Args: never; Returns: string[] }
       get_my_workspace_member_ids: { Args: never; Returns: string[] }
+      get_workspace_invitation_secret: {
+        Args: { _invitation_id: string }
+        Returns: {
+          passcode: string
+          token: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
