@@ -80,12 +80,17 @@ export async function inviteEmployee(input: InviteEmployeeInput) {
       full_name: input.full_name,
       job_title: input.job_title ?? null,
       department: input.department ?? "other",
-      phone: input.phone ?? null,
       is_active: true,
     },
     { onConflict: "id" },
   );
   if (profileError) throw new Error(profileError.message);
+
+  if (input.phone) {
+    await adminClient
+      .from("profile_private")
+      .upsert({ user_id: userId, phone: input.phone }, { onConflict: "user_id" });
+  }
 
   await adminClient.from("user_roles").delete().eq("user_id", userId);
   const { error: roleError } = await adminClient
