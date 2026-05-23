@@ -516,10 +516,14 @@ function ProfileForm({
         full_name: form.full_name,
         department: form.department,
         job_title: form.job_title,
-        phone: form.phone,
         whatsapp_opt_in: form.whatsapp_opt_in,
       })
       .eq("id", form.id);
+    if (!error && form.phone !== undefined) {
+      await supabase
+        .from("profile_private")
+        .upsert({ user_id: form.id, phone: form.phone ?? null }, { onConflict: "user_id" });
+    }
     if (error) toast.error(error.message);
     else {
       toast.success("Profile saved");
