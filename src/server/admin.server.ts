@@ -244,11 +244,16 @@ export async function redeemInvitation(input: RedeemInvitationInput): Promise<{
         full_name: inv.full_name,
         job_title: inv.job_title ?? null,
         department: inv.department ?? "other",
-        phone: inv.phone ?? null,
         is_active: true,
       },
       { onConflict: "id" },
     );
+
+    if (inv.phone) {
+      await adminClient
+        .from("profile_private")
+        .upsert({ user_id: userId, phone: inv.phone }, { onConflict: "user_id" });
+    }
 
     await adminClient.from("user_roles").delete().eq("user_id", userId);
     await adminClient.from("user_roles").insert({ user_id: userId, role: inv.role });
