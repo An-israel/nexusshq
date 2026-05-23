@@ -38,16 +38,23 @@ export async function sendWhatsAppMessage(phone: string, message: string): Promi
 
 // Send notification to user if they have WhatsApp opt-in
 export async function notifyUserWhatsApp(userId: string, message: string): Promise<void> {
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("phone, whatsapp_opt_in, full_name")
-    .eq("id", userId)
-    .maybeSingle();
+  const [{ data: profile }, { data: priv }] = await Promise.all([
+    supabaseAdmin
+      .from("profiles")
+      .select("whatsapp_opt_in, full_name")
+      .eq("id", userId)
+      .maybeSingle(),
+    supabaseAdmin
+      .from("profile_private")
+      .select("phone")
+      .eq("user_id", userId)
+      .maybeSingle(),
+  ]);
 
-  if (!profile?.whatsapp_opt_in || !profile?.phone) return;
+  if (!profile?.whatsapp_opt_in || !priv?.phone) return;
 
-  const phone = profile.phone.startsWith("+")
-    ? profile.phone
-    : `+234${profile.phone.replace(/^0/, "")}`;
+  const phone = priv.phone.startsWith("+")
+    ? priv.phone
+    : `+234${priv.phone.replace(/^0/, "")}`;
   await sendWhatsAppMessage(phone, message);
 }

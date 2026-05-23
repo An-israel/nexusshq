@@ -189,9 +189,9 @@ interface ProfileRow {
   email: string | null;
   department: Dept | null;
   job_title: string | null;
-  phone: string | null;
+  phone?: string | null;
   hire_date: string | null;
-  base_salary: number | null;
+  base_salary?: number | null;
   is_active: boolean;
   avatar_url: string | null;
   whatsapp_opt_in: boolean;
@@ -516,10 +516,14 @@ function ProfileForm({
         full_name: form.full_name,
         department: form.department,
         job_title: form.job_title,
-        phone: form.phone,
         whatsapp_opt_in: form.whatsapp_opt_in,
       })
       .eq("id", form.id);
+    if (!error && form.phone !== undefined) {
+      await supabase
+        .from("profile_private")
+        .upsert({ user_id: form.id, phone: form.phone ?? null }, { onConflict: "user_id" });
+    }
     if (error) toast.error(error.message);
     else {
       toast.success("Profile saved");
@@ -662,7 +666,16 @@ function TeamAdmin() {
   }, [load]);
 
   async function updateProfile(profileId: string, patch: Partial<ProfileRow>) {
-    const { error } = await supabase.from("profiles").update(patch).eq("id", profileId);
+    const { phone, base_salary, ...rest } = patch;
+    const { error } = await supabase.from("profiles").update(rest).eq("id", profileId);
+    if (!error && (phone !== undefined || base_salary !== undefined)) {
+      const priv: { user_id: string; phone?: string | null; base_salary?: number } = {
+        user_id: profileId,
+      };
+      if (phone !== undefined) priv.phone = phone;
+      if (base_salary !== undefined && base_salary !== null) priv.base_salary = base_salary;
+      await supabase.from("profile_private").upsert(priv, { onConflict: "user_id" });
+    }
     if (error) toast.error(error.message);
     else {
       toast.success("Updated");
