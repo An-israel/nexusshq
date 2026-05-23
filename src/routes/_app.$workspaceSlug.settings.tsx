@@ -189,9 +189,9 @@ interface ProfileRow {
   email: string | null;
   department: Dept | null;
   job_title: string | null;
-  phone: string | null;
+  phone?: string | null;
   hire_date: string | null;
-  base_salary: number | null;
+  base_salary?: number | null;
   is_active: boolean;
   avatar_url: string | null;
   whatsapp_opt_in: boolean;
