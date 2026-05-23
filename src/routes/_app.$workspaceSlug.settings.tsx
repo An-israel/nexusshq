@@ -666,7 +666,16 @@ function TeamAdmin() {
   }, [load]);
 
   async function updateProfile(profileId: string, patch: Partial<ProfileRow>) {
-    const { error } = await supabase.from("profiles").update(patch).eq("id", profileId);
+    const { phone, base_salary, ...rest } = patch;
+    const { error } = await supabase.from("profiles").update(rest).eq("id", profileId);
+    if (!error && (phone !== undefined || base_salary !== undefined)) {
+      const priv: { user_id: string; phone?: string | null; base_salary?: number } = {
+        user_id: profileId,
+      };
+      if (phone !== undefined) priv.phone = phone;
+      if (base_salary !== undefined && base_salary !== null) priv.base_salary = base_salary;
+      await supabase.from("profile_private").upsert(priv, { onConflict: "user_id" });
+    }
     if (error) toast.error(error.message);
     else {
       toast.success("Updated");
