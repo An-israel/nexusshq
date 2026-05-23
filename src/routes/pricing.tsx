@@ -260,8 +260,8 @@ function PricingPage() {
                     </div>
                   </div>
 
-                  <Link
-                    to="/login"
+                  <a
+                    href={`/signup?plan=${plan.id}&billing=${billing}`}
                     className={`mb-6 flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-colors ${
                       plan.highlight
                         ? "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -269,7 +269,7 @@ function PricingPage() {
                     }`}
                   >
                     {plan.cta} {plan.highlight && <ArrowRight className="h-4 w-4" />}
-                  </Link>
+                  </a>
 
                   {/* All features included */}
                   <div className="flex-1">

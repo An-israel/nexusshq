@@ -20,6 +20,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
 import { Route as CreateWorkspaceRouteImport } from './routes/create-workspace'
 import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as ComingSoonRouteImport } from './routes/coming-soon'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -124,6 +125,11 @@ const CreateWorkspaceRoute = CreateWorkspaceRouteImport.update({
 const CookiesRoute = CookiesRouteImport.update({
   id: '/cookies',
   path: '/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComingSoonRoute = ComingSoonRouteImport.update({
+  id: '/coming-soon',
+  path: '/coming-soon',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptInviteRoute = AcceptInviteRouteImport.update({
@@ -409,6 +415,7 @@ const AppWorkspaceSlugMessagesChannelChannelIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/coming-soon': typeof ComingSoonRoute
   '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
@@ -471,6 +478,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/coming-soon': typeof ComingSoonRoute
   '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
@@ -535,6 +543,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
+  '/coming-soon': typeof ComingSoonRoute
   '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
   '/join': typeof JoinRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invite'
+    | '/coming-soon'
     | '/cookies'
     | '/create-workspace'
     | '/join'
@@ -661,6 +671,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invite'
+    | '/coming-soon'
     | '/cookies'
     | '/create-workspace'
     | '/join'
@@ -724,6 +735,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/accept-invite'
+    | '/coming-soon'
     | '/cookies'
     | '/create-workspace'
     | '/join'
@@ -788,6 +800,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
+  ComingSoonRoute: typeof ComingSoonRoute
   CookiesRoute: typeof CookiesRoute
   CreateWorkspaceRoute: typeof CreateWorkspaceRoute
   JoinRoute: typeof JoinRoute
@@ -882,6 +895,13 @@ declare module '@tanstack/react-router' {
       path: '/create-workspace'
       fullPath: '/create-workspace'
       preLoaderRoute: typeof CreateWorkspaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coming-soon': {
+      id: '/coming-soon'
+      path: '/coming-soon'
+      fullPath: '/coming-soon'
+      preLoaderRoute: typeof ComingSoonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cookies': {
@@ -1374,6 +1394,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
+  ComingSoonRoute: ComingSoonRoute,
   CookiesRoute: CookiesRoute,
   CreateWorkspaceRoute: CreateWorkspaceRoute,
   JoinRoute: JoinRoute,

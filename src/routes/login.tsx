@@ -79,10 +79,29 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // If already logged in, resolve their workspace and redirect
+  // Check URL params for super admin hint
+  const params = new URLSearchParams(window.location.search);
+  const isAdminLogin =
+    params.get("redirect") === "super-admin" || params.get("admin") === "true";
+
+  // If already logged in, resolve their workspace (or super-admin) and redirect
   useEffect(() => {
     if (!session || !user) return;
-    void resolveWorkspace(user.id).then((slug) => {
+    void (async () => {
+      // Check super admin first
+      const { data: superAdmin } = await supabase
+        .from("super_admin_users")
+        .select("user_id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (superAdmin) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        navigate({ to: "/super-admin" as any });
+        return;
+      }
+
+      const slug = await resolveWorkspace(user.id);
       if (slug === "__multi__") {
         navigate({ to: "/workspaces" });
         return;
@@ -92,9 +111,8 @@ function LoginPage() {
         navigate({ to: `/${slug}/dashboard` as any });
         return;
       }
-      // No workspace yet — send them to create one
       navigate({ to: "/create-workspace" });
-    });
+    })();
   }, [session, user, navigate]);
 
   const handleSignIn = async (e: FormEvent) => {
@@ -115,7 +133,14 @@ function LoginPage() {
         <div className="mb-8 flex flex-col items-center text-center">
           <BrandMark size="lg" showWordmark={false} className="mb-4" />
           <h1 className="text-2xl font-bold tracking-tight">Nexxos HQ</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to your workspace</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isAdminLogin ? "Super Admin Access" : "Sign in to your workspace"}
+          </p>
+          {isAdminLogin && (
+            <span className="mt-2 inline-flex items-center rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-[11px] font-medium text-amber-500">
+              🔐 Admin credentials required
+            </span>
+          )}
         </div>
 
         <form

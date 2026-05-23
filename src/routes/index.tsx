@@ -256,12 +256,13 @@ function LandingPage() {
               Start free trial
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <Link
-              to="/login"
+            <a
+              href="#features"
               className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-card/40 px-5 py-2.5 text-[14px] font-medium text-foreground backdrop-blur transition-colors hover:border-border hover:bg-card"
             >
-              Sign in
-            </Link>
+              See How It Works
+              <ChevronRight className="h-4 w-4 rotate-90" />
+            </a>
           </div>
 
           <div className="mt-7 flex items-center justify-center gap-2 text-[12px] text-muted-foreground">

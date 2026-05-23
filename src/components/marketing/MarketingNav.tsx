@@ -18,50 +18,112 @@ import {
   Globe,
   Settings,
 } from "lucide-react";
+import { openWhatsApp, comingSoon } from "@/lib/marketing";
 
 // ── Product mega-dropdown data ───────────────────────────────────────────────
 
 const FEATURES_LIST = [
-  { icon: CheckSquare, label: "Task Management", desc: "Assign, track, and complete tasks daily" },
-  { icon: Clock, label: "Attendance & Clock In", desc: "One-tap clock-in with real-time status" },
-  { icon: BarChart3, label: "Performance Tracking", desc: "KPIs, OKRs and review scoring" },
-  { icon: FileText, label: "Payslips & HR", desc: "Manage payslips and HR records in one place" },
+  {
+    icon: CheckSquare,
+    label: "Task Management",
+    desc: "Assign, track, and complete tasks daily",
+    href: comingSoon("task-management"),
+  },
+  {
+    icon: Clock,
+    label: "Attendance & Clock In",
+    desc: "One-tap clock-in with real-time status",
+    href: comingSoon("attendance"),
+  },
+  {
+    icon: BarChart3,
+    label: "Performance Tracking",
+    desc: "KPIs, OKRs and review scoring",
+    href: comingSoon("performance-tracking"),
+  },
+  {
+    icon: FileText,
+    label: "Payslips & HR",
+    desc: "Manage payslips and HR records in one place",
+    href: comingSoon("payslips-hr"),
+  },
   {
     icon: UserCheck,
     label: "Employee Onboarding",
     desc: "Structured onboarding flows for new hires",
+    href: comingSoon("employee-onboarding"),
   },
-  { icon: MessageSquare, label: "Team Messaging", desc: "Channels, DMs and @mentions built in" },
-  { icon: ThumbsUp, label: "Deliverable Approvals", desc: "Submit and score work deliverables" },
-  { icon: Sparkles, label: "AI Insights", desc: "Claude AI detects burnout and generates tasks" },
+  {
+    icon: MessageSquare,
+    label: "Team Messaging",
+    desc: "Channels, DMs and @mentions built in",
+    href: comingSoon("team-messaging"),
+  },
+  {
+    icon: ThumbsUp,
+    label: "Deliverable Approvals",
+    desc: "Submit and score work deliverables",
+    href: comingSoon("deliverable-approvals"),
+  },
+  {
+    icon: Sparkles,
+    label: "AI Insights",
+    desc: "Claude AI detects burnout and generates tasks",
+    href: comingSoon("ai-insights"),
+  },
 ];
 
 const USE_CASES_LIST = [
-  { icon: Building2, label: "Creative Agencies", desc: "Manage client work and creative teams" },
-  { icon: Rocket, label: "Startups & SMEs", desc: "Move fast without losing accountability" },
-  { icon: Globe, label: "Remote Teams", desc: "Keep distributed teams aligned daily" },
-  { icon: Settings, label: "Operations Teams", desc: "Streamline workflows and approvals" },
+  {
+    icon: Building2,
+    label: "Creative Agencies",
+    desc: "Manage client work and creative teams",
+    href: comingSoon("creative-agencies"),
+  },
+  {
+    icon: Rocket,
+    label: "Startups & SMEs",
+    desc: "Move fast without losing accountability",
+    href: comingSoon("startups"),
+  },
+  {
+    icon: Globe,
+    label: "Remote Teams",
+    desc: "Keep distributed teams aligned daily",
+    href: comingSoon("remote-teams"),
+  },
+  {
+    icon: Settings,
+    label: "Operations Teams",
+    desc: "Streamline workflows and approvals",
+    href: comingSoon("operations-teams"),
+  },
 ];
 
 // ── Solutions dropdown data ──────────────────────────────────────────────────
 
 const BY_ROLE = [
-  "CEO & Founders",
-  "Operations Managers",
-  "Team Leads & Managers",
-  "HR Professionals",
+  { label: "CEO & Founders", href: comingSoon("ceo-founders") },
+  { label: "Operations Managers", href: comingSoon("operations-managers") },
+  { label: "Team Leads & Managers", href: comingSoon("team-leads") },
+  { label: "HR Professionals", href: comingSoon("hr-professionals") },
 ];
 
-const BY_INDUSTRY = ["Digital Agencies", "Tech Startups", "Consulting Firms", "Media & Content"];
+const BY_INDUSTRY = [
+  { label: "Digital Agencies", href: comingSoon("digital-agencies") },
+  { label: "Tech Startups", href: comingSoon("tech-startups") },
+  { label: "Consulting Firms", href: comingSoon("consulting-firms") },
+  { label: "Media & Content", href: comingSoon("media-content") },
+];
 
 // ── Resources dropdown data ──────────────────────────────────────────────────
 
 const RESOURCES_LIST = [
-  { label: "Blog", href: "#", disabled: false },
-  { label: "Help Centre", href: "#", disabled: false },
-  { label: "Changelog", href: "#", disabled: false },
-  { label: "API Docs", href: "#", disabled: true, badge: "Coming soon" },
-  { label: "System Status", href: "#", disabled: false },
+  { label: "Blog", href: comingSoon("blog"), disabled: false },
+  { label: "Help Centre", href: comingSoon("help-centre"), disabled: false },
+  { label: "Changelog", href: comingSoon("changelog"), disabled: false },
+  { label: "API Docs", href: comingSoon("api-docs"), disabled: true, badge: "Coming soon" },
+  { label: "System Status", href: comingSoon("system-status"), disabled: false },
 ];
 
 // ── Nav item with hover dropdown ─────────────────────────────────────────────
@@ -122,10 +184,10 @@ function ProductDropdown() {
             Features
           </p>
           <div className="space-y-1">
-            {FEATURES_LIST.map(({ icon: Icon, label, desc }) => (
+            {FEATURES_LIST.map(({ icon: Icon, label, desc, href }) => (
               <a
                 key={label}
-                href="#"
+                href={href}
                 className="flex items-start gap-3 rounded-lg px-3 py-2 hover:bg-white/5 transition-colors group"
               >
                 <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/5 text-gray-400 group-hover:text-blue-400 transition-colors">
@@ -146,10 +208,10 @@ function ProductDropdown() {
             Use Cases
           </p>
           <div className="space-y-1">
-            {USE_CASES_LIST.map(({ icon: Icon, label, desc }) => (
+            {USE_CASES_LIST.map(({ icon: Icon, label, desc, href }) => (
               <a
                 key={label}
-                href="#"
+                href={href}
                 className="flex items-start gap-3 rounded-lg px-3 py-2 hover:bg-white/5 transition-colors group"
               >
                 <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-white/5 text-gray-400 group-hover:text-blue-400 transition-colors">
@@ -178,13 +240,13 @@ function SolutionsDropdown() {
           By Role
         </p>
         <div className="space-y-0.5">
-          {BY_ROLE.map((item) => (
+          {BY_ROLE.map(({ label, href }) => (
             <a
-              key={item}
-              href="#"
+              key={label}
+              href={href}
               className="block rounded-lg px-3 py-1.5 text-[13px] text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             >
-              {item}
+              {label}
             </a>
           ))}
         </div>
@@ -194,13 +256,13 @@ function SolutionsDropdown() {
           By Industry
         </p>
         <div className="space-y-0.5">
-          {BY_INDUSTRY.map((item) => (
+          {BY_INDUSTRY.map(({ label, href }) => (
             <a
-              key={item}
-              href="#"
+              key={label}
+              href={href}
               className="block rounded-lg px-3 py-1.5 text-[13px] text-gray-400 hover:text-white hover:bg-white/5 transition-colors"
             >
-              {item}
+              {label}
             </a>
           ))}
         </div>
@@ -308,12 +370,12 @@ export function MarketingNav() {
             >
               Sign In
             </Link>
-            <a
-              href="mailto:hello@nexxoshq.io"
+            <button
+              onClick={openWhatsApp}
               className="rounded-lg border border-white/20 px-4 py-1.5 text-[13px] text-white hover:border-white/40 hover:bg-white/5 transition-colors"
             >
               Request a Demo
-            </a>
+            </button>
             <Link
               to="/signup"
               className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-1.5 text-[13px] font-medium text-white transition-colors"
@@ -364,10 +426,10 @@ export function MarketingNav() {
             <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-gray-500 mb-3">
               Product
             </p>
-            {FEATURES_LIST.map(({ label }) => (
+            {FEATURES_LIST.map(({ label, href }) => (
               <a
                 key={label}
-                href="#"
+                href={href}
                 className="block py-2.5 text-[15px] text-gray-300 hover:text-white transition-colors"
                 onClick={() => setMobileOpen(false)}
               >
@@ -379,14 +441,14 @@ export function MarketingNav() {
               <p className="text-[10px] font-bold tracking-[0.1em] uppercase text-gray-500 mb-3">
                 Solutions
               </p>
-              {[...BY_ROLE, ...BY_INDUSTRY].map((item) => (
+              {[...BY_ROLE, ...BY_INDUSTRY].map(({ label, href }) => (
                 <a
-                  key={item}
-                  href="#"
+                  key={label}
+                  href={href}
                   className="block py-2.5 text-[15px] text-gray-300 hover:text-white transition-colors"
                   onClick={() => setMobileOpen(false)}
                 >
-                  {item}
+                  {label}
                 </a>
               ))}
             </div>
@@ -415,6 +477,15 @@ export function MarketingNav() {
           </nav>
 
           <div className="border-t border-[#1E1E1E] px-6 py-6 space-y-3">
+            <button
+              onClick={() => {
+                setMobileOpen(false);
+                openWhatsApp();
+              }}
+              className="block w-full text-center rounded-lg border border-white/20 py-2.5 text-[14px] text-white hover:border-white/40 hover:bg-white/5 transition-colors"
+            >
+              Request a Demo
+            </button>
             <Link
               to="/login"
               className="block w-full text-center rounded-lg border border-[#1E1E1E] py-2.5 text-[14px] text-gray-300 hover:text-white hover:border-white/20 transition-colors"

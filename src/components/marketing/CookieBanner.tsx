@@ -1,8 +1,9 @@
 import * as React from "react";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 
 export function CookieBanner() {
   const [visible, setVisible] = React.useState(false);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     // Only show if user hasn't already accepted
@@ -17,8 +18,8 @@ export function CookieBanner() {
   }
 
   function handleManage() {
-    // For now just close the banner — in future could open a preference modal
     setVisible(false);
+    void navigate({ to: "/cookies" });
   }
 
   if (!visible) return null;
