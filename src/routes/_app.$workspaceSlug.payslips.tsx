@@ -85,13 +85,16 @@ function PayslipsPage() {
     setPayslips(rows);
     const ids = Array.from(new Set(rows.map((r) => r.user_id)));
     if (ids.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, base_salary")
-        .in("id", ids);
+      const [{ data: profs }, { data: privs }] = await Promise.all([
+        supabase.from("profiles").select("id, full_name, email").in("id", ids),
+        supabase.from("profile_private").select("user_id, base_salary").in("user_id", ids),
+      ]);
+      const privMap = new Map<string, number | null>(
+        (privs ?? []).map((p) => [p.user_id, p.base_salary as number | null]),
+      );
       const map: Record<string, ProfileMini> = {};
       (profs ?? []).forEach((p) => {
-        map[p.id] = p as ProfileMini;
+        map[p.id] = { ...p, base_salary: privMap.get(p.id) ?? null };
       });
       setProfiles(map);
     }
