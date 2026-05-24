@@ -651,13 +651,33 @@ function TeamAdmin() {
     const { data, error } = await supabase
       .from("workspace_members")
       .select(
-        "id, role, user_id, profiles(id, full_name, email, department, job_title, phone, hire_date, base_salary, is_active, avatar_url, whatsapp_opt_in)",
+        "id, role, user_id, profiles(id, full_name, email, department, job_title, hire_date, is_active, avatar_url, whatsapp_opt_in)",
       )
       .eq("workspace_id", workspace.id)
       .eq("is_active", true)
       .order("role");
-    if (error) toast.error(error.message);
-    else setMembers((data ?? []) as unknown as MemberRow[]);
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+    const rows = (data ?? []) as unknown as MemberRow[];
+    const userIds = rows.map((r) => r.user_id).filter(Boolean);
+    if (userIds.length) {
+      const { data: priv } = await supabase
+        .from("profile_private")
+        .select("user_id, phone, base_salary")
+        .in("user_id", userIds);
+      const map = new Map((priv ?? []).map((p) => [p.user_id, p]));
+      for (const r of rows) {
+        if (r.profiles) {
+          const p = map.get(r.user_id);
+          r.profiles.phone = p?.phone ?? null;
+          r.profiles.base_salary = p?.base_salary ?? null;
+        }
+      }
+    }
+    setMembers(rows);
     setLoading(false);
   }, [workspace?.id]);
 
