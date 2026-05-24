@@ -224,16 +224,16 @@ function TasksPage() {
   ).length;
   const ringPercent = Math.round((weekCompleted / Math.max(weekTotal, 1)) * 100);
 
-  // Filtered task list
+  // Filtered task list — hide completed from "all" / "daily" / "weekly" / "overdue"
   const filtered = React.useMemo(() => {
-    let list = [...tasks];
+    let list = tasks.filter((t) => t.status !== "completed");
     if (filter === "daily") list = list.filter((t) => t.task_type === "daily");
     else if (filter === "weekly") list = list.filter((t) => t.task_type === "weekly");
     else if (filter === "overdue")
       list = list.filter(
         (t) => t.status === "overdue" || (t.status !== "completed" && t.due_date < today),
       );
-    else if (filter === "completed") list = list.filter((t) => t.status === "completed");
+    else if (filter === "completed") list = tasks.filter((t) => t.status === "completed");
 
     list.sort((a, b) => {
       const pa = PRIORITY_RANK[a.priority] ?? 9;
