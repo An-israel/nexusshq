@@ -265,9 +265,7 @@ function CreatePayslipDialog({
       const privMap = new Map<string, number | null>(
         (privs ?? []).map((p) => [p.user_id, p.base_salary as number | null]),
       );
-      setEmployees(
-        (profs ?? []).map((p) => ({ ...p, base_salary: privMap.get(p.id) ?? null })),
-      );
+      setEmployees((profs ?? []).map((p) => ({ ...p, base_salary: privMap.get(p.id) ?? null })));
     })();
   }, []);
 
