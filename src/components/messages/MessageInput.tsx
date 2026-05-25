@@ -11,10 +11,12 @@ import {
   Paperclip,
   Smile,
   SendHorizonal,
+  Mic,
   X,
   FileText,
   File,
 } from "lucide-react";
+import { VoiceNoteRecorder } from "@/components/messages/VoiceNoteRecorder";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { EmojiPicker } from "@/components/messages/EmojiPicker";
@@ -28,6 +30,7 @@ interface MessageInputProps {
   currentUserId: string;
   workspaceMembers: MsgProfile[];
   onSend: (body: string, files?: File[]) => Promise<void>;
+  onSendVoiceNote?: (blob: Blob, duration: number, waveformData: number[]) => Promise<void>;
   onEditLastMessage?: () => void;
   disabled?: boolean;
 }
@@ -79,6 +82,7 @@ export function MessageInput({
   placeholder,
   workspaceMembers,
   onSend,
+  onSendVoiceNote,
   onEditLastMessage,
   disabled,
 }: MessageInputProps) {
@@ -89,6 +93,7 @@ export function MessageInput({
   const [mentionQuery, setMentionQuery] = React.useState<string | null>(null);
   const [mentionIndex, setMentionIndex] = React.useState(0);
   const [mentionStart, setMentionStart] = React.useState<number | null>(null);
+  const [voiceRecording, setVoiceRecording] = React.useState(false);
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -327,202 +332,230 @@ export function MessageInput({
   const charsLeft = CHAR_LIMIT - value.length;
   const showCounter = value.length > 3000;
   const canSend = (value.trim().length > 0 || files.length > 0) && !sending && !disabled;
+  const showMic = !canSend && !!onSendVoiceNote;
 
   return (
     <div className="relative mx-4 mb-4">
-      {mentionQuery !== null && filteredMembers.length > 0 && (
-        <div className="absolute bottom-full mb-2 left-0 w-72 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-20">
-          {filteredMembers.map((member, i) => (
-            <button
-              key={member.id}
-              type="button"
-              onMouseDown={(e) => {
-                e.preventDefault();
-                insertMention(member);
-              }}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors text-left",
-                i === mentionIndex
-                  ? "bg-[#2A2A2A] text-white"
-                  : "text-[#E5E7EB] hover:bg-[#252525]",
-              )}
-            >
-              <div
-                className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
-                style={{
-                  backgroundColor: `hsl(${(member.id.charCodeAt(0) * 37) % 360}, 60%, 45%)`,
-                }}
-              >
-                {member.avatar_url ? (
-                  <img
-                    src={member.avatar_url}
-                    alt={member.full_name ?? ""}
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
-                ) : (
-                  (member.full_name ?? member.email ?? "?")[0].toUpperCase()
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="font-medium truncate">{member.full_name ?? member.email}</p>
-                {member.department && (
-                  <p className="text-xs text-[#9CA3AF] truncate">{member.department}</p>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <div
-        ref={dropZoneRef}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        className={cn(
-          "relative rounded-xl border bg-[#1A1A1A] transition-colors",
-          dragging ? "border-primary border-dashed" : "border-[#2A2A2A]",
-        )}
-      >
-        {dragging && (
-          <div className="absolute inset-0 rounded-xl z-10 flex items-center justify-center bg-[#1A1A1A]/80 border-2 border-dashed border-primary">
-            <p className="text-primary text-sm font-medium">Drop files to upload</p>
-          </div>
-        )}
-
-        <div className="flex items-center gap-0.5 px-2 pt-2 pb-1 border-b border-[#2A2A2A]">
-          <ToolbarButton label="Bold" onClick={handleBold}>
-            <Bold className="w-3.5 h-3.5" />
-          </ToolbarButton>
-          <ToolbarButton label="Italic" onClick={handleItalic}>
-            <Italic className="w-3.5 h-3.5" />
-          </ToolbarButton>
-          <ToolbarButton label="Strikethrough" onClick={handleStrike}>
-            <Strikethrough className="w-3.5 h-3.5" />
-          </ToolbarButton>
-          <ToolbarButton label="Inline code" onClick={handleCode}>
-            <Code className="w-3.5 h-3.5" />
-          </ToolbarButton>
-          <div className="w-px h-4 bg-[#2A2A2A] mx-0.5" />
-          <ToolbarButton label="Bullet list" onClick={handleBulletList}>
-            <List className="w-3.5 h-3.5" />
-          </ToolbarButton>
-          <ToolbarButton label="Numbered list" onClick={handleOrderedList}>
-            <ListOrdered className="w-3.5 h-3.5" />
-          </ToolbarButton>
-          <div className="w-px h-4 bg-[#2A2A2A] mx-0.5" />
-          <ToolbarButton label="Insert link" onClick={handleLink}>
-            <Link className="w-3.5 h-3.5" />
-          </ToolbarButton>
-          <ToolbarButton label="Code block" onClick={handleCodeBlock}>
-            <Code2 className="w-3.5 h-3.5" />
-          </ToolbarButton>
-        </div>
-
-        {files.length > 0 && (
-          <div className="flex flex-wrap gap-1.5 px-3 pt-2">
-            {files.map((f, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-1.5 bg-[#252525] border border-[#2A2A2A] rounded-lg px-2 py-1 text-xs text-[#E5E7EB]"
-              >
-                {fileIcon(f.type)}
-                <span className="max-w-[120px] truncate">{f.name}</span>
-                <span className="text-[#6B7280]">{formatBytes(f.size)}</span>
-                <button
-                  type="button"
-                  onClick={() => removeFile(i)}
-                  className="text-[#6B7280] hover:text-white transition-colors"
-                  aria-label={`Remove ${f.name}`}
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <textarea
-          ref={textareaRef}
-          value={value}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          disabled={disabled || sending}
-          rows={1}
-          className={cn(
-            "w-full bg-transparent outline-none resize-none text-base text-white",
-            "placeholder:text-[#6B7280] px-3 py-2 leading-relaxed",
-            "disabled:opacity-50",
-          )}
-          style={{ minHeight: "36px", maxHeight: "160px", fontSize: "16px" }}
-          aria-label={placeholder}
+      {voiceRecording && onSendVoiceNote ? (
+        <VoiceNoteRecorder
+          onSend={async (blob, dur, wf) => {
+            await onSendVoiceNote(blob, dur, wf);
+            setVoiceRecording(false);
+          }}
+          onCancel={() => setVoiceRecording(false)}
+          disabled={disabled}
         />
+      ) : (
+        <>
+          {mentionQuery !== null && filteredMembers.length > 0 && (
+            <div className="absolute bottom-full mb-2 left-0 w-72 bg-[#1A1A1A] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden z-20">
+              {filteredMembers.map((member, i) => (
+                <button
+                  key={member.id}
+                  type="button"
+                  onMouseDown={(e) => {
+                    e.preventDefault();
+                    insertMention(member);
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 text-sm transition-colors text-left",
+                    i === mentionIndex
+                      ? "bg-[#2A2A2A] text-white"
+                      : "text-[#E5E7EB] hover:bg-[#252525]",
+                  )}
+                >
+                  <div
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0"
+                    style={{
+                      backgroundColor: `hsl(${(member.id.charCodeAt(0) * 37) % 360}, 60%, 45%)`,
+                    }}
+                  >
+                    {member.avatar_url ? (
+                      <img
+                        src={member.avatar_url}
+                        alt={member.full_name ?? ""}
+                        className="w-6 h-6 rounded-full object-cover"
+                      />
+                    ) : (
+                      (member.full_name ?? member.email ?? "?")[0].toUpperCase()
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="font-medium truncate">{member.full_name ?? member.email}</p>
+                    {member.department && (
+                      <p className="text-xs text-[#9CA3AF] truncate">{member.department}</p>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
 
-        <div className="flex items-center justify-between px-2 pb-2">
-          <div className="flex items-center gap-0.5">
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={disabled || files.length >= MAX_FILES}
-              className="p-1.5 rounded text-[#9CA3AF] hover:bg-[#252525] hover:text-white transition-colors disabled:opacity-40"
-              aria-label="Attach file"
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
-            <EmojiPicker
-              onSelect={(emoji) => {
-                setValue((prev) => {
-                  if (prev.length + 2 > CHAR_LIMIT) return prev;
-                  return prev + emoji;
-                });
-                textareaRef.current?.focus();
-              }}
-              trigger={
+          <div
+            ref={dropZoneRef}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            className={cn(
+              "relative rounded-xl border bg-[#1A1A1A] transition-colors",
+              dragging ? "border-primary border-dashed" : "border-[#2A2A2A]",
+            )}
+          >
+            {dragging && (
+              <div className="absolute inset-0 rounded-xl z-10 flex items-center justify-center bg-[#1A1A1A]/80 border-2 border-dashed border-primary">
+                <p className="text-primary text-sm font-medium">Drop files to upload</p>
+              </div>
+            )}
+
+            <div className="flex items-center gap-0.5 px-2 pt-2 pb-1 border-b border-[#2A2A2A]">
+              <ToolbarButton label="Bold" onClick={handleBold}>
+                <Bold className="w-3.5 h-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Italic" onClick={handleItalic}>
+                <Italic className="w-3.5 h-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Strikethrough" onClick={handleStrike}>
+                <Strikethrough className="w-3.5 h-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Inline code" onClick={handleCode}>
+                <Code className="w-3.5 h-3.5" />
+              </ToolbarButton>
+              <div className="w-px h-4 bg-[#2A2A2A] mx-0.5" />
+              <ToolbarButton label="Bullet list" onClick={handleBulletList}>
+                <List className="w-3.5 h-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Numbered list" onClick={handleOrderedList}>
+                <ListOrdered className="w-3.5 h-3.5" />
+              </ToolbarButton>
+              <div className="w-px h-4 bg-[#2A2A2A] mx-0.5" />
+              <ToolbarButton label="Insert link" onClick={handleLink}>
+                <Link className="w-3.5 h-3.5" />
+              </ToolbarButton>
+              <ToolbarButton label="Code block" onClick={handleCodeBlock}>
+                <Code2 className="w-3.5 h-3.5" />
+              </ToolbarButton>
+            </div>
+
+            {files.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 px-3 pt-2">
+                {files.map((f, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-1.5 bg-[#252525] border border-[#2A2A2A] rounded-lg px-2 py-1 text-xs text-[#E5E7EB]"
+                  >
+                    {fileIcon(f.type)}
+                    <span className="max-w-[120px] truncate">{f.name}</span>
+                    <span className="text-[#6B7280]">{formatBytes(f.size)}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeFile(i)}
+                      className="text-[#6B7280] hover:text-white transition-colors"
+                      aria-label={`Remove ${f.name}`}
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <textarea
+              ref={textareaRef}
+              value={value}
+              onChange={handleChange}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              disabled={disabled || sending}
+              rows={1}
+              className={cn(
+                "w-full bg-transparent outline-none resize-none text-base text-white",
+                "placeholder:text-[#6B7280] px-3 py-2 leading-relaxed",
+                "disabled:opacity-50",
+              )}
+              style={{ minHeight: "36px", maxHeight: "160px", fontSize: "16px" }}
+              aria-label={placeholder}
+            />
+
+            <div className="flex items-center justify-between px-2 pb-2">
+              <div className="flex items-center gap-0.5">
                 <button
                   type="button"
-                  className="p-1.5 rounded text-[#9CA3AF] hover:bg-[#252525] hover:text-white transition-colors"
-                  aria-label="Insert emoji"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={disabled || files.length >= MAX_FILES}
+                  className="p-1.5 rounded text-[#9CA3AF] hover:bg-[#252525] hover:text-white transition-colors disabled:opacity-40"
+                  aria-label="Attach file"
                 >
-                  <Smile className="w-4 h-4" />
+                  <Paperclip className="w-4 h-4" />
                 </button>
-              }
-            />
+                <EmojiPicker
+                  onSelect={(emoji) => {
+                    setValue((prev) => {
+                      if (prev.length + 2 > CHAR_LIMIT) return prev;
+                      return prev + emoji;
+                    });
+                    textareaRef.current?.focus();
+                  }}
+                  trigger={
+                    <button
+                      type="button"
+                      className="p-1.5 rounded text-[#9CA3AF] hover:bg-[#252525] hover:text-white transition-colors"
+                      aria-label="Insert emoji"
+                    >
+                      <Smile className="w-4 h-4" />
+                    </button>
+                  }
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                {showCounter && (
+                  <span
+                    className={cn("text-xs", charsLeft < 200 ? "text-red-400" : "text-[#9CA3AF]")}
+                  >
+                    {charsLeft}
+                  </span>
+                )}
+                {showMic ? (
+                  <button
+                    type="button"
+                    onClick={() => setVoiceRecording(true)}
+                    disabled={disabled}
+                    className="p-1.5 rounded-lg bg-[#252525] text-[#9CA3AF] hover:bg-[#2A2A2A] hover:text-white transition-colors disabled:opacity-40"
+                    aria-label="Record voice note"
+                  >
+                    <Mic className="w-4 h-4" />
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleSend}
+                    disabled={!canSend}
+                    className={cn(
+                      "p-1.5 rounded-lg transition-colors",
+                      canSend
+                        ? "bg-primary text-white hover:bg-primary/90"
+                        : "bg-[#252525] text-[#6B7280] cursor-not-allowed",
+                    )}
+                    aria-label="Send message"
+                  >
+                    <SendHorizonal className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            {showCounter && (
-              <span className={cn("text-xs", charsLeft < 200 ? "text-red-400" : "text-[#9CA3AF]")}>
-                {charsLeft}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={handleSend}
-              disabled={!canSend}
-              className={cn(
-                "p-1.5 rounded-lg transition-colors",
-                canSend
-                  ? "bg-primary text-white hover:bg-primary/90"
-                  : "bg-[#252525] text-[#6B7280] cursor-not-allowed",
-              )}
-              aria-label="Send message"
-            >
-              <SendHorizonal className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <input
-        ref={fileInputRef}
-        type="file"
-        multiple
-        accept={ACCEPTED_TYPES}
-        onChange={handleFileInput}
-        className="hidden"
-        aria-hidden="true"
-      />
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={ACCEPTED_TYPES}
+            onChange={handleFileInput}
+            className="hidden"
+            aria-hidden="true"
+          />
+        </>
+      )}
     </div>
   );
 }

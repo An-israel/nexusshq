@@ -17,6 +17,7 @@ import { EmojiPicker } from "@/components/messages/EmojiPicker";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { Message, MsgProfile, UserPresence } from "@/lib/messaging/types";
+import { VoiceNotePlayer } from "@/components/messages/VoiceNotePlayer";
 
 interface MessageItemProps {
   message: Message;
@@ -440,6 +441,10 @@ export function MessageItem({
               {renderBody(message.body)}
               {message.is_edited && <span className="text-xs text-[#6B7280] ml-1">(edited)</span>}
             </div>
+          )}
+
+          {!message.is_deleted && message.voice_note && (
+            <VoiceNotePlayer voiceNote={message.voice_note} />
           )}
 
           {!message.is_deleted && <AttachmentRow attachments={message.attachments} />}

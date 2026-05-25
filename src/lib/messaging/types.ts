@@ -82,6 +82,7 @@ export interface Message {
   sender?: MsgProfile;
   reactions?: MessageReaction[];
   attachments?: MessageAttachment[];
+  voice_note?: VoiceNote;
 }
 
 export interface MessageAttachment {
@@ -94,6 +95,21 @@ export interface MessageAttachment {
   google_drive_view_url: string | null;
   storage_path: string | null;
   thumbnail_url: string | null;
+  created_at: string;
+}
+
+export interface VoiceNote {
+  id: string;
+  workspace_id: string;
+  message_id: string;
+  sender_id: string | null;
+  storage_path: string;
+  public_url: string;
+  duration_seconds: number | null;
+  waveform_data: number[] | null;
+  transcription: string | null;
+  transcription_status: "pending" | "processing" | "completed" | "failed";
+  file_size_bytes: number | null;
   created_at: string;
 }
 
