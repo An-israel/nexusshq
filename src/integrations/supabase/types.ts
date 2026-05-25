@@ -2911,6 +2911,10 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      is_workspace_manager: {
+        Args: { _user_id: string; _workspace_id: string }
+        Returns: boolean
+      }
       is_workspace_member: {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
@@ -2946,6 +2950,10 @@ export type Database = {
       seed_workspace_defaults: {
         Args: { p_workspace_id: string }
         Returns: undefined
+      }
+      shares_workspace_with: {
+        Args: { _actor_user_id: string; _target_user_id: string }
+        Returns: boolean
       }
       super_admin_create_workspace: {
         Args: {
