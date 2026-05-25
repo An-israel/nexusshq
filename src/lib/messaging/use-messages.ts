@@ -2,7 +2,7 @@ import React from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { notifyMentions, notifyPinChange } from "./notify";
-import type { Message, MsgProfile, MessageReaction, MessageAttachment } from "./types";
+import type { Message, MsgProfile, MessageReaction, MessageAttachment, VoiceNote } from "./types";
 
 const PAGE_SIZE = 50;
 
@@ -47,6 +47,21 @@ type RawAttachment = {
   created_at: string;
 };
 
+type RawVoiceNote = {
+  id: string;
+  workspace_id: string;
+  message_id: string;
+  sender_id: string | null;
+  storage_path: string;
+  public_url: string;
+  duration_seconds: number | null;
+  waveform_data: number[] | null;
+  transcription: string | null;
+  transcription_status: "pending" | "processing" | "completed" | "failed";
+  file_size_bytes: number | null;
+  created_at: string;
+};
+
 async function loadProfiles(userIds: string[]): Promise<Map<string, MsgProfile>> {
   const unique = Array.from(new Set(userIds));
   if (unique.length === 0) return new Map();
@@ -71,7 +86,7 @@ async function enrichMessages(rawMsgs: RawMessage[]): Promise<Message[]> {
   const msgIds = rawMsgs.map((m) => m.id);
   const senderIds = rawMsgs.map((m) => m.sender_id);
 
-  const [profileMap, reactionsRes, attachmentsRes] = await Promise.all([
+  const [profileMap, reactionsRes, attachmentsRes, voiceNotesRes] = await Promise.all([
     loadProfiles(senderIds),
     supabase
       .from("message_reactions")
@@ -83,10 +98,19 @@ async function enrichMessages(rawMsgs: RawMessage[]): Promise<Message[]> {
         "id,message_id,file_name,file_type,file_size_bytes,google_drive_file_id,google_drive_view_url,storage_path,thumbnail_url,created_at",
       )
       .in("message_id", msgIds),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("voice_notes")
+      .select(
+        "id,workspace_id,message_id,sender_id,storage_path,public_url,duration_seconds,waveform_data,transcription,transcription_status,file_size_bytes,created_at",
+      )
+      .in("message_id", msgIds),
   ]);
 
   const rawReactions = (reactionsRes.data ?? []) as RawReaction[];
   const rawAttachments = (attachmentsRes.data ?? []) as RawAttachment[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawVoiceNotes = ((voiceNotesRes as any).data ?? []) as RawVoiceNote[];
 
   const reactionUserIds = rawReactions.map((r) => r.user_id);
   const reactionProfileMap = await loadProfiles(reactionUserIds);
@@ -105,11 +129,17 @@ async function enrichMessages(rawMsgs: RawMessage[]): Promise<Message[]> {
     attachmentsByMessage.set(a.message_id, arr);
   }
 
+  const voiceNoteByMessage = new Map<string, VoiceNote>();
+  for (const vn of rawVoiceNotes) {
+    voiceNoteByMessage.set(vn.message_id, vn as VoiceNote);
+  }
+
   return rawMsgs.map((m) => ({
     ...m,
     sender: profileMap.get(m.sender_id),
     reactions: reactionsByMessage.get(m.id) ?? [],
     attachments: attachmentsByMessage.get(m.id) ?? [],
+    voice_note: voiceNoteByMessage.get(m.id),
   }));
 }
 
@@ -124,6 +154,7 @@ export function useMessages(params: {
   hasMore: boolean;
   loadMore: () => void;
   sendMessage: (body: string, files?: File[]) => Promise<void>;
+  sendVoiceNote: (blob: Blob, duration: number, waveformData: number[]) => Promise<void>;
   editMessage: (id: string, body: string) => Promise<void>;
   deleteMessage: (id: string) => Promise<void>;
   pinMessage: (id: string, pinned: boolean) => Promise<void>;
@@ -200,7 +231,7 @@ export function useMessages(params: {
     if (!oldestCreatedAtRef.current || !hasMore) return;
 
     try {
-      let q = buildBaseQuery().lt("created_at", oldestCreatedAtRef.current);
+      const q = buildBaseQuery().lt("created_at", oldestCreatedAtRef.current);
       const { data, error } = await q;
       if (error) throw error;
 
@@ -490,12 +521,122 @@ export function useMessages(params: {
     [workspaceId, channelId, conversationId, messages],
   );
 
+  const sendVoiceNote = React.useCallback(
+    async (blob: Blob, duration: number, waveformData: number[]) => {
+      if (!workspaceId) return;
+
+      const {
+        data: { user },
+        error: authErr,
+      } = await supabase.auth.getUser();
+      if (authErr || !user) {
+        toast.error("Not authenticated");
+        return;
+      }
+
+      const optimisticId = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const optimistic: Message = {
+        id: optimisticId,
+        workspace_id: workspaceId,
+        channel_id: channelId ?? null,
+        conversation_id: conversationId ?? null,
+        sender_id: user.id,
+        body: "[Voice Note]",
+        body_html: null,
+        parent_message_id: parentMessageId ?? null,
+        thread_reply_count: 0,
+        thread_last_reply_at: null,
+        is_edited: false,
+        edited_at: null,
+        is_deleted: false,
+        pinned: false,
+        pinned_by: null,
+        has_attachment: false,
+        created_at: now,
+      };
+      setMessages((prev) => [...prev, optimistic]);
+
+      try {
+        const insertPayload: Record<string, unknown> = {
+          workspace_id: workspaceId,
+          sender_id: user.id,
+          body: "[Voice Note]",
+          has_attachment: false,
+        };
+        if (channelId) insertPayload["channel_id"] = channelId;
+        if (conversationId) insertPayload["conversation_id"] = conversationId;
+        if (parentMessageId) insertPayload["parent_message_id"] = parentMessageId;
+
+        const { data: msgData, error: msgErr } = await supabase
+          .from("messages")
+          .insert(insertPayload as never)
+          .select()
+          .single();
+        if (msgErr) throw msgErr;
+
+        const insertedMsg = msgData as unknown as { id: string } & typeof optimistic;
+
+        const ext = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "mp4" : "webm";
+        const containerId = channelId ?? conversationId ?? "misc";
+        const storagePath = `${workspaceId}/${containerId}/${crypto.randomUUID()}.${ext}`;
+
+        const { error: uploadErr } = await supabase.storage
+          .from("voice-notes")
+          .upload(storagePath, blob, { contentType: blob.type });
+        if (uploadErr) throw uploadErr;
+
+        const { data: urlData } = supabase.storage.from("voice-notes").getPublicUrl(storagePath);
+        const publicUrl = urlData?.publicUrl ?? "";
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const vnRes = await (supabase as any)
+          .from("voice_notes")
+          .insert({
+            workspace_id: workspaceId,
+            message_id: (insertedMsg as unknown as { id: string }).id,
+            sender_id: user.id,
+            storage_path: storagePath,
+            public_url: publicUrl,
+            duration_seconds: Math.round(duration),
+            waveform_data: waveformData,
+            file_size_bytes: blob.size,
+            transcription_status: "pending",
+          })
+          .select()
+          .single();
+        if (vnRes.error) throw vnRes.error;
+        const vnData = vnRes.data as RawVoiceNote;
+
+        // Fire-and-forget transcription
+        void fetch("/api/transcribe-voice-note", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ voiceNoteId: vnData.id, publicUrl }),
+        }).catch((e) => console.error("transcription request failed:", e));
+
+        const enriched = await enrichMessages([insertedMsg as unknown as typeof optimistic]);
+        const real = enriched[0];
+        if (real) {
+          real.voice_note = vnData as unknown as VoiceNote;
+          setMessages((prev) => prev.map((m) => (m.id === optimisticId ? real : m)));
+        }
+      } catch (err) {
+        console.error("sendVoiceNote error:", err);
+        toast.error("Failed to send voice note");
+        setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
+      }
+    },
+    [workspaceId, channelId, conversationId, parentMessageId],
+  );
+
   return {
     messages,
     loading,
     hasMore,
     loadMore,
     sendMessage,
+    sendVoiceNote,
     editMessage,
     deleteMessage,
     pinMessage,

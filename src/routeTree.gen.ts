@@ -26,6 +26,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackSplatRouteImport } from './routes/track.$'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
+import { Route as ApiTranscribeVoiceNoteRouteImport } from './routes/api/transcribe-voice-note'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
 import { Route as AppWorkspaceSlugTeamBoardRouteImport } from './routes/_app.$workspaceSlug.team-board'
 import { Route as AppWorkspaceSlugTeamRouteImport } from './routes/_app.$workspaceSlug.team'
@@ -154,6 +155,11 @@ const TrackSplatRoute = TrackSplatRouteImport.update({
 const ApiAiRoute = ApiAiRouteImport.update({
   id: '/api/ai',
   path: '/api/ai',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTranscribeVoiceNoteRoute = ApiTranscribeVoiceNoteRouteImport.update({
+  id: '/api/transcribe-voice-note',
+  path: '/api/transcribe-voice-note',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppWorkspaceSlugRoute = AppWorkspaceSlugRouteImport.update({
@@ -429,6 +435,7 @@ export interface FileRoutesByFullPath {
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
   '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -492,6 +499,7 @@ export interface FileRoutesByTo {
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
   '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -557,6 +565,7 @@ export interface FileRoutesById {
   '/workspaces': typeof WorkspacesRoute
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
   '/track/$': typeof TrackSplatRoute
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/_app/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -666,6 +675,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/$workspaceSlug/messages/channel/$channelId'
+    | '/api/transcribe-voice-note'
     | '/$workspaceSlug/messages/dm/$conversationId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -728,6 +738,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
+    | '/api/transcribe-voice-note'
     | '/$workspaceSlug/messages/channel/$channelId'
     | '/$workspaceSlug/messages/dm/$conversationId'
   id:
@@ -749,6 +760,7 @@ export interface FileRouteTypes {
     | '/workspaces'
     | '/_app/$workspaceSlug'
     | '/api/ai'
+    | '/api/transcribe-voice-note'
     | '/track/$'
     | '/_app/$workspaceSlug/announcements'
     | '/_app/$workspaceSlug/attendance'
@@ -813,6 +825,7 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WorkspacesRoute: typeof WorkspacesRoute
   ApiAiRoute: typeof ApiAiRoute
+  ApiTranscribeVoiceNoteRoute: typeof ApiTranscribeVoiceNoteRoute
   TrackSplatRoute: typeof TrackSplatRoute
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
   ApiPublicCronBurnoutDetectionRoute: typeof ApiPublicCronBurnoutDetectionRoute
@@ -944,6 +957,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ai'
       fullPath: '/api/ai'
       preLoaderRoute: typeof ApiAiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/transcribe-voice-note': {
+      id: '/api/transcribe-voice-note'
+      path: '/api/transcribe-voice-note'
+      fullPath: '/api/transcribe-voice-note'
+      preLoaderRoute: typeof ApiTranscribeVoiceNoteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/$workspaceSlug': {
@@ -1407,6 +1427,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WorkspacesRoute: WorkspacesRoute,
   ApiAiRoute: ApiAiRoute,
+  ApiTranscribeVoiceNoteRoute: ApiTranscribeVoiceNoteRoute,
   TrackSplatRoute: TrackSplatRoute,
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
   ApiPublicCronBurnoutDetectionRoute: ApiPublicCronBurnoutDetectionRoute,

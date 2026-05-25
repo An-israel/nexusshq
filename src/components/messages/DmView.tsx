@@ -120,6 +120,7 @@ export function DmView({
     hasMore,
     loadMore,
     sendMessage,
+    sendVoiceNote,
     editMessage,
     deleteMessage,
     pinMessage,
@@ -394,6 +395,7 @@ export function DmView({
         <div className="shrink-0 border-t border-[#2A2A2A] bg-[#0F0F0F]">
           <MessageInput
             onSend={sendMessage}
+            onSendVoiceNote={sendVoiceNote}
             placeholder={isDirect ? `Message ${title}` : `Message ${title}`}
             workspaceId={workspaceId}
             conversationId={conversation.id}

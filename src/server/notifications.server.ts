@@ -44,17 +44,11 @@ export async function notifyUserWhatsApp(userId: string, message: string): Promi
       .select("whatsapp_opt_in, full_name")
       .eq("id", userId)
       .maybeSingle(),
-    supabaseAdmin
-      .from("profile_private")
-      .select("phone")
-      .eq("user_id", userId)
-      .maybeSingle(),
+    supabaseAdmin.from("profile_private").select("phone").eq("user_id", userId).maybeSingle(),
   ]);
 
   if (!profile?.whatsapp_opt_in || !priv?.phone) return;
 
-  const phone = priv.phone.startsWith("+")
-    ? priv.phone
-    : `+234${priv.phone.replace(/^0/, "")}`;
+  const phone = priv.phone.startsWith("+") ? priv.phone : `+234${priv.phone.replace(/^0/, "")}`;
   await sendWhatsAppMessage(phone, message);
 }

@@ -85,6 +85,7 @@ export function ChannelView({
     hasMore,
     loadMore,
     sendMessage,
+    sendVoiceNote,
     editMessage,
     deleteMessage,
     pinMessage,
@@ -379,6 +380,7 @@ export function ChannelView({
           )}
           <MessageInput
             onSend={sendMessage}
+            onSendVoiceNote={sendVoiceNote}
             placeholder={`Message #${channel.name}`}
             workspaceId={workspaceId}
             channelId={channel.id}

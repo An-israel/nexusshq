@@ -107,6 +107,7 @@ export function ThreadPanel({
   const {
     messages: replies,
     loading,
+    sendVoiceNote: sendThreadVoiceNote,
     editMessage,
     deleteMessage,
     pinMessage,
@@ -271,6 +272,7 @@ export function ThreadPanel({
           currentUserId={currentUserId}
           workspaceMembers={workspaceMembers}
           onSend={sendReply}
+          onSendVoiceNote={sendThreadVoiceNote}
         />
       </div>
     </aside>
