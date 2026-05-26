@@ -429,10 +429,12 @@ function NewProjectDialog({
 
 function NewTaskDialog({
   projectId,
+  workspaceId,
   nextIndex,
   onSaved,
 }: {
   projectId: string;
+  workspaceId: string;
   nextIndex: number;
   onSaved: () => void;
 }) {
@@ -447,6 +449,7 @@ function NewTaskDialog({
     setSaving(true);
     const { error } = await supabase.from("client_project_tasks").insert({
       project_id: projectId,
+      workspace_id: workspaceId,
       title: title.trim(),
       due_date: dueDate || null,
       order_index: nextIndex,
