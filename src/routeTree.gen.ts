@@ -25,8 +25,8 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackSplatRouteImport } from './routes/track.$'
-import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as ApiTranscribeVoiceNoteRouteImport } from './routes/api/transcribe-voice-note'
+import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
 import { Route as AppWorkspaceSlugTeamBoardRouteImport } from './routes/_app.$workspaceSlug.team-board'
 import { Route as AppWorkspaceSlugTeamRouteImport } from './routes/_app.$workspaceSlug.team'
@@ -152,14 +152,14 @@ const TrackSplatRoute = TrackSplatRouteImport.update({
   path: '/track/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiAiRoute = ApiAiRouteImport.update({
-  id: '/api/ai',
-  path: '/api/ai',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiTranscribeVoiceNoteRoute = ApiTranscribeVoiceNoteRouteImport.update({
   id: '/api/transcribe-voice-note',
   path: '/api/transcribe-voice-note',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiRoute = ApiAiRouteImport.update({
+  id: '/api/ai',
+  path: '/api/ai',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppWorkspaceSlugRoute = AppWorkspaceSlugRouteImport.update({
@@ -631,6 +631,7 @@ export interface FileRouteTypes {
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
+    | '/api/transcribe-voice-note'
     | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
@@ -675,7 +676,6 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
     | '/$workspaceSlug/messages/channel/$channelId'
-    | '/api/transcribe-voice-note'
     | '/$workspaceSlug/messages/dm/$conversationId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -695,6 +695,7 @@ export interface FileRouteTypes {
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
+    | '/api/transcribe-voice-note'
     | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
@@ -738,7 +739,6 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
-    | '/api/transcribe-voice-note'
     | '/$workspaceSlug/messages/channel/$channelId'
     | '/$workspaceSlug/messages/dm/$conversationId'
   id:
@@ -952,18 +952,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/ai': {
-      id: '/api/ai'
-      path: '/api/ai'
-      fullPath: '/api/ai'
-      preLoaderRoute: typeof ApiAiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/transcribe-voice-note': {
       id: '/api/transcribe-voice-note'
       path: '/api/transcribe-voice-note'
       fullPath: '/api/transcribe-voice-note'
       preLoaderRoute: typeof ApiTranscribeVoiceNoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai': {
+      id: '/api/ai'
+      path: '/api/ai'
+      fullPath: '/api/ai'
+      preLoaderRoute: typeof ApiAiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/$workspaceSlug': {
