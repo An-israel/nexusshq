@@ -97,6 +97,7 @@ export async function notifyMentions({
     const preview = body.length > 140 ? body.slice(0, 140) + "…" : body;
 
     await supabase.from("notifications").insert(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       finalMatched.map((m) => ({
         user_id: m.id,
         workspace_id: workspaceId,
@@ -104,9 +105,8 @@ export async function notifyMentions({
         title: `${senderName} mentioned you in #${channelName}`,
         message: preview,
         related_task_id: null,
-        // store messageId in metadata-style fallback: re-use related_task_id is
-        // task-only, so we leave deep-linking to a future enhancement.
-      })),
+        related_channel_id: channelId,
+      })) as any[],
     );
     void messageId;
   } catch (err) {
@@ -177,13 +177,16 @@ export async function notifyPinChange({
     const preview = body.length > 120 ? body.slice(0, 120) + "…" : body;
 
     await supabase.from("notifications").insert(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recipients.map((uid) => ({
         user_id: uid,
         workspace_id: workspaceId,
         type: "info" as const,
         title: `${actorName} ${pinned ? "pinned" : "unpinned"} a message in ${location}`,
         message: preview,
-      })),
+        ...(channelId ? { related_channel_id: channelId } : {}),
+        ...(conversationId ? { related_conversation_id: conversationId } : {}),
+      })) as any[],
     );
   } catch (err) {
     console.error("notifyPinChange failed", err);

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -17,6 +17,7 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
+import { getNotificationUrl } from "@/lib/notifications/get-notification-url";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -71,6 +72,8 @@ function colorFor(type: string) {
 function NotificationsPage() {
   const { user } = useAuth();
   const { workspace } = useWorkspace();
+  const { workspaceSlug } = useParams({ from: "/_app/$workspaceSlug/notifications" });
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [notifs, setNotifs] = useState<Notif[]>([]);
   const [tab, setTab] = useState("all");
@@ -179,6 +182,20 @@ function NotificationsPage() {
     setNotifs((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
   };
 
+  const handleNotifClick = async (n: Notif) => {
+    await markRead(n);
+    const url = getNotificationUrl(
+      n as unknown as {
+        type: string;
+        related_task_id?: string | null;
+        related_channel_id?: string | null;
+        related_conversation_id?: string | null;
+      },
+      workspaceSlug,
+    );
+    if (url) void navigate({ to: url as never });
+  };
+
   const unreadCount = notifs.filter((n) => !n.is_read).length;
 
   return (
@@ -269,7 +286,7 @@ function NotificationsPage() {
                 className={`flex cursor-pointer items-start gap-3 p-4 transition-colors hover:bg-accent/40 ${
                   !n.is_read ? "bg-primary/5" : ""
                 }`}
-                onClick={() => markRead(n)}
+                onClick={() => void handleNotifClick(n)}
               >
                 <div
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${colorFor(n.type)}`}
