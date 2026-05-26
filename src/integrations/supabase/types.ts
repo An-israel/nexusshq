@@ -302,7 +302,7 @@ export type Database = {
           project_id: string
           status: string
           title: string
-          workspace_id: string | null
+          workspace_id: string
         }
         Insert: {
           completed_at?: string | null
@@ -314,7 +314,7 @@ export type Database = {
           project_id: string
           status?: string
           title: string
-          workspace_id?: string | null
+          workspace_id: string
         }
         Update: {
           completed_at?: string | null
@@ -326,7 +326,7 @@ export type Database = {
           project_id?: string
           status?: string
           title?: string
-          workspace_id?: string | null
+          workspace_id?: string
         }
         Relationships: [
           {
@@ -355,7 +355,7 @@ export type Database = {
           id: string
           name: string
           status: string
-          workspace_id: string | null
+          workspace_id: string
         }
         Insert: {
           access_token?: string
@@ -366,7 +366,7 @@ export type Database = {
           id?: string
           name: string
           status?: string
-          workspace_id?: string | null
+          workspace_id: string
         }
         Update: {
           access_token?: string
@@ -377,7 +377,7 @@ export type Database = {
           id?: string
           name?: string
           status?: string
-          workspace_id?: string | null
+          workspace_id?: string
         }
         Relationships: [
           {
