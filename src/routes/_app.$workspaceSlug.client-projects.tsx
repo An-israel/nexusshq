@@ -342,6 +342,7 @@ function ClientProjectsPage() {
         <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
           <NewTaskDialog
             projectId={selected.id}
+            workspaceId={selected.workspace_id}
             nextIndex={tasks.length}
             onSaved={() => {
               setNewTaskOpen(false);
