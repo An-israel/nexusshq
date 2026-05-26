@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import {
   Bell,
   AlertCircle,
@@ -16,6 +16,7 @@ import { useWorkspace } from "@/lib/workspace-context";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { timeAgo } from "@/lib/nexus";
+import { getNotificationUrl } from "@/lib/notifications/get-notification-url";
 import type { Database } from "@/integrations/supabase/types";
 
 type Notif = Database["public"]["Tables"]["notifications"]["Row"];
@@ -60,6 +61,7 @@ function colorFor(type: string) {
 export function NotificationBell() {
   const { user } = useAuth();
   const { workspace } = useWorkspace();
+  const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   // Extract workspaceSlug from the current URL: /<slug>/...
   const workspaceSlug = pathname.split("/")[1] ?? "";
@@ -99,6 +101,21 @@ export function NotificationBell() {
   async function markRead(id: string) {
     setUnread((prev) => prev.filter((n) => n.id !== id));
     await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+  }
+
+  async function handleNotifClick(n: Notif) {
+    setOpen(false);
+    await markRead(n.id);
+    const url = getNotificationUrl(
+      n as unknown as {
+        type: string;
+        related_task_id?: string | null;
+        related_channel_id?: string | null;
+        related_conversation_id?: string | null;
+      },
+      workspaceSlug,
+    );
+    if (url) void navigate({ to: url as never });
   }
 
   async function markAllRead() {
@@ -154,7 +171,7 @@ export function NotificationBell() {
                   <li
                     key={n.id}
                     className="flex cursor-pointer items-start gap-3 p-3 hover:bg-accent/50 transition-colors"
-                    onClick={() => void markRead(n.id)}
+                    onClick={() => void handleNotifClick(n)}
                   >
                     <div
                       className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${colorFor(n.type)}`}
