@@ -40,6 +40,7 @@ interface ClientProject {
   status: "active" | "completed" | "on_hold";
   access_token: string;
   created_at: string;
+  workspace_id: string;
 }
 
 interface ProjectTask {
