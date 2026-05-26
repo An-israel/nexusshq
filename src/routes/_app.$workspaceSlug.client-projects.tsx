@@ -40,6 +40,7 @@ interface ClientProject {
   status: "active" | "completed" | "on_hold";
   access_token: string;
   created_at: string;
+  workspace_id: string;
 }
 
 interface ProjectTask {
@@ -342,6 +343,7 @@ function ClientProjectsPage() {
         <Dialog open={newTaskOpen} onOpenChange={setNewTaskOpen}>
           <NewTaskDialog
             projectId={selected.id}
+            workspaceId={selected.workspace_id}
             nextIndex={tasks.length}
             onSaved={() => {
               setNewTaskOpen(false);
@@ -427,10 +429,12 @@ function NewProjectDialog({
 
 function NewTaskDialog({
   projectId,
+  workspaceId,
   nextIndex,
   onSaved,
 }: {
   projectId: string;
+  workspaceId: string;
   nextIndex: number;
   onSaved: () => void;
 }) {
@@ -445,6 +449,7 @@ function NewTaskDialog({
     setSaving(true);
     const { error } = await supabase.from("client_project_tasks").insert({
       project_id: projectId,
+      workspace_id: workspaceId,
       title: title.trim(),
       due_date: dueDate || null,
       order_index: nextIndex,
