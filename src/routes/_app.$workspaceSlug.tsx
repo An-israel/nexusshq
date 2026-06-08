@@ -21,6 +21,14 @@ import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/$workspaceSlug")({
   beforeLoad: async ({ params }) => {
+    // No session storage on the server (localStorage isn't available during
+    // SSR), so getSession() always comes back null here — redirecting would
+    // incorrectly send authenticated users back to /login on every full-page
+    // load (refresh, direct link, or returning from an external redirect like
+    // Paystack checkout). WorkspaceShell re-runs these checks client-side once
+    // the real session is known.
+    if (typeof window === "undefined") return;
+
     const { workspaceSlug } = params;
     const {
       data: { session },
@@ -402,7 +410,7 @@ function WorkspaceShell() {
               : "This workspace has been suspended. Contact support to restore access."}
           </p>
           <a
-            href="mailto:support@nexxoshq.io"
+            href="mailto:nexxoshq@gmail.com"
             className="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Contact support →

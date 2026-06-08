@@ -3,7 +3,6 @@ import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import {
   LayoutDashboard,
   CheckSquare,
-  MessageSquare,
   Bell,
   Menu,
   Clock,
@@ -15,7 +14,6 @@ import {
   GitBranch,
   ClipboardList,
   Kanban,
-  RefreshCw,
   Briefcase,
   Sparkles,
   Settings,
@@ -42,12 +40,6 @@ const BOTTOM_NAV: NavItem[] = [
     roles: ["admin", "manager", "employee"],
   },
   { slug: "tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
-  {
-    slug: "messages",
-    label: "Messages",
-    icon: MessageSquare,
-    roles: ["admin", "manager", "employee"],
-  },
   { slug: "notifications", label: "Alerts", icon: Bell, roles: ["admin", "manager", "employee"] },
 ];
 
@@ -74,12 +66,6 @@ const ALL_NAV: NavItem[] = [
     roles: ["admin", "manager", "employee"],
   },
   {
-    slug: "messages",
-    label: "Messages",
-    icon: MessageSquare,
-    roles: ["admin", "manager", "employee"],
-  },
-  {
     slug: "org-chart",
     label: "Org Chart",
     icon: GitBranch,
@@ -95,12 +81,6 @@ const ALL_NAV: NavItem[] = [
   { slug: "settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
   { slug: "team", label: "Team", icon: Users, roles: ["admin", "manager"] },
   { slug: "team-board", label: "Task Board", icon: Kanban, roles: ["admin", "manager"] },
-  {
-    slug: "recurring-tasks",
-    label: "Recurring Tasks",
-    icon: RefreshCw,
-    roles: ["admin", "manager"],
-  },
   {
     slug: "client-projects",
     label: "Client Projects",

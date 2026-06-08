@@ -161,8 +161,10 @@ function TermsPage() {
                 <p>
                   <span className="text-blue-400 font-semibold">3.3</span> You are responsible for
                   all activity that occurs under your account. Notify us immediately at{" "}
-                  <Placeholder>[support@nexxoshq.io]</Placeholder> if you suspect unauthorised
-                  access.
+                  <a href="mailto:nexxoshq@gmail.com" className="text-blue-400 hover:underline">
+                    nexxoshq@gmail.com
+                  </a>{" "}
+                  if you suspect unauthorised access.
                 </p>
                 <p>
                   <span className="text-blue-400 font-semibold">3.4</span> We reserve the right to
@@ -387,7 +389,10 @@ function TermsPage() {
               </p>
               <div className="mt-4 space-y-2 text-[15px] text-gray-300">
                 <p>
-                  Email: <Placeholder>[support@nexxoshq.io]</Placeholder>
+                  Email:{" "}
+                  <a href="mailto:nexxoshq@gmail.com" className="text-blue-400 hover:underline">
+                    nexxoshq@gmail.com
+                  </a>
                 </p>
                 <p>
                   Phone: <Placeholder>[+234 XXX XXX XXXX]</Placeholder>

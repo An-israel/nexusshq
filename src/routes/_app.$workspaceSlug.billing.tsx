@@ -91,7 +91,7 @@ const PLANS = [
   },
 ] as const;
 
-const SUPPORT_EMAIL = "hello@nexxoshq.io";
+const SUPPORT_EMAIL = "nexxoshq@gmail.com";
 const SUPPORT_WHATSAPP = "https://wa.me/2349000000000";
 
 function openUpgradeEmail(planLabel?: string) {
@@ -569,10 +569,10 @@ function BillingPage() {
             <p className="text-xs text-muted-foreground max-w-sm">
               Contact{" "}
               <a
-                href="mailto:hello@nexxoshq.io"
+                href="mailto:nexxoshq@gmail.com"
                 className="text-foreground underline underline-offset-4 hover:text-primary"
               >
-                hello@nexxoshq.io
+                nexxoshq@gmail.com
               </a>{" "}
               for billing records, receipts, or any payment-related queries.
             </p>
