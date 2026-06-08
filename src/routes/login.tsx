@@ -52,22 +52,10 @@ async function resolveWorkspace(userId: string): Promise<string | null> {
 
   if (slugs.length === 1) return slugs[0];
 
-  // Fall back: check legacy user_roles — existing team members before migration
-  const { data: legacyRole } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .maybeSingle();
-  if (!legacyRole) return null;
-
-  const { data: ws } = await supabase
-    .from("workspaces")
-    .select("slug")
-    .eq("is_active", true)
-    .order("created_at")
-    .limit(1)
-    .maybeSingle();
-  return ws?.slug ?? "skryve";
+  // No workspace membership — the user must create or join one.
+  // Do NOT fall back to "first workspace in the system" (that would dump
+  // every new signup into another tenant's workspace).
+  return null;
 }
 
 function LoginPage() {

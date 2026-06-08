@@ -42,7 +42,7 @@ let instanceCounter = 0;
 export function useFeatureFlags(workspaceId: string | null): { flags: FlagsMap; loading: boolean } {
   const [flags, setFlags] = React.useState<FlagsMap>(buildDefaults);
   const [loading, setLoading] = React.useState<boolean>(workspaceId !== null);
-  const channelName = React.useRef(`feature_flags_${++instanceCounter}`);
+  const channelName = React.useRef(`feature_flags_${workspaceId ?? "none"}_${++instanceCounter}`);
 
   React.useEffect(() => {
     if (workspaceId === null) {
