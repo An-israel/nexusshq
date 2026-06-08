@@ -8,9 +8,10 @@ type WorkspacePlan = Database["public"]["Enums"]["workspace_plan"];
 // Plans actually sold on the billing page — anything else in the metadata is
 // ignored so a tampered/legacy value can't write an invalid plan.
 const PLAN_SEATS: Partial<Record<WorkspacePlan, number>> = {
-  basic: 7,
-  enterprise: 15,
-  unlimited: 999,
+  starter: 5,
+  growth: 15,
+  business: 50,
+  enterprise: 999,
 };
 
 interface PaystackChargeEvent {
@@ -100,13 +101,14 @@ async function activatePlanFromCharge(data: PaystackChargeEvent["data"]) {
     .eq("workspace_id", workspaceId)
     .maybeSingle();
 
+  void interval;
+  void reference;
+
   const subscriptionFields = {
     plan,
     status: "active",
-    billing_interval: interval,
     current_period_start: periodStart.toISOString(),
     current_period_end: periodEnd.toISOString(),
-    paystack_reference: reference,
   };
 
   if (existing) {
