@@ -24,7 +24,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { KpiBoard } from "@/components/kpis/KpiBoard";
 import { toast } from "sonner";
 import {
   Target,
@@ -134,7 +136,8 @@ const STATUS_LABEL: Record<Objective["status"], string> = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function OkrsPage() {
-  const { user, isManager } = useAuth();
+  const { user, role, isManager } = useAuth();
+  const showKpiTab = role === "admin";
   const { workspace } = useWorkspace();
   const [objectives, setObjectives] = React.useState<Objective[]>([]);
   const [keyResults, setKeyResults] = React.useState<KeyResult[]>([]);
@@ -209,16 +212,13 @@ function OkrsPage() {
     }
   }
 
-  return (
+  const objectivesTab = (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Toolbar */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Goals & OKRs</h1>
-          <p className="text-sm text-muted-foreground">
-            Objectives and key results across the company.
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Objectives and key results across the company.
+        </p>
         {isManager && (
           <Button onClick={openNew} className="gap-2">
             <Plus className="h-4 w-4" /> New Objective
@@ -292,6 +292,33 @@ function OkrsPage() {
           void load();
         }}
       />
+    </div>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold">Goals & KPIs</h1>
+        <p className="text-sm text-muted-foreground">
+          Objectives, key results, and department targets — all in one place.
+        </p>
+      </div>
+
+      {showKpiTab ? (
+        <Tabs defaultValue="objectives">
+          <TabsList>
+            <TabsTrigger value="objectives">Objectives & Key Results</TabsTrigger>
+            <TabsTrigger value="kpis">Department KPIs</TabsTrigger>
+          </TabsList>
+          <TabsContent value="objectives">{objectivesTab}</TabsContent>
+          <TabsContent value="kpis">
+            <KpiBoard />
+          </TabsContent>
+        </Tabs>
+      ) : (
+        objectivesTab
+      )}
     </div>
   );
 }

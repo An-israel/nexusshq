@@ -97,7 +97,7 @@ const NAV: NavItem[] = [
   },
   {
     slug: "okrs",
-    label: "Goals & OKRs",
+    label: "Goals & KPIs",
     icon: Flag,
     roles: ["admin", "manager", "employee"],
     flagKey: "okrs",
@@ -140,7 +140,6 @@ const NAV: NavItem[] = [
     flagKey: "reports",
   },
   { slug: "burnout", label: "Wellbeing", icon: Brain, roles: ["admin", "manager"] },
-  { slug: "kpis", label: "KPIs", icon: Target, roles: ["admin"], flagKey: "kpis" },
   { slug: "billing", label: "Billing", icon: CreditCard, roles: ["admin"] },
   { slug: "profile", label: "Profile", icon: UserCircle, roles: ["admin", "manager", "employee"] },
 ];

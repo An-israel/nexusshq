@@ -25,8 +25,7 @@ export const TOGGLEABLE_PAGES: PageFlag[] = [
   { key: "team-board", label: "Task Board", defaultEnabled: true },
   { key: "recurring-tasks", label: "Recurring Tasks", defaultEnabled: true },
   { key: "client-projects", label: "Client Projects", defaultEnabled: true },
-  { key: "kpis", label: "KPIs", defaultEnabled: true },
-  { key: "okrs", label: "Goals & OKRs", defaultEnabled: true },
+  { key: "okrs", label: "Goals & KPIs", defaultEnabled: true },
   { key: "reports", label: "Reports", defaultEnabled: true },
 ];
 

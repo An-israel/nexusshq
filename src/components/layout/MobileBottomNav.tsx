@@ -17,7 +17,6 @@ import {
   Kanban,
   RefreshCw,
   Briefcase,
-  Target,
   Sparkles,
   Settings,
   LogOut,
@@ -86,7 +85,7 @@ const ALL_NAV: NavItem[] = [
     icon: GitBranch,
     roles: ["admin", "manager", "employee"],
   },
-  { slug: "okrs", label: "Goals & OKRs", icon: Flag, roles: ["admin", "manager", "employee"] },
+  { slug: "okrs", label: "Goals & KPIs", icon: Flag, roles: ["admin", "manager", "employee"] },
   {
     slug: "notifications",
     label: "Notifications",
@@ -110,7 +109,6 @@ const ALL_NAV: NavItem[] = [
   },
   { slug: "live", label: "Live", icon: Radio, roles: ["admin", "manager"] },
   { slug: "reports", label: "Reports", icon: BarChart3, roles: ["admin", "manager"] },
-  { slug: "kpis", label: "KPIs", icon: Target, roles: ["admin"] },
 ];
 
 export function MobileBottomNav({ workspaceSlug }: { workspaceSlug: string }) {

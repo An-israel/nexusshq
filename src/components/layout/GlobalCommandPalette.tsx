@@ -18,7 +18,6 @@ import {
   Briefcase,
   Radio,
   BarChart3,
-  Target,
   Brain,
   UserCircle,
   Building2,
@@ -84,7 +83,7 @@ const NAV_ENTRIES: NavEntry[] = [
     slug: "org-chart",
     roles: ["admin", "manager", "employee"],
   },
-  { label: "Goals & OKRs", icon: Flag, slug: "okrs", roles: ["admin", "manager", "employee"] },
+  { label: "Goals & KPIs", icon: Flag, slug: "okrs", roles: ["admin", "manager", "employee"] },
   {
     label: "Notifications",
     icon: Bell,
@@ -110,7 +109,6 @@ const NAV_ENTRIES: NavEntry[] = [
   { label: "Live", icon: Radio, slug: "live", roles: ["admin", "manager"] },
   { label: "Reports", icon: BarChart3, slug: "reports", roles: ["admin", "manager"] },
   { label: "Wellbeing", icon: Brain, slug: "burnout", roles: ["admin", "manager"] },
-  { label: "KPIs", icon: Target, slug: "kpis", roles: ["admin"] },
 ];
 
 // Global singleton for opening the palette from anywhere
