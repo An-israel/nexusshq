@@ -45,14 +45,20 @@ interface KpiRow {
 }
 
 type TaskType = "daily" | "weekly" | "one_time";
+type Recurrence = "daily" | "weekly";
 type Priority = "low" | "medium" | "high" | "urgent";
+
+const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 interface FormState {
   assigned_to: string;
   title: string;
   description: string;
-  task_type: TaskType;
+  is_recurring: boolean;
+  recurrence: Recurrence;
+  day_of_week: string;
   due_date: string;
+  due_time: string;
   priority: Priority;
   kpi_id: string;
   has_warning: boolean;
@@ -74,8 +80,11 @@ function AssignTaskPage() {
     assigned_to: "",
     title: "",
     description: "",
-    task_type: "one_time",
+    is_recurring: false,
+    recurrence: "weekly",
+    day_of_week: "0",
     due_date: todayISO(),
+    due_time: "",
     priority: "medium",
     kpi_id: "",
     has_warning: false,
@@ -156,6 +165,31 @@ function AssignTaskPage() {
 
     setSubmitting(true);
 
+    const taskType: TaskType = form.is_recurring ? form.recurrence : "one_time";
+
+    // For recurring assignments, create the repeating template first so future
+    // occurrences are generated automatically from the Recurring Tasks page.
+    if (form.is_recurring) {
+      const { error: templateError } = await supabase.from("recurring_tasks").insert({
+        title: form.title.trim(),
+        description: form.description.trim() || null,
+        assigned_to: form.assigned_to,
+        created_by: user?.id ?? null,
+        priority: form.priority,
+        recurrence: form.recurrence,
+        day_of_week: form.recurrence === "weekly" ? parseInt(form.day_of_week, 10) : null,
+        due_time: form.due_time || null,
+        last_generated_date: form.due_date,
+        workspace_id: workspace.id,
+      });
+
+      if (templateError) {
+        toast.error(templateError.message);
+        setSubmitting(false);
+        return;
+      }
+    }
+
     const { data: task, error } = await supabase
       .from("tasks")
       .insert({
@@ -164,8 +198,9 @@ function AssignTaskPage() {
         assigned_to: form.assigned_to,
         assigned_by: user?.id ?? null,
         priority: form.priority,
-        task_type: form.task_type,
+        task_type: taskType,
         due_date: form.due_date,
+        due_time: form.due_time || null,
         kpi_id: form.kpi_id || null,
         has_warning: form.has_warning,
         warning_message: form.has_warning ? form.warning_message.trim() || null : null,
@@ -184,18 +219,22 @@ function AssignTaskPage() {
 
     const assignee = members.find((m) => m.id === form.assigned_to);
     const taskTitle = form.title.trim();
-    const dueDateFormatted = new Date(form.due_date + "T00:00:00").toLocaleDateString("en-US", {
+    const dueDateObj = new Date(`${form.due_date}T${form.due_time || "00:00"}:00`);
+    const dueDateFormatted = dueDateObj.toLocaleDateString("en-US", {
       weekday: "short",
       month: "short",
       day: "numeric",
     });
+    const dueFormatted = form.due_time
+      ? `${dueDateFormatted} at ${dueDateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
+      : dueDateFormatted;
 
     // Insert notification
     await supabase.from("notifications").insert({
       user_id: form.assigned_to,
       type: "task_assigned",
       title: "📋 New task assigned",
-      message: `${taskTitle} — due ${dueDateFormatted}`,
+      message: `${taskTitle} — due ${dueFormatted}`,
       related_task_id: task.id,
       workspace_id: workspace.id,
     });
@@ -231,8 +270,8 @@ function AssignTaskPage() {
             ${form.description ? `<p style="color:#6b7280;margin:0 0 12px;">${form.description}</p>` : ""}
             <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;">
               <span style="background:${priorityColor[form.priority]}20;color:${priorityColor[form.priority]};padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase;">${form.priority}</span>
-              <span style="color:#6b7280;font-size:14px;">📅 Due: ${dueDateFormatted}</span>
-              <span style="color:#6b7280;font-size:14px;">🔁 ${form.task_type.replace("_", " ")}</span>
+              <span style="color:#6b7280;font-size:14px;">📅 Due: ${dueFormatted}</span>
+              <span style="color:#6b7280;font-size:14px;">🔁 ${taskType.replace("_", " ")}</span>
             </div>
           </div>
           ${warningSection}
@@ -251,7 +290,11 @@ function AssignTaskPage() {
       }
     }
 
-    toast.success("Task assigned successfully");
+    toast.success(
+      form.is_recurring
+        ? "Recurring task created — first occurrence assigned now"
+        : "Task assigned successfully",
+    );
     setSubmitting(false);
     navigate({ to: "/$workspaceSlug/tasks", params: { workspaceSlug } });
   }
@@ -372,27 +415,26 @@ function AssignTaskPage() {
 
           <Separator />
 
-          {/* ── Section 3: Task Type ── */}
+          {/* ── Section 3: Recurrence ── */}
           <div className="space-y-3">
             <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Task Type
+              Recurrence
             </h2>
             <div className="flex rounded-md overflow-hidden border border-border">
               {(
                 [
-                  { value: "daily", label: "Daily" },
-                  { value: "weekly", label: "Weekly" },
-                  { value: "one_time", label: "One-time" },
-                ] as { value: TaskType; label: string }[]
+                  { value: false, label: "One-time" },
+                  { value: true, label: "Recurring" },
+                ] as { value: boolean; label: string }[]
               ).map(({ value, label }, idx, arr) => (
                 <button
-                  key={value}
+                  key={label}
                   type="button"
-                  onClick={() => setField("task_type", value)}
+                  onClick={() => setField("is_recurring", value)}
                   className={[
                     "flex-1 px-4 py-2 text-sm font-medium transition-colors focus:outline-none",
                     idx !== arr.length - 1 ? "border-r border-border" : "",
-                    form.task_type === value
+                    form.is_recurring === value
                       ? "bg-primary text-primary-foreground"
                       : "bg-background text-muted-foreground hover:bg-muted",
                   ]
@@ -403,6 +445,53 @@ function AssignTaskPage() {
                 </button>
               ))}
             </div>
+
+            {form.is_recurring && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Repeats</Label>
+                  <Select
+                    value={form.recurrence}
+                    onValueChange={(v) => setField("recurrence", v as Recurrence)}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {form.recurrence === "weekly" && (
+                  <div className="space-y-1.5">
+                    <Label>Day of week</Label>
+                    <Select
+                      value={form.day_of_week}
+                      onValueChange={(v) => setField("day_of_week", v)}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {DAY_NAMES.map((d, idx) => (
+                          <SelectItem key={d} value={String(idx)}>
+                            {d}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+              {form.is_recurring
+                ? "A repeating template will be created and the first occurrence assigned right away."
+                : "This task will be assigned once with the deadline below."}
+            </p>
           </div>
 
           <Separator />
@@ -413,15 +502,33 @@ function AssignTaskPage() {
               Schedule &amp; Priority
             </h2>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="due_date">Due Date</Label>
-              <Input
-                id="due_date"
-                type="date"
-                value={form.due_date}
-                onChange={(e) => setField("due_date", e.target.value)}
-                className="w-full"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="due_date">Due Date</Label>
+                <Input
+                  id="due_date"
+                  type="date"
+                  value={form.due_date}
+                  onChange={(e) => setField("due_date", e.target.value)}
+                  className="w-full"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="due_time">
+                  Due Time{" "}
+                  <span className="normal-case font-normal text-muted-foreground/60">
+                    (optional)
+                  </span>
+                </Label>
+                <Input
+                  id="due_time"
+                  type="time"
+                  value={form.due_time}
+                  onChange={(e) => setField("due_time", e.target.value)}
+                  className="w-full"
+                />
+              </div>
             </div>
 
             <div className="space-y-1.5">

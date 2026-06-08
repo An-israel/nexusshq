@@ -34,15 +34,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug")({
       .eq("is_active", true)
       .maybeSingle();
 
-    // Workspaces table may not exist yet (migration pending) — fall back to
-    // user_roles so existing team members are never locked out.
     if (wsError || !workspace) {
-      const { data: legacyRole } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-      if (legacyRole) return; // legacy user — let them through
       throw redirect({ to: "/login" });
     }
 
@@ -53,20 +45,11 @@ export const Route = createFileRoute("/_app/$workspaceSlug")({
       .eq("user_id", session.user.id)
       .maybeSingle();
 
+    // Strict tenant isolation: only actual active workspace members are let
+    // through. Never fall back to legacy user_roles — that bug caused new
+    // signups to be silently dumped into the first workspace in the system.
     if (!membership || membership.is_active === false) {
-      if (!membership) {
-        // Not in workspace_members yet — check legacy user_roles as fallback
-        const { data: legacyRole } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .maybeSingle();
-        if (!legacyRole) throw redirect({ to: "/" });
-        // Has legacy role — let them through
-      } else {
-        // User was removed from this workspace
-        throw redirect({ to: "/workspaces" });
-      }
+      throw redirect({ to: "/workspaces" });
     }
   },
   component: WorkspaceRoot,

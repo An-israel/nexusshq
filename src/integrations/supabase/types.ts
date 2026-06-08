@@ -2002,50 +2002,53 @@ export type Database = {
       };
       recurring_tasks: {
         Row: {
-          assigned_to: string;
-          created_at: string;
-          created_by: string | null;
-          day_of_week: number | null;
-          description: string | null;
-          id: string;
-          is_active: boolean;
-          kpi_id: string | null;
-          last_generated_date: string | null;
-          priority: Database["public"]["Enums"]["task_priority"];
-          recurrence: string;
-          title: string;
-          workspace_id: string | null;
-        };
+          assigned_to: string
+          created_at: string
+          created_by: string | null
+          day_of_week: number | null
+          description: string | null
+          due_time: string | null
+          id: string
+          is_active: boolean
+          kpi_id: string | null
+          last_generated_date: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          recurrence: string
+          title: string
+          workspace_id: string | null
+        }
         Insert: {
-          assigned_to: string;
-          created_at?: string;
-          created_by?: string | null;
-          day_of_week?: number | null;
-          description?: string | null;
-          id?: string;
-          is_active?: boolean;
-          kpi_id?: string | null;
-          last_generated_date?: string | null;
-          priority?: Database["public"]["Enums"]["task_priority"];
-          recurrence?: string;
-          title: string;
-          workspace_id?: string | null;
-        };
+          assigned_to: string
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: number | null
+          description?: string | null
+          due_time?: string | null
+          id?: string
+          is_active?: boolean
+          kpi_id?: string | null
+          last_generated_date?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          recurrence?: string
+          title: string
+          workspace_id?: string | null
+        }
         Update: {
-          assigned_to?: string;
-          created_at?: string;
-          created_by?: string | null;
-          day_of_week?: number | null;
-          description?: string | null;
-          id?: string;
-          is_active?: boolean;
-          kpi_id?: string | null;
-          last_generated_date?: string | null;
-          priority?: Database["public"]["Enums"]["task_priority"];
-          recurrence?: string;
-          title?: string;
-          workspace_id?: string | null;
-        };
+          assigned_to?: string
+          created_at?: string
+          created_by?: string | null
+          day_of_week?: number | null
+          description?: string | null
+          due_time?: string | null
+          id?: string
+          is_active?: boolean
+          kpi_id?: string | null
+          last_generated_date?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          recurrence?: string
+          title?: string
+          workspace_id?: string | null
+        }
         Relationships: [
           {
             foreignKeyName: "recurring_tasks_assigned_to_fkey";
@@ -2172,35 +2175,41 @@ export type Database = {
       };
       subscriptions: {
         Row: {
-          created_at: string;
-          current_period_end: string | null;
-          current_period_start: string | null;
-          id: string;
-          plan: Database["public"]["Enums"]["workspace_plan"];
-          status: string;
-          trial_ends_at: string | null;
-          workspace_id: string;
-        };
+          billing_interval: string
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          paystack_reference: string | null
+          plan: Database["public"]["Enums"]["workspace_plan"]
+          status: string
+          trial_ends_at: string | null
+          workspace_id: string
+        }
         Insert: {
-          created_at?: string;
-          current_period_end?: string | null;
-          current_period_start?: string | null;
-          id?: string;
-          plan: Database["public"]["Enums"]["workspace_plan"];
-          status?: string;
-          trial_ends_at?: string | null;
-          workspace_id: string;
-        };
+          billing_interval?: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          paystack_reference?: string | null
+          plan: Database["public"]["Enums"]["workspace_plan"]
+          status?: string
+          trial_ends_at?: string | null
+          workspace_id: string
+        }
         Update: {
-          created_at?: string;
-          current_period_end?: string | null;
-          current_period_start?: string | null;
-          id?: string;
-          plan?: Database["public"]["Enums"]["workspace_plan"];
-          status?: string;
-          trial_ends_at?: string | null;
-          workspace_id?: string;
-        };
+          billing_interval?: string
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          paystack_reference?: string | null
+          plan?: Database["public"]["Enums"]["workspace_plan"]
+          status?: string
+          trial_ends_at?: string | null
+          workspace_id?: string
+        }
         Relationships: [
           {
             foreignKeyName: "subscriptions_workspace_id_fkey";
@@ -2316,59 +2325,62 @@ export type Database = {
       };
       tasks: {
         Row: {
-          assigned_by: string | null;
-          assigned_to: string;
-          completed_at: string | null;
-          created_at: string;
-          description: string | null;
-          due_date: string;
-          has_warning: boolean;
-          id: string;
-          kpi_id: string | null;
-          priority: Database["public"]["Enums"]["task_priority"];
-          progress_percent: number;
-          status: Database["public"]["Enums"]["task_status"];
-          task_type: Database["public"]["Enums"]["task_type"];
-          title: string;
-          warning_message: string | null;
-          workspace_id: string | null;
-        };
+          assigned_by: string | null
+          assigned_to: string
+          completed_at: string | null
+          created_at: string
+          description: string | null
+          due_date: string
+          due_time: string | null
+          has_warning: boolean
+          id: string
+          kpi_id: string | null
+          priority: Database["public"]["Enums"]["task_priority"]
+          progress_percent: number
+          status: Database["public"]["Enums"]["task_status"]
+          task_type: Database["public"]["Enums"]["task_type"]
+          title: string
+          warning_message: string | null
+          workspace_id: string | null
+        }
         Insert: {
-          assigned_by?: string | null;
-          assigned_to: string;
-          completed_at?: string | null;
-          created_at?: string;
-          description?: string | null;
-          due_date: string;
-          has_warning?: boolean;
-          id?: string;
-          kpi_id?: string | null;
-          priority?: Database["public"]["Enums"]["task_priority"];
-          progress_percent?: number;
-          status?: Database["public"]["Enums"]["task_status"];
-          task_type?: Database["public"]["Enums"]["task_type"];
-          title: string;
-          warning_message?: string | null;
-          workspace_id?: string | null;
-        };
+          assigned_by?: string | null
+          assigned_to: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date: string
+          due_time?: string | null
+          has_warning?: boolean
+          id?: string
+          kpi_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          progress_percent?: number
+          status?: Database["public"]["Enums"]["task_status"]
+          task_type?: Database["public"]["Enums"]["task_type"]
+          title: string
+          warning_message?: string | null
+          workspace_id?: string | null
+        }
         Update: {
-          assigned_by?: string | null;
-          assigned_to?: string;
-          completed_at?: string | null;
-          created_at?: string;
-          description?: string | null;
-          due_date?: string;
-          has_warning?: boolean;
-          id?: string;
-          kpi_id?: string | null;
-          priority?: Database["public"]["Enums"]["task_priority"];
-          progress_percent?: number;
-          status?: Database["public"]["Enums"]["task_status"];
-          task_type?: Database["public"]["Enums"]["task_type"];
-          title?: string;
-          warning_message?: string | null;
-          workspace_id?: string | null;
-        };
+          assigned_by?: string | null
+          assigned_to?: string
+          completed_at?: string | null
+          created_at?: string
+          description?: string | null
+          due_date?: string
+          due_time?: string | null
+          has_warning?: boolean
+          id?: string
+          kpi_id?: string | null
+          priority?: Database["public"]["Enums"]["task_priority"]
+          progress_percent?: number
+          status?: Database["public"]["Enums"]["task_status"]
+          task_type?: Database["public"]["Enums"]["task_type"]
+          title?: string
+          warning_message?: string | null
+          workspace_id?: string | null
+        }
         Relationships: [
           {
             foreignKeyName: "tasks_assigned_by_fkey";
@@ -3005,15 +3017,19 @@ export type Database = {
         | "direct_message"
         | "group_message"
         | "mention"
-        | "info";
-      review_rating: "exceeds" | "meets" | "needs_improvement" | "unsatisfactory";
-      task_priority: "low" | "medium" | "high" | "urgent";
-      task_status: "todo" | "in_progress" | "completed" | "overdue";
-      task_type: "daily" | "weekly" | "one_time";
-      workspace_member_role: "owner" | "admin" | "manager" | "employee";
-      workspace_plan: "starter" | "growth" | "business" | "enterprise";
-      workspace_role: "owner" | "admin" | "manager" | "employee";
-    };
+        | "info"
+      review_rating:
+        | "exceeds"
+        | "meets"
+        | "needs_improvement"
+        | "unsatisfactory"
+      task_priority: "low" | "medium" | "high" | "urgent"
+      task_status: "todo" | "in_progress" | "completed" | "overdue"
+      task_type: "daily" | "weekly" | "one_time"
+      workspace_member_role: "owner" | "admin" | "manager" | "employee"
+      workspace_plan: "starter" | "growth" | "business" | "enterprise" | "basic" | "unlimited"
+      workspace_role: "owner" | "admin" | "manager" | "employee"
+    }
     CompositeTypes: {
       [_ in never]: never;
     };
@@ -3171,7 +3187,7 @@ export const Constants = {
       task_status: ["todo", "in_progress", "completed", "overdue"],
       task_type: ["daily", "weekly", "one_time"],
       workspace_member_role: ["owner", "admin", "manager", "employee"],
-      workspace_plan: ["starter", "growth", "business", "enterprise"],
+      workspace_plan: ["starter", "growth", "business", "enterprise", "basic", "unlimited"],
       workspace_role: ["owner", "admin", "manager", "employee"],
     },
   },

@@ -229,12 +229,41 @@ export async function redeemInvitation(input: RedeemInvitationInput): Promise<{
     user_metadata: { full_name: inv.full_name },
   });
 
-  if (createErr) {
-    // If user already exists (re-attempt), just log them in — don't block
-    if (!createErr.message.toLowerCase().includes("already")) throw new Error(createErr.message);
-  }
+  let userId: string | null = created?.user?.id ?? null;
 
-  const userId = created?.user?.id;
+  if (createErr) {
+    const msg = createErr.message.toLowerCase();
+    const alreadyExists =
+      msg.includes("already") ||
+      msg.includes("registered") ||
+      msg.includes("exists") ||
+      msg.includes("duplicate");
+    if (!alreadyExists) throw new Error(createErr.message);
+
+    // User already exists — find them and reset their password so they can sign in.
+    const { data: prof } = await adminClient
+      .from("profiles")
+      .select("id")
+      .eq("email", inv.email)
+      .maybeSingle();
+    let existingId = prof?.id ?? null;
+
+    if (!existingId) {
+      const { data: list } = await adminClient.auth.admin.listUsers({ page: 1, perPage: 200 });
+      existingId = list?.users.find((u) => u.email?.toLowerCase() === inv.email)?.id ?? null;
+    }
+
+    if (!existingId) {
+      throw new Error("This email is already registered but the account couldn't be located.");
+    }
+
+    const { error: updErr } = await adminClient.auth.admin.updateUserById(existingId, {
+      password: input.password,
+      email_confirm: true,
+    });
+    if (updErr) throw new Error(updErr.message);
+    userId = existingId;
+  }
 
   if (userId) {
     await adminClient.from("profiles").upsert(

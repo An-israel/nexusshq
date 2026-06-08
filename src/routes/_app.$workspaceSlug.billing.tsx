@@ -2,6 +2,7 @@ import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { requireAnyRole } from "@/lib/role-access";
+import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   AlertTriangle,
   Loader2,
   Mail,
+  CreditCard,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/billing")({
@@ -217,12 +219,17 @@ function PlanCard({
   plan,
   currentPlan,
   billing,
+  onUpgrade,
+  checkoutKey,
 }: {
   plan: (typeof PLANS)[number];
   currentPlan: string;
   billing: "monthly" | "annual";
+  onUpgrade: (planId: string, interval: "monthly" | "annual") => void;
+  checkoutKey: string | null;
 }) {
   const isCurrent = plan.id === currentPlan;
+  const isCheckingOut = checkoutKey === `${plan.id}-${billing}`;
   const monthly = PLAN_MONTHLY[plan.id] ?? 0;
   const annualMonthly = Math.round(monthly * (1 - ANNUAL_DISCOUNT));
   const price = billing === "annual" ? annualMonthly : monthly;
@@ -291,24 +298,39 @@ function PlanCard({
 
       {/* CTA */}
       {!isCurrent && (
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2">
           <Button
-            variant="outline"
             size="sm"
-            className="flex-1"
-            onClick={() => openUpgradeEmail(plan.label)}
+            className="w-full"
+            disabled={checkoutKey !== null}
+            onClick={() => onUpgrade(plan.id, billing)}
           >
-            <Mail className="mr-1.5 h-3.5 w-3.5" />
-            Email us
+            {isCheckingOut ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <CreditCard className="mr-1.5 h-3.5 w-3.5" />
+            )}
+            Pay with Paystack
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="flex-1 border-green-500/40 text-green-400 hover:bg-green-500/10"
-            onClick={() => window.open(SUPPORT_WHATSAPP, "_blank")}
-          >
-            WhatsApp
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => openUpgradeEmail(plan.label)}
+            >
+              <Mail className="mr-1.5 h-3.5 w-3.5" />
+              Email us
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 border-green-500/40 text-green-400 hover:bg-green-500/10"
+              onClick={() => window.open(SUPPORT_WHATSAPP, "_blank")}
+            >
+              WhatsApp
+            </Button>
+          </div>
         </div>
       )}
     </Card>
@@ -319,8 +341,10 @@ function PlanCard({
 
 function BillingPage() {
   const { workspace } = useWorkspace();
+  const { user } = useAuth();
 
   const [billingCycle, setBillingCycle] = React.useState<"monthly" | "annual">("monthly");
+  const [checkoutKey, setCheckoutKey] = React.useState<string | null>(null);
   const [sub, setSub] = React.useState<Subscription | null>(null);
   const [usage, setUsage] = React.useState<UsageStats>({
     usedSeats: 0,
@@ -387,6 +411,33 @@ function BillingPage() {
 
     void fetchUsage();
   }, [workspace.id]);
+
+  async function startCheckout(planId: string, interval: "monthly" | "annual") {
+    if (!user?.email || checkoutKey) return;
+    const key = `${planId}-${interval}`;
+    setCheckoutKey(key);
+    try {
+      const res = await fetch("/api/paystack/initialize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          workspaceId: workspace.id,
+          workspaceSlug: workspace.slug,
+          planId,
+          interval,
+          email: user.email,
+        }),
+      });
+      const data = (await res.json()) as { authorization_url?: string; error?: string };
+      if (!res.ok || !data.authorization_url) {
+        throw new Error(data.error ?? "Failed to start checkout");
+      }
+      window.location.href = data.authorization_url;
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to start checkout");
+      setCheckoutKey(null);
+    }
+  }
 
   const planSeats = workspace.plan_seats ?? 5;
   const usedSeats = usage.usedSeats;
@@ -472,6 +523,8 @@ function BillingPage() {
               plan={plan}
               currentPlan={workspace.plan}
               billing={billingCycle}
+              onUpgrade={startCheckout}
+              checkoutKey={checkoutKey}
             />
           ))}
         </div>
