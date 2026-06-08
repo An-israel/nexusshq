@@ -25,6 +25,7 @@ import {
 import { toast } from "sonner";
 import { Megaphone, Pin, Trash2, Plus } from "lucide-react";
 import { DEPARTMENTS, deptLabel, timeAgo } from "@/lib/nexus";
+import { logAuditEvent } from "@/lib/audit-log";
 import { useRealtime } from "@/lib/use-realtime";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -158,7 +159,15 @@ function AnnouncementsPage() {
 
   async function del(id: string) {
     if (!confirm("Delete this announcement?")) return;
+    const target = items.find((a) => a.id === id);
     await supabase.from("announcements").delete().eq("id", id);
+    void logAuditEvent({
+      workspaceId: workspace.id,
+      action: "announcement.deleted",
+      targetType: "announcement",
+      targetId: id,
+      metadata: { title: target?.title ?? null },
+    });
     void load();
   }
 
@@ -296,6 +305,13 @@ function ComposeDialog({
       department: payload.department ?? null,
       title: payload.title,
       body: payload.body,
+    });
+
+    void logAuditEvent({
+      workspaceId,
+      action: "announcement.created",
+      targetType: "announcement",
+      metadata: { title: payload.title, department: payload.department ?? null },
     });
 
     toast.success("Announcement posted");

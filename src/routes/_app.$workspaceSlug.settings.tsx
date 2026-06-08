@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
+import { DEPARTMENTS, deptLabel, timeAgo } from "@/lib/nexus";
 import {
   Save,
   UserCog,
@@ -25,11 +25,13 @@ import {
   MapPin,
   Building2,
   Palette,
+  History,
 } from "lucide-react";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { Switch } from "@/components/ui/switch";
 import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
 import { useWorkspace } from "@/lib/workspace-context";
+import { logAuditEvent } from "@/lib/audit-log";
 
 class FeatureErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -403,6 +405,11 @@ function SettingsPage() {
                 <MapPin className="mr-2 h-4 w-4" /> Office
               </TabsTrigger>
             )}
+            {isAdmin && (
+              <TabsTrigger value="audit-log">
+                <History className="mr-2 h-4 w-4" /> Audit Log
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
         <TabsContent value="profile" className="mt-4">
@@ -442,6 +449,11 @@ function SettingsPage() {
         {isAdmin && (
           <TabsContent value="location" className="mt-4">
             <OfficeLocationSettings />
+          </TabsContent>
+        )}
+        {isAdmin && (
+          <TabsContent value="audit-log" className="mt-4">
+            <AuditLogAdmin />
           </TabsContent>
         )}
       </Tabs>
@@ -698,12 +710,22 @@ function TeamAdmin() {
     }
     if (error) toast.error(error.message);
     else {
+      if (workspace?.id && patch.is_active !== undefined) {
+        const target = members.find((m) => m.profiles?.id === profileId)?.profiles;
+        void logAuditEvent({
+          workspaceId: workspace.id,
+          action: patch.is_active ? "member.activated" : "member.deactivated",
+          targetType: "profile",
+          targetId: profileId,
+          metadata: { target_name: target?.full_name ?? null, target_email: target?.email ?? null },
+        });
+      }
       toast.success("Updated");
       void load();
     }
   }
 
-  async function removeMember(memberId: string, targetUserId: string) {
+  async function removeMember(memberId: string, targetUserId: string, targetName: string) {
     const {
       data: { user: currentUser },
     } = await supabase.auth.getUser();
@@ -734,6 +756,16 @@ function TeamAdmin() {
       .eq("workspace_id", workspace!.id)
       .eq("assigned_to", targetUserId)
       .in("status", ["todo", "in_progress"]);
+
+    if (workspace?.id) {
+      void logAuditEvent({
+        workspaceId: workspace.id,
+        action: "member.removed",
+        targetType: "workspace_member",
+        targetId: targetUserId,
+        metadata: { target_name: targetName },
+      });
+    }
 
     toast.success("Member removed from workspace");
     void load();
@@ -844,7 +876,7 @@ function TeamAdmin() {
               <Button
                 variant="destructive"
                 onClick={() => {
-                  void removeMember(removeTarget.id, removeTarget.userId);
+                  void removeMember(removeTarget.id, removeTarget.userId, removeTarget.name);
                   setRemoveTarget(null);
                 }}
               >
@@ -859,6 +891,7 @@ function TeamAdmin() {
 }
 
 function RolesAdmin() {
+  const { workspace } = useWorkspace();
   const [profiles, setProfiles] = React.useState<ProfileRow[]>([]);
   const [roles, setRoles] = React.useState<Record<string, RoleRow["role"]>>({});
   const [loading, setLoading] = React.useState(true);
@@ -897,6 +930,20 @@ function RolesAdmin() {
       toast.error(ins.error.message);
       return;
     }
+    if (workspace?.id) {
+      const target = profiles.find((p) => p.id === userId);
+      void logAuditEvent({
+        workspaceId: workspace.id,
+        action: "member.role_changed",
+        targetType: "profile",
+        targetId: userId,
+        metadata: {
+          target_name: target?.full_name ?? null,
+          target_email: target?.email ?? null,
+          new_role: role,
+        },
+      });
+    }
     toast.success(`Role set to ${role}`);
     void load();
   }
@@ -928,6 +975,122 @@ function RolesAdmin() {
           </div>
         ))}
       </div>
+    </Card>
+  );
+}
+
+interface AuditEvent {
+  id: string;
+  actor_id: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface ActorMini {
+  full_name: string | null;
+  email: string | null;
+}
+
+function describeAuditEvent(e: AuditEvent): string {
+  const meta = e.metadata ?? {};
+  const name =
+    (meta.target_name as string | undefined) || (meta.target_email as string | undefined);
+  const title = meta.title as string | undefined;
+  switch (e.action) {
+    case "member.removed":
+      return `removed ${name ?? "a member"} from the workspace`;
+    case "member.activated":
+      return `reactivated ${name ?? "a member"}`;
+    case "member.deactivated":
+      return `deactivated ${name ?? "a member"}`;
+    case "member.role_changed":
+      return `changed ${name ?? "a member"}'s role to ${(meta.new_role as string | undefined) ?? "—"}`;
+    case "announcement.created":
+      return `posted the announcement "${title ?? "Untitled"}"`;
+    case "announcement.deleted":
+      return `deleted the announcement "${title ?? "Untitled"}"`;
+    default:
+      return e.action.replace(/[._]/g, " ");
+  }
+}
+
+function AuditLogAdmin() {
+  const { workspace } = useWorkspace();
+  const [events, setEvents] = React.useState<AuditEvent[]>([]);
+  const [actors, setActors] = React.useState<Record<string, ActorMini>>({});
+  const [loading, setLoading] = React.useState(true);
+
+  const load = React.useCallback(async () => {
+    if (!workspace?.id) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("audit_events")
+      .select("*")
+      .eq("workspace_id", workspace.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+    const rows = (data ?? []) as unknown as AuditEvent[];
+    setEvents(rows);
+
+    const actorIds = [...new Set(rows.map((r) => r.actor_id).filter((id): id is string => !!id))];
+    if (actorIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", actorIds);
+      const map: Record<string, ActorMini> = {};
+      (profs ?? []).forEach((p) => {
+        map[p.id] = { full_name: p.full_name, email: p.email };
+      });
+      setActors(map);
+    } else {
+      setActors({});
+    }
+    setLoading(false);
+  }, [workspace?.id]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  return (
+    <Card className="p-4">
+      <div>
+        <h3 className="text-sm font-semibold">Audit log</h3>
+        <p className="text-xs text-muted-foreground">
+          Sensitive admin actions in this workspace — who did what, and when.
+        </p>
+      </div>
+      {events.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">No audit events recorded yet.</p>
+      ) : (
+        <ul className="mt-4 divide-y divide-border">
+          {events.map((e) => {
+            const actor = e.actor_id ? actors[e.actor_id] : null;
+            return (
+              <li key={e.id} className="py-3 text-sm">
+                <p>
+                  <span className="font-medium">
+                    {actor?.full_name ?? actor?.email ?? "Someone"}
+                  </span>{" "}
+                  <span className="text-muted-foreground">{describeAuditEvent(e)}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{timeAgo(e.created_at)}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </Card>
   );
 }
