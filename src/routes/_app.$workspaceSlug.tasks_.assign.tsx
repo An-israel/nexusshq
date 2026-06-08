@@ -229,7 +229,10 @@ function AssignTaskPage() {
       ? `${dueDateFormatted} at ${dueDateObj.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`
       : dueDateFormatted;
 
-    // Insert notification
+    // Insert notification. We send a richer email immediately below when the
+    // assignee has an address, so mark it as already emailed up front —
+    // otherwise the notification-email cron would send a second, plainer
+    // email once the notification goes 5 minutes unread.
     await supabase.from("notifications").insert({
       user_id: form.assigned_to,
       type: "task_assigned",
@@ -237,6 +240,7 @@ function AssignTaskPage() {
       message: `${taskTitle} — due ${dueFormatted}`,
       related_task_id: task.id,
       workspace_id: workspace.id,
+      ...(assignee?.email ? { email_sent_at: new Date().toISOString() } : {}),
     });
 
     // Enqueue email if assignee has email

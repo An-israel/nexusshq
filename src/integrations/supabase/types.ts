@@ -3028,6 +3028,7 @@ export type Database = {
         | "group_message"
         | "mention"
         | "info"
+        | "announcement"
       review_rating:
         | "exceeds"
         | "meets"
@@ -3198,6 +3199,7 @@ export const Constants = {
         "group_message",
         "mention",
         "info",
+        "announcement",
       ],
       review_rating: [
         "exceeds",
