@@ -6,6 +6,25 @@ import { installSupabaseDiagnostics } from "@/lib/supabase-diagnostics";
 
 import appCss from "../styles.css?url";
 
+// Document-level CSP, delivered via <meta http-equiv> since this is the only
+// directive subset that can be expressed without a custom HTTP response layer.
+// Clickjacking/MIME-sniffing/HSTS protections (X-Frame-Options,
+// X-Content-Type-Options, Strict-Transport-Security) are sent as real response
+// headers from src/server-entry.ts instead — meta tags can't deliver those.
+const CONTENT_SECURITY_POLICY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https://*.supabase.co https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://open.er-api.com",
+  "frame-src 'none'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'self'",
+].join("; ");
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -33,6 +52,8 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { httpEquiv: "Content-Security-Policy", content: CONTENT_SECURITY_POLICY },
+      { name: "referrer", content: "strict-origin-when-cross-origin" },
       {
         name: "google-site-verification",
         content: "a7Et3UPOwggV8QhWsn9Ia-4i38Ql1spAbuH2WqIBHG8",

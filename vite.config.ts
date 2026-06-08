@@ -8,6 +8,15 @@ const serverEnv = loadEnv(process.env.NODE_ENV || "development", process.cwd(), 
 Object.assign(process.env, serverEnv);
 
 export default defineConfig({
+  // Custom server entry (src/server-entry.ts) wraps the default TanStack Start
+  // handler to attach security response headers (X-Frame-Options, HSTS, etc.)
+  // that can't be delivered via <meta> tags — see __root.tsx for the CSP/
+  // referrer-policy meta tags that cover the rest.
+  tanstackStart: {
+    server: {
+      entry: "./server-entry",
+    },
+  },
   vite: {
     resolve: {
       alias: {
