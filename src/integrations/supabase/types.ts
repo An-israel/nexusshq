@@ -1987,6 +1987,7 @@ export type Database = {
           created_by: string | null;
           day_of_week: number | null;
           description: string | null;
+          due_time: string | null;
           id: string;
           is_active: boolean;
           kpi_id: string | null;
@@ -2002,6 +2003,7 @@ export type Database = {
           created_by?: string | null;
           day_of_week?: number | null;
           description?: string | null;
+          due_time?: string | null;
           id?: string;
           is_active?: boolean;
           kpi_id?: string | null;
@@ -2017,6 +2019,7 @@ export type Database = {
           created_by?: string | null;
           day_of_week?: number | null;
           description?: string | null;
+          due_time?: string | null;
           id?: string;
           is_active?: boolean;
           kpi_id?: string | null;
@@ -2302,6 +2305,7 @@ export type Database = {
           created_at: string;
           description: string | null;
           due_date: string;
+          due_time: string | null;
           has_warning: boolean;
           id: string;
           kpi_id: string | null;
@@ -2320,6 +2324,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           due_date: string;
+          due_time?: string | null;
           has_warning?: boolean;
           id?: string;
           kpi_id?: string | null;
@@ -2338,6 +2343,7 @@ export type Database = {
           created_at?: string;
           description?: string | null;
           due_date?: string;
+          due_time?: string | null;
           has_warning?: boolean;
           id?: string;
           kpi_id?: string | null;
