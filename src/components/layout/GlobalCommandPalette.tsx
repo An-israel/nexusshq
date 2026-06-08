@@ -5,16 +5,10 @@ import {
   CheckSquare,
   Clock,
   Users,
-  CalendarOff,
   ClipboardList,
-  FolderUp,
   Star,
-  Wallet,
   Megaphone,
-  Heart,
   MessageSquare,
-  BookOpen,
-  FileText,
   GitBranch,
   Flag,
   Bell,
@@ -26,7 +20,6 @@ import {
   BarChart3,
   Target,
   Brain,
-  Zap,
   UserCircle,
   Building2,
   Search,
@@ -66,39 +59,23 @@ const NAV_ENTRIES: NavEntry[] = [
   },
   { label: "Tasks", icon: CheckSquare, slug: "tasks", roles: ["admin", "manager", "employee"] },
   { label: "Attendance", icon: Clock, slug: "attendance", roles: ["admin", "manager", "employee"] },
-  { label: "Leave", icon: CalendarOff, slug: "leave", roles: ["admin", "manager", "employee"] },
   {
     label: "Standups",
     icon: ClipboardList,
     slug: "standups",
     roles: ["admin", "manager", "employee"],
   },
-  {
-    label: "Deliverables",
-    icon: FolderUp,
-    slug: "deliverables",
-    roles: ["admin", "manager", "employee"],
-  },
   { label: "Reviews", icon: Star, slug: "reviews", roles: ["admin", "manager", "employee"] },
-  { label: "Payslips", icon: Wallet, slug: "payslips", roles: ["admin", "manager", "employee"] },
   {
     label: "Announcements",
     icon: Megaphone,
     slug: "announcements",
     roles: ["admin", "manager", "employee"],
   },
-  { label: "Recognition", icon: Heart, slug: "kudos", roles: ["admin", "manager", "employee"] },
   {
     label: "Messages",
     icon: MessageSquare,
     slug: "messages",
-    roles: ["admin", "manager", "employee"],
-  },
-  { label: "Handbook", icon: BookOpen, slug: "handbook", roles: ["admin", "manager", "employee"] },
-  {
-    label: "Documents",
-    icon: FileText,
-    slug: "documents",
     roles: ["admin", "manager", "employee"],
   },
   {
@@ -134,7 +111,6 @@ const NAV_ENTRIES: NavEntry[] = [
   { label: "Reports", icon: BarChart3, slug: "reports", roles: ["admin", "manager"] },
   { label: "Wellbeing", icon: Brain, slug: "burnout", roles: ["admin", "manager"] },
   { label: "KPIs", icon: Target, slug: "kpis", roles: ["admin"] },
-  { label: "Automations", icon: Zap, slug: "settings/automations", roles: ["admin"] },
 ];
 
 // Global singleton for opening the palette from anywhere
@@ -259,10 +235,6 @@ export function GlobalCommandPalette({ workspaceSlug }: CommandPaletteProps) {
           <CommandItem onSelect={() => go("standups")}>
             <ClipboardList className="mr-2 h-4 w-4 text-primary" />
             Submit Today's Standup
-          </CommandItem>
-          <CommandItem onSelect={() => go("leave")}>
-            <CalendarOff className="mr-2 h-4 w-4 text-warning" />
-            Request Leave
           </CommandItem>
           <CommandItem onSelect={() => go("tasks")}>
             <CheckSquare className="mr-2 h-4 w-4 text-primary" />
