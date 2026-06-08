@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { verifyCronRequest } from "@/server/cron-auth.server";
 
 // Called by pg_cron every Monday at 06:00 UTC (= 07:00 WAT).
 // Computes last-week stats, asks Claude for a summary paragraph, and emails
@@ -8,6 +9,9 @@ export const Route = createFileRoute("/api/public/cron/weekly-summary-email")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const authError = verifyCronRequest(request);
+        if (authError) return authError;
+
         const monday = new Date();
         monday.setDate(monday.getDate() - monday.getDay()); // this Monday
         const lastMon = new Date(monday);

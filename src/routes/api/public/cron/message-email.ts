@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { getNotificationUrl } from "@/lib/notifications/get-notification-url";
+import { verifyCronRequest } from "@/server/cron-auth.server";
 
 const CTA_LABELS: Record<string, string> = {
   task_assigned: "View Task",
@@ -25,6 +26,9 @@ export const Route = createFileRoute("/api/public/cron/message-email")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const authError = verifyCronRequest(request);
+        if (authError) return authError;
+
         const apiKey = process.env.RESEND_API_KEY;
         const fromEmail = process.env.RESEND_FROM_EMAIL ?? "notifications@nexxoshq.app";
         const baseUrl = new URL(request.url).origin;

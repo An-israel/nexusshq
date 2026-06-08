@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { verifyCronRequest } from "@/server/cron-auth.server";
 
 // Called by pg_cron every Sunday at 06:00 UTC (= 07:00 WAT).
 // Analyses past-4-week activity for every active employee and calls the
@@ -8,6 +9,9 @@ export const Route = createFileRoute("/api/public/cron/burnout-detection")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const authError = verifyCronRequest(request);
+        if (authError) return authError;
+
         const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
         if (!apiKey) {
           return Response.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 500 });

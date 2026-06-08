@@ -44,13 +44,17 @@ create policy "managers acknowledge burnout alerts"
   );
 
 -- Schedule burnout detection: every Sunday 06:00 UTC (= 07:00 WAT)
--- Run in Supabase SQL editor after deploying:
+-- Run in Supabase SQL editor after deploying. Must include the bearer auth
+-- header (see src/server/cron-auth.server.ts / 20260608160000_cron_endpoint_auth.sql):
 -- SELECT cron.schedule(
 --   'nexus-burnout-detection',
 --   '0 6 * * 0',
 --   $$ SELECT net.http_post(
 --        url := 'https://<your-domain>/api/public/cron/burnout-detection',
---        headers := '{"Content-Type":"application/json"}'::jsonb,
+--        headers := jsonb_build_object(
+--          'Content-Type', 'application/json',
+--          'Authorization', 'Bearer ' || current_setting('app.service_role_key', true)
+--        ),
 --        body := '{}'::jsonb
 --      ); $$
 -- );
@@ -61,7 +65,10 @@ create policy "managers acknowledge burnout alerts"
 --   '0 6 * * 1',
 --   $$ SELECT net.http_post(
 --        url := 'https://<your-domain>/api/public/cron/weekly-summary-email',
---        headers := '{"Content-Type":"application/json"}'::jsonb,
+--        headers := jsonb_build_object(
+--          'Content-Type', 'application/json',
+--          'Authorization', 'Bearer ' || current_setting('app.service_role_key', true)
+--        ),
 --        body := '{}'::jsonb
 --      ); $$
 -- );
