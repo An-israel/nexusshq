@@ -28,6 +28,8 @@ import { Route as TrackSplatRouteImport } from './routes/track.$'
 import { Route as ApiTranscribeVoiceNoteRouteImport } from './routes/api/transcribe-voice-note'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
+import { Route as ApiPaystackWebhookRouteImport } from './routes/api/paystack/webhook'
+import { Route as ApiPaystackInitializeRouteImport } from './routes/api/paystack/initialize'
 import { Route as AppWorkspaceSlugTeamBoardRouteImport } from './routes/_app.$workspaceSlug.team-board'
 import { Route as AppWorkspaceSlugTeamRouteImport } from './routes/_app.$workspaceSlug.team'
 import { Route as AppWorkspaceSlugTasksRouteImport } from './routes/_app.$workspaceSlug.tasks'
@@ -166,6 +168,16 @@ const AppWorkspaceSlugRoute = AppWorkspaceSlugRouteImport.update({
   id: '/$workspaceSlug',
   path: '/$workspaceSlug',
   getParentRoute: () => AppRoute,
+} as any)
+const ApiPaystackWebhookRoute = ApiPaystackWebhookRouteImport.update({
+  id: '/api/paystack/webhook',
+  path: '/api/paystack/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPaystackInitializeRoute = ApiPaystackInitializeRouteImport.update({
+  id: '/api/paystack/initialize',
+  path: '/api/paystack/initialize',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AppWorkspaceSlugTeamBoardRoute =
   AppWorkspaceSlugTeamBoardRouteImport.update({
@@ -465,6 +477,8 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
+  '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -529,6 +543,8 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
+  '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -595,6 +611,8 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/_app/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
+  '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/_app/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/_app/$workspaceSlug/tasks_/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -661,6 +679,8 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/api/paystack/initialize'
+    | '/api/paystack/webhook'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/settings/automations'
     | '/$workspaceSlug/tasks/$taskId'
@@ -725,6 +745,8 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/api/paystack/initialize'
+    | '/api/paystack/webhook'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/settings/automations'
     | '/$workspaceSlug/tasks/$taskId'
@@ -790,6 +812,8 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/tasks'
     | '/_app/$workspaceSlug/team'
     | '/_app/$workspaceSlug/team-board'
+    | '/api/paystack/initialize'
+    | '/api/paystack/webhook'
     | '/_app/$workspaceSlug/messages/activity'
     | '/_app/$workspaceSlug/settings/automations'
     | '/_app/$workspaceSlug/tasks_/$taskId'
@@ -827,6 +851,8 @@ export interface RootRouteChildren {
   ApiAiRoute: typeof ApiAiRoute
   ApiTranscribeVoiceNoteRoute: typeof ApiTranscribeVoiceNoteRoute
   TrackSplatRoute: typeof TrackSplatRoute
+  ApiPaystackInitializeRoute: typeof ApiPaystackInitializeRoute
+  ApiPaystackWebhookRoute: typeof ApiPaystackWebhookRoute
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
   ApiPublicCronBurnoutDetectionRoute: typeof ApiPublicCronBurnoutDetectionRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
@@ -972,6 +998,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/$workspaceSlug'
       preLoaderRoute: typeof AppWorkspaceSlugRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/api/paystack/webhook': {
+      id: '/api/paystack/webhook'
+      path: '/api/paystack/webhook'
+      fullPath: '/api/paystack/webhook'
+      preLoaderRoute: typeof ApiPaystackWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/paystack/initialize': {
+      id: '/api/paystack/initialize'
+      path: '/api/paystack/initialize'
+      fullPath: '/api/paystack/initialize'
+      preLoaderRoute: typeof ApiPaystackInitializeRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_app/$workspaceSlug/team-board': {
       id: '/_app/$workspaceSlug/team-board'
@@ -1429,6 +1469,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiRoute: ApiAiRoute,
   ApiTranscribeVoiceNoteRoute: ApiTranscribeVoiceNoteRoute,
   TrackSplatRoute: TrackSplatRoute,
+  ApiPaystackInitializeRoute: ApiPaystackInitializeRoute,
+  ApiPaystackWebhookRoute: ApiPaystackWebhookRoute,
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
   ApiPublicCronBurnoutDetectionRoute: ApiPublicCronBurnoutDetectionRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
@@ -1442,3 +1484,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

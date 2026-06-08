@@ -260,7 +260,9 @@ export function useMessages(params: {
     else if (conversationId) filterParts.push(`conversation_id=eq.${conversationId}`);
 
     const realtimeChannel = supabase
-      .channel(`messages-${workspaceId}-${channelId ?? conversationId ?? parentMessageId ?? "none"}`)
+      .channel(
+        `messages-${workspaceId}-${channelId ?? conversationId ?? parentMessageId ?? "none"}`,
+      )
       .on(
         "postgres_changes",
         {

@@ -19,9 +19,7 @@ import {
   Star,
   Sparkles,
   Briefcase,
-  CalendarOff,
   Flag,
-  BookOpen,
   Bell,
   ChevronRight,
 } from "lucide-react";
@@ -131,19 +129,9 @@ const FEATURES = [
     desc: "Give clients a branded portal link to track project milestones — no login required on their end.",
   },
   {
-    icon: CalendarOff,
-    title: "Leave Management",
-    desc: "Submit, approve, and track leave requests with automatic balance calculations per leave type.",
-  },
-  {
     icon: Flag,
-    title: "Goals & OKRs",
-    desc: "Set company-wide objectives and key results. Track progress with live indicators at every level.",
-  },
-  {
-    icon: BookOpen,
-    title: "Company Handbook",
-    desc: "Publish policies, guides, and SOPs that every employee can access from any device.",
+    title: "Goals & KPIs",
+    desc: "Set company-wide objectives, key results, and department targets — tracked together in one place.",
   },
   {
     icon: Bell,

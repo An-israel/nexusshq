@@ -33,7 +33,7 @@ export function getNotificationUrl(
       return `${base}/attendance`;
 
     case "kpi_reminder":
-      return `${base}/kpis`;
+      return `${base}/okrs`;
 
     case "warning":
     case "flag":
