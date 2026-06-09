@@ -65,7 +65,9 @@ function JoinPage() {
         <BrandMark size="lg" className="mb-5" />
         <h1 className="text-2xl font-bold tracking-tight">Join your workspace</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Use the invite link or passcode your manager shared with you
+          {token
+            ? "Your invite link was detected. Set a password to create your account."
+            : "Enter the invite token from your email, or the passcode your manager shared."}
         </p>
       </div>
 

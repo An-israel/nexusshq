@@ -9,6 +9,7 @@ import {
   redeemInvitation,
   removeWorkspaceMember,
   resolveFlag,
+  sendInviteEmail,
   setEmployeeActive,
   setEmployeeRole,
 } from "@/server/admin.server";
@@ -110,6 +111,7 @@ export const createInvitationFn = createServerFn({ method: "POST" })
     z
       .object({
         workspaceId: z.string().uuid(),
+        workspaceName: z.string().min(1),
         email: z.string().email(),
         full_name: z.string().min(1),
         job_title: z.string().nullable().optional(),
@@ -128,13 +130,43 @@ export const createInvitationFn = createServerFn({ method: "POST" })
           .optional(),
         phone: z.string().nullable().optional(),
         role: z.enum(["admin", "manager", "employee"]),
+        siteUrl: z.string().url().optional(),
       })
       .parse(data),
   )
   .handler(async ({ data, context }) => {
     await assertCallerIsManagerOrAdmin(context.userId, context.supabase);
     if (data.role === "admin") await assertCallerIsAdmin(context.userId, context.supabase);
-    return createInvitation({ ...data, invitedBy: context.userId });
+
+    const result = await createInvitation({
+      workspaceId: data.workspaceId,
+      email: data.email,
+      full_name: data.full_name,
+      job_title: data.job_title,
+      department: data.department,
+      phone: data.phone,
+      role: data.role,
+      invitedBy: context.userId,
+    });
+
+    // Fire-and-forget email — link+passcode fallback works even if this fails
+    const appUrl = data.siteUrl ?? process.env.APP_URL ?? "https://nexus.skryveai.com";
+    const joinUrl = `${appUrl}/join?token=${result.token}`;
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    void sendInviteEmail({
+      toEmail: data.email,
+      toName: data.full_name,
+      workspaceName: data.workspaceName,
+      inviterName: profile?.full_name ?? "Your workspace admin",
+      joinUrl,
+    }).catch(() => {});
+
+    return result;
   });
 
 export const redeemInvitationFn = createServerFn({ method: "POST" })

@@ -147,7 +147,65 @@ export async function resolveFlag(flagId: string, callerClient: DbClient) {
   if (error) throw new Error(error.message);
 }
 
-// ── Invitation system (link + passcode, no email required) ────────────────────
+// ── Invite email ──────────────────────────────────────────────────────────────
+
+export async function sendInviteEmail(opts: {
+  toEmail: string;
+  toName: string;
+  workspaceName: string;
+  inviterName: string;
+  joinUrl: string;
+}): Promise<void> {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) return; // silently skip — link+passcode fallback still works
+  const from = process.env.RESEND_FROM_EMAIL
+    ? `Nexxos HQ <${process.env.RESEND_FROM_EMAIL}>`
+    : "Nexxos HQ <noreply@nexus.skryveai.com>";
+
+  await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from,
+      to: [opts.toEmail],
+      subject: `${opts.inviterName} invited you to join ${opts.workspaceName} on Nexxos HQ`,
+      html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Workspace Invitation</title></head>
+<body style="margin:0;padding:0;background:#f4f4f5;font-family:Arial,sans-serif">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f4f5;padding:40px 0">
+    <tr><td align="center">
+      <table width="520" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.08)">
+        <tr><td style="background:#0f0f0f;padding:28px 32px">
+          <p style="margin:0;font-size:20px;font-weight:700;color:#ffffff;letter-spacing:-.3px">Nexxos HQ</p>
+        </td></tr>
+        <tr><td style="padding:36px 32px">
+          <h1 style="margin:0 0 12px;font-size:22px;font-weight:700;color:#0f0f0f">You've been invited!</h1>
+          <p style="margin:0 0 24px;font-size:15px;color:#555;line-height:1.6">
+            <strong>${opts.inviterName}</strong> has invited you to join
+            <strong>${opts.workspaceName}</strong> on Nexxos HQ — the all-in-one workspace for team operations.
+          </p>
+          <table cellpadding="0" cellspacing="0"><tr><td>
+            <a href="${opts.joinUrl}" style="display:inline-block;background:#0f0f0f;color:#ffffff;font-size:14px;font-weight:600;padding:13px 28px;border-radius:8px;text-decoration:none">
+              Accept Invitation →
+            </a>
+          </td></tr></table>
+          <p style="margin:28px 0 0;font-size:13px;color:#888;line-height:1.5">
+            This invitation expires in 7 days. If you weren't expecting this, you can safely ignore it.<br><br>
+            Or copy this link into your browser:<br>
+            <a href="${opts.joinUrl}" style="color:#6366f1;word-break:break-all">${opts.joinUrl}</a>
+          </p>
+        </td></tr>
+        <tr><td style="background:#f9f9f9;padding:20px 32px;border-top:1px solid #eee">
+          <p style="margin:0;font-size:12px;color:#aaa">© Nexxos HQ · nexxoshq.app</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+    }),
+  });
+}
+
+// ── Invitation system (link + passcode, email sent automatically) ─────────────
 
 const PASSCODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
