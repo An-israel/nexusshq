@@ -14,10 +14,8 @@ import {
   Star,
   Kanban,
   Megaphone,
-  MessageSquare,
   GitBranch,
   ClipboardList,
-  RefreshCw,
   Briefcase,
   Flag,
   BarChart3,
@@ -57,13 +55,6 @@ const NAV: NavItem[] = [
     label: "Dashboard",
     icon: LayoutDashboard,
     roles: ["admin", "manager", "employee"],
-  },
-  {
-    slug: "messages",
-    label: "Messages",
-    icon: MessageSquare,
-    roles: ["admin", "manager", "employee"],
-    flagKey: "messages",
   },
   {
     slug: "standups",
@@ -116,13 +107,6 @@ const NAV: NavItem[] = [
     icon: Kanban,
     roles: ["admin", "manager"],
     flagKey: "team-board",
-  },
-  {
-    slug: "recurring-tasks",
-    label: "Recurring Tasks",
-    icon: RefreshCw,
-    roles: ["admin", "manager"],
-    flagKey: "recurring-tasks",
   },
   {
     slug: "client-projects",

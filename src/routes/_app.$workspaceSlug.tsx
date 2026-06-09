@@ -15,12 +15,56 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { GlobalCommandPalette, openCommandPalette } from "@/components/layout/GlobalCommandPalette";
+import { WhatsNew } from "@/components/layout/WhatsNew";
 import { cn } from "@/lib/utils";
 import { setLastWorkspaceSlug } from "@/lib/last-workspace";
 import { toast } from "sonner";
 
+// Derives a short human-readable device label from the user-agent string.
+function parseDeviceName(ua: string): string {
+  if (/iPhone/.test(ua)) return "iPhone";
+  if (/iPad/.test(ua)) return "iPad";
+  if (/Android/.test(ua)) return "Android";
+  const os = /Windows/.test(ua)
+    ? "Windows"
+    : /Mac/.test(ua)
+      ? "macOS"
+      : /Linux/.test(ua)
+        ? "Linux"
+        : "Unknown OS";
+  const browser = /Edg\//.test(ua)
+    ? "Edge"
+    : /Chrome\//.test(ua)
+      ? "Chrome"
+      : /Firefox\//.test(ua)
+        ? "Firefox"
+        : /Safari\//.test(ua)
+          ? "Safari"
+          : "Browser";
+  return `${browser} on ${os}`;
+}
+
+// Stable per-device UUID stored in localStorage
+function getDeviceSessionId(): string {
+  const key = "nexus_device_session_id";
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 export const Route = createFileRoute("/_app/$workspaceSlug")({
   beforeLoad: async ({ params }) => {
+    // No session storage on the server (localStorage isn't available during
+    // SSR), so getSession() always comes back null here — redirecting would
+    // incorrectly send authenticated users back to /login on every full-page
+    // load (refresh, direct link, or returning from an external redirect like
+    // Paystack checkout). WorkspaceShell re-runs these checks client-side once
+    // the real session is known.
+    if (typeof window === "undefined") return;
+
     const { workspaceSlug } = params;
     const {
       data: { session },
@@ -322,6 +366,23 @@ function WorkspaceShell() {
     };
   }, [workspaceSlug, user, setWorkspaceData, navigate]);
 
+  // Track this device session for the "Active sessions" panel in Settings
+  React.useEffect(() => {
+    if (!user || !workspace?.id) return;
+    const sessionId = getDeviceSessionId();
+    void supabase.from("user_sessions").upsert(
+      {
+        user_id: user.id,
+        workspace_id: workspace.id,
+        session_id: sessionId,
+        user_agent: navigator.userAgent,
+        device_name: parseDeviceName(navigator.userAgent),
+        last_active_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,session_id" },
+    );
+  }, [user?.id, workspace?.id]);
+
   // BUG 2: presence heartbeat — upsert every 5 min + on visibility change
   React.useEffect(() => {
     if (!user || !workspace?.id) return;
@@ -402,7 +463,7 @@ function WorkspaceShell() {
               : "This workspace has been suspended. Contact support to restore access."}
           </p>
           <a
-            href="mailto:support@nexxoshq.io"
+            href="mailto:nexxoshq@gmail.com"
             className="inline-flex items-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Contact support →
@@ -490,6 +551,7 @@ function WorkspaceShell() {
                 <kbd className="hidden md:inline text-[10px] font-mono opacity-60">⌘K</kbd>
               </button>
               <NotificationBell />
+              <WhatsNew />
               {/* Profile avatar — links to profile page, mobile only */}
               <a
                 href={`/${workspaceSlug}/profile`}

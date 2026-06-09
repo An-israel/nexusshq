@@ -22,6 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import { Heart, Send, Award } from "lucide-react";
 import { timeAgo } from "@/lib/nexus";
@@ -302,14 +303,12 @@ function KudosPage() {
           ))}
         </div>
       ) : kudos.length === 0 ? (
-        <div className="flex flex-col items-center gap-3 py-20 text-center">
-          <Award className="h-14 w-14 text-muted-foreground/30" />
-          <p className="text-base font-medium text-muted-foreground">No kudos yet</p>
-          <p className="text-sm text-muted-foreground">Be the first to celebrate a teammate.</p>
-          <Button variant="outline" onClick={() => setSendOpen(true)}>
-            <Heart className="mr-2 h-4 w-4" /> Send the first kudos
-          </Button>
-        </div>
+        <EmptyState
+          icon={Award}
+          title="No kudos yet"
+          description="Be the first to celebrate a teammate's hard work."
+          action={{ label: "Send kudos", onClick: () => setSendOpen(true) }}
+        />
       ) : (
         <div className="space-y-3">
           {kudos.map((k) => (

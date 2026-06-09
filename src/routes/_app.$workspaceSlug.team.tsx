@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/workspace-context";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { deptLabel, initialsOf, todayISO } from "@/lib/nexus";
 import { requireAnyRole } from "@/lib/role-access";
 import { useAuth } from "@/lib/auth-context";
+import { removeWorkspaceMemberFn } from "@/lib/admin.functions";
 import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
 import { toast } from "sonner";
@@ -45,8 +47,7 @@ interface MemberRow {
 
 function TeamPage() {
   const { workspaceSlug } = Route.useParams();
-  const { isAdmin, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { workspace, isWorkspaceAdmin, isWorkspaceManager } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
   const [members, setMembers] = useState<MemberRow[]>([]);
@@ -197,7 +198,7 @@ function TeamPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          {isManager && (
+          {isWorkspaceManager && (
             <Button
               variant="outline"
               size="sm"
@@ -207,15 +208,18 @@ function TeamPage() {
               {showInactive ? "Hide deactivated" : "Show deactivated"}
             </Button>
           )}
-          {isManager && (
+          {isWorkspaceManager && (
             <Button variant="outline" size="sm" asChild className="text-xs">
               <Link to="/$workspaceSlug/tasks/assign" params={{ workspaceSlug }}>
                 <ClipboardList className="mr-1.5 h-3.5 w-3.5" /> Assign Task
               </Link>
             </Button>
           )}
-          {isManager && (
-            <InviteEmployeeDialog onInvited={() => setReloadKey((k) => k + 1)} isAdmin={isAdmin} />
+          {isWorkspaceManager && (
+            <InviteEmployeeDialog
+              onInvited={() => setReloadKey((k) => k + 1)}
+              isAdmin={isWorkspaceAdmin}
+            />
           )}
         </div>
       </div>
@@ -247,8 +251,8 @@ function TeamPage() {
                 <MemberCard
                   key={m.profile.id}
                   m={m}
-                  isAdmin={isAdmin}
-                  isManager={isManager}
+                  isAdmin={isWorkspaceAdmin}
+                  isManager={isWorkspaceManager}
                   onRoleChanged={() => setReloadKey((k) => k + 1)}
                   onActivationChanged={() => setReloadKey((k) => k + 1)}
                 />
@@ -272,8 +276,8 @@ function TeamPage() {
                     <MemberCard
                       key={m.profile.id}
                       m={m}
-                      isAdmin={isAdmin}
-                      isManager={isManager}
+                      isAdmin={isWorkspaceAdmin}
+                      isManager={isWorkspaceManager}
                       onRoleChanged={() => setReloadKey((k) => k + 1)}
                       onActivationChanged={() => setReloadKey((k) => k + 1)}
                     />
@@ -329,6 +333,8 @@ function MemberCard({
   onActivationChanged: () => void;
 }) {
   const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const removeMember = useServerFn(removeWorkspaceMemberFn);
   const [toggling, setToggling] = useState(false);
   const [removing, setRemoving] = useState(false);
 
@@ -352,18 +358,15 @@ function MemberCard({
     const name = m.profile.full_name ?? m.profile.email ?? "this employee";
     if (!confirm(`Remove ${name} from this workspace? They will lose access immediately.`)) return;
     setRemoving(true);
-    const { error } = await supabase
-      .from("workspace_members")
-      .delete()
-      .eq("workspace_id", workspace.id)
-      .eq("user_id", m.profile.id);
-    if (error) {
-      toast.error(error.message);
-    } else {
+    try {
+      await removeMember({ data: { workspaceId: workspace.id, userId: m.profile.id } });
       toast.success(`${name} removed from workspace`);
       onActivationChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to remove member");
+    } finally {
+      setRemoving(false);
     }
-    setRemoving(false);
   }
 
   const todayPct = m.todayTotal ? Math.round((m.todayDone / m.todayTotal) * 100) : 0;
@@ -457,7 +460,7 @@ function MemberCard({
               }
             />
           )}
-          {isAdmin && (
+          {isAdmin && m.profile.id !== user?.id && (
             <Button
               variant="ghost"
               size="sm"

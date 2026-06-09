@@ -29,6 +29,9 @@ export function getNotificationUrl(
         ? `${base}/messages/dm/${n.related_conversation_id}`
         : `${base}/messages`;
 
+    case "announcement":
+      return `${base}/announcements`;
+
     case "clock_reminder":
       return `${base}/attendance`;
 

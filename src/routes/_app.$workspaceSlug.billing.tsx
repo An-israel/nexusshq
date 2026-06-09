@@ -19,6 +19,8 @@ import {
   Loader2,
   Mail,
   CreditCard,
+  Download,
+  FileText,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/billing")({
@@ -43,6 +45,22 @@ interface UsageStats {
   usedSeats: number;
   messagesThisMonth: number;
   tasksThisMonth: number;
+}
+
+interface Invoice {
+  id: string;
+  invoice_number: string;
+  plan: string;
+  billing_interval: string;
+  amount_ngn: number;
+  vat_ngn: number;
+  status: string;
+  period_start: string | null;
+  period_end: string | null;
+  issued_at: string;
+  customer_email: string | null;
+  customer_name: string | null;
+  paystack_reference: string | null;
 }
 
 // ─── Plan definitions ──────────────────────────────────────────────────────────
@@ -91,7 +109,7 @@ const PLANS = [
   },
 ] as const;
 
-const SUPPORT_EMAIL = "hello@nexxoshq.io";
+const SUPPORT_EMAIL = "nexxoshq@gmail.com";
 const SUPPORT_WHATSAPP = "https://wa.me/2349000000000";
 
 function openUpgradeEmail(planLabel?: string) {
@@ -337,6 +355,196 @@ function PlanCard({
   );
 }
 
+// ─── Invoice HTML generator ────────────────────────────────────────────────────
+
+const PLAN_LABELS: Record<string, string> = {
+  basic: "Basic",
+  enterprise: "Enterprise",
+  unlimited: "Unlimited",
+};
+const VAT_DISPLAY = "7.5%";
+const COMPANY_NAME = "Nexxos HQ";
+const COMPANY_EMAIL = "hello@nexxoshq.io";
+
+function generateInvoiceHTML(inv: Invoice): string {
+  const netNgn = inv.amount_ngn - inv.vat_ngn;
+  const planLabel = PLAN_LABELS[inv.plan] ?? inv.plan;
+  const intervalLabel = inv.billing_interval === "annual" ? "Annual" : "Monthly";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Invoice ${inv.invoice_number}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:system-ui,sans-serif;color:#111;background:#fff;padding:40px}
+  .wrap{max-width:680px;margin:auto}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px}
+  .logo{font-size:22px;font-weight:700;letter-spacing:-0.5px}
+  .logo span{color:#6366f1}
+  .meta{text-align:right;font-size:13px;color:#555}
+  .meta strong{color:#111;font-size:16px;display:block;margin-bottom:2px}
+  h2{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:12px}
+  .parties{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:32px}
+  .party p{font-size:13px;color:#555;line-height:1.6}
+  .party strong{font-size:13px;color:#111}
+  table{width:100%;border-collapse:collapse;margin-bottom:24px}
+  thead th{background:#f5f5f7;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:#888;padding:8px 12px;text-align:left}
+  td{font-size:13px;padding:10px 12px;border-bottom:1px solid #eee}
+  .totals{max-width:280px;margin-left:auto}
+  .totals tr td{border:none;padding:4px 0}
+  .totals tr td:last-child{text-align:right}
+  .totals .total td{font-weight:700;font-size:15px;padding-top:8px;border-top:2px solid #111}
+  .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;background:#dcfce7;color:#166534}
+  .footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#aaa;text-align:center}
+  @media print{body{padding:0}.wrap{max-width:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <div class="logo">${COMPANY_NAME.replace("Nexxos", "<span>Nexxos</span>")}</div>
+      <p style="font-size:12px;color:#888;margin-top:4px">${COMPANY_EMAIL}</p>
+    </div>
+    <div class="meta">
+      <strong>INVOICE</strong>
+      <span>${inv.invoice_number}</span><br>
+      <span>Issued: ${new Date(inv.issued_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</span>
+    </div>
+  </div>
+
+  <div class="parties">
+    <div class="party">
+      <h2>From</h2>
+      <strong>${COMPANY_NAME}</strong>
+      <p>${COMPANY_EMAIL}</p>
+    </div>
+    <div class="party">
+      <h2>Bill To</h2>
+      <strong>${inv.customer_name ?? "—"}</strong>
+      <p>${inv.customer_email ?? "—"}</p>
+    </div>
+  </div>
+
+  <table>
+    <thead><tr><th>Description</th><th>Period</th><th style="text-align:right">Amount</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>${planLabel} Plan (${intervalLabel})</td>
+        <td style="color:#555">${inv.period_start ? new Date(inv.period_start).toLocaleDateString("en-GB") : "—"} – ${inv.period_end ? new Date(inv.period_end).toLocaleDateString("en-GB") : "—"}</td>
+        <td style="text-align:right">₦${netNgn.toLocaleString("en-NG")}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="totals">
+    <tr><td>Subtotal</td><td>₦${netNgn.toLocaleString("en-NG")}</td></tr>
+    <tr><td>VAT (${VAT_DISPLAY})</td><td>₦${inv.vat_ngn.toLocaleString("en-NG")}</td></tr>
+    <tr class="total"><td>Total</td><td>₦${inv.amount_ngn.toLocaleString("en-NG")}</td></tr>
+  </table>
+
+  ${inv.paystack_reference ? `<p style="font-size:11px;color:#aaa;margin-top:8px">Payment ref: ${inv.paystack_reference}</p>` : ""}
+  <p style="margin-top:8px"><span class="badge">PAID</span></p>
+
+  <div class="footer">Thank you for using ${COMPANY_NAME}. This is a VAT invoice under Nigerian tax regulations.</div>
+</div>
+</body>
+</html>`;
+}
+
+function downloadInvoice(inv: Invoice) {
+  const html = generateInvoiceHTML(inv);
+  const blob = new Blob([html], { type: "text/html" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${inv.invoice_number}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Invoice history section ────────────────────────────────────────────────────
+
+function InvoiceHistory({ workspaceId }: { workspaceId: string }) {
+  const [invoices, setInvoices] = React.useState<Invoice[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    void (async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("workspace_id", workspaceId)
+        .order("issued_at", { ascending: false })
+        .limit(50);
+      setInvoices((data ?? []) as Invoice[]);
+      setLoading(false);
+    })();
+  }, [workspaceId]);
+
+  return (
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-lg font-semibold">Invoice history</h2>
+        <p className="text-sm text-muted-foreground">Download VAT invoices for all payments.</p>
+      </div>
+      <Card>
+        {loading ? (
+          <CardContent className="py-10 flex justify-center">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </CardContent>
+        ) : invoices.length === 0 ? (
+          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+              <FileText className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-sm font-medium">No invoices yet.</p>
+            <p className="text-xs text-muted-foreground max-w-sm">
+              Invoices will appear here after your first payment.
+            </p>
+          </CardContent>
+        ) : (
+          <div className="divide-y divide-border">
+            {invoices.map((inv) => {
+              const planLabel = PLAN_LABELS[inv.plan] ?? inv.plan;
+              const intervalLabel = inv.billing_interval === "annual" ? "Annual" : "Monthly";
+              return (
+                <div
+                  key={inv.id}
+                  className="flex items-center justify-between px-4 py-3 gap-3 flex-wrap"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">
+                      {inv.invoice_number}{" "}
+                      <span className="text-muted-foreground font-normal">
+                        · {planLabel} ({intervalLabel})
+                      </span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(inv.issued_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}{" "}
+                      · ₦{inv.amount_ngn.toLocaleString("en-NG")} (incl. VAT)
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => downloadInvoice(inv)}>
+                    <Download className="mr-1.5 h-3.5 w-3.5" /> Download
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </Card>
+    </section>
+  );
+}
+
 // ─── Main page ─────────────────────────────────────────────────────────────────
 
 function BillingPage() {
@@ -417,9 +625,15 @@ function BillingPage() {
     const key = `${planId}-${interval}`;
     setCheckoutKey(key);
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           workspaceId: workspace.id,
           workspaceSlug: workspace.slug,
@@ -555,30 +769,8 @@ function BillingPage() {
         </div>
       </section>
 
-      {/* ── Section 4: Invoice history placeholder ── */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-lg font-semibold">Invoice history</h2>
-        </div>
-        <Card>
-          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-              <Mail className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <p className="text-sm font-medium">Invoice history coming soon.</p>
-            <p className="text-xs text-muted-foreground max-w-sm">
-              Contact{" "}
-              <a
-                href="mailto:hello@nexxoshq.io"
-                className="text-foreground underline underline-offset-4 hover:text-primary"
-              >
-                hello@nexxoshq.io
-              </a>{" "}
-              for billing records, receipts, or any payment-related queries.
-            </p>
-          </CardContent>
-        </Card>
-      </section>
+      {/* ── Section 4: Invoice history ── */}
+      <InvoiceHistory workspaceId={workspace.id} />
     </div>
   );
 }

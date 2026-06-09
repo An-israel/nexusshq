@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { requireApiUser } from "@/server/api-auth.server";
+import { checkRateLimit, clientKey, tooManyRequests } from "@/server/rate-limit.server";
 
 // Server-side handler: starts a Paystack hosted-checkout transaction for a
 // workspace plan upgrade. PAYSTACK_SECRET_KEY must be set in the server
@@ -8,6 +10,12 @@ export const Route = createFileRoute("/api/paystack/initialize")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const user = await requireApiUser(request);
+        if (user instanceof Response) return user;
+
+        const rl = checkRateLimit(clientKey(request, "paystack-init", user.id), 10, 60_000);
+        if (!rl.ok) return tooManyRequests(rl.retryAfterSeconds);
+
         const secretKey = process.env.PAYSTACK_SECRET_KEY;
         if (!secretKey) {
           return Response.json(

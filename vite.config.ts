@@ -1,6 +1,7 @@
 import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import viteTsconfigPaths from "vite-tsconfig-paths";
 
@@ -11,7 +12,11 @@ Object.assign(process.env, serverEnv);
 
 export default defineConfig({
   plugins: [tailwindcss(), viteTsconfigPaths()],
+  // Point TanStack Start at our custom Cloudflare Worker entry so security
+  // headers get stamped on every response (the default entry has no hook for
+  // this; src/server-entry.ts wraps the default stream handler).
   tanstackStart: {
+    server: { entry: "./server-entry" },
     importProtection: {
       behavior: "error",
       client: {
@@ -43,5 +48,17 @@ export default defineConfig({
         "@tanstack/query-core",
       ],
     },
+    build: {
+      sourcemap: true,
+    },
+    plugins: process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+          }),
+        ]
+      : [],
   },
 });

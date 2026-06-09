@@ -6,7 +6,7 @@ export interface Workspace {
   slug: string;
   logo_url: string | null;
   primary_color: string;
-  plan: "starter" | "growth" | "business" | "enterprise";
+  plan: "starter" | "growth" | "business" | "enterprise" | "basic" | "unlimited";
   plan_seats: number;
   is_active: boolean;
   trial_ends_at: string | null;

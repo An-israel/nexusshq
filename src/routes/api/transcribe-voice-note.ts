@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { requireApiUser } from "@/server/api-auth.server";
+import { checkRateLimit, clientKey, tooManyRequests } from "@/server/rate-limit.server";
 
 // Server-side handler: downloads the voice note from Supabase Storage and
 // sends it to OpenAI Whisper for transcription. OPENAI_API_KEY must be set
@@ -8,6 +10,12 @@ export const Route = createFileRoute("/api/transcribe-voice-note")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const user = await requireApiUser(request);
+        if (user instanceof Response) return user;
+
+        const rl = checkRateLimit(clientKey(request, "transcribe", user.id), 20, 60_000);
+        if (!rl.ok) return tooManyRequests(rl.retryAfterSeconds);
+
         const apiKey = process.env.OPENAI_API_KEY ?? "";
         if (!apiKey) {
           return Response.json(

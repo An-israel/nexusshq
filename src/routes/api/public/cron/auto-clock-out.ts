@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { verifyCronRequest } from "@/server/cron-auth.server";
 
 // Public endpoint called by pg_cron at 16:00 UTC (= 17:00 WAT) every day.
 // Auto clock-out anyone who forgot to clock out by end of day.
 export const Route = createFileRoute("/api/public/cron/auto-clock-out")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const authError = verifyCronRequest(request);
+        if (authError) return authError;
+
         const today = new Date().toISOString().slice(0, 10);
         // 17:00 WAT = 16:00 UTC
         const autoOut = new Date(`${today}T16:00:00.000Z`);

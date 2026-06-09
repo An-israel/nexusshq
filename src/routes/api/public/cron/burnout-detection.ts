@@ -1,13 +1,19 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { verifyCronRequest } from "@/server/cron-auth.server";
+import { callAI } from "@/server/ai.server";
 
 // Called by pg_cron every Sunday at 06:00 UTC (= 07:00 WAT).
-// Analyses past-4-week activity for every active employee and calls the
-// /api/ai burnout-risk action.  Persists medium/high alerts to burnout_alerts.
+// Analyses past-4-week activity for every active employee and calls callAI()
+// directly (not via HTTP /api/ai, which now requires a user session).
+// Persists medium/high alerts to burnout_alerts.
 export const Route = createFileRoute("/api/public/cron/burnout-detection")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        const authError = verifyCronRequest(request);
+        if (authError) return authError;
+
         const apiKey = process.env.ANTHROPIC_API_KEY ?? "";
         if (!apiKey) {
           return Response.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 500 });
@@ -25,7 +31,6 @@ export const Route = createFileRoute("/api/public/cron/burnout-detection")({
 
         if (pErr) return Response.json({ error: pErr.message }, { status: 500 });
 
-        const baseUrl = new URL(request.url).origin;
         const results: Array<{ name: string; risk_level: string; reason: string }> = [];
         let alertsInserted = 0;
 
@@ -65,28 +70,19 @@ export const Route = createFileRoute("/api/public/cron/burnout-detection")({
             .eq("assigned_to", profile.id)
             .eq("status", "overdue");
 
-          // Call AI burnout-risk
-          const aiResp = await fetch(`${baseUrl}/api/ai`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "burnout-risk",
-              context: {
-                name: profile.full_name ?? profile.email ?? profile.id,
-                overtimeMinutes,
-                missedClockOuts,
-                overdueTasks: overdueTasks ?? 0,
-                lateDays,
-              },
-            }),
+          // Call AI burnout-risk directly (server-to-server — no HTTP round-trip)
+          const aiResult = await callAI("burnout-risk", {
+            name: profile.full_name ?? profile.email ?? profile.id,
+            overtimeMinutes,
+            missedClockOuts,
+            overdueTasks: overdueTasks ?? 0,
+            lateDays,
           });
+          if ("error" in aiResult) continue;
 
-          if (!aiResp.ok) continue;
-
-          const aiData = (await aiResp.json()) as { result?: string };
           let parsed: { risk_level: string; reason: string } | null = null;
           try {
-            parsed = JSON.parse(aiData.result ?? "");
+            parsed = JSON.parse(aiResult.result ?? "");
           } catch {
             // skip malformed AI response
           }

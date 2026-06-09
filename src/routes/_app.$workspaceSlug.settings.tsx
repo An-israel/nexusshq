@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
+import { DEPARTMENTS, deptLabel, timeAgo } from "@/lib/nexus";
 import {
   Save,
   UserCog,
@@ -25,11 +25,29 @@ import {
   MapPin,
   Building2,
   Palette,
+  History,
+  Download,
+  Trash2,
+  Lock,
+  QrCode,
+  CheckCircle2,
+  AlertTriangle,
+  KeyRound,
+  Webhook,
+  Monitor,
+  Plus,
+  Eye,
+  EyeOff,
+  Copy,
+  RotateCcw,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { Switch } from "@/components/ui/switch";
 import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
 import { useWorkspace } from "@/lib/workspace-context";
+import { logAuditEvent } from "@/lib/audit-log";
 
 class FeatureErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -403,6 +421,22 @@ function SettingsPage() {
                 <MapPin className="mr-2 h-4 w-4" /> Office
               </TabsTrigger>
             )}
+            {isAdmin && (
+              <TabsTrigger value="audit-log">
+                <History className="mr-2 h-4 w-4" /> Audit Log
+              </TabsTrigger>
+            )}
+            {isAdmin && (
+              <TabsTrigger value="api">
+                <KeyRound className="mr-2 h-4 w-4" /> API
+              </TabsTrigger>
+            )}
+            <TabsTrigger value="privacy">
+              <Download className="mr-2 h-4 w-4" /> Privacy
+            </TabsTrigger>
+            <TabsTrigger value="security">
+              <Lock className="mr-2 h-4 w-4" /> Security
+            </TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="profile" className="mt-4">
@@ -444,7 +478,365 @@ function SettingsPage() {
             <OfficeLocationSettings />
           </TabsContent>
         )}
+        {isAdmin && (
+          <TabsContent value="audit-log" className="mt-4">
+            <AuditLogAdmin />
+          </TabsContent>
+        )}
+        {isAdmin && (
+          <TabsContent value="api" className="mt-4">
+            <ApiSettings />
+          </TabsContent>
+        )}
+        <TabsContent value="privacy" className="mt-4">
+          <PrivacySettings />
+        </TabsContent>
+        <TabsContent value="security" className="mt-4">
+          <SecuritySettings />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// ─── Privacy (GDPR) ──────────────────────────────────────────────────────────
+
+function PrivacySettings() {
+  const [exporting, setExporting] = React.useState(false);
+  const [deleteConfirm, setDeleteConfirm] = React.useState(false);
+  const [deleteInput, setDeleteInput] = React.useState("");
+  const [deleting, setDeleting] = React.useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const resp = await fetch("/api/gdpr/export", {
+        method: "POST",
+        headers: {
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+      });
+      if (!resp.ok) {
+        const err = (await resp.json()) as { error?: string };
+        toast.error(err.error ?? "Export failed");
+        return;
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nexus-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Your data export has been downloaded.");
+    } catch {
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (deleteInput !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const resp = await fetch("/api/gdpr/delete", {
+        method: "POST",
+        headers: {
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+      });
+      if (!resp.ok) {
+        const err = (await resp.json()) as { error?: string };
+        toast.error(err.error ?? "Account deletion failed");
+        setDeleting(false);
+        return;
+      }
+      toast.success("Account deleted. You will be signed out.");
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch {
+      toast.error("Account deletion failed. Please try again.");
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <Card className="p-6 space-y-4">
+        <div>
+          <h3 className="font-semibold flex items-center gap-2">
+            <Download className="h-4 w-4" /> Export your data
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Download a copy of all data associated with your account — profile, attendance, tasks,
+            messages, notifications, and more — as a JSON file.
+          </p>
+        </div>
+        <Button onClick={() => void handleExport()} disabled={exporting} variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          {exporting ? "Preparing export…" : "Download my data"}
+        </Button>
+      </Card>
+
+      <Card className="p-6 space-y-4 border-destructive/40">
+        <div>
+          <h3 className="font-semibold text-destructive flex items-center gap-2">
+            <Trash2 className="h-4 w-4" /> Delete my account
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Permanently removes your personal information. Your contributions (tasks, messages,
+            attendance) are retained for workspace integrity but will no longer be attributed to
+            you. This action cannot be undone.
+          </p>
+        </div>
+
+        {!deleteConfirm ? (
+          <Button variant="destructive" onClick={() => setDeleteConfirm(true)}>
+            <Trash2 className="mr-2 h-4 w-4" /> Delete my account
+          </Button>
+        ) : (
+          <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+            <p className="text-sm font-medium flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" /> Type{" "}
+              <code className="font-mono bg-muted px-1 rounded">DELETE</code> to confirm
+            </p>
+            <Input
+              value={deleteInput}
+              onChange={(e) => setDeleteInput(e.target.value)}
+              placeholder="DELETE"
+              className="text-base md:text-sm font-mono max-w-xs"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteConfirm(false);
+                  setDeleteInput("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => void handleDelete()}
+                disabled={deleteInput !== "DELETE" || deleting}
+              >
+                {deleting ? "Deleting…" : "Permanently delete account"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+// ─── Security / MFA ──────────────────────────────────────────────────────────
+
+type MfaFactor = {
+  id: string;
+  factor_type: string;
+  friendly_name?: string | null;
+  status: string;
+};
+
+function SecuritySettings() {
+  const [factors, setFactors] = React.useState<MfaFactor[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [enrolling, setEnrolling] = React.useState(false);
+  const [qrUri, setQrUri] = React.useState<string | null>(null);
+  const [secret, setSecret] = React.useState<string | null>(null);
+  const [pendingFactorId, setPendingFactorId] = React.useState<string | null>(null);
+  const [totpCode, setTotpCode] = React.useState("");
+  const [verifying, setVerifying] = React.useState(false);
+  const [unenrolling, setUnenrolling] = React.useState<string | null>(null);
+
+  const loadFactors = React.useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setFactors([...(data.totp ?? []), ...(data.phone ?? [])] as MfaFactor[]);
+    }
+    setLoading(false);
+  }, []);
+
+  React.useEffect(() => {
+    void loadFactors();
+  }, [loadFactors]);
+
+  async function startEnroll() {
+    setEnrolling(true);
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+    if (error || !data) {
+      toast.error(error?.message ?? "Failed to start enrollment");
+      setEnrolling(false);
+      return;
+    }
+    setQrUri(data.totp.qr_code);
+    setSecret(data.totp.secret);
+    setPendingFactorId(data.id);
+    setEnrolling(false);
+  }
+
+  async function verifyEnrollment() {
+    if (!pendingFactorId || !totpCode) return;
+    setVerifying(true);
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: pendingFactorId,
+      code: totpCode,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Two-factor authentication enabled.");
+      setQrUri(null);
+      setSecret(null);
+      setPendingFactorId(null);
+      setTotpCode("");
+      void loadFactors();
+    }
+    setVerifying(false);
+  }
+
+  async function unenroll(factorId: string) {
+    setUnenrolling(factorId);
+    const { error } = await supabase.auth.mfa.unenroll({ factorId });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Authenticator removed.");
+      void loadFactors();
+    }
+    setUnenrolling(null);
+  }
+
+  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  const verifiedFactors = factors.filter((f) => f.status === "verified");
+  const hasMfa = verifiedFactors.length > 0;
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <Card className="p-6 space-y-4">
+        <div>
+          <h3 className="font-semibold flex items-center gap-2">
+            <QrCode className="h-4 w-4" /> Two-factor authentication (2FA)
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Add an extra layer of security to your account. When enabled, you'll need a verification
+            code from your authenticator app in addition to your password.
+          </p>
+        </div>
+
+        {hasMfa && (
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+            <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+              Two-factor authentication is enabled
+            </p>
+          </div>
+        )}
+
+        {verifiedFactors.map((f) => (
+          <div
+            key={f.id}
+            className="flex items-center justify-between rounded-lg border border-border px-4 py-3"
+          >
+            <div>
+              <p className="text-sm font-medium">{f.friendly_name ?? "Authenticator app"}</p>
+              <p className="text-xs text-muted-foreground capitalize">{f.factor_type} · active</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              disabled={unenrolling === f.id}
+              onClick={() => void unenroll(f.id)}
+            >
+              {unenrolling === f.id ? "Removing…" : "Remove"}
+            </Button>
+          </div>
+        ))}
+
+        {!qrUri && (
+          <Button
+            variant={hasMfa ? "outline" : "default"}
+            onClick={() => void startEnroll()}
+            disabled={enrolling}
+          >
+            <QrCode className="mr-2 h-4 w-4" />
+            {enrolling ? "Setting up…" : hasMfa ? "Add another authenticator" : "Enable 2FA"}
+          </Button>
+        )}
+
+        {qrUri && (
+          <div className="space-y-4 rounded-lg border border-border p-4">
+            <div>
+              <p className="text-sm font-medium">Scan this QR code with your authenticator app</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Use Google Authenticator, Authy, 1Password, or any TOTP-compatible app.
+              </p>
+            </div>
+            <img
+              src={qrUri}
+              alt="MFA QR code"
+              className="rounded-lg border border-border"
+              width={200}
+              height={200}
+            />
+            {secret && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Or enter the setup key manually:
+                </p>
+                <code className="text-xs font-mono bg-muted px-2 py-1 rounded select-all break-all">
+                  {secret}
+                </code>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Enter the 6-digit code from your app to confirm</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="123456"
+                  className="text-base md:text-sm font-mono w-32"
+                  maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                />
+                <Button
+                  onClick={() => void verifyEnrollment()}
+                  disabled={totpCode.length !== 6 || verifying}
+                >
+                  {verifying ? "Verifying…" : "Verify & enable"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setQrUri(null);
+                    setSecret(null);
+                    setPendingFactorId(null);
+                    setTotpCode("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
@@ -698,12 +1090,22 @@ function TeamAdmin() {
     }
     if (error) toast.error(error.message);
     else {
+      if (workspace?.id && patch.is_active !== undefined) {
+        const target = members.find((m) => m.profiles?.id === profileId)?.profiles;
+        void logAuditEvent({
+          workspaceId: workspace.id,
+          action: patch.is_active ? "member.activated" : "member.deactivated",
+          targetType: "profile",
+          targetId: profileId,
+          metadata: { target_name: target?.full_name ?? null, target_email: target?.email ?? null },
+        });
+      }
       toast.success("Updated");
       void load();
     }
   }
 
-  async function removeMember(memberId: string, targetUserId: string) {
+  async function removeMember(memberId: string, targetUserId: string, targetName: string) {
     const {
       data: { user: currentUser },
     } = await supabase.auth.getUser();
@@ -734,6 +1136,16 @@ function TeamAdmin() {
       .eq("workspace_id", workspace!.id)
       .eq("assigned_to", targetUserId)
       .in("status", ["todo", "in_progress"]);
+
+    if (workspace?.id) {
+      void logAuditEvent({
+        workspaceId: workspace.id,
+        action: "member.removed",
+        targetType: "workspace_member",
+        targetId: targetUserId,
+        metadata: { target_name: targetName },
+      });
+    }
 
     toast.success("Member removed from workspace");
     void load();
@@ -844,7 +1256,7 @@ function TeamAdmin() {
               <Button
                 variant="destructive"
                 onClick={() => {
-                  void removeMember(removeTarget.id, removeTarget.userId);
+                  void removeMember(removeTarget.id, removeTarget.userId, removeTarget.name);
                   setRemoveTarget(null);
                 }}
               >
@@ -859,6 +1271,7 @@ function TeamAdmin() {
 }
 
 function RolesAdmin() {
+  const { workspace } = useWorkspace();
   const [profiles, setProfiles] = React.useState<ProfileRow[]>([]);
   const [roles, setRoles] = React.useState<Record<string, RoleRow["role"]>>({});
   const [loading, setLoading] = React.useState(true);
@@ -897,6 +1310,20 @@ function RolesAdmin() {
       toast.error(ins.error.message);
       return;
     }
+    if (workspace?.id) {
+      const target = profiles.find((p) => p.id === userId);
+      void logAuditEvent({
+        workspaceId: workspace.id,
+        action: "member.role_changed",
+        targetType: "profile",
+        targetId: userId,
+        metadata: {
+          target_name: target?.full_name ?? null,
+          target_email: target?.email ?? null,
+          new_role: role,
+        },
+      });
+    }
     toast.success(`Role set to ${role}`);
     void load();
   }
@@ -929,5 +1356,577 @@ function RolesAdmin() {
         ))}
       </div>
     </Card>
+  );
+}
+
+interface AuditEvent {
+  id: string;
+  actor_id: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
+interface ActorMini {
+  full_name: string | null;
+  email: string | null;
+}
+
+function describeAuditEvent(e: AuditEvent): string {
+  const meta = e.metadata ?? {};
+  const name =
+    (meta.target_name as string | undefined) || (meta.target_email as string | undefined);
+  const title = meta.title as string | undefined;
+  switch (e.action) {
+    case "member.removed":
+      return `removed ${name ?? "a member"} from the workspace`;
+    case "member.activated":
+      return `reactivated ${name ?? "a member"}`;
+    case "member.deactivated":
+      return `deactivated ${name ?? "a member"}`;
+    case "member.role_changed":
+      return `changed ${name ?? "a member"}'s role to ${(meta.new_role as string | undefined) ?? "—"}`;
+    case "announcement.created":
+      return `posted the announcement "${title ?? "Untitled"}"`;
+    case "announcement.deleted":
+      return `deleted the announcement "${title ?? "Untitled"}"`;
+    default:
+      return e.action.replace(/[._]/g, " ");
+  }
+}
+
+function AuditLogAdmin() {
+  const { workspace } = useWorkspace();
+  const [events, setEvents] = React.useState<AuditEvent[]>([]);
+  const [actors, setActors] = React.useState<Record<string, ActorMini>>({});
+  const [loading, setLoading] = React.useState(true);
+
+  const load = React.useCallback(async () => {
+    if (!workspace?.id) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("audit_events")
+      .select("*")
+      .eq("workspace_id", workspace.id)
+      .order("created_at", { ascending: false })
+      .limit(100);
+    if (error) {
+      toast.error(error.message);
+      setLoading(false);
+      return;
+    }
+    const rows = (data ?? []) as unknown as AuditEvent[];
+    setEvents(rows);
+
+    const actorIds = [...new Set(rows.map((r) => r.actor_id).filter((id): id is string => !!id))];
+    if (actorIds.length) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", actorIds);
+      const map: Record<string, ActorMini> = {};
+      (profs ?? []).forEach((p) => {
+        map[p.id] = { full_name: p.full_name, email: p.email };
+      });
+      setActors(map);
+    } else {
+      setActors({});
+    }
+    setLoading(false);
+  }, [workspace?.id]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
+
+  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  return (
+    <Card className="p-4">
+      <div>
+        <h3 className="text-sm font-semibold">Audit log</h3>
+        <p className="text-xs text-muted-foreground">
+          Sensitive admin actions in this workspace — who did what, and when.
+        </p>
+      </div>
+      {events.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">No audit events recorded yet.</p>
+      ) : (
+        <ul className="mt-4 divide-y divide-border">
+          {events.map((e) => {
+            const actor = e.actor_id ? actors[e.actor_id] : null;
+            return (
+              <li key={e.id} className="py-3 text-sm">
+                <p>
+                  <span className="font-medium">
+                    {actor?.full_name ?? actor?.email ?? "Someone"}
+                  </span>{" "}
+                  <span className="text-muted-foreground">{describeAuditEvent(e)}</span>
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{timeAgo(e.created_at)}</p>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+// ─── API Settings (API Keys + Webhooks + Active Sessions) ────────────────────
+
+const WEBHOOK_EVENTS = [
+  "task.created",
+  "task.completed",
+  "standup.submitted",
+  "member.joined",
+  "attendance.clock_in",
+  "attendance.clock_out",
+] as const;
+
+interface ApiKey {
+  id: string;
+  name: string;
+  key_prefix: string;
+  scopes: string[];
+  is_active: boolean;
+  last_used_at: string | null;
+  created_at: string;
+}
+interface WebhookEndpoint {
+  id: string;
+  name: string;
+  url: string;
+  events: string[];
+  is_active: boolean;
+  last_fired_at: string | null;
+  last_error: string | null;
+  created_at: string;
+}
+interface UserSession {
+  id: string;
+  session_id: string;
+  device_name: string | null;
+  user_agent: string | null;
+  created_at: string;
+  last_active_at: string;
+}
+
+function ApiSettings() {
+  return (
+    <div className="max-w-2xl space-y-8">
+      <ApiKeysSection />
+      <Separator />
+      <WebhooksSection />
+      <Separator />
+      <ActiveSessionsSection />
+    </div>
+  );
+}
+
+function ApiKeysSection() {
+  const { workspace } = useWorkspace();
+  const [keys, setKeys] = React.useState<ApiKey[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [name, setName] = React.useState("");
+  const [creating, setCreating] = React.useState(false);
+  const [newKey, setNewKey] = React.useState<string | null>(null);
+  const [showKey, setShowKey] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch(`/api/apikeys?workspace=${workspace.slug}`, {
+      headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { keys: ApiKey[] };
+      setKeys(json.keys);
+    }
+    setLoading(false);
+  }, [workspace.slug]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function create() {
+    if (!name.trim()) return;
+    setCreating(true);
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch("/api/apikeys", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.session?.access_token ?? ""}`,
+      },
+      body: JSON.stringify({ workspace: workspace.slug, name: name.trim() }),
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { key: ApiKey & { plaintext: string } };
+      setNewKey(json.key.plaintext);
+      setName("");
+      void load();
+    } else {
+      toast.error("Failed to create API key");
+    }
+    setCreating(false);
+  }
+
+  async function revoke(id: string) {
+    const { data: session } = await supabase.auth.getSession();
+    await fetch(`/api/apikeys/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+    });
+    void load();
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold flex items-center gap-2">
+          <KeyRound className="h-4 w-4" /> API Keys
+        </h3>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Use API keys to authenticate requests to{" "}
+          <code className="text-xs bg-muted px-1 rounded">/api/v1/*</code>.
+        </p>
+      </div>
+
+      {newKey && (
+        <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 space-y-2">
+          <p className="text-xs font-medium text-green-400">
+            API key created — copy it now, it won't be shown again.
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs font-mono bg-background rounded px-2 py-1 truncate">
+              {showKey ? newKey : newKey.slice(0, 12) + "•".repeat(20)}
+            </code>
+            <button
+              onClick={() => setShowKey((v) => !v)}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={() => {
+                void navigator.clipboard.writeText(newKey);
+                toast.success("Copied");
+              }}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <Copy className="h-4 w-4" />
+            </button>
+          </div>
+          <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setNewKey(null)}>
+            Dismiss
+          </Button>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Input
+          placeholder="Key name (e.g. Zapier integration)"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="h-8 text-sm"
+        />
+        <Button size="sm" onClick={() => void create()} disabled={creating || !name.trim()}>
+          <Plus className="mr-1 h-3.5 w-3.5" />
+          {creating ? "Creating…" : "Create"}
+        </Button>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : keys.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No API keys yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {keys.map((k) => (
+            <div
+              key={k.id}
+              className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2.5"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{k.name}</p>
+                <p className="text-xs text-muted-foreground font-mono">{k.key_prefix}••••••••</p>
+                {k.last_used_at && (
+                  <p className="text-xs text-muted-foreground">
+                    Last used {timeAgo(k.last_used_at)}
+                  </p>
+                )}
+              </div>
+              <Button
+                size="sm"
+                variant="destructive"
+                className="h-7 text-xs shrink-0 ml-3"
+                onClick={() => void revoke(k.id)}
+              >
+                <Trash2 className="mr-1 h-3 w-3" />
+                Revoke
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WebhooksSection() {
+  const { workspace } = useWorkspace();
+  const [endpoints, setEndpoints] = React.useState<WebhookEndpoint[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [form, setForm] = React.useState({ name: "", url: "", events: [] as string[] });
+  const [creating, setCreating] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch(`/api/webhooks?workspace=${workspace.slug}`, {
+      headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+    });
+    if (res.ok) {
+      const json = (await res.json()) as { endpoints: WebhookEndpoint[] };
+      setEndpoints(json.endpoints);
+    }
+    setLoading(false);
+  }, [workspace.slug]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function create() {
+    if (!form.name.trim() || !form.url.trim() || !form.events.length) {
+      toast.error("Name, URL, and at least one event are required");
+      return;
+    }
+    setCreating(true);
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch("/api/webhooks", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.session?.access_token ?? ""}`,
+      },
+      body: JSON.stringify({ workspace: workspace.slug, ...form }),
+    });
+    if (res.ok) {
+      toast.success("Webhook endpoint created");
+      setForm({ name: "", url: "", events: [] });
+      void load();
+    } else {
+      const err = (await res.json()) as { error?: string };
+      toast.error(err.error ?? "Failed to create webhook");
+    }
+    setCreating(false);
+  }
+
+  async function remove(id: string) {
+    const { data: session } = await supabase.auth.getSession();
+    await fetch(`/api/webhooks/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+    });
+    void load();
+  }
+
+  function toggleEvent(ev: string) {
+    setForm((f) => ({
+      ...f,
+      events: f.events.includes(ev) ? f.events.filter((e) => e !== ev) : [...f.events, ev],
+    }));
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold flex items-center gap-2">
+          <Webhook className="h-4 w-4" /> Webhook Endpoints
+        </h3>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Receive real-time events in Zapier, Make, or your own server. Each request is signed with{" "}
+          <code className="text-xs bg-muted px-1 rounded">X-Nexus-Signature</code>.
+        </p>
+      </div>
+
+      <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+        <h4 className="text-xs font-medium text-foreground">New endpoint</h4>
+        <Input
+          placeholder="Name (e.g. Zapier trigger)"
+          value={form.name}
+          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          className="h-8 text-sm"
+        />
+        <Input
+          placeholder="https://hooks.zapier.com/…"
+          value={form.url}
+          onChange={(e) => setForm((f) => ({ ...f, url: e.target.value }))}
+          className="h-8 text-sm"
+        />
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {WEBHOOK_EVENTS.map((ev) => (
+            <button
+              key={ev}
+              onClick={() => toggleEvent(ev)}
+              className={`rounded-full border px-2 py-0.5 text-[11px] font-mono transition-colors ${form.events.includes(ev) ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:border-foreground/30"}`}
+            >
+              {ev}
+            </button>
+          ))}
+        </div>
+        <Button size="sm" onClick={() => void create()} disabled={creating} className="mt-1">
+          <Plus className="mr-1 h-3.5 w-3.5" />
+          {creating ? "Creating…" : "Add endpoint"}
+        </Button>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : endpoints.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No webhook endpoints yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {endpoints.map((ep) => (
+            <div key={ep.id} className="rounded-lg border border-border bg-card p-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{ep.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{ep.url}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  className="h-7 text-xs shrink-0"
+                  onClick={() => void remove(ep.id)}
+                >
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {ep.events.map((ev) => (
+                  <Badge key={ev} variant="secondary" className="text-[10px] font-mono py-0">
+                    {ev}
+                  </Badge>
+                ))}
+              </div>
+              {ep.last_error && (
+                <p className="text-xs text-destructive">Last error: {ep.last_error}</p>
+              )}
+              {ep.last_fired_at && (
+                <p className="text-xs text-muted-foreground">
+                  Last fired {timeAgo(ep.last_fired_at)}
+                </p>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActiveSessionsSection() {
+  const { user } = useAuth();
+  const { workspace } = useWorkspace();
+  const [sessions, setSessions] = React.useState<UserSession[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [signingOut, setSigningOut] = React.useState(false);
+
+  const currentSessionId = React.useMemo(() => {
+    if (typeof localStorage === "undefined") return null;
+    return localStorage.getItem("nexus_device_session_id");
+  }, []);
+
+  const load = React.useCallback(async () => {
+    if (!user || !workspace?.id) return;
+    const { data } = await supabase
+      .from("user_sessions")
+      .select("id, session_id, device_name, user_agent, created_at, last_active_at")
+      .eq("user_id", user.id)
+      .eq("workspace_id", workspace.id)
+      .order("last_active_at", { ascending: false });
+    setSessions((data ?? []) as UserSession[]);
+    setLoading(false);
+  }, [user?.id, workspace?.id]);
+
+  React.useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function signOutOthers() {
+    setSigningOut(true);
+    await supabase.auth.signOut({ scope: "others" });
+    // Remove non-current sessions from our table
+    if (currentSessionId && user) {
+      await supabase
+        .from("user_sessions")
+        .delete()
+        .eq("user_id", user.id)
+        .neq("session_id", currentSessionId);
+    }
+    void load();
+    toast.success("All other devices have been signed out.");
+    setSigningOut(false);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold flex items-center gap-2">
+            <Monitor className="h-4 w-4" /> Active Sessions
+          </h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Devices where you're currently signed in.
+          </p>
+        </div>
+        {sessions.length > 1 && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void signOutOthers()}
+            disabled={signingOut}
+          >
+            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />
+            {signingOut ? "Signing out…" : "Sign out others"}
+          </Button>
+        )}
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : sessions.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No sessions found.</p>
+      ) : (
+        <div className="space-y-2">
+          {sessions.map((s) => {
+            const isCurrent = s.session_id === currentSessionId;
+            return (
+              <div
+                key={s.id}
+                className={`flex items-start justify-between rounded-lg border px-3 py-2.5 ${isCurrent ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{s.device_name ?? "Unknown device"}</p>
+                    {isCurrent && <Badge className="text-[10px] py-0 h-4">This device</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Last active {timeAgo(s.last_active_at)}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate max-w-xs">
+                    {s.user_agent?.slice(0, 60)}…
+                  </p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

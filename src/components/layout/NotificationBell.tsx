@@ -9,6 +9,7 @@ import {
   Target,
   MessageSquare,
   Users,
+  Megaphone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -39,6 +40,8 @@ function iconFor(type: string) {
       return MessageSquare;
     case "group_message":
       return Users;
+    case "announcement":
+      return Megaphone;
     default:
       return Bell;
   }

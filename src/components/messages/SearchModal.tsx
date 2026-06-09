@@ -113,14 +113,23 @@ export function SearchModal({
     setLoading(true);
 
     (async () => {
-      const { data: msgs, error } = await supabase
+      // Use full-text search for queries 3+ chars (GIN-indexed, fast).
+      // Fall back to ILIKE for very short queries where FTS adds no value.
+      const baseQuery = supabase
         .from("messages")
         .select("id, body, created_at, channel_id, conversation_id, sender_id")
         .eq("workspace_id", workspaceId)
         .eq("is_deleted", false)
-        .ilike("body", `%${debouncedQuery}%`)
         .order("created_at", { ascending: false })
         .limit(30);
+
+      const { data: msgs, error } =
+        debouncedQuery.length >= 3
+          ? await baseQuery.textSearch("body", debouncedQuery, {
+              type: "websearch",
+              config: "english",
+            })
+          : await baseQuery.ilike("body", `%${debouncedQuery}%`);
 
       if (cancelled) return;
       if (error) {

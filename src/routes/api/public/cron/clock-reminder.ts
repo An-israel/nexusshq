@@ -1,12 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { verifyCronRequest } from "@/server/cron-auth.server";
 
 // Public endpoint called by pg_cron at 15:15 UTC weekdays.
 // Notifies anyone clocked in but not out for today.
 export const Route = createFileRoute("/api/public/cron/clock-reminder")({
   server: {
     handlers: {
-      POST: async () => {
+      POST: async ({ request }) => {
+        const authError = verifyCronRequest(request);
+        if (authError) return authError;
+
         const today = new Date().toISOString().slice(0, 10);
         const { data: rows, error } = await supabaseAdmin
           .from("attendance")

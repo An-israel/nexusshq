@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspacesRouteImport } from './routes/workspaces'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -25,11 +26,25 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackSplatRouteImport } from './routes/track.$'
+import { Route as ApiWebhooksRouteImport } from './routes/api/webhooks'
 import { Route as ApiTranscribeVoiceNoteRouteImport } from './routes/api/transcribe-voice-note'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiCalendarRouteImport } from './routes/api/calendar'
+import { Route as ApiApikeysRouteImport } from './routes/api/apikeys'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
+import { Route as ApiWebhooksIdRouteImport } from './routes/api/webhooks.$id'
+import { Route as ApiV1WorkspaceRouteImport } from './routes/api/v1/workspace'
+import { Route as ApiV1TasksRouteImport } from './routes/api/v1/tasks'
+import { Route as ApiV1MembersRouteImport } from './routes/api/v1/members'
+import { Route as ApiV1AttendanceRouteImport } from './routes/api/v1/attendance'
+import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
 import { Route as ApiPaystackWebhookRouteImport } from './routes/api/paystack/webhook'
 import { Route as ApiPaystackInitializeRouteImport } from './routes/api/paystack/initialize'
+import { Route as ApiGdprExportRouteImport } from './routes/api/gdpr/export'
+import { Route as ApiGdprDeleteRouteImport } from './routes/api/gdpr/delete'
+import { Route as ApiCalendarTokenRouteImport } from './routes/api/calendar.$token'
+import { Route as ApiApikeysIdRouteImport } from './routes/api/apikeys.$id'
 import { Route as AppWorkspaceSlugTeamBoardRouteImport } from './routes/_app.$workspaceSlug.team-board'
 import { Route as AppWorkspaceSlugTeamRouteImport } from './routes/_app.$workspaceSlug.team'
 import { Route as AppWorkspaceSlugTasksRouteImport } from './routes/_app.$workspaceSlug.tasks'
@@ -62,6 +77,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicCronWeeklySummaryEmailRouteImport } from './routes/api/public/cron/weekly-summary-email'
+import { Route as ApiPublicCronSubscriptionCheckRouteImport } from './routes/api/public/cron/subscription-check'
 import { Route as ApiPublicCronMessageEmailRouteImport } from './routes/api/public/cron/message-email'
 import { Route as ApiPublicCronLateTaskReportRouteImport } from './routes/api/public/cron/late-task-report'
 import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
@@ -88,6 +104,11 @@ const TermsRoute = TermsRouteImport.update({
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -154,9 +175,29 @@ const TrackSplatRoute = TrackSplatRouteImport.update({
   path: '/track/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksRoute = ApiWebhooksRouteImport.update({
+  id: '/api/webhooks',
+  path: '/api/webhooks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTranscribeVoiceNoteRoute = ApiTranscribeVoiceNoteRouteImport.update({
   id: '/api/transcribe-voice-note',
   path: '/api/transcribe-voice-note',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCalendarRoute = ApiCalendarRouteImport.update({
+  id: '/api/calendar',
+  path: '/api/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiApikeysRoute = ApiApikeysRouteImport.update({
+  id: '/api/apikeys',
+  path: '/api/apikeys',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiRoute = ApiAiRouteImport.update({
@@ -169,6 +210,36 @@ const AppWorkspaceSlugRoute = AppWorkspaceSlugRouteImport.update({
   path: '/$workspaceSlug',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiWebhooksIdRoute = ApiWebhooksIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiWebhooksRoute,
+} as any)
+const ApiV1WorkspaceRoute = ApiV1WorkspaceRouteImport.update({
+  id: '/api/v1/workspace',
+  path: '/api/v1/workspace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1TasksRoute = ApiV1TasksRouteImport.update({
+  id: '/api/v1/tasks',
+  path: '/api/v1/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1MembersRoute = ApiV1MembersRouteImport.update({
+  id: '/api/v1/members',
+  path: '/api/v1/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1AttendanceRoute = ApiV1AttendanceRouteImport.update({
+  id: '/api/v1/attendance',
+  path: '/api/v1/attendance',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
+  id: '/api/push/subscribe',
+  path: '/api/push/subscribe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPaystackWebhookRoute = ApiPaystackWebhookRouteImport.update({
   id: '/api/paystack/webhook',
   path: '/api/paystack/webhook',
@@ -178,6 +249,26 @@ const ApiPaystackInitializeRoute = ApiPaystackInitializeRouteImport.update({
   id: '/api/paystack/initialize',
   path: '/api/paystack/initialize',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGdprExportRoute = ApiGdprExportRouteImport.update({
+  id: '/api/gdpr/export',
+  path: '/api/gdpr/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGdprDeleteRoute = ApiGdprDeleteRouteImport.update({
+  id: '/api/gdpr/delete',
+  path: '/api/gdpr/delete',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCalendarTokenRoute = ApiCalendarTokenRouteImport.update({
+  id: '/$token',
+  path: '/$token',
+  getParentRoute: () => ApiCalendarRoute,
+} as any)
+const ApiApikeysIdRoute = ApiApikeysIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiApikeysRoute,
 } as any)
 const AppWorkspaceSlugTeamBoardRoute =
   AppWorkspaceSlugTeamBoardRouteImport.update({
@@ -357,6 +448,12 @@ const ApiPublicCronWeeklySummaryEmailRoute =
     path: '/api/public/cron/weekly-summary-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronSubscriptionCheckRoute =
+  ApiPublicCronSubscriptionCheckRouteImport.update({
+    id: '/api/public/cron/subscription-check',
+    path: '/api/public/cron/subscription-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronMessageEmailRoute =
   ApiPublicCronMessageEmailRouteImport.update({
     id: '/api/public/cron/message-email',
@@ -442,12 +539,17 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/apikeys': typeof ApiApikeysRouteWithChildren
+  '/api/calendar': typeof ApiCalendarRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
+  '/api/webhooks': typeof ApiWebhooksRouteWithChildren
   '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -477,8 +579,18 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/apikeys/$id': typeof ApiApikeysIdRoute
+  '/api/calendar/$token': typeof ApiCalendarTokenRoute
+  '/api/gdpr/delete': typeof ApiGdprDeleteRoute
+  '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/v1/attendance': typeof ApiV1AttendanceRoute
+  '/api/v1/members': typeof ApiV1MembersRoute
+  '/api/v1/tasks': typeof ApiV1TasksRoute
+  '/api/v1/workspace': typeof ApiV1WorkspaceRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -489,6 +601,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -508,12 +621,17 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/apikeys': typeof ApiApikeysRouteWithChildren
+  '/api/calendar': typeof ApiCalendarRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
+  '/api/webhooks': typeof ApiWebhooksRouteWithChildren
   '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -543,8 +661,18 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/apikeys/$id': typeof ApiApikeysIdRoute
+  '/api/calendar/$token': typeof ApiCalendarTokenRoute
+  '/api/gdpr/delete': typeof ApiGdprDeleteRoute
+  '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/v1/attendance': typeof ApiV1AttendanceRoute
+  '/api/v1/members': typeof ApiV1MembersRoute
+  '/api/v1/tasks': typeof ApiV1TasksRoute
+  '/api/v1/workspace': typeof ApiV1WorkspaceRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -555,6 +683,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -576,12 +705,17 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/apikeys': typeof ApiApikeysRouteWithChildren
+  '/api/calendar': typeof ApiCalendarRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
+  '/api/webhooks': typeof ApiWebhooksRouteWithChildren
   '/track/$': typeof TrackSplatRoute
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/_app/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -611,8 +745,18 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/_app/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/apikeys/$id': typeof ApiApikeysIdRoute
+  '/api/calendar/$token': typeof ApiCalendarTokenRoute
+  '/api/gdpr/delete': typeof ApiGdprDeleteRoute
+  '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
+  '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/v1/attendance': typeof ApiV1AttendanceRoute
+  '/api/v1/members': typeof ApiV1MembersRoute
+  '/api/v1/tasks': typeof ApiV1TasksRoute
+  '/api/v1/workspace': typeof ApiV1WorkspaceRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/_app/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/_app/$workspaceSlug/tasks_/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -623,6 +767,7 @@ export interface FileRoutesById {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -644,12 +789,17 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/sitemap.xml'
+    | '/status'
     | '/super-admin'
     | '/terms'
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
+    | '/api/apikeys'
+    | '/api/calendar'
+    | '/api/health'
     | '/api/transcribe-voice-note'
+    | '/api/webhooks'
     | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
@@ -679,8 +829,18 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/api/apikeys/$id'
+    | '/api/calendar/$token'
+    | '/api/gdpr/delete'
+    | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
+    | '/api/push/subscribe'
+    | '/api/v1/attendance'
+    | '/api/v1/members'
+    | '/api/v1/tasks'
+    | '/api/v1/workspace'
+    | '/api/webhooks/$id'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/settings/automations'
     | '/$workspaceSlug/tasks/$taskId'
@@ -691,6 +851,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -710,12 +871,17 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/sitemap.xml'
+    | '/status'
     | '/super-admin'
     | '/terms'
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
+    | '/api/apikeys'
+    | '/api/calendar'
+    | '/api/health'
     | '/api/transcribe-voice-note'
+    | '/api/webhooks'
     | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
@@ -745,8 +911,18 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/api/apikeys/$id'
+    | '/api/calendar/$token'
+    | '/api/gdpr/delete'
+    | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
+    | '/api/push/subscribe'
+    | '/api/v1/attendance'
+    | '/api/v1/members'
+    | '/api/v1/tasks'
+    | '/api/v1/workspace'
+    | '/api/webhooks/$id'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/settings/automations'
     | '/$workspaceSlug/tasks/$taskId'
@@ -757,6 +933,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -777,12 +954,17 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/sitemap.xml'
+    | '/status'
     | '/super-admin'
     | '/terms'
     | '/workspaces'
     | '/_app/$workspaceSlug'
     | '/api/ai'
+    | '/api/apikeys'
+    | '/api/calendar'
+    | '/api/health'
     | '/api/transcribe-voice-note'
+    | '/api/webhooks'
     | '/track/$'
     | '/_app/$workspaceSlug/announcements'
     | '/_app/$workspaceSlug/attendance'
@@ -812,8 +994,18 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/tasks'
     | '/_app/$workspaceSlug/team'
     | '/_app/$workspaceSlug/team-board'
+    | '/api/apikeys/$id'
+    | '/api/calendar/$token'
+    | '/api/gdpr/delete'
+    | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
+    | '/api/push/subscribe'
+    | '/api/v1/attendance'
+    | '/api/v1/members'
+    | '/api/v1/tasks'
+    | '/api/v1/workspace'
+    | '/api/webhooks/$id'
     | '/_app/$workspaceSlug/messages/activity'
     | '/_app/$workspaceSlug/settings/automations'
     | '/_app/$workspaceSlug/tasks_/$taskId'
@@ -824,6 +1016,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -845,19 +1038,32 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StatusRoute: typeof StatusRoute
   SuperAdminRoute: typeof SuperAdminRoute
   TermsRoute: typeof TermsRoute
   WorkspacesRoute: typeof WorkspacesRoute
   ApiAiRoute: typeof ApiAiRoute
+  ApiApikeysRoute: typeof ApiApikeysRouteWithChildren
+  ApiCalendarRoute: typeof ApiCalendarRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiTranscribeVoiceNoteRoute: typeof ApiTranscribeVoiceNoteRoute
+  ApiWebhooksRoute: typeof ApiWebhooksRouteWithChildren
   TrackSplatRoute: typeof TrackSplatRoute
+  ApiGdprDeleteRoute: typeof ApiGdprDeleteRoute
+  ApiGdprExportRoute: typeof ApiGdprExportRoute
   ApiPaystackInitializeRoute: typeof ApiPaystackInitializeRoute
   ApiPaystackWebhookRoute: typeof ApiPaystackWebhookRoute
+  ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
+  ApiV1AttendanceRoute: typeof ApiV1AttendanceRoute
+  ApiV1MembersRoute: typeof ApiV1MembersRoute
+  ApiV1TasksRoute: typeof ApiV1TasksRoute
+  ApiV1WorkspaceRoute: typeof ApiV1WorkspaceRoute
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
   ApiPublicCronBurnoutDetectionRoute: typeof ApiPublicCronBurnoutDetectionRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
   ApiPublicCronLateTaskReportRoute: typeof ApiPublicCronLateTaskReportRoute
   ApiPublicCronMessageEmailRoute: typeof ApiPublicCronMessageEmailRoute
+  ApiPublicCronSubscriptionCheckRoute: typeof ApiPublicCronSubscriptionCheckRoute
   ApiPublicCronWeeklySummaryEmailRoute: typeof ApiPublicCronWeeklySummaryEmailRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -885,6 +1091,13 @@ declare module '@tanstack/react-router' {
       path: '/super-admin'
       fullPath: '/super-admin'
       preLoaderRoute: typeof SuperAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -978,11 +1191,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks': {
+      id: '/api/webhooks'
+      path: '/api/webhooks'
+      fullPath: '/api/webhooks'
+      preLoaderRoute: typeof ApiWebhooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/transcribe-voice-note': {
       id: '/api/transcribe-voice-note'
       path: '/api/transcribe-voice-note'
       fullPath: '/api/transcribe-voice-note'
       preLoaderRoute: typeof ApiTranscribeVoiceNoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/calendar': {
+      id: '/api/calendar'
+      path: '/api/calendar'
+      fullPath: '/api/calendar'
+      preLoaderRoute: typeof ApiCalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/apikeys': {
+      id: '/api/apikeys'
+      path: '/api/apikeys'
+      fullPath: '/api/apikeys'
+      preLoaderRoute: typeof ApiApikeysRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ai': {
@@ -999,6 +1240,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppWorkspaceSlugRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/webhooks/$id': {
+      id: '/api/webhooks/$id'
+      path: '/$id'
+      fullPath: '/api/webhooks/$id'
+      preLoaderRoute: typeof ApiWebhooksIdRouteImport
+      parentRoute: typeof ApiWebhooksRoute
+    }
+    '/api/v1/workspace': {
+      id: '/api/v1/workspace'
+      path: '/api/v1/workspace'
+      fullPath: '/api/v1/workspace'
+      preLoaderRoute: typeof ApiV1WorkspaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/tasks': {
+      id: '/api/v1/tasks'
+      path: '/api/v1/tasks'
+      fullPath: '/api/v1/tasks'
+      preLoaderRoute: typeof ApiV1TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/members': {
+      id: '/api/v1/members'
+      path: '/api/v1/members'
+      fullPath: '/api/v1/members'
+      preLoaderRoute: typeof ApiV1MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/attendance': {
+      id: '/api/v1/attendance'
+      path: '/api/v1/attendance'
+      fullPath: '/api/v1/attendance'
+      preLoaderRoute: typeof ApiV1AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/push/subscribe': {
+      id: '/api/push/subscribe'
+      path: '/api/push/subscribe'
+      fullPath: '/api/push/subscribe'
+      preLoaderRoute: typeof ApiPushSubscribeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/paystack/webhook': {
       id: '/api/paystack/webhook'
       path: '/api/paystack/webhook'
@@ -1012,6 +1295,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/paystack/initialize'
       preLoaderRoute: typeof ApiPaystackInitializeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/gdpr/export': {
+      id: '/api/gdpr/export'
+      path: '/api/gdpr/export'
+      fullPath: '/api/gdpr/export'
+      preLoaderRoute: typeof ApiGdprExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/gdpr/delete': {
+      id: '/api/gdpr/delete'
+      path: '/api/gdpr/delete'
+      fullPath: '/api/gdpr/delete'
+      preLoaderRoute: typeof ApiGdprDeleteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/calendar/$token': {
+      id: '/api/calendar/$token'
+      path: '/$token'
+      fullPath: '/api/calendar/$token'
+      preLoaderRoute: typeof ApiCalendarTokenRouteImport
+      parentRoute: typeof ApiCalendarRoute
+    }
+    '/api/apikeys/$id': {
+      id: '/api/apikeys/$id'
+      path: '/$id'
+      fullPath: '/api/apikeys/$id'
+      preLoaderRoute: typeof ApiApikeysIdRouteImport
+      parentRoute: typeof ApiApikeysRoute
     }
     '/_app/$workspaceSlug/team-board': {
       id: '/_app/$workspaceSlug/team-board'
@@ -1237,6 +1548,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronWeeklySummaryEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/subscription-check': {
+      id: '/api/public/cron/subscription-check'
+      path: '/api/public/cron/subscription-check'
+      fullPath: '/api/public/cron/subscription-check'
+      preLoaderRoute: typeof ApiPublicCronSubscriptionCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/message-email': {
       id: '/api/public/cron/message-email'
       path: '/api/public/cron/message-email'
@@ -1450,6 +1768,42 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface ApiApikeysRouteChildren {
+  ApiApikeysIdRoute: typeof ApiApikeysIdRoute
+}
+
+const ApiApikeysRouteChildren: ApiApikeysRouteChildren = {
+  ApiApikeysIdRoute: ApiApikeysIdRoute,
+}
+
+const ApiApikeysRouteWithChildren = ApiApikeysRoute._addFileChildren(
+  ApiApikeysRouteChildren,
+)
+
+interface ApiCalendarRouteChildren {
+  ApiCalendarTokenRoute: typeof ApiCalendarTokenRoute
+}
+
+const ApiCalendarRouteChildren: ApiCalendarRouteChildren = {
+  ApiCalendarTokenRoute: ApiCalendarTokenRoute,
+}
+
+const ApiCalendarRouteWithChildren = ApiCalendarRoute._addFileChildren(
+  ApiCalendarRouteChildren,
+)
+
+interface ApiWebhooksRouteChildren {
+  ApiWebhooksIdRoute: typeof ApiWebhooksIdRoute
+}
+
+const ApiWebhooksRouteChildren: ApiWebhooksRouteChildren = {
+  ApiWebhooksIdRoute: ApiWebhooksIdRoute,
+}
+
+const ApiWebhooksRouteWithChildren = ApiWebhooksRoute._addFileChildren(
+  ApiWebhooksRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
@@ -1463,19 +1817,32 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StatusRoute: StatusRoute,
   SuperAdminRoute: SuperAdminRoute,
   TermsRoute: TermsRoute,
   WorkspacesRoute: WorkspacesRoute,
   ApiAiRoute: ApiAiRoute,
+  ApiApikeysRoute: ApiApikeysRouteWithChildren,
+  ApiCalendarRoute: ApiCalendarRouteWithChildren,
+  ApiHealthRoute: ApiHealthRoute,
   ApiTranscribeVoiceNoteRoute: ApiTranscribeVoiceNoteRoute,
+  ApiWebhooksRoute: ApiWebhooksRouteWithChildren,
   TrackSplatRoute: TrackSplatRoute,
+  ApiGdprDeleteRoute: ApiGdprDeleteRoute,
+  ApiGdprExportRoute: ApiGdprExportRoute,
   ApiPaystackInitializeRoute: ApiPaystackInitializeRoute,
   ApiPaystackWebhookRoute: ApiPaystackWebhookRoute,
+  ApiPushSubscribeRoute: ApiPushSubscribeRoute,
+  ApiV1AttendanceRoute: ApiV1AttendanceRoute,
+  ApiV1MembersRoute: ApiV1MembersRoute,
+  ApiV1TasksRoute: ApiV1TasksRoute,
+  ApiV1WorkspaceRoute: ApiV1WorkspaceRoute,
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
   ApiPublicCronBurnoutDetectionRoute: ApiPublicCronBurnoutDetectionRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
   ApiPublicCronLateTaskReportRoute: ApiPublicCronLateTaskReportRoute,
   ApiPublicCronMessageEmailRoute: ApiPublicCronMessageEmailRoute,
+  ApiPublicCronSubscriptionCheckRoute: ApiPublicCronSubscriptionCheckRoute,
   ApiPublicCronWeeklySummaryEmailRoute: ApiPublicCronWeeklySummaryEmailRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

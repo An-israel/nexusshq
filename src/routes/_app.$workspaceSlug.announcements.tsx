@@ -25,10 +25,65 @@ import {
 import { toast } from "sonner";
 import { Megaphone, Pin, Trash2, Plus } from "lucide-react";
 import { DEPARTMENTS, deptLabel, timeAgo } from "@/lib/nexus";
+import { logAuditEvent } from "@/lib/audit-log";
 import { useRealtime } from "@/lib/use-realtime";
 import type { Database } from "@/integrations/supabase/types";
 
 type Department = Database["public"]["Enums"]["department_type"];
+
+/**
+ * Notify every targeted, active workspace member (excluding the author) that
+ * a new announcement was posted. In-app notifications are picked up by the
+ * notification-email cron and emailed via Resend if left unread.
+ * Best-effort: failures are logged, never thrown.
+ */
+async function notifyAnnouncementRecipients({
+  workspaceId,
+  authorId,
+  department,
+  title,
+  body,
+}: {
+  workspaceId: string;
+  authorId: string;
+  department: Department | null;
+  title: string;
+  body: string;
+}): Promise<void> {
+  try {
+    const { data: members } = await supabase
+      .from("workspace_members")
+      .select("user_id")
+      .eq("workspace_id", workspaceId)
+      .eq("is_active", true);
+    const memberIds = (members ?? []).map((m) => m.user_id).filter((id) => id !== authorId);
+    if (memberIds.length === 0) return;
+
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("id, department")
+      .in("id", memberIds);
+
+    const recipientIds = (profiles ?? [])
+      .filter((p) => !department || p.department === department)
+      .map((p) => p.id);
+    if (recipientIds.length === 0) return;
+
+    const preview = body.length > 140 ? body.slice(0, 140) + "…" : body;
+
+    await supabase.from("notifications").insert(
+      recipientIds.map((id) => ({
+        user_id: id,
+        workspace_id: workspaceId,
+        type: "announcement" as const,
+        title: `📣 ${title}`,
+        message: preview,
+      })),
+    );
+  } catch (err) {
+    console.error("notifyAnnouncementRecipients failed", err);
+  }
+}
 
 export const Route = createFileRoute("/_app/$workspaceSlug/announcements")({
   component: AnnouncementsPage,
@@ -104,7 +159,15 @@ function AnnouncementsPage() {
 
   async function del(id: string) {
     if (!confirm("Delete this announcement?")) return;
+    const target = items.find((a) => a.id === id);
     await supabase.from("announcements").delete().eq("id", id);
+    void logAuditEvent({
+      workspaceId: workspace.id,
+      action: "announcement.deleted",
+      targetType: "announcement",
+      targetId: id,
+      metadata: { title: target?.title ?? null },
+    });
     void load();
   }
 
@@ -235,6 +298,22 @@ function ComposeDialog({
       toast.error(error.message);
       return;
     }
+
+    void notifyAnnouncementRecipients({
+      workspaceId,
+      authorId,
+      department: payload.department ?? null,
+      title: payload.title,
+      body: payload.body,
+    });
+
+    void logAuditEvent({
+      workspaceId,
+      action: "announcement.created",
+      targetType: "announcement",
+      metadata: { title: payload.title, department: payload.department ?? null },
+    });
+
     toast.success("Announcement posted");
     onSaved();
   }
