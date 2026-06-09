@@ -26,17 +26,25 @@ import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackSplatRouteImport } from './routes/track.$'
+import { Route as ApiWebhooksRouteImport } from './routes/api/webhooks'
 import { Route as ApiTranscribeVoiceNoteRouteImport } from './routes/api/transcribe-voice-note'
 import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiCalendarRouteImport } from './routes/api/calendar'
+import { Route as ApiApikeysRouteImport } from './routes/api/apikeys'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
+import { Route as ApiWebhooksIdRouteImport } from './routes/api/webhooks.$id'
+import { Route as ApiV1WorkspaceRouteImport } from './routes/api/v1/workspace'
+import { Route as ApiV1TasksRouteImport } from './routes/api/v1/tasks'
+import { Route as ApiV1MembersRouteImport } from './routes/api/v1/members'
+import { Route as ApiV1AttendanceRouteImport } from './routes/api/v1/attendance'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
 import { Route as ApiPaystackWebhookRouteImport } from './routes/api/paystack/webhook'
 import { Route as ApiPaystackInitializeRouteImport } from './routes/api/paystack/initialize'
 import { Route as ApiGdprExportRouteImport } from './routes/api/gdpr/export'
 import { Route as ApiGdprDeleteRouteImport } from './routes/api/gdpr/delete'
 import { Route as ApiCalendarTokenRouteImport } from './routes/api/calendar.$token'
+import { Route as ApiApikeysIdRouteImport } from './routes/api/apikeys.$id'
 import { Route as AppWorkspaceSlugTeamBoardRouteImport } from './routes/_app.$workspaceSlug.team-board'
 import { Route as AppWorkspaceSlugTeamRouteImport } from './routes/_app.$workspaceSlug.team'
 import { Route as AppWorkspaceSlugTasksRouteImport } from './routes/_app.$workspaceSlug.tasks'
@@ -167,6 +175,11 @@ const TrackSplatRoute = TrackSplatRouteImport.update({
   path: '/track/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWebhooksRoute = ApiWebhooksRouteImport.update({
+  id: '/api/webhooks',
+  path: '/api/webhooks',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTranscribeVoiceNoteRoute = ApiTranscribeVoiceNoteRouteImport.update({
   id: '/api/transcribe-voice-note',
   path: '/api/transcribe-voice-note',
@@ -182,6 +195,11 @@ const ApiCalendarRoute = ApiCalendarRouteImport.update({
   path: '/api/calendar',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiApikeysRoute = ApiApikeysRouteImport.update({
+  id: '/api/apikeys',
+  path: '/api/apikeys',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiRoute = ApiAiRouteImport.update({
   id: '/api/ai',
   path: '/api/ai',
@@ -191,6 +209,31 @@ const AppWorkspaceSlugRoute = AppWorkspaceSlugRouteImport.update({
   id: '/$workspaceSlug',
   path: '/$workspaceSlug',
   getParentRoute: () => AppRoute,
+} as any)
+const ApiWebhooksIdRoute = ApiWebhooksIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiWebhooksRoute,
+} as any)
+const ApiV1WorkspaceRoute = ApiV1WorkspaceRouteImport.update({
+  id: '/api/v1/workspace',
+  path: '/api/v1/workspace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1TasksRoute = ApiV1TasksRouteImport.update({
+  id: '/api/v1/tasks',
+  path: '/api/v1/tasks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1MembersRoute = ApiV1MembersRouteImport.update({
+  id: '/api/v1/members',
+  path: '/api/v1/members',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1AttendanceRoute = ApiV1AttendanceRouteImport.update({
+  id: '/api/v1/attendance',
+  path: '/api/v1/attendance',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
   id: '/api/push/subscribe',
@@ -221,6 +264,11 @@ const ApiCalendarTokenRoute = ApiCalendarTokenRouteImport.update({
   id: '/$token',
   path: '/$token',
   getParentRoute: () => ApiCalendarRoute,
+} as any)
+const ApiApikeysIdRoute = ApiApikeysIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiApikeysRoute,
 } as any)
 const AppWorkspaceSlugTeamBoardRoute =
   AppWorkspaceSlugTeamBoardRouteImport.update({
@@ -497,9 +545,11 @@ export interface FileRoutesByFullPath {
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/apikeys': typeof ApiApikeysRouteWithChildren
   '/api/calendar': typeof ApiCalendarRouteWithChildren
   '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
+  '/api/webhooks': typeof ApiWebhooksRouteWithChildren
   '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -529,12 +579,18 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/apikeys/$id': typeof ApiApikeysIdRoute
   '/api/calendar/$token': typeof ApiCalendarTokenRoute
   '/api/gdpr/delete': typeof ApiGdprDeleteRoute
   '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/v1/attendance': typeof ApiV1AttendanceRoute
+  '/api/v1/members': typeof ApiV1MembersRoute
+  '/api/v1/tasks': typeof ApiV1TasksRoute
+  '/api/v1/workspace': typeof ApiV1WorkspaceRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -571,9 +627,11 @@ export interface FileRoutesByTo {
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/apikeys': typeof ApiApikeysRouteWithChildren
   '/api/calendar': typeof ApiCalendarRouteWithChildren
   '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
+  '/api/webhooks': typeof ApiWebhooksRouteWithChildren
   '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -603,12 +661,18 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/apikeys/$id': typeof ApiApikeysIdRoute
   '/api/calendar/$token': typeof ApiCalendarTokenRoute
   '/api/gdpr/delete': typeof ApiGdprDeleteRoute
   '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/v1/attendance': typeof ApiV1AttendanceRoute
+  '/api/v1/members': typeof ApiV1MembersRoute
+  '/api/v1/tasks': typeof ApiV1TasksRoute
+  '/api/v1/workspace': typeof ApiV1WorkspaceRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/$workspaceSlug/tasks/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -647,9 +711,11 @@ export interface FileRoutesById {
   '/workspaces': typeof WorkspacesRoute
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/apikeys': typeof ApiApikeysRouteWithChildren
   '/api/calendar': typeof ApiCalendarRouteWithChildren
   '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
+  '/api/webhooks': typeof ApiWebhooksRouteWithChildren
   '/track/$': typeof TrackSplatRoute
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
   '/_app/$workspaceSlug/attendance': typeof AppWorkspaceSlugAttendanceRoute
@@ -679,12 +745,18 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/_app/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/apikeys/$id': typeof ApiApikeysIdRoute
   '/api/calendar/$token': typeof ApiCalendarTokenRoute
   '/api/gdpr/delete': typeof ApiGdprDeleteRoute
   '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
+  '/api/v1/attendance': typeof ApiV1AttendanceRoute
+  '/api/v1/members': typeof ApiV1MembersRoute
+  '/api/v1/tasks': typeof ApiV1TasksRoute
+  '/api/v1/workspace': typeof ApiV1WorkspaceRoute
+  '/api/webhooks/$id': typeof ApiWebhooksIdRoute
   '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
   '/_app/$workspaceSlug/settings/automations': typeof AppWorkspaceSlugSettingsAutomationsRoute
   '/_app/$workspaceSlug/tasks_/$taskId': typeof AppWorkspaceSlugTasksTaskIdRoute
@@ -723,9 +795,11 @@ export interface FileRouteTypes {
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
+    | '/api/apikeys'
     | '/api/calendar'
     | '/api/health'
     | '/api/transcribe-voice-note'
+    | '/api/webhooks'
     | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
@@ -755,12 +829,18 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/api/apikeys/$id'
     | '/api/calendar/$token'
     | '/api/gdpr/delete'
     | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
     | '/api/push/subscribe'
+    | '/api/v1/attendance'
+    | '/api/v1/members'
+    | '/api/v1/tasks'
+    | '/api/v1/workspace'
+    | '/api/webhooks/$id'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/settings/automations'
     | '/$workspaceSlug/tasks/$taskId'
@@ -797,9 +877,11 @@ export interface FileRouteTypes {
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
+    | '/api/apikeys'
     | '/api/calendar'
     | '/api/health'
     | '/api/transcribe-voice-note'
+    | '/api/webhooks'
     | '/track/$'
     | '/$workspaceSlug/announcements'
     | '/$workspaceSlug/attendance'
@@ -829,12 +911,18 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/api/apikeys/$id'
     | '/api/calendar/$token'
     | '/api/gdpr/delete'
     | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
     | '/api/push/subscribe'
+    | '/api/v1/attendance'
+    | '/api/v1/members'
+    | '/api/v1/tasks'
+    | '/api/v1/workspace'
+    | '/api/webhooks/$id'
     | '/$workspaceSlug/messages/activity'
     | '/$workspaceSlug/settings/automations'
     | '/$workspaceSlug/tasks/$taskId'
@@ -872,9 +960,11 @@ export interface FileRouteTypes {
     | '/workspaces'
     | '/_app/$workspaceSlug'
     | '/api/ai'
+    | '/api/apikeys'
     | '/api/calendar'
     | '/api/health'
     | '/api/transcribe-voice-note'
+    | '/api/webhooks'
     | '/track/$'
     | '/_app/$workspaceSlug/announcements'
     | '/_app/$workspaceSlug/attendance'
@@ -904,12 +994,18 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/tasks'
     | '/_app/$workspaceSlug/team'
     | '/_app/$workspaceSlug/team-board'
+    | '/api/apikeys/$id'
     | '/api/calendar/$token'
     | '/api/gdpr/delete'
     | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
     | '/api/push/subscribe'
+    | '/api/v1/attendance'
+    | '/api/v1/members'
+    | '/api/v1/tasks'
+    | '/api/v1/workspace'
+    | '/api/webhooks/$id'
     | '/_app/$workspaceSlug/messages/activity'
     | '/_app/$workspaceSlug/settings/automations'
     | '/_app/$workspaceSlug/tasks_/$taskId'
@@ -947,15 +1043,21 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   WorkspacesRoute: typeof WorkspacesRoute
   ApiAiRoute: typeof ApiAiRoute
+  ApiApikeysRoute: typeof ApiApikeysRouteWithChildren
   ApiCalendarRoute: typeof ApiCalendarRouteWithChildren
   ApiHealthRoute: typeof ApiHealthRoute
   ApiTranscribeVoiceNoteRoute: typeof ApiTranscribeVoiceNoteRoute
+  ApiWebhooksRoute: typeof ApiWebhooksRouteWithChildren
   TrackSplatRoute: typeof TrackSplatRoute
   ApiGdprDeleteRoute: typeof ApiGdprDeleteRoute
   ApiGdprExportRoute: typeof ApiGdprExportRoute
   ApiPaystackInitializeRoute: typeof ApiPaystackInitializeRoute
   ApiPaystackWebhookRoute: typeof ApiPaystackWebhookRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
+  ApiV1AttendanceRoute: typeof ApiV1AttendanceRoute
+  ApiV1MembersRoute: typeof ApiV1MembersRoute
+  ApiV1TasksRoute: typeof ApiV1TasksRoute
+  ApiV1WorkspaceRoute: typeof ApiV1WorkspaceRoute
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
   ApiPublicCronBurnoutDetectionRoute: typeof ApiPublicCronBurnoutDetectionRoute
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
@@ -1089,6 +1191,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrackSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/webhooks': {
+      id: '/api/webhooks'
+      path: '/api/webhooks'
+      fullPath: '/api/webhooks'
+      preLoaderRoute: typeof ApiWebhooksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/transcribe-voice-note': {
       id: '/api/transcribe-voice-note'
       path: '/api/transcribe-voice-note'
@@ -1110,6 +1219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCalendarRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/apikeys': {
+      id: '/api/apikeys'
+      path: '/api/apikeys'
+      fullPath: '/api/apikeys'
+      preLoaderRoute: typeof ApiApikeysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai': {
       id: '/api/ai'
       path: '/api/ai'
@@ -1123,6 +1239,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/$workspaceSlug'
       preLoaderRoute: typeof AppWorkspaceSlugRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/api/webhooks/$id': {
+      id: '/api/webhooks/$id'
+      path: '/$id'
+      fullPath: '/api/webhooks/$id'
+      preLoaderRoute: typeof ApiWebhooksIdRouteImport
+      parentRoute: typeof ApiWebhooksRoute
+    }
+    '/api/v1/workspace': {
+      id: '/api/v1/workspace'
+      path: '/api/v1/workspace'
+      fullPath: '/api/v1/workspace'
+      preLoaderRoute: typeof ApiV1WorkspaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/tasks': {
+      id: '/api/v1/tasks'
+      path: '/api/v1/tasks'
+      fullPath: '/api/v1/tasks'
+      preLoaderRoute: typeof ApiV1TasksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/members': {
+      id: '/api/v1/members'
+      path: '/api/v1/members'
+      fullPath: '/api/v1/members'
+      preLoaderRoute: typeof ApiV1MembersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/attendance': {
+      id: '/api/v1/attendance'
+      path: '/api/v1/attendance'
+      fullPath: '/api/v1/attendance'
+      preLoaderRoute: typeof ApiV1AttendanceRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/push/subscribe': {
       id: '/api/push/subscribe'
@@ -1165,6 +1316,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/calendar/$token'
       preLoaderRoute: typeof ApiCalendarTokenRouteImport
       parentRoute: typeof ApiCalendarRoute
+    }
+    '/api/apikeys/$id': {
+      id: '/api/apikeys/$id'
+      path: '/$id'
+      fullPath: '/api/apikeys/$id'
+      preLoaderRoute: typeof ApiApikeysIdRouteImport
+      parentRoute: typeof ApiApikeysRoute
     }
     '/_app/$workspaceSlug/team-board': {
       id: '/_app/$workspaceSlug/team-board'
@@ -1610,6 +1768,18 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface ApiApikeysRouteChildren {
+  ApiApikeysIdRoute: typeof ApiApikeysIdRoute
+}
+
+const ApiApikeysRouteChildren: ApiApikeysRouteChildren = {
+  ApiApikeysIdRoute: ApiApikeysIdRoute,
+}
+
+const ApiApikeysRouteWithChildren = ApiApikeysRoute._addFileChildren(
+  ApiApikeysRouteChildren,
+)
+
 interface ApiCalendarRouteChildren {
   ApiCalendarTokenRoute: typeof ApiCalendarTokenRoute
 }
@@ -1620,6 +1790,18 @@ const ApiCalendarRouteChildren: ApiCalendarRouteChildren = {
 
 const ApiCalendarRouteWithChildren = ApiCalendarRoute._addFileChildren(
   ApiCalendarRouteChildren,
+)
+
+interface ApiWebhooksRouteChildren {
+  ApiWebhooksIdRoute: typeof ApiWebhooksIdRoute
+}
+
+const ApiWebhooksRouteChildren: ApiWebhooksRouteChildren = {
+  ApiWebhooksIdRoute: ApiWebhooksIdRoute,
+}
+
+const ApiWebhooksRouteWithChildren = ApiWebhooksRoute._addFileChildren(
+  ApiWebhooksRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
@@ -1640,15 +1822,21 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   WorkspacesRoute: WorkspacesRoute,
   ApiAiRoute: ApiAiRoute,
+  ApiApikeysRoute: ApiApikeysRouteWithChildren,
   ApiCalendarRoute: ApiCalendarRouteWithChildren,
   ApiHealthRoute: ApiHealthRoute,
   ApiTranscribeVoiceNoteRoute: ApiTranscribeVoiceNoteRoute,
+  ApiWebhooksRoute: ApiWebhooksRouteWithChildren,
   TrackSplatRoute: TrackSplatRoute,
   ApiGdprDeleteRoute: ApiGdprDeleteRoute,
   ApiGdprExportRoute: ApiGdprExportRoute,
   ApiPaystackInitializeRoute: ApiPaystackInitializeRoute,
   ApiPaystackWebhookRoute: ApiPaystackWebhookRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
+  ApiV1AttendanceRoute: ApiV1AttendanceRoute,
+  ApiV1MembersRoute: ApiV1MembersRoute,
+  ApiV1TasksRoute: ApiV1TasksRoute,
+  ApiV1WorkspaceRoute: ApiV1WorkspaceRoute,
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
   ApiPublicCronBurnoutDetectionRoute: ApiPublicCronBurnoutDetectionRoute,
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
