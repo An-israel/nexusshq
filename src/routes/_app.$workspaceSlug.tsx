@@ -20,6 +20,27 @@ import { cn } from "@/lib/utils";
 import { setLastWorkspaceSlug } from "@/lib/last-workspace";
 import { toast } from "sonner";
 
+// Derives a short human-readable device label from the user-agent string.
+function parseDeviceName(ua: string): string {
+  if (/iPhone/.test(ua)) return "iPhone";
+  if (/iPad/.test(ua)) return "iPad";
+  if (/Android/.test(ua)) return "Android";
+  const os = /Windows/.test(ua) ? "Windows" : /Mac/.test(ua) ? "macOS" : /Linux/.test(ua) ? "Linux" : "Unknown OS";
+  const browser = /Edg\//.test(ua) ? "Edge" : /Chrome\//.test(ua) ? "Chrome" : /Firefox\//.test(ua) ? "Firefox" : /Safari\//.test(ua) ? "Safari" : "Browser";
+  return `${browser} on ${os}`;
+}
+
+// Stable per-device UUID stored in localStorage
+function getDeviceSessionId(): string {
+  const key = "nexus_device_session_id";
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
 export const Route = createFileRoute("/_app/$workspaceSlug")({
   beforeLoad: async ({ params }) => {
     // No session storage on the server (localStorage isn't available during
@@ -330,6 +351,23 @@ function WorkspaceShell() {
       active = false;
     };
   }, [workspaceSlug, user, setWorkspaceData, navigate]);
+
+  // Track this device session for the "Active sessions" panel in Settings
+  React.useEffect(() => {
+    if (!user || !workspace?.id) return;
+    const sessionId = getDeviceSessionId();
+    void supabase.from("user_sessions").upsert(
+      {
+        user_id: user.id,
+        workspace_id: workspace.id,
+        session_id: sessionId,
+        user_agent: navigator.userAgent,
+        device_name: parseDeviceName(navigator.userAgent),
+        last_active_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,session_id" },
+    );
+  }, [user?.id, workspace?.id]);
 
   // BUG 2: presence heartbeat — upsert every 5 min + on visibility change
   React.useEffect(() => {

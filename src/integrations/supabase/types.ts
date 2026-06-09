@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_keys: {
+        Row: {
+          id: string
+          workspace_id: string
+          name: string
+          key_hash: string
+          key_prefix: string
+          scopes: string[]
+          created_by: string | null
+          last_used_at: string | null
+          expires_at: string | null
+          is_active: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          name: string
+          key_hash: string
+          key_prefix: string
+          scopes?: string[]
+          created_by?: string | null
+          last_used_at?: string | null
+          expires_at?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          name?: string
+          key_hash?: string
+          key_prefix?: string
+          scopes?: string[]
+          created_by?: string | null
+          last_used_at?: string | null
+          expires_at?: string | null
+          is_active?: boolean
+          created_at?: string
+        }
+        Relationships: []
+      }
       announcements: {
         Row: {
           author_id: string | null
@@ -2961,6 +3003,81 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_sessions: {
+        Row: {
+          id: string
+          user_id: string
+          workspace_id: string
+          session_id: string
+          user_agent: string | null
+          device_name: string | null
+          created_at: string
+          last_active_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          workspace_id: string
+          session_id: string
+          user_agent?: string | null
+          device_name?: string | null
+          created_at?: string
+          last_active_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          workspace_id?: string
+          session_id?: string
+          user_agent?: string | null
+          device_name?: string | null
+          created_at?: string
+          last_active_at?: string
+        }
+        Relationships: []
+      }
+      webhook_endpoints: {
+        Row: {
+          id: string
+          workspace_id: string
+          name: string
+          url: string
+          events: string[]
+          secret: string
+          is_active: boolean
+          created_by: string | null
+          created_at: string
+          last_fired_at: string | null
+          last_error: string | null
+        }
+        Insert: {
+          id?: string
+          workspace_id: string
+          name: string
+          url: string
+          events?: string[]
+          secret: string
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          last_fired_at?: string | null
+          last_error?: string | null
+        }
+        Update: {
+          id?: string
+          workspace_id?: string
+          name?: string
+          url?: string
+          events?: string[]
+          secret?: string
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          last_fired_at?: string | null
+          last_error?: string | null
+        }
+        Relationships: []
       }
       workspaces: {
         Row: {

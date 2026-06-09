@@ -32,7 +32,17 @@ import {
   QrCode,
   CheckCircle2,
   AlertTriangle,
+  KeyRound,
+  Webhook,
+  Monitor,
+  Plus,
+  Eye,
+  EyeOff,
+  Copy,
+  RotateCcw,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { Switch } from "@/components/ui/switch";
 import { TOGGLEABLE_PAGES, useFeatureFlags, setFeatureFlag } from "@/lib/feature-flags";
@@ -416,6 +426,11 @@ function SettingsPage() {
                 <History className="mr-2 h-4 w-4" /> Audit Log
               </TabsTrigger>
             )}
+            {isAdmin && (
+              <TabsTrigger value="api">
+                <KeyRound className="mr-2 h-4 w-4" /> API
+              </TabsTrigger>
+            )}
             <TabsTrigger value="privacy">
               <Download className="mr-2 h-4 w-4" /> Privacy
             </TabsTrigger>
@@ -466,6 +481,11 @@ function SettingsPage() {
         {isAdmin && (
           <TabsContent value="audit-log" className="mt-4">
             <AuditLogAdmin />
+          </TabsContent>
+        )}
+        {isAdmin && (
+          <TabsContent value="api" className="mt-4">
+            <ApiSettings />
           </TabsContent>
         )}
         <TabsContent value="privacy" className="mt-4">
@@ -1452,5 +1472,340 @@ function AuditLogAdmin() {
         </ul>
       )}
     </Card>
+  );
+}
+
+// ─── API Settings (API Keys + Webhooks + Active Sessions) ────────────────────
+
+const WEBHOOK_EVENTS = [
+  "task.created", "task.completed", "standup.submitted", "member.joined",
+  "attendance.clock_in", "attendance.clock_out",
+] as const;
+
+interface ApiKey {
+  id: string; name: string; key_prefix: string; scopes: string[];
+  is_active: boolean; last_used_at: string | null; created_at: string;
+}
+interface WebhookEndpoint {
+  id: string; name: string; url: string; events: string[];
+  is_active: boolean; last_fired_at: string | null; last_error: string | null; created_at: string;
+}
+interface UserSession {
+  id: string; session_id: string; device_name: string | null;
+  user_agent: string | null; created_at: string; last_active_at: string;
+}
+
+function ApiSettings() {
+  return (
+    <div className="max-w-2xl space-y-8">
+      <ApiKeysSection />
+      <Separator />
+      <WebhooksSection />
+      <Separator />
+      <ActiveSessionsSection />
+    </div>
+  );
+}
+
+function ApiKeysSection() {
+  const { workspace } = useWorkspace();
+  const [keys, setKeys] = React.useState<ApiKey[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [name, setName] = React.useState("");
+  const [creating, setCreating] = React.useState(false);
+  const [newKey, setNewKey] = React.useState<string | null>(null);
+  const [showKey, setShowKey] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch(`/api/apikeys?workspace=${workspace.slug}`, {
+      headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+    });
+    if (res.ok) {
+      const json = await res.json() as { keys: ApiKey[] };
+      setKeys(json.keys);
+    }
+    setLoading(false);
+  }, [workspace.slug]);
+
+  React.useEffect(() => { void load(); }, [load]);
+
+  async function create() {
+    if (!name.trim()) return;
+    setCreating(true);
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch("/api/apikeys", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+      body: JSON.stringify({ workspace: workspace.slug, name: name.trim() }),
+    });
+    if (res.ok) {
+      const json = await res.json() as { key: ApiKey & { plaintext: string } };
+      setNewKey(json.key.plaintext);
+      setName("");
+      void load();
+    } else {
+      toast.error("Failed to create API key");
+    }
+    setCreating(false);
+  }
+
+  async function revoke(id: string) {
+    const { data: session } = await supabase.auth.getSession();
+    await fetch(`/api/apikeys/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+    });
+    void load();
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold flex items-center gap-2"><KeyRound className="h-4 w-4" /> API Keys</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">Use API keys to authenticate requests to <code className="text-xs bg-muted px-1 rounded">/api/v1/*</code>.</p>
+      </div>
+
+      {newKey && (
+        <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 space-y-2">
+          <p className="text-xs font-medium text-green-400">API key created — copy it now, it won't be shown again.</p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 text-xs font-mono bg-background rounded px-2 py-1 truncate">
+              {showKey ? newKey : newKey.slice(0, 12) + "•".repeat(20)}
+            </code>
+            <button onClick={() => setShowKey(v => !v)} className="text-muted-foreground hover:text-foreground">
+              {showKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+            <button onClick={() => { void navigator.clipboard.writeText(newKey); toast.success("Copied"); }} className="text-muted-foreground hover:text-foreground">
+              <Copy className="h-4 w-4" />
+            </button>
+          </div>
+          <Button size="sm" variant="ghost" className="text-xs h-7" onClick={() => setNewKey(null)}>Dismiss</Button>
+        </div>
+      )}
+
+      <div className="flex gap-2">
+        <Input placeholder="Key name (e.g. Zapier integration)" value={name} onChange={e => setName(e.target.value)} className="h-8 text-sm" />
+        <Button size="sm" onClick={() => void create()} disabled={creating || !name.trim()}>
+          <Plus className="mr-1 h-3.5 w-3.5" />{creating ? "Creating…" : "Create"}
+        </Button>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : keys.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No API keys yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {keys.map(k => (
+            <div key={k.id} className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2.5">
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate">{k.name}</p>
+                <p className="text-xs text-muted-foreground font-mono">{k.key_prefix}••••••••</p>
+                {k.last_used_at && <p className="text-xs text-muted-foreground">Last used {timeAgo(k.last_used_at)}</p>}
+              </div>
+              <Button size="sm" variant="destructive" className="h-7 text-xs shrink-0 ml-3" onClick={() => void revoke(k.id)}>
+                <Trash2 className="mr-1 h-3 w-3" />Revoke
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WebhooksSection() {
+  const { workspace } = useWorkspace();
+  const [endpoints, setEndpoints] = React.useState<WebhookEndpoint[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [form, setForm] = React.useState({ name: "", url: "", events: [] as string[] });
+  const [creating, setCreating] = React.useState(false);
+
+  const load = React.useCallback(async () => {
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch(`/api/webhooks?workspace=${workspace.slug}`, {
+      headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+    });
+    if (res.ok) {
+      const json = await res.json() as { endpoints: WebhookEndpoint[] };
+      setEndpoints(json.endpoints);
+    }
+    setLoading(false);
+  }, [workspace.slug]);
+
+  React.useEffect(() => { void load(); }, [load]);
+
+  async function create() {
+    if (!form.name.trim() || !form.url.trim() || !form.events.length) {
+      toast.error("Name, URL, and at least one event are required"); return;
+    }
+    setCreating(true);
+    const { data: session } = await supabase.auth.getSession();
+    const res = await fetch("/api/webhooks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+      body: JSON.stringify({ workspace: workspace.slug, ...form }),
+    });
+    if (res.ok) {
+      toast.success("Webhook endpoint created");
+      setForm({ name: "", url: "", events: [] });
+      void load();
+    } else {
+      const err = await res.json() as { error?: string };
+      toast.error(err.error ?? "Failed to create webhook");
+    }
+    setCreating(false);
+  }
+
+  async function remove(id: string) {
+    const { data: session } = await supabase.auth.getSession();
+    await fetch(`/api/webhooks/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+    });
+    void load();
+  }
+
+  function toggleEvent(ev: string) {
+    setForm(f => ({ ...f, events: f.events.includes(ev) ? f.events.filter(e => e !== ev) : [...f.events, ev] }));
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold flex items-center gap-2"><Webhook className="h-4 w-4" /> Webhook Endpoints</h3>
+        <p className="text-xs text-muted-foreground mt-0.5">Receive real-time events in Zapier, Make, or your own server. Each request is signed with <code className="text-xs bg-muted px-1 rounded">X-Nexus-Signature</code>.</p>
+      </div>
+
+      <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+        <h4 className="text-xs font-medium text-foreground">New endpoint</h4>
+        <Input placeholder="Name (e.g. Zapier trigger)" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="h-8 text-sm" />
+        <Input placeholder="https://hooks.zapier.com/…" value={form.url} onChange={e => setForm(f => ({ ...f, url: e.target.value }))} className="h-8 text-sm" />
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {WEBHOOK_EVENTS.map(ev => (
+            <button
+              key={ev}
+              onClick={() => toggleEvent(ev)}
+              className={`rounded-full border px-2 py-0.5 text-[11px] font-mono transition-colors ${form.events.includes(ev) ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:border-foreground/30"}`}
+            >
+              {ev}
+            </button>
+          ))}
+        </div>
+        <Button size="sm" onClick={() => void create()} disabled={creating} className="mt-1">
+          <Plus className="mr-1 h-3.5 w-3.5" />{creating ? "Creating…" : "Add endpoint"}
+        </Button>
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : endpoints.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No webhook endpoints yet.</p>
+      ) : (
+        <div className="space-y-2">
+          {endpoints.map(ep => (
+            <div key={ep.id} className="rounded-lg border border-border bg-card p-3 space-y-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{ep.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{ep.url}</p>
+                </div>
+                <Button size="sm" variant="destructive" className="h-7 text-xs shrink-0" onClick={() => void remove(ep.id)}>
+                  <Trash2 className="h-3 w-3" />
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {ep.events.map(ev => <Badge key={ev} variant="secondary" className="text-[10px] font-mono py-0">{ev}</Badge>)}
+              </div>
+              {ep.last_error && <p className="text-xs text-destructive">Last error: {ep.last_error}</p>}
+              {ep.last_fired_at && <p className="text-xs text-muted-foreground">Last fired {timeAgo(ep.last_fired_at)}</p>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ActiveSessionsSection() {
+  const { user } = useAuth();
+  const { workspace } = useWorkspace();
+  const [sessions, setSessions] = React.useState<UserSession[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [signingOut, setSigningOut] = React.useState(false);
+
+  const currentSessionId = React.useMemo(() => {
+    if (typeof localStorage === "undefined") return null;
+    return localStorage.getItem("nexus_device_session_id");
+  }, []);
+
+  const load = React.useCallback(async () => {
+    if (!user || !workspace?.id) return;
+    const { data } = await supabase
+      .from("user_sessions")
+      .select("id, session_id, device_name, user_agent, created_at, last_active_at")
+      .eq("user_id", user.id)
+      .eq("workspace_id", workspace.id)
+      .order("last_active_at", { ascending: false });
+    setSessions((data ?? []) as UserSession[]);
+    setLoading(false);
+  }, [user?.id, workspace?.id]);
+
+  React.useEffect(() => { void load(); }, [load]);
+
+  async function signOutOthers() {
+    setSigningOut(true);
+    await supabase.auth.signOut({ scope: "others" });
+    // Remove non-current sessions from our table
+    if (currentSessionId && user) {
+      await supabase.from("user_sessions")
+        .delete()
+        .eq("user_id", user.id)
+        .neq("session_id", currentSessionId);
+    }
+    void load();
+    toast.success("All other devices have been signed out.");
+    setSigningOut(false);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-semibold flex items-center gap-2"><Monitor className="h-4 w-4" /> Active Sessions</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">Devices where you're currently signed in.</p>
+        </div>
+        {sessions.length > 1 && (
+          <Button size="sm" variant="outline" onClick={() => void signOutOthers()} disabled={signingOut}>
+            <RotateCcw className="mr-1.5 h-3.5 w-3.5" />{signingOut ? "Signing out…" : "Sign out others"}
+          </Button>
+        )}
+      </div>
+
+      {loading ? (
+        <p className="text-xs text-muted-foreground">Loading…</p>
+      ) : sessions.length === 0 ? (
+        <p className="text-xs text-muted-foreground">No sessions found.</p>
+      ) : (
+        <div className="space-y-2">
+          {sessions.map(s => {
+            const isCurrent = s.session_id === currentSessionId;
+            return (
+              <div key={s.id} className={`flex items-start justify-between rounded-lg border px-3 py-2.5 ${isCurrent ? "border-primary/30 bg-primary/5" : "border-border bg-card"}`}>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{s.device_name ?? "Unknown device"}</p>
+                    {isCurrent && <Badge className="text-[10px] py-0 h-4">This device</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Last active {timeAgo(s.last_active_at)}</p>
+                  <p className="text-xs text-muted-foreground truncate max-w-xs">{s.user_agent?.slice(0, 60)}…</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }

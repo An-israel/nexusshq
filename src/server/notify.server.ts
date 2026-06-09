@@ -1,5 +1,6 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { sendWebPushToUser } from "@/server/web-push.server";
+import { fireWebhooks } from "@/server/webhook-fire.server";
 
 interface NotifRow {
   user_id: string;
@@ -8,13 +9,23 @@ interface NotifRow {
   message: string;
 }
 
-// Inserts in-app notifications AND fires Web Push for each recipient.
-export async function createNotifications(notifs: NotifRow[]): Promise<void> {
+// Inserts in-app notifications, fires Web Push for each recipient, and
+// optionally triggers outbound webhooks for the workspace.
+export async function createNotifications(
+  notifs: NotifRow[],
+  options?: { workspaceId?: string; webhookEvent?: string; webhookPayload?: unknown },
+): Promise<void> {
   if (!notifs.length) return;
   await supabaseAdmin.from("notifications").insert(notifs);
-  await Promise.all(
-    notifs.map((n) =>
-      sendWebPushToUser(n.user_id, { title: n.title, body: n.message }).catch(() => {}),
-    ),
+  const tasks: Promise<void>[] = notifs.map((n) =>
+    sendWebPushToUser(n.user_id, { title: n.title, body: n.message }).catch(() => {}),
   );
+  if (options?.workspaceId && options?.webhookEvent) {
+    tasks.push(
+      fireWebhooks(options.workspaceId, options.webhookEvent, options.webhookPayload ?? {}).catch(
+        () => {},
+      ),
+    );
+  }
+  await Promise.all(tasks);
 }
