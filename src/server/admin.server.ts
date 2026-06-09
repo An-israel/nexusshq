@@ -25,24 +25,39 @@ function requireAdminClient(): DbClient {
 // Use the caller's own JWT to verify their role.
 // "users view own roles" RLS policy allows this without service-role key.
 export async function assertCallerIsAdmin(callerId: string, callerClient: DbClient) {
-  const { data, error } = await callerClient
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", callerId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) throw new Error("Forbidden: admin role required");
+  // Check user_roles (legacy) first, then workspace_members (owner/admin)
+  const [rolesRes, memberRes] = await Promise.all([
+    callerClient.from("user_roles").select("role").eq("user_id", callerId).eq("role", "admin"),
+    callerClient
+      .from("workspace_members")
+      .select("role")
+      .eq("user_id", callerId)
+      .eq("is_active", true)
+      .in("role", ["owner", "admin"]),
+  ]);
+  const hasAdmin =
+    (rolesRes.data?.length ?? 0) > 0 || (memberRes.data?.length ?? 0) > 0;
+  if (!hasAdmin) throw new Error("Forbidden: admin role required");
 }
 
 export async function assertCallerIsManagerOrAdmin(callerId: string, callerClient: DbClient) {
-  const { data, error } = await callerClient
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", callerId)
-    .in("role", ["admin", "manager"]);
-  if (error) throw new Error(error.message);
-  if (!data || data.length === 0) throw new Error("Forbidden: manager or admin role required");
+  // Check user_roles (legacy) first, then workspace_members (owner/admin/manager)
+  const [rolesRes, memberRes] = await Promise.all([
+    callerClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", callerId)
+      .in("role", ["admin", "manager"]),
+    callerClient
+      .from("workspace_members")
+      .select("role")
+      .eq("user_id", callerId)
+      .eq("is_active", true)
+      .in("role", ["owner", "admin", "manager"]),
+  ]);
+  const hasRole =
+    (rolesRes.data?.length ?? 0) > 0 || (memberRes.data?.length ?? 0) > 0;
+  if (!hasRole) throw new Error("Forbidden: manager or admin role required");
 }
 
 export interface InviteEmployeeInput {
@@ -110,9 +125,10 @@ export async function inviteEmployee(input: InviteEmployeeInput) {
   return { userId, email };
 }
 
-// Uses the caller's JWT — manager RLS policies allow these writes (see migration).
-export async function setEmployeeActive(userId: string, isActive: boolean, callerClient: DbClient) {
-  const { error } = await callerClient
+// Uses admin client — permission is already validated by assertCallerIsAdmin upstream.
+export async function setEmployeeActive(userId: string, isActive: boolean, _callerClient: DbClient) {
+  const adminClient = requireAdminClient();
+  const { error } = await adminClient
     .from("profiles")
     .update({ is_active: isActive })
     .eq("id", userId);
