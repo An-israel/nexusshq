@@ -3001,11 +3001,11 @@ export type Database = {
       }
       log_audit_event: {
         Args: {
-          _action: string
-          _metadata?: Json
-          _target_id?: string
-          _target_type?: string
           _workspace_id: string
+          _action: string
+          _target_type?: string
+          _target_id?: string
+          _metadata?: Json
         }
         Returns: string
       }

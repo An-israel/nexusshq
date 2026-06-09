@@ -2,13 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verifyCronRequest } from "@/server/cron-auth.server";
 
-// Called by pg_cron every Monday at 07:00 UTC
-// Schedule in Supabase SQL editor (must include the bearer auth header —
-// see src/server/cron-auth.server.ts):
+// Called by pg_cron every Monday at 07:00 UTC.
+// Schedule in Supabase SQL editor (must include the bearer auth header):
 //   SELECT cron.schedule(
 //     'nexus-late-task-report',
 //     '0 7 * * 1',
-//     $$ SELECT net.http_post(url := 'https://<your-domain>/api/public/cron/late-task-report',
+//     $$ SELECT net.http_post(
+//          url := 'https://<your-domain>/api/public/cron/late-task-report',
 //          headers := jsonb_build_object(
 //            'Content-Type', 'application/json',
 //            'Authorization', 'Bearer ' || current_setting('app.service_role_key', true)

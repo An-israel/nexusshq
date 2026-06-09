@@ -6,23 +6,23 @@ import { installSupabaseDiagnostics } from "@/lib/supabase-diagnostics";
 
 import appCss from "../styles.css?url";
 
-// Document-level CSP, delivered via <meta http-equiv> since this is the only
-// directive subset that can be expressed without a custom HTTP response layer.
-// Clickjacking/MIME-sniffing/HSTS protections (X-Frame-Options,
-// X-Content-Type-Options, Strict-Transport-Security) are sent as real response
-// headers from src/server-entry.ts instead — meta tags can't deliver those.
+// Document-level CSP delivered via <meta http-equiv>. Covers browsers that
+// receive cached HTML without the HTTP header. frame-ancestors/report-uri
+// are not supported in meta tags — those are in src/server-entry.ts via
+// X-Frame-Options and the HSTS/permissions headers.
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://*.supabase.co https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://open.er-api.com",
+  "img-src 'self' data: blob: https://*.supabase.co https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev https:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://open.er-api.com https://api.anthropic.com https://api.openai.com https://api.paystack.co https://api.resend.com",
+  "media-src 'self' blob:",
+  "worker-src blob:",
   "frame-src 'none'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'self'",
 ].join("; ");
 
 function NotFoundComponent() {

@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verifyCronRequest } from "@/server/cron-auth.server";
+import { callAI } from "@/server/ai.server";
 
 // Called by pg_cron every Monday at 06:00 UTC (= 07:00 WAT).
-// Computes last-week stats, asks Claude for a summary paragraph, and emails
-// all active employees + managers.
+// Computes last-week stats, asks Claude for a summary paragraph via callAI()
+// directly (not via HTTP /api/ai, which now requires a user session), then
+// emails all active employees + managers.
 export const Route = createFileRoute("/api/public/cron/weekly-summary-email")({
   server: {
     handlers: {
@@ -83,31 +85,21 @@ export const Route = createFileRoute("/api/public/cron/weekly-summary-email")({
         }
         const topDept = Object.entries(deptCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "N/A";
 
-        // ── Ask Claude for summary ─────────────────────────────────────────
-        const baseUrl = new URL(request.url).origin;
+        // ── Ask Claude for summary (server-to-server — no HTTP round-trip) ──
         let emailBody = "";
 
-        const aiResp = await fetch(`${baseUrl}/api/ai`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            action: "weekly-summary",
-            context: {
-              stats: {
-                totalTasks: total ?? 0,
-                completedTasks: completed ?? 0,
-                overdueTasks: overdue ?? 0,
-                presentDays,
-                absentDays,
-                topDept,
-              },
-            },
-          }),
+        const aiResult = await callAI("weekly-summary", {
+          stats: {
+            totalTasks: total ?? 0,
+            completedTasks: completed ?? 0,
+            overdueTasks: overdue ?? 0,
+            presentDays,
+            absentDays,
+            topDept,
+          },
         });
-
-        if (aiResp.ok) {
-          const d = (await aiResp.json()) as { result?: string };
-          emailBody = d.result ?? "";
+        if ("result" in aiResult) {
+          emailBody = aiResult.result;
         }
 
         if (!emailBody) {

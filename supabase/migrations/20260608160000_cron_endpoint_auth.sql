@@ -16,10 +16,10 @@
 -- generated or distributed out-of-band.
 --
 -- Re-create the 3 jobs that are actually scheduled today so they send the
--- Authorization header (late-task-report / burnout-detection /
+-- Authorization header. (late-task-report / burnout-detection /
 -- weekly-summary-email are documented for manual scheduling in their own
 -- migrations and were never cron.schedule()'d here — there's no job
--- definition to update for them, but their handlers are hardened too).
+-- definition to update for them, but their handlers are hardened too.)
 
 SELECT cron.unschedule('nexus-clock-out-reminder')
 WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'nexus-clock-out-reminder');

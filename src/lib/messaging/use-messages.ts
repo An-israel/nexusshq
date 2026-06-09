@@ -610,12 +610,17 @@ export function useMessages(params: {
         if (vnRes.error) throw vnRes.error;
         const vnData = vnRes.data as RawVoiceNote;
 
-        // Fire-and-forget transcription
-        void fetch("/api/transcribe-voice-note", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ voiceNoteId: vnData.id, publicUrl }),
-        }).catch((e) => console.error("transcription request failed:", e));
+        // Fire-and-forget transcription (bearer token attached for auth check)
+        void supabase.auth.getSession().then(({ data: { session: _sess } }) => {
+          void fetch("/api/transcribe-voice-note", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              ...(_sess?.access_token ? { Authorization: `Bearer ${_sess.access_token}` } : {}),
+            },
+            body: JSON.stringify({ voiceNoteId: vnData.id, publicUrl }),
+          }).catch((e) => console.error("transcription request failed:", e));
+        });
 
         const enriched = await enrichMessages([insertedMsg as unknown as typeof optimistic]);
         const real = enriched[0];

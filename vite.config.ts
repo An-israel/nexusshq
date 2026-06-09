@@ -8,14 +8,11 @@ const serverEnv = loadEnv(process.env.NODE_ENV || "development", process.cwd(), 
 Object.assign(process.env, serverEnv);
 
 export default defineConfig({
-  // Custom server entry (src/server-entry.ts) wraps the default TanStack Start
-  // handler to attach security response headers (X-Frame-Options, HSTS, etc.)
-  // that can't be delivered via <meta> tags — see __root.tsx for the CSP/
-  // referrer-policy meta tags that cover the rest.
+  // Point TanStack Start at our custom Cloudflare Worker entry so security
+  // headers get stamped on every response (the default entry has no hook for
+  // this; src/server-entry.ts wraps the default stream handler).
   tanstackStart: {
-    server: {
-      entry: "./server-entry",
-    },
+    server: { entry: "./server-entry" },
   },
   vite: {
     resolve: {

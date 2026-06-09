@@ -417,9 +417,13 @@ function BillingPage() {
     const key = `${planId}-${interval}`;
     setCheckoutKey(key);
     try {
+      const { data: { session: _session } } = await supabase.auth.getSession();
       const res = await fetch("/api/paystack/initialize", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(_session?.access_token ? { Authorization: `Bearer ${_session.access_token}` } : {}),
+        },
         body: JSON.stringify({
           workspaceId: workspace.id,
           workspaceSlug: workspace.slug,
