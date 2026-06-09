@@ -64,6 +64,7 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicCronWeeklySummaryEmailRouteImport } from './routes/api/public/cron/weekly-summary-email'
+import { Route as ApiPublicCronSubscriptionCheckRouteImport } from './routes/api/public/cron/subscription-check'
 import { Route as ApiPublicCronMessageEmailRouteImport } from './routes/api/public/cron/message-email'
 import { Route as ApiPublicCronLateTaskReportRouteImport } from './routes/api/public/cron/late-task-report'
 import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
@@ -369,6 +370,12 @@ const ApiPublicCronWeeklySummaryEmailRoute =
     path: '/api/public/cron/weekly-summary-email',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronSubscriptionCheckRoute =
+  ApiPublicCronSubscriptionCheckRouteImport.update({
+    id: '/api/public/cron/subscription-check',
+    path: '/api/public/cron/subscription-check',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronMessageEmailRoute =
   ApiPublicCronMessageEmailRouteImport.update({
     id: '/api/public/cron/message-email',
@@ -503,6 +510,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -571,6 +579,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -641,6 +650,7 @@ export interface FileRoutesById {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -711,6 +721,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -779,6 +790,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -848,6 +860,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -884,6 +897,7 @@ export interface RootRouteChildren {
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
   ApiPublicCronLateTaskReportRoute: typeof ApiPublicCronLateTaskReportRoute
   ApiPublicCronMessageEmailRoute: typeof ApiPublicCronMessageEmailRoute
+  ApiPublicCronSubscriptionCheckRoute: typeof ApiPublicCronSubscriptionCheckRoute
   ApiPublicCronWeeklySummaryEmailRoute: typeof ApiPublicCronWeeklySummaryEmailRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1277,6 +1291,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronWeeklySummaryEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/subscription-check': {
+      id: '/api/public/cron/subscription-check'
+      path: '/api/public/cron/subscription-check'
+      fullPath: '/api/public/cron/subscription-check'
+      preLoaderRoute: typeof ApiPublicCronSubscriptionCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/message-email': {
       id: '/api/public/cron/message-email'
       path: '/api/public/cron/message-email'
@@ -1518,6 +1539,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
   ApiPublicCronLateTaskReportRoute: ApiPublicCronLateTaskReportRoute,
   ApiPublicCronMessageEmailRoute: ApiPublicCronMessageEmailRoute,
+  ApiPublicCronSubscriptionCheckRoute: ApiPublicCronSubscriptionCheckRoute,
   ApiPublicCronWeeklySummaryEmailRoute: ApiPublicCronWeeklySummaryEmailRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
@@ -1526,3 +1548,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

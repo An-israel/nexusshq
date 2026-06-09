@@ -1051,6 +1051,68 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          amount_ngn: number
+          billing_interval: string
+          customer_email: string | null
+          customer_name: string | null
+          id: string
+          invoice_number: string
+          issued_at: string
+          paystack_reference: string | null
+          period_end: string | null
+          period_start: string | null
+          plan: string
+          status: string
+          subscription_id: string | null
+          vat_ngn: number
+          workspace_id: string
+        }
+        Insert: {
+          amount_ngn: number
+          billing_interval?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          paystack_reference?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan: string
+          status?: string
+          subscription_id?: string | null
+          vat_ngn?: number
+          workspace_id: string
+        }
+        Update: {
+          amount_ngn?: number
+          billing_interval?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          paystack_reference?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          plan?: string
+          status?: string
+          subscription_id?: string | null
+          vat_ngn?: number
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       key_result_updates: {
         Row: {
           created_at: string | null
