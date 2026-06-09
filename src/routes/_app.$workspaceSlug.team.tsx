@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { deptLabel, initialsOf, todayISO } from "@/lib/nexus";
 import { requireAnyRole } from "@/lib/role-access";
 import { useAuth } from "@/lib/auth-context";
-import { removeWorkspaceMemberFn } from "@/lib/admin.functions";
+import { removeWorkspaceMemberFn, setEmployeeActiveFn } from "@/lib/admin.functions";
 import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
 import { toast } from "sonner";
@@ -335,23 +335,22 @@ function MemberCard({
   const { workspace } = useWorkspace();
   const { user } = useAuth();
   const removeMember = useServerFn(removeWorkspaceMemberFn);
+  const setActive = useServerFn(setEmployeeActiveFn);
   const [toggling, setToggling] = useState(false);
   const [removing, setRemoving] = useState(false);
 
   async function toggleActive() {
     setToggling(true);
     const nextActive = !m.profile.is_active;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_active: nextActive })
-      .eq("id", m.profile.id);
-    if (error) {
-      toast.error(error.message);
-    } else {
+    try {
+      await setActive({ data: { userId: m.profile.id, isActive: nextActive } });
       toast.success(nextActive ? "Account reactivated" : "Account deactivated");
       onActivationChanged();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to update account status");
+    } finally {
+      setToggling(false);
     }
-    setToggling(false);
   }
 
   async function removeFromWorkspace() {

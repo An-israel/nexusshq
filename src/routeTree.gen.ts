@@ -78,6 +78,7 @@ import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/em
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicCronWeeklySummaryEmailRouteImport } from './routes/api/public/cron/weekly-summary-email'
 import { Route as ApiPublicCronSubscriptionCheckRouteImport } from './routes/api/public/cron/subscription-check'
+import { Route as ApiPublicCronNotificationEmailRouteImport } from './routes/api/public/cron/notification-email'
 import { Route as ApiPublicCronMessageEmailRouteImport } from './routes/api/public/cron/message-email'
 import { Route as ApiPublicCronLateTaskReportRouteImport } from './routes/api/public/cron/late-task-report'
 import { Route as ApiPublicCronClockReminderRouteImport } from './routes/api/public/cron/clock-reminder'
@@ -454,6 +455,12 @@ const ApiPublicCronSubscriptionCheckRoute =
     path: '/api/public/cron/subscription-check',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronNotificationEmailRoute =
+  ApiPublicCronNotificationEmailRouteImport.update({
+    id: '/api/public/cron/notification-email',
+    path: '/api/public/cron/notification-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicCronMessageEmailRoute =
   ApiPublicCronMessageEmailRouteImport.update({
     id: '/api/public/cron/message-email',
@@ -601,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/notification-email': typeof ApiPublicCronNotificationEmailRoute
   '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -683,6 +691,7 @@ export interface FileRoutesByTo {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/notification-email': typeof ApiPublicCronNotificationEmailRoute
   '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -767,6 +776,7 @@ export interface FileRoutesById {
   '/api/public/cron/clock-reminder': typeof ApiPublicCronClockReminderRoute
   '/api/public/cron/late-task-report': typeof ApiPublicCronLateTaskReportRoute
   '/api/public/cron/message-email': typeof ApiPublicCronMessageEmailRoute
+  '/api/public/cron/notification-email': typeof ApiPublicCronNotificationEmailRoute
   '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
@@ -851,6 +861,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/notification-email'
     | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
@@ -933,6 +944,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/notification-email'
     | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
@@ -1016,6 +1028,7 @@ export interface FileRouteTypes {
     | '/api/public/cron/clock-reminder'
     | '/api/public/cron/late-task-report'
     | '/api/public/cron/message-email'
+    | '/api/public/cron/notification-email'
     | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
     | '/lovable/email/auth/preview'
@@ -1063,6 +1076,7 @@ export interface RootRouteChildren {
   ApiPublicCronClockReminderRoute: typeof ApiPublicCronClockReminderRoute
   ApiPublicCronLateTaskReportRoute: typeof ApiPublicCronLateTaskReportRoute
   ApiPublicCronMessageEmailRoute: typeof ApiPublicCronMessageEmailRoute
+  ApiPublicCronNotificationEmailRoute: typeof ApiPublicCronNotificationEmailRoute
   ApiPublicCronSubscriptionCheckRoute: typeof ApiPublicCronSubscriptionCheckRoute
   ApiPublicCronWeeklySummaryEmailRoute: typeof ApiPublicCronWeeklySummaryEmailRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -1562,6 +1576,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronMessageEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/notification-email': {
+      id: '/api/public/cron/notification-email'
+      path: '/api/public/cron/notification-email'
+      fullPath: '/api/public/cron/notification-email'
+      preLoaderRoute: typeof ApiPublicCronNotificationEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/late-task-report': {
       id: '/api/public/cron/late-task-report'
       path: '/api/public/cron/late-task-report'
@@ -1842,6 +1863,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronClockReminderRoute: ApiPublicCronClockReminderRoute,
   ApiPublicCronLateTaskReportRoute: ApiPublicCronLateTaskReportRoute,
   ApiPublicCronMessageEmailRoute: ApiPublicCronMessageEmailRoute,
+  ApiPublicCronNotificationEmailRoute: ApiPublicCronNotificationEmailRoute,
   ApiPublicCronSubscriptionCheckRoute: ApiPublicCronSubscriptionCheckRoute,
   ApiPublicCronWeeklySummaryEmailRoute: ApiPublicCronWeeklySummaryEmailRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,

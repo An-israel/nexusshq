@@ -35,6 +35,8 @@ import {
   Ban,
   RefreshCw,
   ChevronRight,
+  Mail,
+  Search,
 } from "lucide-react";
 
 // ── Route guard ──────────────────────────────────────────────────────────────
@@ -945,6 +947,169 @@ function WorkspacesTab() {
   );
 }
 
+// ── Users tab ────────────────────────────────────────────────────────────────
+
+interface UserRow {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  is_active: boolean | null;
+  created_at: string | null;
+  workspaces: { name: string; role: string }[];
+}
+
+function UsersTab() {
+  const [users, setUsers] = React.useState<UserRow[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [search, setSearch] = React.useState("");
+
+  React.useEffect(() => {
+    void (async () => {
+      setLoading(true);
+      try {
+        // Fetch all profiles
+        const { data: profiles, error: profErr } = await supabase
+          .from("profiles")
+          .select("id, email, full_name, is_active, created_at")
+          .order("created_at", { ascending: false });
+        if (profErr) throw profErr;
+
+        // Fetch all workspace memberships with workspace names
+        const { data: members, error: memErr } = await supabase
+          .from("workspace_members")
+          .select("user_id, role, workspaces(name)");
+        if (memErr) throw memErr;
+
+        // Group memberships by user
+        const membersByUser: Record<string, { name: string; role: string }[]> = {};
+        for (const m of members ?? []) {
+          if (!membersByUser[m.user_id]) membersByUser[m.user_id] = [];
+          const ws = m.workspaces as { name: string } | null;
+          if (ws?.name) membersByUser[m.user_id].push({ name: ws.name, role: m.role });
+        }
+
+        setUsers(
+          (profiles ?? []).map((p) => ({
+            ...p,
+            workspaces: membersByUser[p.id] ?? [],
+          })),
+        );
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Failed to load users");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const filtered = React.useMemo(() => {
+    const q = search.toLowerCase();
+    if (!q) return users;
+    return users.filter(
+      (u) =>
+        u.email?.toLowerCase().includes(q) ||
+        u.full_name?.toLowerCase().includes(q) ||
+        u.workspaces.some((w) => w.name.toLowerCase().includes(q)),
+    );
+  }, [users, search]);
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">All Users</h2>
+          <p className="text-sm text-muted-foreground">
+            {users.length} registered accounts across all workspaces.
+          </p>
+        </div>
+        <div className="relative w-64">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <input
+            type="search"
+            placeholder="Search name, email, workspace…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full rounded-lg border border-border bg-muted/40 py-2 pl-9 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+      </div>
+
+      <div className="overflow-hidden rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead className="border-b border-border bg-muted/40 text-xs text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 text-left font-medium">Name</th>
+              <th className="px-4 py-3 text-left font-medium">Email</th>
+              <th className="px-4 py-3 text-left font-medium">Workspaces</th>
+              <th className="px-4 py-3 text-left font-medium">Status</th>
+              <th className="px-4 py-3 text-left font-medium">Joined</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-border">
+            {loading ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                  Loading…
+                </td>
+              </tr>
+            ) : filtered.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                  No users found.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((u) => (
+                <tr key={u.id} className="transition-colors hover:bg-muted/20">
+                  <td className="px-4 py-3 font-medium">{u.full_name ?? "—"}</td>
+                  <td className="px-4 py-3">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Mail className="h-3.5 w-3.5 shrink-0" />
+                      {u.email ?? "—"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {u.workspaces.length === 0 ? (
+                      <span className="text-xs text-muted-foreground">No workspace</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {u.workspaces.map((w, i) => (
+                          <span
+                            key={i}
+                            className="inline-flex items-center gap-1 rounded border border-border bg-muted/40 px-1.5 py-0.5 text-[11px]"
+                          >
+                            {w.name}
+                            <span className="text-muted-foreground/60">·</span>
+                            <span className="capitalize text-muted-foreground">{w.role}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-[11px] font-medium ${
+                        u.is_active
+                          ? "bg-green-500/10 text-green-500"
+                          : "bg-destructive/10 text-destructive"
+                      }`}
+                    >
+                      {u.is_active ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {u.created_at ? new Date(u.created_at).toLocaleDateString() : "—"}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
 // ── Plans tab ────────────────────────────────────────────────────────────────
 
 const DEFAULT_PLANS = [
@@ -1403,6 +1568,10 @@ ON CONFLICT (user_id) DO NOTHING;`}
               <Building2 className="h-4 w-4" />
               Workspaces
             </TabsTrigger>
+            <TabsTrigger value="users" className="gap-2 data-[state=active]:text-purple-400">
+              <Users className="h-4 w-4" />
+              Users
+            </TabsTrigger>
             <TabsTrigger value="plans" className="gap-2 data-[state=active]:text-purple-400">
               <CreditCard className="h-4 w-4" />
               Plans
@@ -1415,6 +1584,10 @@ ON CONFLICT (user_id) DO NOTHING;`}
 
           <TabsContent value="workspaces">
             <WorkspacesTab />
+          </TabsContent>
+
+          <TabsContent value="users">
+            <UsersTab />
           </TabsContent>
 
           <TabsContent value="plans">

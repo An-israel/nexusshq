@@ -17,24 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { UserPlus, Copy, Check, Link2, KeyRound } from "lucide-react";
+import { UserPlus, Copy, Check, Link2, Mail, KeyRound } from "lucide-react";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
-import { supabase } from "@/integrations/supabase/client";
 import { useWorkspace } from "@/lib/workspace-context";
-
-const PASSCODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-function generatePasscode(len = 6): string {
-  const arr = new Uint8Array(len);
-  crypto.getRandomValues(arr);
-  return Array.from(arr)
-    .map((b) => PASSCODE_CHARS[b % PASSCODE_CHARS.length])
-    .join("");
-}
+import { useServerFn } from "@tanstack/react-start";
+import { createInvitationFn } from "@/lib/admin.functions";
 
 interface Generated {
   token: string;
   passcode: string;
   inviteUrl: string;
+  emailSent: boolean;
 }
 
 function CopyField({
@@ -81,6 +74,7 @@ export function InviteEmployeeDialog({
   isAdmin?: boolean;
 }) {
   const { workspace } = useWorkspace();
+  const createInvitation = useServerFn(createInvitationFn);
 
   const [open, setOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
@@ -119,38 +113,30 @@ export function InviteEmployeeDialog({
     }
     setSubmitting(true);
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) throw new Error("Not signed in");
-
-      const passcode = generatePasscode();
-
-      const { data, error } = await supabase
-        .from("workspace_invitations")
-        .insert({
-          workspace_id: workspace.id,
-          passcode,
+      const result = await createInvitation({
+        data: {
+          workspaceId: workspace.id,
+          workspaceName: workspace.name,
           email: form.email.trim().toLowerCase(),
           full_name: form.full_name.trim(),
           job_title: form.job_title.trim() || null,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          department: (form.department || "other") as any,
+          department: (form.department || "other") as (typeof DEPARTMENTS)[number],
           phone: form.phone.trim() || null,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          role: form.role as any,
-          invited_by: user.id,
-        })
-        .select("token, passcode")
-        .single();
+          role: form.role,
+          siteUrl: window.location.origin,
+        },
+      });
 
-      if (error) throw new Error(error.message);
-
-      const inviteUrl = `${window.location.origin}/join?token=${data.token}`;
-      setGenerated({ token: data.token, passcode: data.passcode, inviteUrl });
+      const inviteUrl = `${window.location.origin}/join?token=${result.token}`;
+      setGenerated({
+        token: result.token,
+        passcode: result.passcode,
+        inviteUrl,
+        emailSent: true,
+      });
       onInvited?.();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create invitation");
+      toast.error(err instanceof Error ? err.message : "Failed to send invitation");
     } finally {
       setSubmitting(false);
     }
@@ -253,10 +239,6 @@ export function InviteEmployeeDialog({
                     </Select>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  No email is sent. You'll get a link and passcode to share with the employee
-                  directly.
-                </p>
               </div>
 
               <DialogFooter>
@@ -264,29 +246,38 @@ export function InviteEmployeeDialog({
                   Cancel
                 </Button>
                 <Button onClick={submit} disabled={submitting}>
-                  {submitting ? "Generating…" : "Generate invite"}
+                  {submitting ? (
+                    "Sending…"
+                  ) : (
+                    <>
+                      <Mail className="mr-2 h-4 w-4" /> Send invite
+                    </>
+                  )}
                 </Button>
               </DialogFooter>
             </>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>Invitation ready</DialogTitle>
+                <DialogTitle>Invitation sent</DialogTitle>
               </DialogHeader>
 
               <div className="space-y-4 py-2">
-                <p className="text-sm text-muted-foreground">
-                  Share <strong>either</strong> the link or the passcode with{" "}
-                  <strong>{form.full_name}</strong>. The invitation expires in 7 days.
+                <div className="flex items-start gap-3 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-3">
+                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
+                  <p className="text-sm text-green-700 dark:text-green-400">
+                    An invitation email has been sent to <strong>{form.email}</strong>. They'll
+                    receive a link to create their account and join{" "}
+                    <strong>{workspace.name}</strong>.
+                  </p>
+                </div>
+
+                <p className="text-xs text-muted-foreground">
+                  Didn't receive the email? Share the link or passcode below as a backup.
                 </p>
 
                 <CopyField label="Invite link" icon={Link2} value={generated.inviteUrl} />
                 <CopyField label="Passcode" icon={KeyRound} value={generated.passcode} />
-
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-                  The employee visits <strong>/join</strong> on the app and enters either the link
-                  or passcode to create their account.
-                </div>
               </div>
 
               <DialogFooter>
