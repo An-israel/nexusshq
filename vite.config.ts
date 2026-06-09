@@ -1,6 +1,7 @@
 import path from "node:path";
 import { loadEnv } from "vite";
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { sentryVitePlugin } from "@sentry/vite-plugin";
 
 // Load all env vars (no prefix) into process.env so server routes can access
 // non-VITE_ secrets like SUPABASE_SERVICE_ROLE_KEY.
@@ -28,5 +29,17 @@ export default defineConfig({
         entities: path.resolve(import.meta.dirname, "node_modules/entities"),
       },
     },
+    build: {
+      sourcemap: true,
+    },
+    plugins: process.env.SENTRY_AUTH_TOKEN
+      ? [
+          sentryVitePlugin({
+            org: process.env.SENTRY_ORG,
+            project: process.env.SENTRY_PROJECT,
+            authToken: process.env.SENTRY_AUTH_TOKEN,
+          }),
+        ]
+      : [],
   },
 });

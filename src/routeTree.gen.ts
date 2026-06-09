@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspacesRouteImport } from './routes/workspaces'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
+import { Route as StatusRouteImport } from './routes/status'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as PrivacyRouteImport } from './routes/privacy'
@@ -26,6 +27,7 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrackSplatRouteImport } from './routes/track.$'
 import { Route as ApiTranscribeVoiceNoteRouteImport } from './routes/api/transcribe-voice-note'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
 import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
 import { Route as ApiPaystackWebhookRouteImport } from './routes/api/paystack/webhook'
@@ -91,6 +93,11 @@ const TermsRoute = TermsRouteImport.update({
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StatusRoute = StatusRouteImport.update({
+  id: '/status',
+  path: '/status',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -160,6 +167,11 @@ const TrackSplatRoute = TrackSplatRouteImport.update({
 const ApiTranscribeVoiceNoteRoute = ApiTranscribeVoiceNoteRouteImport.update({
   id: '/api/transcribe-voice-note',
   path: '/api/transcribe-voice-note',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiRoute = ApiAiRouteImport.update({
@@ -461,11 +473,13 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
   '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
@@ -530,11 +544,13 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
   '/track/$': typeof TrackSplatRoute
   '/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
@@ -601,11 +617,13 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/signup': typeof SignupRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
   '/api/ai': typeof ApiAiRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/transcribe-voice-note': typeof ApiTranscribeVoiceNoteRoute
   '/track/$': typeof TrackSplatRoute
   '/_app/$workspaceSlug/announcements': typeof AppWorkspaceSlugAnnouncementsRoute
@@ -672,11 +690,13 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/sitemap.xml'
+    | '/status'
     | '/super-admin'
     | '/terms'
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
+    | '/api/health'
     | '/api/transcribe-voice-note'
     | '/track/$'
     | '/$workspaceSlug/announcements'
@@ -741,11 +761,13 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/sitemap.xml'
+    | '/status'
     | '/super-admin'
     | '/terms'
     | '/workspaces'
     | '/$workspaceSlug'
     | '/api/ai'
+    | '/api/health'
     | '/api/transcribe-voice-note'
     | '/track/$'
     | '/$workspaceSlug/announcements'
@@ -811,11 +833,13 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/signup'
     | '/sitemap.xml'
+    | '/status'
     | '/super-admin'
     | '/terms'
     | '/workspaces'
     | '/_app/$workspaceSlug'
     | '/api/ai'
+    | '/api/health'
     | '/api/transcribe-voice-note'
     | '/track/$'
     | '/_app/$workspaceSlug/announcements'
@@ -882,10 +906,12 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   SignupRoute: typeof SignupRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  StatusRoute: typeof StatusRoute
   SuperAdminRoute: typeof SuperAdminRoute
   TermsRoute: typeof TermsRoute
   WorkspacesRoute: typeof WorkspacesRoute
   ApiAiRoute: typeof ApiAiRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiTranscribeVoiceNoteRoute: typeof ApiTranscribeVoiceNoteRoute
   TrackSplatRoute: typeof TrackSplatRoute
   ApiGdprDeleteRoute: typeof ApiGdprDeleteRoute
@@ -925,6 +951,13 @@ declare module '@tanstack/react-router' {
       path: '/super-admin'
       fullPath: '/super-admin'
       preLoaderRoute: typeof SuperAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/status': {
+      id: '/status'
+      path: '/status'
+      fullPath: '/status'
+      preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1023,6 +1056,13 @@ declare module '@tanstack/react-router' {
       path: '/api/transcribe-voice-note'
       fullPath: '/api/transcribe-voice-note'
       preLoaderRoute: typeof ApiTranscribeVoiceNoteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ai': {
@@ -1524,10 +1564,12 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   SignupRoute: SignupRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  StatusRoute: StatusRoute,
   SuperAdminRoute: SuperAdminRoute,
   TermsRoute: TermsRoute,
   WorkspacesRoute: WorkspacesRoute,
   ApiAiRoute: ApiAiRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiTranscribeVoiceNoteRoute: ApiTranscribeVoiceNoteRoute,
   TrackSplatRoute: TrackSplatRoute,
   ApiGdprDeleteRoute: ApiGdprDeleteRoute,

@@ -1,11 +1,34 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { useEffect } from "react";
-import { AuthProvider } from "@/lib/auth-context";
+import * as Sentry from "@sentry/react";
+import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { installSupabaseDiagnostics } from "@/lib/supabase-diagnostics";
 
 import appCss from "../styles.css?url";
 
+// ─── Sentry client-side init ──────────────────────────────────────────────────
+// Only runs in the browser (guards against SSR execution).
+// Set VITE_SENTRY_DSN in your environment to enable. When the var is absent
+// (local dev without Sentry account) the SDK is a no-op and nothing breaks.
+const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
+
+if (typeof document !== "undefined" && SENTRY_DSN) {
+  Sentry.init({
+    dsn: SENTRY_DSN,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      // Session replay: mask all text/media for privacy, full capture on errors
+      Sentry.replayIntegration({ maskAllText: true, blockAllMedia: true }),
+    ],
+    tracesSampleRate: 0.1,
+    replaysSessionSampleRate: 0.02,
+    replaysOnErrorSampleRate: 1.0,
+    environment: import.meta.env.MODE ?? "production",
+  });
+}
+
+// ─── CSP (meta tag delivery for cached HTML) ──────────────────────────────────
 // Document-level CSP delivered via <meta http-equiv>. Covers browsers that
 // receive cached HTML without the HTTP header. frame-ancestors/report-uri
 // are not supported in meta tags — those are in src/server-entry.ts via
@@ -16,7 +39,7 @@ const CONTENT_SECURITY_POLICY = [
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://*.supabase.co https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://open.er-api.com https://api.anthropic.com https://api.openai.com https://api.paystack.co https://api.resend.com",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://open.er-api.com https://api.anthropic.com https://api.openai.com https://api.paystack.co https://api.resend.com https://o*.ingest.sentry.io",
   "media-src 'self' blob:",
   "worker-src blob:",
   "frame-src 'none'",
@@ -24,6 +47,8 @@ const CONTENT_SECURITY_POLICY = [
   "base-uri 'self'",
   "form-action 'self'",
 ].join("; ");
+
+// ─── Route tree ───────────────────────────────────────────────────────────────
 
 function NotFoundComponent() {
   return (
@@ -41,6 +66,28 @@ function NotFoundComponent() {
           >
             Go home
           </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AppErrorFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-5xl font-bold text-foreground">Oops</h1>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">Something went wrong</h2>
+        <p className="mt-2 text-sm text-muted-foreground">
+          An unexpected error occurred. It has been reported and we're on it.
+        </p>
+        <div className="mt-6">
+          <button
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Reload page
+          </button>
         </div>
       </div>
     </div>
@@ -146,6 +193,21 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Syncs the signed-in user identity into Sentry so error reports are
+// attributed to a specific user (id + email only — no PII beyond that).
+function SentryUserScope() {
+  const { user } = useAuth();
+  useEffect(() => {
+    if (!SENTRY_DSN) return;
+    if (user) {
+      Sentry.setUser({ id: user.id, email: user.email ?? undefined });
+    } else {
+      Sentry.setUser(null);
+    }
+  }, [user?.id, user?.email]);
+  return null;
+}
+
 function RootComponent() {
   useEffect(() => {
     installSupabaseDiagnostics();
@@ -161,9 +223,12 @@ function RootComponent() {
 
   return (
     <AuthProvider>
-      <main id="main">
-        <Outlet />
-      </main>
+      <SentryUserScope />
+      <Sentry.ErrorBoundary fallback={<AppErrorFallback />}>
+        <main id="main">
+          <Outlet />
+        </main>
+      </Sentry.ErrorBoundary>
       <Toaster theme="dark" position="top-right" />
     </AuthProvider>
   );
