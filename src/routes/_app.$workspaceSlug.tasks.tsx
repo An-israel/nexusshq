@@ -45,6 +45,7 @@ import {
 } from "lucide-react";
 import { SwipeableRow } from "@/components/ui/swipeable-row";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/tasks")({
   component: TasksPage,
@@ -338,13 +339,19 @@ function TasksPage() {
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <CheckSquare className="h-12 w-12 text-muted-foreground/30" />
-              <p className="text-sm font-medium text-muted-foreground">No tasks yet</p>
-              <p className="text-xs text-muted-foreground">
-                Tasks assigned to you will appear here.
-              </p>
-            </div>
+            <EmptyState
+              icon={CheckSquare}
+              title={filter === "completed" ? "No completed tasks" : filter === "overdue" ? "No overdue tasks" : "No tasks yet"}
+              description={
+                filter === "completed"
+                  ? "Completed tasks will appear here."
+                  : filter === "overdue"
+                    ? "You're all caught up — nothing overdue."
+                    : isManager
+                      ? "Assign tasks to your team to get started."
+                      : "Tasks assigned to you will appear here."
+              }
+            />
           ) : (
             <div className="space-y-3">
               {filtered.map((t) => (

@@ -15,6 +15,7 @@ import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { GlobalCommandPalette, openCommandPalette } from "@/components/layout/GlobalCommandPalette";
+import { WhatsNew } from "@/components/layout/WhatsNew";
 import { cn } from "@/lib/utils";
 import { setLastWorkspaceSlug } from "@/lib/last-workspace";
 import { toast } from "sonner";
@@ -498,6 +499,7 @@ function WorkspaceShell() {
                 <kbd className="hidden md:inline text-[10px] font-mono opacity-60">⌘K</kbd>
               </button>
               <NotificationBell />
+              <WhatsNew />
               {/* Profile avatar — links to profile page, mobile only */}
               <a
                 href={`/${workspaceSlug}/profile`}

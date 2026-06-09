@@ -27,6 +27,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KpiBoard } from "@/components/kpis/KpiBoard";
+import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "sonner";
 import {
   Target,
@@ -254,9 +255,16 @@ function OkrsPage() {
           ))}
         </div>
       ) : objectives.length === 0 ? (
-        <Card className="p-10 text-center text-sm text-muted-foreground">
-          No objectives yet.{isManager && ' Click "New Objective" to get started.'}
-        </Card>
+        <EmptyState
+          icon={Target}
+          title="No objectives yet"
+          description={
+            isManager
+              ? "Create your first objective to start tracking team goals."
+              : "Your manager hasn't set any objectives yet."
+          }
+          action={isManager ? { label: "New Objective", onClick: openNew } : undefined}
+        />
       ) : (
         <div className="space-y-4">
           {objectives.map((obj) => {

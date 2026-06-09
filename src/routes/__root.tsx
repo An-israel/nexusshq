@@ -1,9 +1,10 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
 import { useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
 import { Toaster } from "@/components/ui/sonner";
 import { installSupabaseDiagnostics } from "@/lib/supabase-diagnostics";
+import { posthog, POSTHOG_KEY } from "@/lib/analytics";
 
 import appCss from "../styles.css?url";
 
@@ -28,6 +29,9 @@ if (typeof document !== "undefined" && SENTRY_DSN) {
   });
 }
 
+// ─── Crisp support chat ───────────────────────────────────────────────────────
+const CRISP_ID = import.meta.env.VITE_CRISP_WEBSITE_ID as string | undefined;
+
 // ─── CSP (meta tag delivery for cached HTML) ──────────────────────────────────
 // Document-level CSP delivered via <meta http-equiv>. Covers browsers that
 // receive cached HTML without the HTTP header. frame-ancestors/report-uri
@@ -35,14 +39,14 @@ if (typeof document !== "undefined" && SENTRY_DSN) {
 // X-Frame-Options and the HSTS/permissions headers.
 const CONTENT_SECURITY_POLICY = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://client.crisp.chat",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://client.crisp.chat",
+  "font-src 'self' https://fonts.gstatic.com data: https://client.crisp.chat",
   "img-src 'self' data: blob: https://*.supabase.co https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev https:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://open.er-api.com https://api.anthropic.com https://api.openai.com https://api.paystack.co https://api.resend.com https://o*.ingest.sentry.io",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://ipapi.co https://open.er-api.com https://api.anthropic.com https://api.openai.com https://api.paystack.co https://api.resend.com https://o*.ingest.sentry.io https://us.i.posthog.com https://app.posthog.com https://*.crisp.chat wss://*.crisp.chat",
   "media-src 'self' blob:",
   "worker-src blob:",
-  "frame-src 'none'",
+  "frame-src https://*.crisp.chat",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
@@ -193,6 +197,51 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Tracks a $pageview event on every route change (no auth context needed).
+function PostHogPageView() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  useEffect(() => {
+    if (!POSTHOG_KEY) return;
+    posthog.capture("$pageview");
+  }, [pathname]);
+  return null;
+}
+
+// Identifies the authenticated user in PostHog and Crisp.
+function GrowthUserScope() {
+  const { user, profile } = useAuth();
+
+  useEffect(() => {
+    if (!POSTHOG_KEY) return;
+    if (user) {
+      posthog.identify(user.id, {
+        email: user.email ?? undefined,
+        name: profile?.full_name ?? undefined,
+      });
+    } else {
+      posthog.reset();
+    }
+  }, [user?.id, profile?.full_name]);
+
+  useEffect(() => {
+    if (!CRISP_ID || typeof window === "undefined") return;
+    // Lazily inject the Crisp loader the first time we have user context.
+    if (!("$crisp" in window)) {
+      (window as Record<string, unknown>).$crisp = [];
+      (window as Record<string, unknown>).CRISP_WEBSITE_ID = CRISP_ID;
+      const s = document.createElement("script");
+      s.src = "https://client.crisp.chat/l.js";
+      s.async = true;
+      document.head.appendChild(s);
+    }
+    const $crisp = (window as Record<string, unknown[]>).$crisp as unknown[][];
+    if (user?.email) $crisp.push(["set", "user:email", [user.email]]);
+    if (profile?.full_name) $crisp.push(["set", "user:nickname", [profile.full_name]]);
+  }, [user?.email, profile?.full_name]);
+
+  return null;
+}
+
 // Syncs the signed-in user identity into Sentry so error reports are
 // attributed to a specific user (id + email only — no PII beyond that).
 function SentryUserScope() {
@@ -224,6 +273,8 @@ function RootComponent() {
   return (
     <AuthProvider>
       <SentryUserScope />
+      <GrowthUserScope />
+      <PostHogPageView />
       <Sentry.ErrorBoundary fallback={<AppErrorFallback />}>
         <main id="main">
           <Outlet />
