@@ -30,6 +30,8 @@ import { Route as ApiAiRouteImport } from './routes/api/ai'
 import { Route as AppWorkspaceSlugRouteImport } from './routes/_app.$workspaceSlug'
 import { Route as ApiPaystackWebhookRouteImport } from './routes/api/paystack/webhook'
 import { Route as ApiPaystackInitializeRouteImport } from './routes/api/paystack/initialize'
+import { Route as ApiGdprExportRouteImport } from './routes/api/gdpr/export'
+import { Route as ApiGdprDeleteRouteImport } from './routes/api/gdpr/delete'
 import { Route as AppWorkspaceSlugTeamBoardRouteImport } from './routes/_app.$workspaceSlug.team-board'
 import { Route as AppWorkspaceSlugTeamRouteImport } from './routes/_app.$workspaceSlug.team'
 import { Route as AppWorkspaceSlugTasksRouteImport } from './routes/_app.$workspaceSlug.tasks'
@@ -177,6 +179,16 @@ const ApiPaystackWebhookRoute = ApiPaystackWebhookRouteImport.update({
 const ApiPaystackInitializeRoute = ApiPaystackInitializeRouteImport.update({
   id: '/api/paystack/initialize',
   path: '/api/paystack/initialize',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGdprExportRoute = ApiGdprExportRouteImport.update({
+  id: '/api/gdpr/export',
+  path: '/api/gdpr/export',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGdprDeleteRoute = ApiGdprDeleteRouteImport.update({
+  id: '/api/gdpr/delete',
+  path: '/api/gdpr/delete',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppWorkspaceSlugTeamBoardRoute =
@@ -477,6 +489,8 @@ export interface FileRoutesByFullPath {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/gdpr/delete': typeof ApiGdprDeleteRoute
+  '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
@@ -543,6 +557,8 @@ export interface FileRoutesByTo {
   '/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/gdpr/delete': typeof ApiGdprDeleteRoute
+  '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
@@ -611,6 +627,8 @@ export interface FileRoutesById {
   '/_app/$workspaceSlug/tasks': typeof AppWorkspaceSlugTasksRoute
   '/_app/$workspaceSlug/team': typeof AppWorkspaceSlugTeamRouteWithChildren
   '/_app/$workspaceSlug/team-board': typeof AppWorkspaceSlugTeamBoardRoute
+  '/api/gdpr/delete': typeof ApiGdprDeleteRoute
+  '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
   '/_app/$workspaceSlug/messages/activity': typeof AppWorkspaceSlugMessagesActivityRoute
@@ -679,6 +697,8 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/api/gdpr/delete'
+    | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
     | '/$workspaceSlug/messages/activity'
@@ -745,6 +765,8 @@ export interface FileRouteTypes {
     | '/$workspaceSlug/tasks'
     | '/$workspaceSlug/team'
     | '/$workspaceSlug/team-board'
+    | '/api/gdpr/delete'
+    | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
     | '/$workspaceSlug/messages/activity'
@@ -812,6 +834,8 @@ export interface FileRouteTypes {
     | '/_app/$workspaceSlug/tasks'
     | '/_app/$workspaceSlug/team'
     | '/_app/$workspaceSlug/team-board'
+    | '/api/gdpr/delete'
+    | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
     | '/_app/$workspaceSlug/messages/activity'
@@ -851,6 +875,8 @@ export interface RootRouteChildren {
   ApiAiRoute: typeof ApiAiRoute
   ApiTranscribeVoiceNoteRoute: typeof ApiTranscribeVoiceNoteRoute
   TrackSplatRoute: typeof TrackSplatRoute
+  ApiGdprDeleteRoute: typeof ApiGdprDeleteRoute
+  ApiGdprExportRoute: typeof ApiGdprExportRoute
   ApiPaystackInitializeRoute: typeof ApiPaystackInitializeRoute
   ApiPaystackWebhookRoute: typeof ApiPaystackWebhookRoute
   ApiPublicCronAutoClockOutRoute: typeof ApiPublicCronAutoClockOutRoute
@@ -1011,6 +1037,20 @@ declare module '@tanstack/react-router' {
       path: '/api/paystack/initialize'
       fullPath: '/api/paystack/initialize'
       preLoaderRoute: typeof ApiPaystackInitializeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/gdpr/export': {
+      id: '/api/gdpr/export'
+      path: '/api/gdpr/export'
+      fullPath: '/api/gdpr/export'
+      preLoaderRoute: typeof ApiGdprExportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/gdpr/delete': {
+      id: '/api/gdpr/delete'
+      path: '/api/gdpr/delete'
+      fullPath: '/api/gdpr/delete'
+      preLoaderRoute: typeof ApiGdprDeleteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app/$workspaceSlug/team-board': {
@@ -1469,6 +1509,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiRoute: ApiAiRoute,
   ApiTranscribeVoiceNoteRoute: ApiTranscribeVoiceNoteRoute,
   TrackSplatRoute: TrackSplatRoute,
+  ApiGdprDeleteRoute: ApiGdprDeleteRoute,
+  ApiGdprExportRoute: ApiGdprExportRoute,
   ApiPaystackInitializeRoute: ApiPaystackInitializeRoute,
   ApiPaystackWebhookRoute: ApiPaystackWebhookRoute,
   ApiPublicCronAutoClockOutRoute: ApiPublicCronAutoClockOutRoute,
@@ -1484,12 +1526,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

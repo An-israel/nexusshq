@@ -26,6 +26,12 @@ import {
   Building2,
   Palette,
   History,
+  Download,
+  Trash2,
+  Lock,
+  QrCode,
+  CheckCircle2,
+  AlertTriangle,
 } from "lucide-react";
 import { AvatarUploader } from "@/components/AvatarUploader";
 import { Switch } from "@/components/ui/switch";
@@ -410,6 +416,12 @@ function SettingsPage() {
                 <History className="mr-2 h-4 w-4" /> Audit Log
               </TabsTrigger>
             )}
+            <TabsTrigger value="privacy">
+              <Download className="mr-2 h-4 w-4" /> Privacy
+            </TabsTrigger>
+            <TabsTrigger value="security">
+              <Lock className="mr-2 h-4 w-4" /> Security
+            </TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value="profile" className="mt-4">
@@ -456,7 +468,355 @@ function SettingsPage() {
             <AuditLogAdmin />
           </TabsContent>
         )}
+        <TabsContent value="privacy" className="mt-4">
+          <PrivacySettings />
+        </TabsContent>
+        <TabsContent value="security" className="mt-4">
+          <SecuritySettings />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+// ─── Privacy (GDPR) ──────────────────────────────────────────────────────────
+
+function PrivacySettings() {
+  const [exporting, setExporting] = React.useState(false);
+  const [deleteConfirm, setDeleteConfirm] = React.useState(false);
+  const [deleteInput, setDeleteInput] = React.useState("");
+  const [deleting, setDeleting] = React.useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const resp = await fetch("/api/gdpr/export", {
+        method: "POST",
+        headers: {
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+      });
+      if (!resp.ok) {
+        const err = (await resp.json()) as { error?: string };
+        toast.error(err.error ?? "Export failed");
+        return;
+      }
+      const blob = await resp.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `nexus-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Your data export has been downloaded.");
+    } catch {
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (deleteInput !== "DELETE") return;
+    setDeleting(true);
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const resp = await fetch("/api/gdpr/delete", {
+        method: "POST",
+        headers: {
+          ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+        },
+      });
+      if (!resp.ok) {
+        const err = (await resp.json()) as { error?: string };
+        toast.error(err.error ?? "Account deletion failed");
+        setDeleting(false);
+        return;
+      }
+      toast.success("Account deleted. You will be signed out.");
+      await supabase.auth.signOut();
+      window.location.href = "/";
+    } catch {
+      toast.error("Account deletion failed. Please try again.");
+      setDeleting(false);
+    }
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <Card className="p-6 space-y-4">
+        <div>
+          <h3 className="font-semibold flex items-center gap-2">
+            <Download className="h-4 w-4" /> Export your data
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Download a copy of all data associated with your account — profile, attendance, tasks,
+            messages, notifications, and more — as a JSON file.
+          </p>
+        </div>
+        <Button onClick={() => void handleExport()} disabled={exporting} variant="outline">
+          <Download className="mr-2 h-4 w-4" />
+          {exporting ? "Preparing export…" : "Download my data"}
+        </Button>
+      </Card>
+
+      <Card className="p-6 space-y-4 border-destructive/40">
+        <div>
+          <h3 className="font-semibold text-destructive flex items-center gap-2">
+            <Trash2 className="h-4 w-4" /> Delete my account
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Permanently removes your personal information. Your contributions (tasks, messages,
+            attendance) are retained for workspace integrity but will no longer be attributed to
+            you. This action cannot be undone.
+          </p>
+        </div>
+
+        {!deleteConfirm ? (
+          <Button variant="destructive" onClick={() => setDeleteConfirm(true)}>
+            <Trash2 className="mr-2 h-4 w-4" /> Delete my account
+          </Button>
+        ) : (
+          <div className="space-y-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+            <p className="text-sm font-medium flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-4 w-4" /> Type{" "}
+              <code className="font-mono bg-muted px-1 rounded">DELETE</code> to confirm
+            </p>
+            <Input
+              value={deleteInput}
+              onChange={(e) => setDeleteInput(e.target.value)}
+              placeholder="DELETE"
+              className="text-base md:text-sm font-mono max-w-xs"
+            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setDeleteConfirm(false);
+                  setDeleteInput("");
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => void handleDelete()}
+                disabled={deleteInput !== "DELETE" || deleting}
+              >
+                {deleting ? "Deleting…" : "Permanently delete account"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Card>
+    </div>
+  );
+}
+
+// ─── Security / MFA ──────────────────────────────────────────────────────────
+
+type MfaFactor = {
+  id: string;
+  factor_type: string;
+  friendly_name?: string | null;
+  status: string;
+};
+
+function SecuritySettings() {
+  const [factors, setFactors] = React.useState<MfaFactor[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [enrolling, setEnrolling] = React.useState(false);
+  const [qrUri, setQrUri] = React.useState<string | null>(null);
+  const [secret, setSecret] = React.useState<string | null>(null);
+  const [pendingFactorId, setPendingFactorId] = React.useState<string | null>(null);
+  const [totpCode, setTotpCode] = React.useState("");
+  const [verifying, setVerifying] = React.useState(false);
+  const [unenrolling, setUnenrolling] = React.useState<string | null>(null);
+
+  const loadFactors = React.useCallback(async () => {
+    setLoading(true);
+    const { data, error } = await supabase.auth.mfa.listFactors();
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setFactors([...(data.totp ?? []), ...(data.phone ?? [])] as MfaFactor[]);
+    }
+    setLoading(false);
+  }, []);
+
+  React.useEffect(() => {
+    void loadFactors();
+  }, [loadFactors]);
+
+  async function startEnroll() {
+    setEnrolling(true);
+    const { data, error } = await supabase.auth.mfa.enroll({ factorType: "totp" });
+    if (error || !data) {
+      toast.error(error?.message ?? "Failed to start enrollment");
+      setEnrolling(false);
+      return;
+    }
+    setQrUri(data.totp.qr_code);
+    setSecret(data.totp.secret);
+    setPendingFactorId(data.id);
+    setEnrolling(false);
+  }
+
+  async function verifyEnrollment() {
+    if (!pendingFactorId || !totpCode) return;
+    setVerifying(true);
+    const { error } = await supabase.auth.mfa.challengeAndVerify({
+      factorId: pendingFactorId,
+      code: totpCode,
+    });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Two-factor authentication enabled.");
+      setQrUri(null);
+      setSecret(null);
+      setPendingFactorId(null);
+      setTotpCode("");
+      void loadFactors();
+    }
+    setVerifying(false);
+  }
+
+  async function unenroll(factorId: string) {
+    setUnenrolling(factorId);
+    const { error } = await supabase.auth.mfa.unenroll({ factorId });
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("Authenticator removed.");
+      void loadFactors();
+    }
+    setUnenrolling(null);
+  }
+
+  if (loading) return <p className="text-sm text-muted-foreground">Loading…</p>;
+
+  const verifiedFactors = factors.filter((f) => f.status === "verified");
+  const hasMfa = verifiedFactors.length > 0;
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <Card className="p-6 space-y-4">
+        <div>
+          <h3 className="font-semibold flex items-center gap-2">
+            <QrCode className="h-4 w-4" /> Two-factor authentication (2FA)
+          </h3>
+          <p className="text-sm text-muted-foreground mt-1">
+            Add an extra layer of security to your account. When enabled, you'll need a verification
+            code from your authenticator app in addition to your password.
+          </p>
+        </div>
+
+        {hasMfa && (
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3">
+            <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+            <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+              Two-factor authentication is enabled
+            </p>
+          </div>
+        )}
+
+        {verifiedFactors.map((f) => (
+          <div
+            key={f.id}
+            className="flex items-center justify-between rounded-lg border border-border px-4 py-3"
+          >
+            <div>
+              <p className="text-sm font-medium">{f.friendly_name ?? "Authenticator app"}</p>
+              <p className="text-xs text-muted-foreground capitalize">{f.factor_type} · active</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              disabled={unenrolling === f.id}
+              onClick={() => void unenroll(f.id)}
+            >
+              {unenrolling === f.id ? "Removing…" : "Remove"}
+            </Button>
+          </div>
+        ))}
+
+        {!qrUri && (
+          <Button
+            variant={hasMfa ? "outline" : "default"}
+            onClick={() => void startEnroll()}
+            disabled={enrolling}
+          >
+            <QrCode className="mr-2 h-4 w-4" />
+            {enrolling ? "Setting up…" : hasMfa ? "Add another authenticator" : "Enable 2FA"}
+          </Button>
+        )}
+
+        {qrUri && (
+          <div className="space-y-4 rounded-lg border border-border p-4">
+            <div>
+              <p className="text-sm font-medium">Scan this QR code with your authenticator app</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Use Google Authenticator, Authy, 1Password, or any TOTP-compatible app.
+              </p>
+            </div>
+            <img
+              src={qrUri}
+              alt="MFA QR code"
+              className="rounded-lg border border-border"
+              width={200}
+              height={200}
+            />
+            {secret && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-1">
+                  Or enter the setup key manually:
+                </p>
+                <code className="text-xs font-mono bg-muted px-2 py-1 rounded select-all break-all">
+                  {secret}
+                </code>
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label>Enter the 6-digit code from your app to confirm</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                  placeholder="123456"
+                  className="text-base md:text-sm font-mono w-32"
+                  maxLength={6}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                />
+                <Button
+                  onClick={() => void verifyEnrollment()}
+                  disabled={totpCode.length !== 6 || verifying}
+                >
+                  {verifying ? "Verifying…" : "Verify & enable"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setQrUri(null);
+                    setSecret(null);
+                    setPendingFactorId(null);
+                    setTotpCode("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
