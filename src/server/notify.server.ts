@@ -4,7 +4,19 @@ import { fireWebhooks } from "@/server/webhook-fire.server";
 
 interface NotifRow {
   user_id: string;
-  type: "info" | "warning" | "success" | "error";
+  type:
+    | "info"
+    | "warning"
+    | "task_assigned"
+    | "task_due_soon"
+    | "task_overdue"
+    | "flag"
+    | "kpi_reminder"
+    | "clock_reminder"
+    | "direct_message"
+    | "group_message"
+    | "mention"
+    | "announcement";
   title: string;
   message: string;
 }

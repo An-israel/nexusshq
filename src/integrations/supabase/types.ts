@@ -2368,36 +2368,30 @@ export type Database = {
       }
       subscriptions: {
         Row: {
-          billing_interval: string
           created_at: string
           current_period_end: string | null
           current_period_start: string | null
           id: string
-          paystack_reference: string | null
           plan: Database["public"]["Enums"]["workspace_plan"]
           status: string
           trial_ends_at: string | null
           workspace_id: string
         }
         Insert: {
-          billing_interval?: string
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          paystack_reference?: string | null
           plan: Database["public"]["Enums"]["workspace_plan"]
           status?: string
           trial_ends_at?: string | null
           workspace_id: string
         }
         Update: {
-          billing_interval?: string
           created_at?: string
           current_period_end?: string | null
           current_period_start?: string | null
           id?: string
-          paystack_reference?: string | null
           plan?: Database["public"]["Enums"]["workspace_plan"]
           status?: string
           trial_ends_at?: string | null
@@ -3310,7 +3304,7 @@ export type Database = {
       task_status: "todo" | "in_progress" | "completed" | "overdue"
       task_type: "daily" | "weekly" | "one_time"
       workspace_member_role: "owner" | "admin" | "manager" | "employee"
-      workspace_plan: "starter" | "growth" | "business" | "enterprise" | "basic" | "unlimited"
+      workspace_plan: "starter" | "growth" | "business" | "enterprise"
       workspace_role: "owner" | "admin" | "manager" | "employee"
     }
     CompositeTypes: {
@@ -3483,7 +3477,7 @@ export const Constants = {
       task_status: ["todo", "in_progress", "completed", "overdue"],
       task_type: ["daily", "weekly", "one_time"],
       workspace_member_role: ["owner", "admin", "manager", "employee"],
-      workspace_plan: ["starter", "growth", "business", "enterprise", "basic", "unlimited"],
+      workspace_plan: ["starter", "growth", "business", "enterprise"],
       workspace_role: ["owner", "admin", "manager", "employee"],
     },
   },

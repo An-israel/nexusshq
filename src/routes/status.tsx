@@ -25,13 +25,7 @@ function StatusIndicator({ status }: { status: "ok" | "error" | "loading" }) {
   );
 }
 
-function StatusRow({
-  label,
-  status,
-}: {
-  label: string;
-  status: "ok" | "error" | "loading";
-}) {
+function StatusRow({ label, status }: { label: string; status: "ok" | "error" | "loading" }) {
   return (
     <div className="flex items-center justify-between rounded-lg border border-border bg-card px-5 py-4">
       <span className="text-sm font-medium text-foreground">{label}</span>
@@ -70,11 +64,7 @@ function StatusPage() {
 
   const overallOk = !fetchError && health?.status === "ok";
   const dbStatus = fetchError ? "error" : health ? health.services.database : "loading";
-  const apiStatus: "ok" | "error" | "loading" = fetchError
-    ? "error"
-    : health
-      ? "ok"
-      : "loading";
+  const apiStatus: "ok" | "error" | "loading" = fetchError ? "error" : health ? "ok" : "loading";
 
   return (
     <div className="flex min-h-screen flex-col bg-background px-4 py-16">

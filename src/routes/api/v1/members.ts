@@ -12,7 +12,10 @@ export const Route = createFileRoute("/api/v1/members")({
 
         const url = new URL(request.url);
         const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
-        const perPage = Math.min(100, Math.max(1, parseInt(url.searchParams.get("per_page") ?? "50")));
+        const perPage = Math.min(
+          100,
+          Math.max(1, parseInt(url.searchParams.get("per_page") ?? "50")),
+        );
         const from = (page - 1) * perPage;
 
         const { data: members, count } = await supabaseAdmin

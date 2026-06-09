@@ -34,10 +34,7 @@ export async function sendWebPushToUser(userId: string, payload: PushPayload): P
       const status = (err as { statusCode?: number }).statusCode;
       if (status === 410 || status === 404) {
         // Subscription expired — clean it up
-        void supabaseAdmin
-          .from("push_subscriptions")
-          .delete()
-          .eq("endpoint", sub.endpoint);
+        void supabaseAdmin.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
       }
     }
   }

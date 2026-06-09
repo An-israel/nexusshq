@@ -1,4 +1,11 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts, useRouterState } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+  useRouterState,
+} from "@tanstack/react-router";
 import { useEffect } from "react";
 import * as Sentry from "@sentry/react";
 import { AuthProvider, useAuth } from "@/lib/auth-context";
@@ -227,14 +234,14 @@ function GrowthUserScope() {
     if (!CRISP_ID || typeof window === "undefined") return;
     // Lazily inject the Crisp loader the first time we have user context.
     if (!("$crisp" in window)) {
-      (window as Record<string, unknown>).$crisp = [];
-      (window as Record<string, unknown>).CRISP_WEBSITE_ID = CRISP_ID;
+      (window as unknown as Record<string, unknown>).$crisp = [];
+      (window as unknown as Record<string, unknown>).CRISP_WEBSITE_ID = CRISP_ID;
       const s = document.createElement("script");
       s.src = "https://client.crisp.chat/l.js";
       s.async = true;
       document.head.appendChild(s);
     }
-    const $crisp = (window as Record<string, unknown[]>).$crisp as unknown[][];
+    const $crisp = (window as unknown as Record<string, unknown[]>).$crisp as unknown[][];
     if (user?.email) $crisp.push(["set", "user:email", [user.email]]);
     if (profile?.full_name) $crisp.push(["set", "user:nickname", [profile.full_name]]);
   }, [user?.email, profile?.full_name]);

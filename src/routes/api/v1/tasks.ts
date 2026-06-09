@@ -14,17 +14,28 @@ export const Route = createFileRoute("/api/v1/tasks")({
 
         const url = new URL(request.url);
         const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
-        const perPage = Math.min(100, Math.max(1, parseInt(url.searchParams.get("per_page") ?? "50")));
+        const perPage = Math.min(
+          100,
+          Math.max(1, parseInt(url.searchParams.get("per_page") ?? "50")),
+        );
         const from = (page - 1) * perPage;
 
         let query = supabaseAdmin
           .from("tasks")
-          .select("id, title, description, status, priority, due_date, assigned_to, task_type, progress_percent, created_at", { count: "exact" })
+          .select(
+            "id, title, description, status, priority, due_date, assigned_to, task_type, progress_percent, created_at",
+            { count: "exact" },
+          )
           .eq("workspace_id", ctx.workspaceId)
           .range(from, from + perPage - 1)
           .order("due_date");
 
-        const status = url.searchParams.get("status");
+        const status = url.searchParams.get("status") as
+          | "todo"
+          | "in_progress"
+          | "completed"
+          | "overdue"
+          | null;
         if (status) query = query.eq("status", status);
 
         const assignedTo = url.searchParams.get("assigned_to");
@@ -47,7 +58,7 @@ export const Route = createFileRoute("/api/v1/tasks")({
           assigned_to: string;
           due_date: string;
           priority?: "low" | "medium" | "high" | "urgent";
-          task_type?: "daily" | "one_time" | "weekly" | "monthly";
+          task_type?: "daily" | "one_time" | "weekly";
         };
         try {
           body = await request.json();

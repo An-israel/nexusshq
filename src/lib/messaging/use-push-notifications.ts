@@ -17,15 +17,20 @@ async function registerWebPushSubscription(userId: string): Promise<void> {
   try {
     const registration = await navigator.serviceWorker.ready;
     const existing = await registration.pushManager.getSubscription();
-    const sub = existing ?? (await registration.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
-    }));
+    const sub =
+      existing ??
+      (await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY) as Uint8Array<ArrayBuffer>,
+      }));
 
     const json = sub.toJSON();
     await fetch("/api/push/subscribe", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? ""}` },
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token ?? ""}`,
+      },
       body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
     });
   } catch {

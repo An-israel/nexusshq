@@ -11,7 +11,8 @@ export interface ApiKeyContext {
 export async function requireApiKey(request: Request): Promise<ApiKeyContext | Response> {
   const raw =
     request.headers.get("x-api-key") ??
-    (/^Bearer\s+(nhq_.+)$/i.exec(request.headers.get("authorization") ?? "")?.[1] ?? null);
+    /^Bearer\s+(nhq_.+)$/i.exec(request.headers.get("authorization") ?? "")?.[1] ??
+    null;
 
   if (!raw) {
     return Response.json({ error: "Missing API key" }, { status: 401 });

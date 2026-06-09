@@ -12,15 +12,17 @@ export const Route = createFileRoute("/api/v1/attendance")({
 
         const url = new URL(request.url);
         const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
-        const perPage = Math.min(100, Math.max(1, parseInt(url.searchParams.get("per_page") ?? "50")));
+        const perPage = Math.min(
+          100,
+          Math.max(1, parseInt(url.searchParams.get("per_page") ?? "50")),
+        );
         const from = (page - 1) * perPage;
 
         let query = supabaseAdmin
           .from("attendance")
-          .select(
-            "id, user_id, date, clock_in, clock_out, status, total_minutes, created_at",
-            { count: "exact" },
-          )
+          .select("id, user_id, date, clock_in, clock_out, status, total_minutes, created_at", {
+            count: "exact",
+          })
           .eq("workspace_id", ctx.workspaceId)
           .range(from, from + perPage - 1)
           .order("date", { ascending: false });
