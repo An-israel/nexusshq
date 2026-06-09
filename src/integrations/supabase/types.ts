@@ -14,48 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      api_keys: {
-        Row: {
-          id: string
-          workspace_id: string
-          name: string
-          key_hash: string
-          key_prefix: string
-          scopes: string[]
-          created_by: string | null
-          last_used_at: string | null
-          expires_at: string | null
-          is_active: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          workspace_id: string
-          name: string
-          key_hash: string
-          key_prefix: string
-          scopes?: string[]
-          created_by?: string | null
-          last_used_at?: string | null
-          expires_at?: string | null
-          is_active?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          workspace_id?: string
-          name?: string
-          key_hash?: string
-          key_prefix?: string
-          scopes?: string[]
-          created_by?: string | null
-          last_used_at?: string | null
-          expires_at?: string | null
-          is_active?: boolean
-          created_at?: string
-        }
-        Relationships: []
-      }
       announcements: {
         Row: {
           author_id: string | null
@@ -151,54 +109,6 @@ export type Database = {
           },
           {
             foreignKeyName: "attendance_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      audit_events: {
-        Row: {
-          action: string
-          actor_id: string | null
-          created_at: string
-          id: string
-          metadata: Json
-          target_id: string | null
-          target_type: string | null
-          workspace_id: string
-        }
-        Insert: {
-          action: string
-          actor_id?: string | null
-          created_at?: string
-          id?: string
-          metadata?: Json
-          target_id?: string | null
-          target_type?: string | null
-          workspace_id: string
-        }
-        Update: {
-          action?: string
-          actor_id?: string | null
-          created_at?: string
-          id?: string
-          metadata?: Json
-          target_id?: string | null
-          target_type?: string | null
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "audit_events_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "audit_events_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -1086,68 +996,6 @@ export type Database = {
           },
           {
             foreignKeyName: "group_messages_workspace_id_fkey"
-            columns: ["workspace_id"]
-            isOneToOne: false
-            referencedRelation: "workspaces"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      invoices: {
-        Row: {
-          amount_ngn: number
-          billing_interval: string
-          customer_email: string | null
-          customer_name: string | null
-          id: string
-          invoice_number: string
-          issued_at: string
-          paystack_reference: string | null
-          period_end: string | null
-          period_start: string | null
-          plan: string
-          status: string
-          subscription_id: string | null
-          vat_ngn: number
-          workspace_id: string
-        }
-        Insert: {
-          amount_ngn: number
-          billing_interval?: string
-          customer_email?: string | null
-          customer_name?: string | null
-          id?: string
-          invoice_number: string
-          issued_at?: string
-          paystack_reference?: string | null
-          period_end?: string | null
-          period_start?: string | null
-          plan: string
-          status?: string
-          subscription_id?: string | null
-          vat_ngn?: number
-          workspace_id: string
-        }
-        Update: {
-          amount_ngn?: number
-          billing_interval?: string
-          customer_email?: string | null
-          customer_name?: string | null
-          id?: string
-          invoice_number?: string
-          issued_at?: string
-          paystack_reference?: string | null
-          period_end?: string | null
-          period_start?: string | null
-          plan?: string
-          status?: string
-          subscription_id?: string | null
-          vat_ngn?: number
-          workspace_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "invoices_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -2098,41 +1946,6 @@ export type Database = {
           },
         ]
       }
-      push_subscriptions: {
-        Row: {
-          id: string
-          user_id: string
-          endpoint: string
-          p256dh: string
-          auth: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          endpoint: string
-          p256dh: string
-          auth: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          endpoint?: string
-          p256dh?: string
-          auth?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2998,81 +2811,6 @@ export type Database = {
           },
         ]
       }
-      user_sessions: {
-        Row: {
-          id: string
-          user_id: string
-          workspace_id: string
-          session_id: string
-          user_agent: string | null
-          device_name: string | null
-          created_at: string
-          last_active_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          workspace_id: string
-          session_id: string
-          user_agent?: string | null
-          device_name?: string | null
-          created_at?: string
-          last_active_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          workspace_id?: string
-          session_id?: string
-          user_agent?: string | null
-          device_name?: string | null
-          created_at?: string
-          last_active_at?: string
-        }
-        Relationships: []
-      }
-      webhook_endpoints: {
-        Row: {
-          id: string
-          workspace_id: string
-          name: string
-          url: string
-          events: string[]
-          secret: string
-          is_active: boolean
-          created_by: string | null
-          created_at: string
-          last_fired_at: string | null
-          last_error: string | null
-        }
-        Insert: {
-          id?: string
-          workspace_id: string
-          name: string
-          url: string
-          events?: string[]
-          secret: string
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          last_fired_at?: string | null
-          last_error?: string | null
-        }
-        Update: {
-          id?: string
-          workspace_id?: string
-          name?: string
-          url?: string
-          events?: string[]
-          secret?: string
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          last_fired_at?: string | null
-          last_error?: string | null
-        }
-        Relationships: []
-      }
       workspaces: {
         Row: {
           clock_in_radius_m: number
@@ -3207,16 +2945,6 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
-      log_audit_event: {
-        Args: {
-          _workspace_id: string
-          _action: string
-          _target_type?: string
-          _target_id?: string
-          _metadata?: Json
-        }
-        Returns: string
-      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3294,7 +3022,6 @@ export type Database = {
         | "group_message"
         | "mention"
         | "info"
-        | "announcement"
       review_rating:
         | "exceeds"
         | "meets"
@@ -3465,7 +3192,6 @@ export const Constants = {
         "group_message",
         "mention",
         "info",
-        "announcement",
       ],
       review_rating: [
         "exceeds",
