@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Loader2, Camera, Save, Lock } from "lucide-react";
+import { Loader2, Camera, Save, Lock, CalendarDays, Copy, RefreshCw } from "lucide-react";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/profile")({
   component: ProfilePage,
@@ -76,6 +76,7 @@ function ProfilePage() {
       <AvatarSection user={user} profile={profile} refresh={refresh} />
       <ProfileDetailsSection user={user} profile={profile} refresh={refresh} />
       <StatusSection user={user} />
+      <CalendarFeedSection />
       <SecuritySection />
     </div>
   );
@@ -509,6 +510,87 @@ function SecuritySection() {
             {saving ? "Updating…" : "Update password"}
           </Button>
         </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ─── Section 5: Calendar Feed ────────────────────────────────────────── */
+
+function CalendarFeedSection() {
+  const [feedUrl, setFeedUrl] = React.useState<string | null>(null);
+  const [loading, setLoading] = React.useState(false);
+
+  async function generateFeed(rotate = false) {
+    setLoading(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      const res = await fetch("/api/calendar", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.session?.access_token ?? ""}` },
+      });
+      if (!res.ok) throw new Error("Failed to generate calendar link");
+      const json = (await res.json()) as { url: string };
+      setFeedUrl(json.url);
+      if (rotate) toast.success("Calendar link regenerated.");
+    } catch {
+      toast.error("Could not generate calendar link.");
+    }
+    setLoading(false);
+  }
+
+  function copyUrl() {
+    if (!feedUrl) return;
+    void navigator.clipboard.writeText(feedUrl);
+    toast.success("Copied to clipboard.");
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <CalendarDays className="h-4 w-4" />
+          Calendar Feed
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          Subscribe to your tasks and leave requests in Google Calendar, Apple Calendar, or any
+          iCal-compatible app.
+        </p>
+
+        {feedUrl ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <Input
+                readOnly
+                value={feedUrl}
+                className="font-mono text-xs"
+                onClick={(e) => (e.target as HTMLInputElement).select()}
+              />
+              <Button size="icon" variant="outline" onClick={copyUrl} aria-label="Copy URL">
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Paste this URL into your calendar app. The feed updates automatically.
+            </p>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => void generateFeed(true)}
+              disabled={loading}
+            >
+              <RefreshCw className="mr-1.5 h-3.5 w-3.5" />
+              Regenerate link
+            </Button>
+          </div>
+        ) : (
+          <Button onClick={() => void generateFeed()} disabled={loading}>
+            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarDays className="mr-2 h-4 w-4" />}
+            {loading ? "Generating…" : "Get calendar link"}
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

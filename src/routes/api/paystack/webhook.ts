@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { createNotifications } from "@/server/notify.server";
 import type { Database } from "@/integrations/supabase/types";
 
 type WorkspacePlan = Database["public"]["Enums"]["workspace_plan"];
@@ -264,5 +265,5 @@ async function notifyAdmins(
     user_id: r.user_id,
     ...notif,
   }));
-  if (notifs.length) await supabaseAdmin.from("notifications").insert(notifs);
+  if (notifs.length) await createNotifications(notifs);
 }

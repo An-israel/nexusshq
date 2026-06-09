@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verifyCronRequest } from "@/server/cron-auth.server";
+import { createNotifications } from "@/server/notify.server";
 
 // Called by pg_cron daily at 02:00 UTC.
 // Marks expired active subscriptions as past_due, and downgrades workspaces
@@ -86,5 +87,5 @@ async function notifyWorkspaceAdmins(
     type: "warning" as const,
     ...notif,
   }));
-  if (notifs.length) await supabaseAdmin.from("notifications").insert(notifs);
+  if (notifs.length) await createNotifications(notifs);
 }
