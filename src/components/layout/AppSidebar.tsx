@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   CheckSquare,
   Users,
-  Target,
   Clock,
   Bell,
   Settings,
@@ -16,6 +15,7 @@ import {
   Megaphone,
   GitBranch,
   ClipboardList,
+  RefreshCw,
   Briefcase,
   Flag,
   BarChart3,
@@ -49,83 +49,172 @@ interface NavItem {
   flagKey?: string;
 }
 
-const NAV: NavItem[] = [
+interface NavGroup {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  items: NavItem[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
   {
-    slug: "dashboard",
+    id: "dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
-    roles: ["admin", "manager", "employee"],
+    items: [
+      {
+        slug: "dashboard",
+        label: "Overview",
+        icon: LayoutDashboard,
+        roles: ["admin", "manager", "employee"],
+      },
+      {
+        slug: "announcements",
+        label: "Announcements",
+        icon: Megaphone,
+        roles: ["admin", "manager", "employee"],
+        flagKey: "announcements",
+      },
+      {
+        slug: "notifications",
+        label: "Notifications",
+        icon: Bell,
+        roles: ["admin", "manager", "employee"],
+      },
+      {
+        slug: "standups",
+        label: "Standups",
+        icon: ClipboardList,
+        roles: ["admin", "manager", "employee"],
+        flagKey: "standups",
+      },
+    ],
   },
   {
-    slug: "standups",
-    label: "Standups",
-    icon: ClipboardList,
-    roles: ["admin", "manager", "employee"],
-    flagKey: "standups",
-  },
-  { slug: "tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
-  {
-    slug: "reviews",
-    label: "Reviews",
-    icon: Star,
-    roles: ["admin", "manager", "employee"],
-    flagKey: "reviews",
-  },
-  { slug: "attendance", label: "Attendance", icon: Clock, roles: ["admin", "manager", "employee"] },
-  {
-    slug: "announcements",
-    label: "Announcements",
-    icon: Megaphone,
-    roles: ["admin", "manager", "employee"],
-    flagKey: "announcements",
-  },
-  {
-    slug: "org-chart",
-    label: "Org Chart",
-    icon: GitBranch,
-    roles: ["admin", "manager", "employee"],
-    flagKey: "org-chart",
-  },
-  {
-    slug: "okrs",
-    label: "Goals & KPIs",
-    icon: Flag,
-    roles: ["admin", "manager", "employee"],
-    flagKey: "okrs",
-  },
-  {
-    slug: "notifications",
-    label: "Notifications",
-    icon: Bell,
-    roles: ["admin", "manager", "employee"],
-  },
-  { slug: "settings", label: "Settings", icon: Settings, roles: ["admin", "manager", "employee"] },
-  { slug: "team", label: "Team", icon: Users, roles: ["admin", "manager"] },
-  {
-    slug: "team-board",
-    label: "Task Board",
-    icon: Kanban,
-    roles: ["admin", "manager"],
-    flagKey: "team-board",
+    id: "work",
+    label: "Work",
+    icon: CheckSquare,
+    items: [
+      {
+        slug: "tasks",
+        label: "Tasks",
+        icon: CheckSquare,
+        roles: ["admin", "manager", "employee"],
+      },
+      {
+        slug: "team-board",
+        label: "Task Board",
+        icon: Kanban,
+        roles: ["admin", "manager"],
+        flagKey: "team-board",
+      },
+      {
+        slug: "recurring-tasks",
+        label: "Recurring Tasks",
+        icon: RefreshCw,
+        roles: ["admin", "manager"],
+        flagKey: "recurring-tasks",
+      },
+      {
+        slug: "client-projects",
+        label: "Client Projects",
+        icon: Briefcase,
+        roles: ["admin", "manager"],
+        flagKey: "client-projects",
+      },
+      {
+        slug: "reviews",
+        label: "Reviews",
+        icon: Star,
+        roles: ["admin", "manager", "employee"],
+        flagKey: "reviews",
+      },
+    ],
   },
   {
-    slug: "client-projects",
-    label: "Client Projects",
-    icon: Briefcase,
-    roles: ["admin", "manager"],
-    flagKey: "client-projects",
+    id: "team",
+    label: "Team",
+    icon: Users,
+    items: [
+      {
+        slug: "team",
+        label: "Members",
+        icon: Users,
+        roles: ["admin", "manager"],
+      },
+      {
+        slug: "org-chart",
+        label: "Org Chart",
+        icon: GitBranch,
+        roles: ["admin", "manager", "employee"],
+        flagKey: "org-chart",
+      },
+      {
+        slug: "live",
+        label: "Live",
+        icon: Radio,
+        roles: ["admin", "manager"],
+      },
+      {
+        slug: "attendance",
+        label: "Attendance",
+        icon: Clock,
+        roles: ["admin", "manager", "employee"],
+      },
+    ],
   },
-  { slug: "live", label: "Live", icon: Radio, roles: ["admin", "manager"] },
   {
-    slug: "reports",
-    label: "Reports",
+    id: "performance",
+    label: "Performance",
     icon: BarChart3,
-    roles: ["admin", "manager"],
-    flagKey: "reports",
+    items: [
+      {
+        slug: "reports",
+        label: "Reports",
+        icon: BarChart3,
+        roles: ["admin", "manager"],
+        flagKey: "reports",
+      },
+      {
+        slug: "okrs",
+        label: "Goals & KPIs",
+        icon: Flag,
+        roles: ["admin", "manager", "employee"],
+        flagKey: "okrs",
+      },
+      {
+        slug: "burnout",
+        label: "Wellbeing",
+        icon: Brain,
+        roles: ["admin", "manager"],
+      },
+    ],
   },
-  { slug: "burnout", label: "Wellbeing", icon: Brain, roles: ["admin", "manager"] },
-  { slug: "billing", label: "Billing", icon: CreditCard, roles: ["admin"] },
-  { slug: "profile", label: "Profile", icon: UserCircle, roles: ["admin", "manager", "employee"] },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: Settings,
+    items: [
+      {
+        slug: "settings",
+        label: "Settings",
+        icon: Settings,
+        roles: ["admin", "manager", "employee"],
+      },
+      {
+        slug: "profile",
+        label: "Profile",
+        icon: UserCircle,
+        roles: ["admin", "manager", "employee"],
+      },
+      {
+        slug: "billing",
+        label: "Billing",
+        icon: CreditCard,
+        roles: ["admin"],
+      },
+    ],
+  },
 ];
 
 export function AppSidebar({
@@ -187,15 +276,56 @@ export function AppSidebar({
 
   const { flags } = useFeatureFlags(workspace?.id ?? null);
 
-  const items = (role ? NAV.filter((n) => n.roles.includes(role)) : NAV).filter(
-    (n) => !n.flagKey || flags[n.flagKey] !== false || role === "admin",
-  );
-
   const href = (slug: string) => `/${workspaceSlug}/${slug}`;
   const isActive = (slug: string) => {
     const path = href(slug);
     return pathname === path || (slug !== "dashboard" && pathname.startsWith(path));
   };
+
+  // Filter each group's items by role and feature flags, then drop empty groups
+  const visibleGroups = NAV_GROUPS.map((group) => ({
+    ...group,
+    items: group.items.filter(
+      (item) =>
+        (!role || item.roles.includes(role)) &&
+        (!item.flagKey || flags[item.flagKey] !== false || role === "admin"),
+    ),
+  })).filter((group) => group.items.length > 0);
+
+  // Which group contains the currently active route
+  const activeGroupId = React.useMemo(() => {
+    for (const group of visibleGroups) {
+      if (group.items.some((item) => isActive(item.slug))) return group.id;
+    }
+    return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
+
+  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(
+    () => new Set(activeGroupId ? [activeGroupId] : ["dashboard"]),
+  );
+
+  // Auto-expand when navigating to a new group
+  React.useEffect(() => {
+    if (activeGroupId) {
+      setExpandedGroups((prev) => {
+        if (prev.has(activeGroupId)) return prev;
+        return new Set([...prev, activeGroupId]);
+      });
+    }
+  }, [activeGroupId]);
+
+  function toggleGroup(id: string) {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }
 
   return (
     <aside
@@ -248,26 +378,105 @@ export function AppSidebar({
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 space-y-1 overflow-y-auto px-2 py-4">
-        {items.map((item) => {
-          const Icon = item.icon;
-          const active = isActive(item.slug);
+      <nav className="flex-1 space-y-0.5 overflow-y-auto px-2 py-4">
+        {visibleGroups.map((group) => {
+          const GroupIcon = group.icon;
+          const groupHasActive = group.items.some((item) => isActive(item.slug));
+          const isExpanded = expandedGroups.has(group.id);
+
+          if (collapsed) {
+            // Collapsed: icon button → flyout dropdown to the right
+            return (
+              <DropdownMenu key={group.id}>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className={cn(
+                      "flex w-full items-center justify-center rounded-lg p-2.5 transition-colors",
+                      groupHasActive
+                        ? "bg-primary/15 text-primary"
+                        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                    )}
+                    title={group.label}
+                  >
+                    <GroupIcon className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="right" align="start" className="w-48">
+                  <p className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                    {group.label}
+                  </p>
+                  <DropdownMenuSeparator />
+                  {group.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    const active = isActive(item.slug);
+                    return (
+                      <DropdownMenuItem key={item.slug} asChild>
+                        <Link
+                          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                          to={href(item.slug) as any}
+                          className={cn(
+                            "flex cursor-pointer items-center gap-2",
+                            active && "text-primary",
+                          )}
+                        >
+                          <ItemIcon className="h-4 w-4 shrink-0" />
+                          {item.label}
+                        </Link>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            );
+          }
+
+          // Expanded sidebar: collapsible group with sub-items
           return (
-            <Link
-              key={item.slug}
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              to={href(item.slug) as any}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
-                active
-                  ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:bg-accent hover:text-foreground",
+            <div key={group.id}>
+              <button
+                onClick={() => toggleGroup(group.id)}
+                className={cn(
+                  "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors",
+                  groupHasActive
+                    ? "text-primary"
+                    : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                )}
+              >
+                <GroupIcon className="h-4 w-4 shrink-0" />
+                <span className="flex-1 text-left font-medium">{group.label}</span>
+                <ChevronRight
+                  className={cn(
+                    "h-3.5 w-3.5 shrink-0 transition-transform duration-150",
+                    isExpanded && "rotate-90",
+                  )}
+                />
+              </button>
+
+              {isExpanded && (
+                <div className="mb-1 ml-3 mt-0.5 space-y-0.5 border-l border-border pl-3">
+                  {group.items.map((item) => {
+                    const ItemIcon = item.icon;
+                    const active = isActive(item.slug);
+                    return (
+                      <Link
+                        key={item.slug}
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                        to={href(item.slug) as any}
+                        className={cn(
+                          "flex items-center gap-3 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                          active
+                            ? "bg-primary/15 text-primary"
+                            : "text-muted-foreground hover:bg-accent hover:text-foreground",
+                        )}
+                      >
+                        <ItemIcon className="h-3.5 w-3.5 shrink-0" />
+                        <span>{item.label}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
               )}
-              title={collapsed ? item.label : undefined}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
+            </div>
           );
         })}
       </nav>
@@ -292,8 +501,6 @@ export function AppSidebar({
                   className="flex items-center justify-between gap-2 cursor-pointer"
                   onClick={() => {
                     localStorage.setItem("nexus_active_workspace", ws.slug);
-                    // Hard redirect so the WorkspaceProvider fully reinitialises
-                    // with the new workspace — soft navigate() leaves stale context.
                     window.location.href = `/${ws.slug}/dashboard`;
                   }}
                 >
