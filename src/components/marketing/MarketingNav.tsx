@@ -1,5 +1,6 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
+import nexxosGlyph from "@/assets/brand/nexxos-glyph-light.svg.asset.json";
 import {
   Zap,
   ChevronDown,
