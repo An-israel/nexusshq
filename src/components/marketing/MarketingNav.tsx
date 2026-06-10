@@ -407,9 +407,7 @@ export function MarketingNav() {
         <div className="fixed inset-0 z-50 bg-[#0A0A0A] flex flex-col overflow-y-auto">
           <div className="flex items-center justify-between px-6 py-4 border-b border-[#1E1E1E]">
             <Link to="/" className="flex items-center gap-2" onClick={() => setMobileOpen(false)}>
-              <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-white">
-                <Zap className="h-4 w-4" />
-              </div>
+              <img src={nexxosGlyph.url} alt="" className="h-7 w-7" />
               <span className="text-[15px] font-semibold text-white tracking-tight">Nexxos HQ</span>
             </Link>
             <button
