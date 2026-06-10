@@ -13,7 +13,10 @@ function icsDate(dateStr: string): string {
 }
 
 function icsDateTime(isoStr: string): string {
-  return isoStr.replace(/[-:]/g, "").replace(/\.\d{3}/, "").replace("Z", "Z");
+  return isoStr
+    .replace(/[-:]/g, "")
+    .replace(/\.\d{3}/, "")
+    .replace("Z", "Z");
 }
 
 function escapeIcs(str: string): string {

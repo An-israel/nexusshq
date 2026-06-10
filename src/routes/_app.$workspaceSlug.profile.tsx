@@ -587,7 +587,11 @@ function CalendarFeedSection() {
           </div>
         ) : (
           <Button onClick={() => void generateFeed()} disabled={loading}>
-            {loading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CalendarDays className="mr-2 h-4 w-4" />}
+            {loading ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <CalendarDays className="mr-2 h-4 w-4" />
+            )}
             {loading ? "Generating…" : "Get calendar link"}
           </Button>
         )}

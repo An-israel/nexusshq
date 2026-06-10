@@ -35,8 +35,7 @@ export async function assertCallerIsAdmin(callerId: string, callerClient: DbClie
       .eq("is_active", true)
       .in("role", ["owner", "admin"]),
   ]);
-  const hasAdmin =
-    (rolesRes.data?.length ?? 0) > 0 || (memberRes.data?.length ?? 0) > 0;
+  const hasAdmin = (rolesRes.data?.length ?? 0) > 0 || (memberRes.data?.length ?? 0) > 0;
   if (!hasAdmin) throw new Error("Forbidden: admin role required");
 }
 
@@ -55,8 +54,7 @@ export async function assertCallerIsManagerOrAdmin(callerId: string, callerClien
       .eq("is_active", true)
       .in("role", ["owner", "admin", "manager"]),
   ]);
-  const hasRole =
-    (rolesRes.data?.length ?? 0) > 0 || (memberRes.data?.length ?? 0) > 0;
+  const hasRole = (rolesRes.data?.length ?? 0) > 0 || (memberRes.data?.length ?? 0) > 0;
   if (!hasRole) throw new Error("Forbidden: manager or admin role required");
 }
 
@@ -126,7 +124,11 @@ export async function inviteEmployee(input: InviteEmployeeInput) {
 }
 
 // Uses admin client — permission is already validated by assertCallerIsAdmin upstream.
-export async function setEmployeeActive(userId: string, isActive: boolean, _callerClient: DbClient) {
+export async function setEmployeeActive(
+  userId: string,
+  isActive: boolean,
+  _callerClient: DbClient,
+) {
   const adminClient = requireAdminClient();
   const { error } = await adminClient
     .from("profiles")

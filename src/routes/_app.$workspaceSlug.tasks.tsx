@@ -341,7 +341,13 @@ function TasksPage() {
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={CheckSquare}
-              title={filter === "completed" ? "No completed tasks" : filter === "overdue" ? "No overdue tasks" : "No tasks yet"}
+              title={
+                filter === "completed"
+                  ? "No completed tasks"
+                  : filter === "overdue"
+                    ? "No overdue tasks"
+                    : "No tasks yet"
+              }
               description={
                 filter === "completed"
                   ? "Completed tasks will appear here."
