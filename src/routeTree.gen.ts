@@ -1569,18 +1569,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronSubscriptionCheckRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/cron/message-email': {
-      id: '/api/public/cron/message-email'
-      path: '/api/public/cron/message-email'
-      fullPath: '/api/public/cron/message-email'
-      preLoaderRoute: typeof ApiPublicCronMessageEmailRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/cron/notification-email': {
       id: '/api/public/cron/notification-email'
       path: '/api/public/cron/notification-email'
       fullPath: '/api/public/cron/notification-email'
       preLoaderRoute: typeof ApiPublicCronNotificationEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/message-email': {
+      id: '/api/public/cron/message-email'
+      path: '/api/public/cron/message-email'
+      fullPath: '/api/public/cron/message-email'
+      preLoaderRoute: typeof ApiPublicCronMessageEmailRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/cron/late-task-report': {
