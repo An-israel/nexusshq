@@ -1,20 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="112" fill="#0F0F0F"/>
-  <rect width="512" height="512" rx="112" fill="url(#grad)" opacity="0.15"/>
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#6366f1"/>
-      <stop offset="100%" style="stop-color:#8b5cf6"/>
-    </linearGradient>
-  </defs>
-  <rect x="48" y="48" width="416" height="416" rx="80" fill="#6366f1" opacity="0.12"/>
-  <text
-    x="256" y="340"
-    font-family="Inter, system-ui, -apple-system, sans-serif"
-    font-size="260"
-    font-weight="800"
-    fill="white"
-    text-anchor="middle"
-    letter-spacing="-8"
-  >N</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 1280">
+  <rect width="1280" height="1280" rx="280" fill="#0A0A0F"/>
+  <g transform="translate(100 100)">
+    <path d="M540.459 0C838.946 0 1080.92 241.972 1080.92 540.459C1080.92 827.379 857.337 1062.08 574.896 1079.84L1029.35 413.883H775.528L347.181 1045.33C312.804 1032.16 280.116 1015.58 249.529 996.01L646.779 413.883H392.958L97.2393 849.814C35.9547 762.174 3.61906e-05 655.516 0 540.459C0 241.972 241.972 6.60083e-05 540.459 0Z" fill="white"/>
+  </g>
 </svg>

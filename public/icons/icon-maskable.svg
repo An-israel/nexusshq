@@ -1,14 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Full bleed background for maskable safe zone -->
-  <rect width="512" height="512" fill="#0F0F0F"/>
-  <rect width="512" height="512" fill="#6366f1" opacity="0.12"/>
-  <text
-    x="256" y="340"
-    font-family="Inter, system-ui, -apple-system, sans-serif"
-    font-size="260"
-    font-weight="800"
-    fill="white"
-    text-anchor="middle"
-    letter-spacing="-8"
-  >N</text>
+  <rect width="512" height="512" fill="#0A0A0F"/>
+  <g transform="translate(96 96) scale(0.296)">
+    <path d="M540.459 0C838.946 0 1080.92 241.972 1080.92 540.459C1080.92 827.379 857.337 1062.08 574.896 1079.84L1029.35 413.883H775.528L347.181 1045.33C312.804 1032.16 280.116 1015.58 249.529 996.01L646.779 413.883H392.958L97.2393 849.814C35.9547 762.174 3.61906e-05 655.516 0 540.459C0 241.972 241.972 6.60083e-05 540.459 0Z" fill="white"/>
+  </g>
 </svg>
