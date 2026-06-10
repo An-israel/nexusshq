@@ -337,9 +337,7 @@ export function MarketingNav() {
         <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
           {/* LEFT: Logo */}
           <Link to="/" className="flex items-center gap-2 shrink-0">
-            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-blue-600 text-white">
-              <Zap className="h-4 w-4" />
-            </div>
+            <img src={nexxosGlyph.url} alt="" className="h-7 w-7" />
             <span className="text-[15px] font-semibold text-white tracking-tight">Nexxos HQ</span>
           </Link>
 
