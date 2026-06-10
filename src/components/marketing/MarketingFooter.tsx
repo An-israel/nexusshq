@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { Zap, ChevronDown } from "lucide-react";
+import nexxosGlyph from "@/assets/brand/nexxos-glyph-light.svg.asset.json";
 import { openWhatsApp, comingSoon, WHATSAPP_URL } from "@/lib/marketing";
 
 // ── Footer column data ────────────────────────────────────────────────────────
