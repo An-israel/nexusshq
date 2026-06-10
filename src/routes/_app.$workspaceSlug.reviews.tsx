@@ -94,7 +94,9 @@ function ReviewsPage() {
     setInsightLoading(true);
     const subj = profiles[r.user_id];
     try {
-      const { data: { session: _session } } = await supabase.auth.getSession();
+      const {
+        data: { session: _session },
+      } = await supabase.auth.getSession();
       const resp = await fetch("/api/ai", {
         method: "POST",
         headers: {

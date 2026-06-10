@@ -157,7 +157,9 @@ function BurnoutPage() {
         leaveRequests: leavesByUser[e.id] ?? 0,
       }));
 
-      const { data: { session: _session } } = await supabase.auth.getSession();
+      const {
+        data: { session: _session },
+      } = await supabase.auth.getSession();
       const resp = await fetch("/api/ai", {
         method: "POST",
         headers: {

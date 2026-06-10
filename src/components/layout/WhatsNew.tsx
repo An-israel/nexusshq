@@ -98,7 +98,9 @@ export function WhatsNew() {
                 )}
               </div>
               <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{entry.body}</p>
-              <span className="mt-1.5 block text-[10px] text-muted-foreground/50">{entry.date}</span>
+              <span className="mt-1.5 block text-[10px] text-muted-foreground/50">
+                {entry.date}
+              </span>
             </div>
           ))}
         </div>
