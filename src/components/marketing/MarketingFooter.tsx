@@ -313,9 +313,7 @@ export function MarketingFooter() {
         {/* Mobile bottom bar */}
         <div className="md:hidden flex flex-col items-center gap-4 text-center">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white">
-              <Zap className="h-3 w-3" />
-            </div>
+            <img src={nexxosGlyph.url} alt="" className="h-5 w-5" />
             <span className="text-[13px] font-semibold text-white tracking-tight">Nexxos HQ</span>
           </Link>
           <p className="text-xs text-gray-500">© 2026 Nexxos HQ. All rights reserved.</p>
