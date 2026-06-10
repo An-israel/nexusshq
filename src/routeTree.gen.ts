@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as WorkspacesRouteImport } from './routes/workspaces'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SystemStatusRouteImport } from './routes/system-status'
 import { Route as SuperAdminRouteImport } from './routes/super-admin'
 import { Route as StatusRouteImport } from './routes/status'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -19,9 +20,12 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as JoinRouteImport } from './routes/join'
+import { Route as HelpCentreRouteImport } from './routes/help-centre'
 import { Route as CreateWorkspaceRouteImport } from './routes/create-workspace'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as ComingSoonRouteImport } from './routes/coming-soon'
+import { Route as ChangelogRouteImport } from './routes/changelog'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AcceptInviteRouteImport } from './routes/accept-invite'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
@@ -102,6 +106,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SystemStatusRoute = SystemStatusRouteImport.update({
+  id: '/system-status',
+  path: '/system-status',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SuperAdminRoute = SuperAdminRouteImport.update({
   id: '/super-admin',
   path: '/super-admin',
@@ -142,6 +151,11 @@ const JoinRoute = JoinRouteImport.update({
   path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HelpCentreRoute = HelpCentreRouteImport.update({
+  id: '/help-centre',
+  path: '/help-centre',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CreateWorkspaceRoute = CreateWorkspaceRouteImport.update({
   id: '/create-workspace',
   path: '/create-workspace',
@@ -155,6 +169,16 @@ const CookiesRoute = CookiesRouteImport.update({
 const ComingSoonRoute = ComingSoonRouteImport.update({
   id: '/coming-soon',
   path: '/coming-soon',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AcceptInviteRoute = AcceptInviteRouteImport.update({
@@ -537,9 +561,12 @@ const AppWorkspaceSlugMessagesChannelChannelIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/blog': typeof BlogRoute
+  '/changelog': typeof ChangelogRoute
   '/coming-soon': typeof ComingSoonRoute
   '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
+  '/help-centre': typeof HelpCentreRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
@@ -548,6 +575,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
+  '/system-status': typeof SystemStatusRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
@@ -620,9 +648,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accept-invite': typeof AcceptInviteRoute
+  '/blog': typeof BlogRoute
+  '/changelog': typeof ChangelogRoute
   '/coming-soon': typeof ComingSoonRoute
   '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
+  '/help-centre': typeof HelpCentreRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
@@ -631,6 +662,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
+  '/system-status': typeof SystemStatusRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
@@ -705,9 +737,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
   '/accept-invite': typeof AcceptInviteRoute
+  '/blog': typeof BlogRoute
+  '/changelog': typeof ChangelogRoute
   '/coming-soon': typeof ComingSoonRoute
   '/cookies': typeof CookiesRoute
   '/create-workspace': typeof CreateWorkspaceRoute
+  '/help-centre': typeof HelpCentreRoute
   '/join': typeof JoinRoute
   '/login': typeof LoginRoute
   '/pricing': typeof PricingRoute
@@ -716,6 +751,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/status': typeof StatusRoute
   '/super-admin': typeof SuperAdminRoute
+  '/system-status': typeof SystemStatusRoute
   '/terms': typeof TermsRoute
   '/workspaces': typeof WorkspacesRoute
   '/_app/$workspaceSlug': typeof AppWorkspaceSlugRouteWithChildren
@@ -790,9 +826,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/accept-invite'
+    | '/blog'
+    | '/changelog'
     | '/coming-soon'
     | '/cookies'
     | '/create-workspace'
+    | '/help-centre'
     | '/join'
     | '/login'
     | '/pricing'
@@ -801,6 +840,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/status'
     | '/super-admin'
+    | '/system-status'
     | '/terms'
     | '/workspaces'
     | '/$workspaceSlug'
@@ -873,9 +913,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/accept-invite'
+    | '/blog'
+    | '/changelog'
     | '/coming-soon'
     | '/cookies'
     | '/create-workspace'
+    | '/help-centre'
     | '/join'
     | '/login'
     | '/pricing'
@@ -884,6 +927,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/status'
     | '/super-admin'
+    | '/system-status'
     | '/terms'
     | '/workspaces'
     | '/$workspaceSlug'
@@ -957,9 +1001,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_app'
     | '/accept-invite'
+    | '/blog'
+    | '/changelog'
     | '/coming-soon'
     | '/cookies'
     | '/create-workspace'
+    | '/help-centre'
     | '/join'
     | '/login'
     | '/pricing'
@@ -968,6 +1015,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/status'
     | '/super-admin'
+    | '/system-status'
     | '/terms'
     | '/workspaces'
     | '/_app/$workspaceSlug'
@@ -1042,9 +1090,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
   AcceptInviteRoute: typeof AcceptInviteRoute
+  BlogRoute: typeof BlogRoute
+  ChangelogRoute: typeof ChangelogRoute
   ComingSoonRoute: typeof ComingSoonRoute
   CookiesRoute: typeof CookiesRoute
   CreateWorkspaceRoute: typeof CreateWorkspaceRoute
+  HelpCentreRoute: typeof HelpCentreRoute
   JoinRoute: typeof JoinRoute
   LoginRoute: typeof LoginRoute
   PricingRoute: typeof PricingRoute
@@ -1053,6 +1104,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   StatusRoute: typeof StatusRoute
   SuperAdminRoute: typeof SuperAdminRoute
+  SystemStatusRoute: typeof SystemStatusRoute
   TermsRoute: typeof TermsRoute
   WorkspacesRoute: typeof WorkspacesRoute
   ApiAiRoute: typeof ApiAiRoute
@@ -1098,6 +1150,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/system-status': {
+      id: '/system-status'
+      path: '/system-status'
+      fullPath: '/system-status'
+      preLoaderRoute: typeof SystemStatusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/super-admin': {
@@ -1156,6 +1215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/help-centre': {
+      id: '/help-centre'
+      path: '/help-centre'
+      fullPath: '/help-centre'
+      preLoaderRoute: typeof HelpCentreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/create-workspace': {
       id: '/create-workspace'
       path: '/create-workspace'
@@ -1175,6 +1241,20 @@ declare module '@tanstack/react-router' {
       path: '/coming-soon'
       fullPath: '/coming-soon'
       preLoaderRoute: typeof ComingSoonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/accept-invite': {
@@ -1829,9 +1909,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
   AcceptInviteRoute: AcceptInviteRoute,
+  BlogRoute: BlogRoute,
+  ChangelogRoute: ChangelogRoute,
   ComingSoonRoute: ComingSoonRoute,
   CookiesRoute: CookiesRoute,
   CreateWorkspaceRoute: CreateWorkspaceRoute,
+  HelpCentreRoute: HelpCentreRoute,
   JoinRoute: JoinRoute,
   LoginRoute: LoginRoute,
   PricingRoute: PricingRoute,
@@ -1840,6 +1923,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   StatusRoute: StatusRoute,
   SuperAdminRoute: SuperAdminRoute,
+  SystemStatusRoute: SystemStatusRoute,
   TermsRoute: TermsRoute,
   WorkspacesRoute: WorkspacesRoute,
   ApiAiRoute: ApiAiRoute,
