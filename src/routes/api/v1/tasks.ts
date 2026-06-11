@@ -9,7 +9,7 @@ export const Route = createFileRoute("/api/v1/tasks")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const ctx = await requireApiKey(request);
+        const ctx = await requireApiKey(request, "tasks:read");
         if (ctx instanceof Response) return ctx;
 
         const url = new URL(request.url);
@@ -49,7 +49,7 @@ export const Route = createFileRoute("/api/v1/tasks")({
       },
 
       POST: async ({ request }) => {
-        const ctx = await requireApiKey(request);
+        const ctx = await requireApiKey(request, "tasks:write");
         if (ctx instanceof Response) return ctx;
 
         let body: {

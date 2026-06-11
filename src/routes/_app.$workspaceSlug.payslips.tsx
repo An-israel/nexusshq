@@ -58,8 +58,8 @@ function fmtMoney(amt: number, ccy: string) {
 }
 
 function PayslipsPage() {
-  const { user, isAdmin } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceAdmin: isAdmin } = useWorkspace();
   const [payslips, setPayslips] = React.useState<PayslipRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
   const [loading, setLoading] = React.useState(true);

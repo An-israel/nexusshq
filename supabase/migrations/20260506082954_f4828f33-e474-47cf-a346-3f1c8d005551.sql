@@ -73,7 +73,9 @@ CREATE POLICY "managers review requests" ON public.leave_requests
   WITH CHECK (has_role(auth.uid(),'manager') OR has_role(auth.uid(),'admin'));
 
 -- init_leave_balances RPC
-CREATE OR REPLACE FUNCTION public.init_leave_balances(p_user_id uuid, p_year integer)
+-- p_year keeps the default from 20260506010000_leave_management.sql; Postgres
+-- forbids removing a parameter default via CREATE OR REPLACE.
+CREATE OR REPLACE FUNCTION public.init_leave_balances(p_user_id uuid, p_year integer DEFAULT extract(year from now())::int)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER

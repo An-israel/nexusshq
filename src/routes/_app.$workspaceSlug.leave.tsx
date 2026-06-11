@@ -108,8 +108,8 @@ function workdaysBetween(start: string, end: string): number {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function LeavePage() {
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const year = new Date().getFullYear();
 
   const [leaveTypes, setLeaveTypes] = React.useState<LeaveType[]>([]);
@@ -326,7 +326,8 @@ function RequestList({
   workspaceId: string;
   onReview: () => void;
 }) {
-  const { user, isManager } = useAuth();
+  const { user } = useAuth();
+  const { isWorkspaceManager: isManager } = useWorkspace();
   const [reviewId, setReviewId] = React.useState<string | null>(null);
   const [note, setNote] = React.useState("");
   const [action, setAction] = React.useState<"approved" | "rejected">("approved");

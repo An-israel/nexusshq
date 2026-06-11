@@ -76,8 +76,8 @@ const RATING_STYLE: Record<Rating, string> = {
 };
 
 function ReviewsPage() {
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [reviews, setReviews] = React.useState<ReviewRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
   const [loading, setLoading] = React.useState(true);

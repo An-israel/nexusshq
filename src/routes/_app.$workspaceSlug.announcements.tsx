@@ -106,8 +106,8 @@ interface AuthorMini {
 }
 
 function AnnouncementsPage() {
-  const { user, isManager, profile } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user, profile } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [items, setItems] = React.useState<Announcement[]>([]);
   const [authors, setAuthors] = React.useState<Record<string, AuthorMini>>({});
   const [loading, setLoading] = React.useState(true);

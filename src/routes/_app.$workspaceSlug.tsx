@@ -10,6 +10,7 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { WorkspaceProvider, useWorkspace } from "@/lib/workspace-context";
 import { useAuth } from "@/lib/auth-context";
+import { usePushNotifications } from "@/lib/messaging/use-push-notifications";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { MobileBottomNav } from "@/components/layout/MobileBottomNav";
 import { ClockWidget } from "@/components/layout/ClockWidget";
@@ -275,6 +276,7 @@ function WorkspaceShell() {
     if (workspaceSlug) setLastWorkspaceSlug(workspaceSlug);
   }, [workspaceSlug]);
   const { user, role, profile } = useAuth();
+  usePushNotifications(user?.id ?? null, workspaceSlug);
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const isMessages = useRouterState({ select: (s) => s.location.pathname.includes("/messages") });

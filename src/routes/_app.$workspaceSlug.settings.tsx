@@ -379,7 +379,8 @@ function WorkspaceSettings() {
 }
 
 function SettingsPage() {
-  const { profile, refresh, isAdmin } = useAuth();
+  const { profile, refresh } = useAuth();
+  const { isWorkspaceAdmin: isAdmin } = useWorkspace();
 
   return (
     <div className="space-y-6">
@@ -1486,6 +1487,14 @@ const WEBHOOK_EVENTS = [
   "attendance.clock_out",
 ] as const;
 
+const API_KEY_SCOPES = [
+  "tasks:read",
+  "tasks:write",
+  "attendance:read",
+  "members:read",
+  "workspace:read",
+] as const;
+
 interface ApiKey {
   id: string;
   name: string;
@@ -1531,6 +1540,7 @@ function ApiKeysSection() {
   const [keys, setKeys] = React.useState<ApiKey[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [name, setName] = React.useState("");
+  const [scopes, setScopes] = React.useState<string[]>([]);
   const [creating, setCreating] = React.useState(false);
   const [newKey, setNewKey] = React.useState<string | null>(null);
   const [showKey, setShowKey] = React.useState(false);
@@ -1551,6 +1561,10 @@ function ApiKeysSection() {
     void load();
   }, [load]);
 
+  function toggleScope(scope: string) {
+    setScopes((s) => (s.includes(scope) ? s.filter((x) => x !== scope) : [...s, scope]));
+  }
+
   async function create() {
     if (!name.trim()) return;
     setCreating(true);
@@ -1561,12 +1575,13 @@ function ApiKeysSection() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${session.session?.access_token ?? ""}`,
       },
-      body: JSON.stringify({ workspace: workspace.slug, name: name.trim() }),
+      body: JSON.stringify({ workspace: workspace.slug, name: name.trim(), scopes }),
     });
     if (res.ok) {
       const json = (await res.json()) as { key: ApiKey & { plaintext: string } };
       setNewKey(json.key.plaintext);
       setName("");
+      setScopes([]);
       void load();
     } else {
       toast.error("Failed to create API key");
@@ -1626,6 +1641,24 @@ function ApiKeysSection() {
         </div>
       )}
 
+      <div className="space-y-2">
+        <div className="flex flex-wrap gap-1.5">
+          {API_KEY_SCOPES.map((scope) => (
+            <button
+              key={scope}
+              type="button"
+              onClick={() => toggleScope(scope)}
+              className={`rounded-full border px-2 py-0.5 text-[11px] font-mono transition-colors ${scopes.includes(scope) ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:border-foreground/30"}`}
+            >
+              {scope}
+            </button>
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Leave all unselected for unrestricted access to /api/v1/*.
+        </p>
+      </div>
+
       <div className="flex gap-2">
         <Input
           placeholder="Key name (e.g. Zapier integration)"
@@ -1653,6 +1686,9 @@ function ApiKeysSection() {
               <div className="min-w-0">
                 <p className="text-sm font-medium truncate">{k.name}</p>
                 <p className="text-xs text-muted-foreground font-mono">{k.key_prefix}••••••••</p>
+                <p className="text-[11px] text-muted-foreground font-mono">
+                  {k.scopes.length ? k.scopes.join(", ") : "unrestricted"}
+                </p>
                 {k.last_used_at && (
                   <p className="text-xs text-muted-foreground">
                     Last used {timeAgo(k.last_used_at)}

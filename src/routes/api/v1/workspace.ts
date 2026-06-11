@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/v1/workspace")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const ctx = await requireApiKey(request);
+        const ctx = await requireApiKey(request, "workspace:read");
         if (ctx instanceof Response) return ctx;
 
         const { data: ws } = await supabaseAdmin

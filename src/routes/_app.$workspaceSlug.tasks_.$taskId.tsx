@@ -70,8 +70,8 @@ interface ProfileMini {
 function TaskDetailPage() {
   const { taskId } = Route.useParams();
   const navigate = useNavigate();
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [task, setTask] = React.useState<TaskRow | null>(null);
   const [updates, setUpdates] = React.useState<UpdateRow[]>([]);
   const [profileMap, setProfileMap] = React.useState<Record<string, ProfileMini>>({});

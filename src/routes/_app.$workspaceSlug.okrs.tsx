@@ -137,9 +137,9 @@ const STATUS_LABEL: Record<Objective["status"], string> = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function OkrsPage() {
-  const { user, role, isManager } = useAuth();
+  const { user, role } = useAuth();
   const showKpiTab = role === "admin";
-  const { workspace } = useWorkspace();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [objectives, setObjectives] = React.useState<Objective[]>([]);
   const [keyResults, setKeyResults] = React.useState<KeyResult[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});

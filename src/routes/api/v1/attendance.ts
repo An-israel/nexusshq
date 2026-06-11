@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/v1/attendance")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const ctx = await requireApiKey(request);
+        const ctx = await requireApiKey(request, "attendance:read");
         if (ctx instanceof Response) return ctx;
 
         const url = new URL(request.url);

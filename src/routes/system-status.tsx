@@ -1,6 +1,6 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle2, Clock } from "lucide-react";
+import { CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { CookieBanner } from "@/components/marketing/CookieBanner";
@@ -65,7 +65,53 @@ const HISTORY: HistoryEntry[] = [
   },
 ];
 
+// Services whose status is derived from the live Supabase health check
+// (Database/Auth backs the web app, attendance, notifications, billing,
+// storage, and AI features — they all fail together if Supabase is down).
+const SUPABASE_BACKED_SERVICES = new Set<string>(SERVICES.map((s) => s.name));
+
+type CheckState = "checking" | "operational" | "degraded";
+
+function useSupabaseHealth(): { state: CheckState; checkedAt: Date | null } {
+  const [state, setState] = React.useState<CheckState>("checking");
+  const [checkedAt, setCheckedAt] = React.useState<Date | null>(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+
+    async function check() {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      try {
+        if (!supabaseUrl) throw new Error("Supabase URL not configured");
+        const res = await fetch(`${supabaseUrl}/auth/v1/health`, {
+          method: "GET",
+          headers: { apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ?? "" },
+        });
+        if (!cancelled) {
+          setState(res.ok ? "operational" : "degraded");
+          setCheckedAt(new Date());
+        }
+      } catch {
+        if (!cancelled) {
+          setState("degraded");
+          setCheckedAt(new Date());
+        }
+      }
+    }
+
+    void check();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return { state, checkedAt };
+}
+
 function SystemStatusPage() {
+  const { state, checkedAt } = useSupabaseHealth();
+  const degraded = state === "degraded";
+
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-white">
       <MarketingNav />
@@ -81,35 +127,63 @@ function SystemStatusPage() {
         </div>
 
         {/* Overall status banner */}
-        <div className="mb-10 flex items-center gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-5 py-4">
-          <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-400" />
+        <div
+          className={`mb-10 flex items-center gap-3 rounded-xl border px-5 py-4 ${
+            degraded
+              ? "border-amber-500/30 bg-amber-500/10"
+              : "border-emerald-500/30 bg-emerald-500/10"
+          }`}
+        >
+          {degraded ? (
+            <AlertTriangle className="h-6 w-6 shrink-0 text-amber-400" />
+          ) : (
+            <CheckCircle2 className="h-6 w-6 shrink-0 text-emerald-400" />
+          )}
           <div>
-            <p className="text-[15px] font-semibold text-emerald-400">All Systems Operational</p>
-            <p className="text-[13px] text-emerald-400/70">
-              Last checked: June 10, 2026 at 09:00 WAT
+            <p
+              className={`text-[15px] font-semibold ${degraded ? "text-amber-400" : "text-emerald-400"}`}
+            >
+              {state === "checking"
+                ? "Checking systems…"
+                : degraded
+                  ? "Degraded Performance"
+                  : "All Systems Operational"}
+            </p>
+            <p className={`text-[13px] ${degraded ? "text-amber-400/70" : "text-emerald-400/70"}`}>
+              {checkedAt ? `Last checked: ${checkedAt.toLocaleString()}` : "Checking…"}
             </p>
           </div>
         </div>
 
         {/* Services list */}
         <div className="mb-12 rounded-xl border border-[#1E1E1E] bg-[#111111]">
-          {SERVICES.map((service, i) => (
-            <div
-              key={service.name}
-              className={`flex items-center justify-between gap-4 px-5 py-4 ${
-                i !== SERVICES.length - 1 ? "border-b border-[#1E1E1E]" : ""
-              }`}
-            >
-              <div>
-                <p className="text-[14px] font-medium text-white">{service.name}</p>
-                <p className="text-[12px] text-gray-500">{service.description}</p>
+          {SERVICES.map((service, i) => {
+            const isDegraded = degraded && SUPABASE_BACKED_SERVICES.has(service.name);
+            return (
+              <div
+                key={service.name}
+                className={`flex items-center justify-between gap-4 px-5 py-4 ${
+                  i !== SERVICES.length - 1 ? "border-b border-[#1E1E1E]" : ""
+                }`}
+              >
+                <div>
+                  <p className="text-[14px] font-medium text-white">{service.name}</p>
+                  <p className="text-[12px] text-gray-500">{service.description}</p>
+                </div>
+                {isDegraded ? (
+                  <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-amber-500/10 px-2.5 py-1 text-[11px] font-semibold text-amber-400">
+                    <AlertTriangle className="h-3 w-3" />
+                    Degraded
+                  </span>
+                ) : (
+                  <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
+                    <CheckCircle2 className="h-3 w-3" />
+                    Operational
+                  </span>
+                )}
               </div>
-              <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-400">
-                <CheckCircle2 className="h-3 w-3" />
-                Operational
-              </span>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Past incidents */}

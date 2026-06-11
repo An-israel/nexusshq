@@ -42,8 +42,8 @@ interface WikiPage {
 }
 
 function HandbookPage() {
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [sections, setSections] = React.useState<WikiSection[]>([]);
   const [pages, setPages] = React.useState<WikiPage[]>([]);
   const [loading, setLoading] = React.useState(true);

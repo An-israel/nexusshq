@@ -7,7 +7,7 @@ export const Route = createFileRoute("/api/v1/members")({
   server: {
     handlers: {
       GET: async ({ request }) => {
-        const ctx = await requireApiKey(request);
+        const ctx = await requireApiKey(request, "members:read");
         if (ctx instanceof Response) return ctx;
 
         const url = new URL(request.url);

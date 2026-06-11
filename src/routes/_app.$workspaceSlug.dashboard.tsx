@@ -47,8 +47,8 @@ function overtimeMinsBetween(start: Date, end: Date): number {
 }
 
 function DashboardPage() {
-  const { profile, user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { profile, user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [loading, setLoading] = useState(true);
   const [todayTasks, setTodayTasks] = useState<Task[]>([]);
   const [weekTasks, setWeekTasks] = useState<Task[]>([]);

@@ -11,7 +11,6 @@ import { CreateChannelModal } from "@/components/messages/CreateChannelModal";
 import { NewDmModal } from "@/components/messages/NewDmModal";
 import { QuickSwitcher } from "@/components/messages/QuickSwitcher";
 import { SearchModal } from "@/components/messages/SearchModal";
-import { usePushNotifications } from "@/lib/messaging/use-push-notifications";
 import { cn } from "@/lib/utils";
 import type { MsgProfile, UserPresence } from "@/lib/messaging/types";
 
@@ -131,8 +130,6 @@ function MessagesLayout() {
       setMobileShowSidebar(false);
     }
   }, [joinedChannels, pathname]);
-
-  usePushNotifications(currentUserId, workspaceSlug);
 
   const ctxValue = React.useMemo<MessagingCtxValue>(
     () => ({
