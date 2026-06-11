@@ -28,6 +28,7 @@ interface Generated {
   passcode: string;
   inviteUrl: string;
   emailSent: boolean;
+  emailError?: string | null;
 }
 
 function CopyField({
@@ -127,13 +128,19 @@ export function InviteEmployeeDialog({
         },
       });
 
-      const inviteUrl = `${window.location.origin}/join?token=${result.token}`;
+      const inviteUrl = result.token
+        ? `${window.location.origin}/join?token=${result.token}`
+        : "";
       setGenerated({
         token: result.token,
         passcode: result.passcode,
         inviteUrl,
-        emailSent: true,
+        emailSent: result.emailSent,
+        emailError: result.emailError,
       });
+      if (!result.emailSent && result.emailError) {
+        toast.error(result.emailError);
+      }
       onInvited?.();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to send invitation");
@@ -263,12 +270,38 @@ export function InviteEmployeeDialog({
               </DialogHeader>
 
               <div className="space-y-4 py-2">
-                <div className="flex items-start gap-3 rounded-lg border border-green-500/30 bg-green-500/10 px-3 py-3">
-                  <Mail className="mt-0.5 h-4 w-4 shrink-0 text-green-600 dark:text-green-400" />
-                  <p className="text-sm text-green-700 dark:text-green-400">
-                    An invitation email has been sent to <strong>{form.email}</strong>. They'll
-                    receive a link to create their account and join{" "}
-                    <strong>{workspace.name}</strong>.
+                <div
+                  className={`flex items-start gap-3 rounded-lg px-3 py-3 ${
+                    generated.emailSent
+                      ? "border border-green-500/30 bg-green-500/10"
+                      : "border border-amber-500/30 bg-amber-500/10"
+                  }`}
+                >
+                  <Mail
+                    className={`mt-0.5 h-4 w-4 shrink-0 ${
+                      generated.emailSent
+                        ? "text-green-600 dark:text-green-400"
+                        : "text-amber-600 dark:text-amber-400"
+                    }`}
+                  />
+                  <p
+                    className={`text-sm ${
+                      generated.emailSent
+                        ? "text-green-700 dark:text-green-400"
+                        : "text-amber-700 dark:text-amber-400"
+                    }`}
+                  >
+                    {generated.emailSent ? (
+                      <>
+                        An invitation email has been sent to <strong>{form.email}</strong>. They'll
+                        receive a link to create their account and join <strong>{workspace.name}</strong>.
+                      </>
+                    ) : (
+                      <>
+                        The invitation was created, but the email was not delivered yet. Share the link
+                        or passcode below with <strong>{form.email}</strong> for now.
+                      </>
+                    )}
                   </p>
                 </div>
 

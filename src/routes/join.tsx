@@ -12,7 +12,10 @@ import { BrandMark } from "@/components/BrandMark";
 
 export const Route = createFileRoute("/join")({
   validateSearch: (s: Record<string, unknown>) => ({
-    token: typeof s.token === "string" ? s.token : undefined,
+    token:
+      typeof s.token === "string" && s.token !== "undefined" && s.token.trim().length > 0
+        ? s.token
+        : undefined,
   }),
   component: JoinPage,
 });
