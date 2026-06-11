@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 import { removeWorkspaceMemberFn, setEmployeeActiveFn } from "@/lib/admin.functions";
 import { InviteEmployeeDialog } from "@/components/team/InviteEmployeeDialog";
 import { ManageRoleDialog } from "@/components/team/ManageRoleDialog";
+import { PendingInvitations } from "@/components/team/PendingInvitations";
 import { toast } from "sonner";
 import {
   Users,
@@ -223,6 +224,8 @@ function TeamPage() {
           )}
         </div>
       </div>
+
+      {isWorkspaceManager && <PendingInvitations reloadKey={reloadKey} />}
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <StatCard icon={Users} label="Active employees" value={stats.activeCount} />

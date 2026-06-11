@@ -176,13 +176,16 @@ export async function sendInviteEmail(opts: {
 }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
+    console.error("[invite-email] RESEND_API_KEY is not set — invite email cannot be sent", {
+      to: opts.toEmail,
+    });
     throw new Error("Invite email is not configured yet.");
   }
   const from = process.env.RESEND_FROM_EMAIL
     ? process.env.RESEND_FROM_EMAIL.includes("<")
       ? process.env.RESEND_FROM_EMAIL
       : `Nexxos HQ <${process.env.RESEND_FROM_EMAIL}>`
-    : process.env.EMAIL_FROM ?? "Nexxos HQ <onboarding@resend.dev>";
+    : (process.env.EMAIL_FROM ?? "Nexxos HQ <onboarding@resend.dev>");
 
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -228,7 +231,59 @@ export async function sendInviteEmail(opts: {
 
   if (!response.ok) {
     const errorBody = await response.text();
-    throw new Error(`Invite email failed: ${errorBody || response.statusText}`);
+    // Server-side log of the raw provider failure (status + body) for debugging.
+    console.error("[invite-email] Resend rejected the invite email", {
+      to: opts.toEmail,
+      status: response.status,
+      body: errorBody,
+    });
+    let providerMessage = errorBody || response.statusText;
+    try {
+      const parsed = JSON.parse(errorBody) as { message?: string };
+      if (parsed.message) providerMessage = parsed.message;
+    } catch {
+      // body wasn't JSON — keep raw text
+    }
+    throw new Error(`Invite email failed: ${providerMessage}`);
+  }
+
+  const result = (await response.json().catch(() => null)) as { id?: string } | null;
+  console.log("[invite-email] accepted by Resend", { to: opts.toEmail, id: result?.id ?? null });
+}
+
+/**
+ * Records the outcome of an invite email attempt on the invitation row so
+ * admins can see real delivery status instead of a false "email sent" state.
+ * Best-effort: never throws.
+ */
+export async function markInviteEmailResult(
+  invitationId: string,
+  sent: boolean,
+  errorMessage?: string | null,
+): Promise<void> {
+  try {
+    const adminClient = requireAdminClient();
+    const { data: current } = await adminClient
+      .from("workspace_invitations")
+      .select("email_attempts")
+      .eq("id", invitationId)
+      .maybeSingle();
+
+    const { error } = await adminClient
+      .from("workspace_invitations")
+      .update({
+        email_status: sent ? "sent" : "failed",
+        email_error: sent ? null : (errorMessage ?? "Unknown email delivery error"),
+        email_attempts: (current?.email_attempts ?? 0) + 1,
+        email_last_attempt_at: new Date().toISOString(),
+      })
+      .eq("id", invitationId);
+    if (error) throw error;
+  } catch (err) {
+    console.error("[invite-email] failed to record email delivery status", {
+      invitationId,
+      err,
+    });
   }
 }
 
@@ -262,6 +317,7 @@ export interface CreateInvitationInput {
 }
 
 export async function createInvitation(input: CreateInvitationInput): Promise<{
+  invitationId: string;
   token: string;
   passcode: string;
 }> {
@@ -269,7 +325,7 @@ export async function createInvitation(input: CreateInvitationInput): Promise<{
   const passcode = generatePasscode();
   const token = generateInviteToken();
 
-  const { error } = await adminClient
+  const { data, error } = await adminClient
     .from("workspace_invitations")
     .insert({
       workspace_id: input.workspaceId,
@@ -287,7 +343,93 @@ export async function createInvitation(input: CreateInvitationInput): Promise<{
     .single();
 
   if (error) throw new Error(error.message);
-  return { token, passcode };
+  return { invitationId: data.id, token, passcode };
+}
+
+/**
+ * Regenerates a fresh token + passcode for an existing unused invitation and
+ * extends its expiry, so it can be emailed again even if the original link
+ * was broken or the first email never arrived.
+ */
+export async function resendInvitation(opts: {
+  invitationId: string;
+  workspaceId: string;
+}): Promise<{
+  token: string;
+  passcode: string;
+  email: string;
+  full_name: string;
+}> {
+  const adminClient = requireAdminClient();
+
+  const { data: inv, error: lookupErr } = await adminClient
+    .from("workspace_invitations")
+    .select("id, email, full_name, used_at")
+    .eq("id", opts.invitationId)
+    .eq("workspace_id", opts.workspaceId)
+    .maybeSingle();
+
+  if (lookupErr) throw new Error(lookupErr.message);
+  if (!inv) throw new Error("Invitation not found.");
+  if (inv.used_at) throw new Error("This invitation has already been used.");
+
+  const token = generateInviteToken();
+  const passcode = generatePasscode();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { error: updateErr } = await adminClient
+    .from("workspace_invitations")
+    .update({ token, passcode, expires_at: expiresAt, email_status: "pending", email_error: null })
+    .eq("id", inv.id);
+
+  if (updateErr) throw new Error(updateErr.message);
+  return { token, passcode, email: inv.email, full_name: inv.full_name };
+}
+
+/**
+ * Lets someone holding a dead invite link ask the inviter for a fresh one.
+ * Looks the invitation up by token or passcode regardless of expiry/used
+ * state and notifies the inviter in-app (the notification email cron picks
+ * it up from there). Never reveals invitation details to the caller.
+ */
+export async function requestNewInvite(tokenOrPasscode: string): Promise<{ ok: boolean }> {
+  const adminClient = requireAdminClient();
+  const key = tokenOrPasscode.trim();
+  if (!key || key === "undefined" || key === "null") return { ok: false };
+
+  const isPasscode = /^[A-Z0-9]{4,8}$/i.test(key) && key.length <= 8;
+  const query = adminClient
+    .from("workspace_invitations")
+    .select("id, email, full_name, workspace_id, invited_by");
+  const { data: inv } = await (
+    isPasscode ? query.eq("passcode", key.toUpperCase()) : query.eq("token", key)
+  ).maybeSingle();
+
+  if (!inv?.invited_by) return { ok: false };
+
+  // Light dedupe: skip if we already nudged this inviter about this invite recently.
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { data: recent } = await adminClient
+    .from("notifications")
+    .select("id")
+    .eq("user_id", inv.invited_by)
+    .eq("title", "Invitation needs to be resent")
+    .gt("created_at", oneHourAgo)
+    .limit(1);
+  if (recent && recent.length > 0) return { ok: true };
+
+  const { error } = await adminClient.from("notifications").insert({
+    user_id: inv.invited_by,
+    workspace_id: inv.workspace_id,
+    type: "info",
+    title: "Invitation needs to be resent",
+    message: `${inv.full_name} (${inv.email}) tried to use an invite link that is expired, already used, or broken. Resend the invitation from Team → Pending invitations.`,
+  });
+  if (error) {
+    console.error("[invite] failed to notify inviter about a new-invite request", error);
+    return { ok: false };
+  }
+  return { ok: true };
 }
 
 export interface RedeemInvitationInput {
