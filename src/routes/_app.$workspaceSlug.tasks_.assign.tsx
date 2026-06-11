@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { todayISO, initialsOf } from "@/lib/nexus";
+import { todayISO, initialsOf, escapeHtml } from "@/lib/nexus";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/$workspaceSlug/tasks_/assign")({
@@ -250,7 +250,7 @@ function AssignTaskPage() {
           ? `
       <div style="border-left:4px solid #f59e0b;background:#fef3c7;padding:12px 16px;margin:16px 0;border-radius:4px;">
         <strong style="color:#92400e;">⚠ Warning:</strong>
-        <p style="color:#78350f;margin:4px 0 0;">${form.warning_message}</p>
+        <p style="color:#78350f;margin:4px 0 0;">${escapeHtml(form.warning_message)}</p>
       </div>`
           : "";
 
@@ -267,11 +267,11 @@ function AssignTaskPage() {
           <h1 style="color:#fff;margin:0;font-size:20px;">New Task Assigned</h1>
         </div>
         <div style="padding:24px;">
-          <p style="color:#374151;margin:0 0 16px;">Hi ${assignee.full_name ?? "there"},</p>
+          <p style="color:#374151;margin:0 0 16px;">Hi ${escapeHtml(assignee.full_name ?? "there")},</p>
           <p style="color:#374151;margin:0 0 16px;">A new task has been assigned to you in Nexxos HQ.</p>
           <div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:16px;">
-            <h2 style="margin:0 0 8px;font-size:18px;color:#111;">${taskTitle}</h2>
-            ${form.description ? `<p style="color:#6b7280;margin:0 0 12px;">${form.description}</p>` : ""}
+            <h2 style="margin:0 0 8px;font-size:18px;color:#111;">${escapeHtml(taskTitle)}</h2>
+            ${form.description ? `<p style="color:#6b7280;margin:0 0 12px;">${escapeHtml(form.description)}</p>` : ""}
             <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;">
               <span style="background:${priorityColor[form.priority]}20;color:${priorityColor[form.priority]};padding:4px 10px;border-radius:4px;font-size:12px;font-weight:600;text-transform:uppercase;">${form.priority}</span>
               <span style="color:#6b7280;font-size:14px;">📅 Due: ${dueFormatted}</span>

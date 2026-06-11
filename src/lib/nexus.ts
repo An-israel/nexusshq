@@ -1,5 +1,15 @@
 // Shared helpers for Nexxos HQ
 
+// Escape user-supplied text before interpolating it into HTML email templates.
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export const DEPARTMENTS = [
   "management",
   "customer_success",

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verifyCronRequest } from "@/server/cron-auth.server";
+import { escapeHtml } from "@/lib/nexus";
 
 // Called by pg_cron every 5 minutes.
 // Sends an email for any message notification that is still unread after 5 minutes.
@@ -65,8 +66,8 @@ export const Route = createFileRoute("/api/public/cron/message-email")({
               subject: notif.title,
               html: `
                 <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
-                  <h2 style="margin-bottom:8px">${notif.title}</h2>
-                  <p style="color:#555;margin-bottom:24px">${notif.message}</p>
+                  <h2 style="margin-bottom:8px">${escapeHtml(notif.title)}</h2>
+                  <p style="color:#555;margin-bottom:24px">${escapeHtml(notif.message)}</p>
                   <a href="https://project--1a191282-4857-4af0-8b72-38cc1bac2a29.lovable.app/messages"
                      style="background:#6366f1;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none">
                     Open Messages

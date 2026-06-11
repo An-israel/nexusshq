@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { verifyCronRequest } from "@/server/cron-auth.server";
+import { escapeHtml } from "@/lib/nexus";
 
 // Called by pg_cron every 5 minutes.
 // Sends email for any unread non-message notification with no email sent yet.
@@ -65,9 +66,9 @@ export const Route = createFileRoute("/api/public/cron/notification-email")({
               to: [recipient.email],
               subject: notif.title,
               html: buildEmailHtml({
-                recipientName: recipient.name ?? "there",
-                title: notif.title,
-                message: notif.message,
+                recipientName: escapeHtml(recipient.name ?? "there"),
+                title: escapeHtml(notif.title),
+                message: escapeHtml(notif.message),
                 ctaUrl,
                 ctaLabel: ctaLabelForType(notif.type),
               }),
