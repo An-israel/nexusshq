@@ -8,7 +8,15 @@ export interface ApiKeyContext {
 
 // Validates an API key sent in X-API-Key or Authorization: Bearer nhq_...
 // Returns { workspaceId, keyId } on success, or a 401/403 Response on failure.
-export async function requireApiKey(request: Request): Promise<ApiKeyContext | Response> {
+//
+// If `requiredScope` is given and the key has a non-empty `scopes` list, the
+// key must include that scope (or "*") or the request is rejected with 403.
+// Keys with an empty scopes list (the default) are treated as unrestricted,
+// for backwards compatibility with keys created before scopes were enforced.
+export async function requireApiKey(
+  request: Request,
+  requiredScope?: string,
+): Promise<ApiKeyContext | Response> {
   const raw =
     request.headers.get("x-api-key") ??
     /^Bearer\s+(nhq_.+)$/i.exec(request.headers.get("authorization") ?? "")?.[1] ??
@@ -22,7 +30,7 @@ export async function requireApiKey(request: Request): Promise<ApiKeyContext | R
 
   const { data: key } = await supabaseAdmin
     .from("api_keys")
-    .select("id, workspace_id, is_active, expires_at")
+    .select("id, workspace_id, is_active, expires_at, scopes")
     .eq("key_hash", hash)
     .maybeSingle();
 
@@ -31,6 +39,19 @@ export async function requireApiKey(request: Request): Promise<ApiKeyContext | R
   }
   if (key.expires_at && new Date(key.expires_at) < new Date()) {
     return Response.json({ error: "API key expired" }, { status: 401 });
+  }
+
+  const scopes = key.scopes ?? [];
+  if (
+    requiredScope &&
+    scopes.length > 0 &&
+    !scopes.includes("*") &&
+    !scopes.includes(requiredScope)
+  ) {
+    return Response.json(
+      { error: `API key is missing required scope: ${requiredScope}` },
+      { status: 403 },
+    );
   }
 
   // Fire-and-forget last_used_at stamp
