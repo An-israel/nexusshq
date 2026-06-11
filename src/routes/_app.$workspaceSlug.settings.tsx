@@ -1043,7 +1043,7 @@ function TeamAdmin() {
     const { data, error } = await supabase
       .from("workspace_members")
       .select(
-        "id, role, user_id, profiles(id, full_name, email, department, job_title, hire_date, is_active, avatar_url, whatsapp_opt_in)",
+        "id, role, user_id, profiles!workspace_members_user_id_fkey(id, full_name, email, department, job_title, hire_date, is_active, avatar_url, whatsapp_opt_in)",
       )
       .eq("workspace_id", workspace.id)
       .eq("is_active", true)

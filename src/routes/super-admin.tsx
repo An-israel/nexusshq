@@ -275,7 +275,9 @@ function WorkspaceDetailSheet({
     try {
       const { data: mem } = await supabase
         .from("workspace_members")
-        .select("id, user_id, role, is_active, profiles(full_name, email)")
+        .select(
+          "id, user_id, role, is_active, profiles!workspace_members_user_id_fkey(full_name, email)",
+        )
         .eq("workspace_id", ws.id);
       setMembers((mem ?? []) as unknown as MemberRow[]);
 

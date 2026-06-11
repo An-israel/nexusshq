@@ -58,8 +58,8 @@ interface Profile {
 const SCREENSHOT_MAX = 10 * 1024 * 1024; // 10MB
 
 function StandupsPage() {
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [view, setView] = React.useState<"mine" | "team">(isManager ? "team" : "mine");
   const [todayStandup, setTodayStandup] = React.useState<Standup | null>(null);
   const [historyStandups, setHistoryStandups] = React.useState<Standup[]>([]);
