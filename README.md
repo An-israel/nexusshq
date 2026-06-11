@@ -54,3 +54,15 @@ Several routes under `src/routes/api/public/cron/` are meant to be called by
 `pg_cron` on a schedule (see the `cron.schedule(...)` calls in
 `supabase/migrations/`). They authenticate via a bearer token compared
 against `SUPABASE_SERVICE_ROLE_KEY` (`src/server/cron-auth.server.ts`).
+
+## Email delivery (Resend)
+
+By default, a new Resend account is in **sandbox mode**: it can only send
+email to the account owner's verified address, regardless of `RESEND_FROM_EMAIL`.
+To send notification/cron/transactional emails to real users in production:
+
+1. Add and verify a sending domain in the Resend dashboard.
+2. Set `RESEND_FROM_EMAIL` to an address on that verified domain.
+
+Until this is done, emails sent via `src/routes/api/public/cron/*` and
+`enqueue_email` will only be delivered to the Resend account owner.
