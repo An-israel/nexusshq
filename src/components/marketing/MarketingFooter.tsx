@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Link } from "@tanstack/react-router";
 import { Zap, ChevronDown } from "lucide-react";
+import nexxosGlyph from "@/assets/brand/nexxos-glyph-light.svg.asset.json";
 import { openWhatsApp, comingSoon, WHATSAPP_URL } from "@/lib/marketing";
 
 // ── Footer column data ────────────────────────────────────────────────────────
@@ -282,9 +283,7 @@ export function MarketingFooter() {
           {/* Left: logo + copyright */}
           <div className="flex flex-col gap-1">
             <Link to="/" className="flex items-center gap-2">
-              <div className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white">
-                <Zap className="h-3 w-3" />
-              </div>
+              <img src={nexxosGlyph.url} alt="" className="h-5 w-5" />
               <span className="text-[13px] font-semibold text-white tracking-tight">Nexxos HQ</span>
             </Link>
             <p className="text-xs text-gray-500">© 2026 Nexxos HQ. All rights reserved.</p>
@@ -314,9 +313,7 @@ export function MarketingFooter() {
         {/* Mobile bottom bar */}
         <div className="md:hidden flex flex-col items-center gap-4 text-center">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-5 w-5 items-center justify-center rounded-md bg-blue-600 text-white">
-              <Zap className="h-3 w-3" />
-            </div>
+            <img src={nexxosGlyph.url} alt="" className="h-5 w-5" />
             <span className="text-[13px] font-semibold text-white tracking-tight">Nexxos HQ</span>
           </Link>
           <p className="text-xs text-gray-500">© 2026 Nexxos HQ. All rights reserved.</p>

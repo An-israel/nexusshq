@@ -1,6 +1,9 @@
 import { Link } from "@tanstack/react-router";
-import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import glyphLight from "@/assets/brand/nexxos-glyph-light.svg.asset.json";
+import glyphDark from "@/assets/brand/nexxos-glyph-dark.svg.asset.json";
+import lockupLight from "@/assets/brand/nexxos-lockup-light.svg.asset.json";
+import lockupDark from "@/assets/brand/nexxos-lockup-dark.svg.asset.json";
 
 interface BrandMarkProps {
   /** Render as a link to `/` (default true) */
@@ -11,12 +14,14 @@ interface BrandMarkProps {
   className?: string;
   /** Show the "Nexxos HQ" wordmark next to the glyph (default true) */
   showWordmark?: boolean;
+  /** Force a theme variant. Defaults to auto (light on dark bg, dark on light bg). */
+  variant?: "light" | "dark" | "auto";
 }
 
 const SIZE_MAP = {
-  sm: { box: "h-7 w-7 rounded-md", icon: "h-3.5 w-3.5", word: "text-sm" },
-  md: { box: "h-9 w-9 rounded-lg", icon: "h-4 w-4", word: "text-lg" },
-  lg: { box: "h-12 w-12 rounded-xl", icon: "h-5 w-5", word: "text-xl" },
+  sm: { glyph: "h-6 w-6", lockup: "h-5" },
+  md: { glyph: "h-8 w-8", lockup: "h-7" },
+  lg: { glyph: "h-11 w-11", lockup: "h-9" },
 } as const;
 
 /**
@@ -28,18 +33,31 @@ export function BrandMark({
   size = "md",
   className,
   showWordmark = true,
+  variant = "auto",
 }: BrandMarkProps) {
   const s = SIZE_MAP[size];
+
+  // "auto" — render both and let CSS pick based on the dark class.
+  const renderImg = (lightSrc: string, darkSrc: string, sizeClass: string, alt: string) => {
+    if (variant === "light") {
+      return <img src={lightSrc} alt={alt} className={cn(sizeClass, "w-auto")} />;
+    }
+    if (variant === "dark") {
+      return <img src={darkSrc} alt={alt} className={cn(sizeClass, "w-auto")} />;
+    }
+    return (
+      <>
+        <img src={lightSrc} alt={alt} className={cn(sizeClass, "w-auto hidden dark:block")} />
+        <img src={darkSrc} alt={alt} className={cn(sizeClass, "w-auto block dark:hidden")} />
+      </>
+    );
+  };
+
   const inner = (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <span className={cn("flex items-center justify-center bg-primary/15 text-primary", s.box)}>
-        <Zap className={s.icon} />
-      </span>
-      {showWordmark && (
-        <span className={cn("font-bold tracking-tight text-foreground", s.word)}>
-          Nex<span className="text-blue-400">x</span>os HQ
-        </span>
-      )}
+      {showWordmark
+        ? renderImg(lockupLight.url, lockupDark.url, s.lockup, "Nexxos HQ")
+        : renderImg(glyphLight.url, glyphDark.url, s.glyph, "Nexxos HQ")}
     </span>
   );
 

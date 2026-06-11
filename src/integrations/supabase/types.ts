@@ -14,48 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      api_keys: {
-        Row: {
-          id: string
-          workspace_id: string
-          name: string
-          key_hash: string
-          key_prefix: string
-          scopes: string[]
-          created_by: string | null
-          last_used_at: string | null
-          expires_at: string | null
-          is_active: boolean
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          workspace_id: string
-          name: string
-          key_hash: string
-          key_prefix: string
-          scopes?: string[]
-          created_by?: string | null
-          last_used_at?: string | null
-          expires_at?: string | null
-          is_active?: boolean
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          workspace_id?: string
-          name?: string
-          key_hash?: string
-          key_prefix?: string
-          scopes?: string[]
-          created_by?: string | null
-          last_used_at?: string | null
-          expires_at?: string | null
-          is_active?: boolean
-          created_at?: string
-        }
-        Relationships: []
-      }
       announcements: {
         Row: {
           author_id: string | null
@@ -97,6 +55,56 @@ export type Database = {
           },
           {
             foreignKeyName: "announcements_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          scopes: string[]
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          scopes?: string[]
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          scopes?: string[]
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
@@ -190,13 +198,6 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "audit_events_actor_id_fkey"
-            columns: ["actor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "audit_events_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -1097,6 +1098,7 @@ export type Database = {
         Row: {
           amount_ngn: number
           billing_interval: string
+          created_at: string
           customer_email: string | null
           customer_name: string | null
           id: string
@@ -1112,8 +1114,9 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
-          amount_ngn: number
-          billing_interval?: string
+          amount_ngn?: number
+          billing_interval: string
+          created_at?: string
           customer_email?: string | null
           customer_name?: string | null
           id?: string
@@ -1131,6 +1134,7 @@ export type Database = {
         Update: {
           amount_ngn?: number
           billing_interval?: string
+          created_at?: string
           customer_email?: string | null
           customer_name?: string | null
           id?: string
@@ -1146,6 +1150,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "invoices_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "invoices_workspace_id_fkey"
             columns: ["workspace_id"]
@@ -2098,41 +2109,6 @@ export type Database = {
           },
         ]
       }
-      push_subscriptions: {
-        Row: {
-          id: string
-          user_id: string
-          endpoint: string
-          p256dh: string
-          auth: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          endpoint: string
-          p256dh: string
-          auth: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          endpoint?: string
-          p256dh?: string
-          auth?: string
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -2192,6 +2168,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       recurring_tasks: {
         Row: {
@@ -2673,6 +2676,47 @@ export type Database = {
           },
         ]
       }
+      user_sessions: {
+        Row: {
+          created_at: string
+          device_name: string | null
+          id: string
+          last_active_at: string
+          session_id: string
+          user_agent: string | null
+          user_id: string
+          workspace_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          device_name?: string | null
+          id?: string
+          last_active_at?: string
+          session_id: string
+          user_agent?: string | null
+          user_id: string
+          workspace_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          device_name?: string | null
+          id?: string
+          last_active_at?: string
+          session_id?: string
+          user_agent?: string | null
+          user_id?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_sessions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       waitlist_emails: {
         Row: {
           created_at: string | null
@@ -2693,6 +2737,56 @@ export type Database = {
           page?: string | null
         }
         Relationships: []
+      }
+      webhook_endpoints: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          events: string[]
+          id: string
+          is_active: boolean
+          last_error: string | null
+          last_fired_at: string | null
+          name: string
+          secret: string
+          url: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_fired_at?: string | null
+          name: string
+          secret: string
+          url: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          last_error?: string | null
+          last_fired_at?: string | null
+          name?: string
+          secret?: string
+          url?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_endpoints_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       wiki_pages: {
         Row: {
@@ -2998,81 +3092,6 @@ export type Database = {
           },
         ]
       }
-      user_sessions: {
-        Row: {
-          id: string
-          user_id: string
-          workspace_id: string
-          session_id: string
-          user_agent: string | null
-          device_name: string | null
-          created_at: string
-          last_active_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          workspace_id: string
-          session_id: string
-          user_agent?: string | null
-          device_name?: string | null
-          created_at?: string
-          last_active_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          workspace_id?: string
-          session_id?: string
-          user_agent?: string | null
-          device_name?: string | null
-          created_at?: string
-          last_active_at?: string
-        }
-        Relationships: []
-      }
-      webhook_endpoints: {
-        Row: {
-          id: string
-          workspace_id: string
-          name: string
-          url: string
-          events: string[]
-          secret: string
-          is_active: boolean
-          created_by: string | null
-          created_at: string
-          last_fired_at: string | null
-          last_error: string | null
-        }
-        Insert: {
-          id?: string
-          workspace_id: string
-          name: string
-          url: string
-          events?: string[]
-          secret: string
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          last_fired_at?: string | null
-          last_error?: string | null
-        }
-        Update: {
-          id?: string
-          workspace_id?: string
-          name?: string
-          url?: string
-          events?: string[]
-          secret?: string
-          is_active?: boolean
-          created_by?: string | null
-          created_at?: string
-          last_fired_at?: string | null
-          last_error?: string | null
-        }
-        Relationships: []
-      }
       workspaces: {
         Row: {
           clock_in_radius_m: number
@@ -3209,11 +3228,11 @@ export type Database = {
       }
       log_audit_event: {
         Args: {
-          _workspace_id: string
           _action: string
-          _target_type?: string
-          _target_id?: string
           _metadata?: Json
+          _target_id?: string
+          _target_type?: string
+          _workspace_id: string
         }
         Returns: string
       }

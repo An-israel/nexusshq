@@ -149,7 +149,8 @@ export const createInvitationFn = createServerFn({ method: "POST" })
       invitedBy: context.userId,
     });
 
-    // Fire-and-forget email — link+passcode fallback works even if this fails
+    let emailSent = false;
+    let emailError: string | null = null;
     const appUrl = data.siteUrl ?? process.env.APP_URL ?? "https://nexus.skryveai.com";
     const joinUrl = `${appUrl}/join?token=${result.token}`;
     const { data: profile } = await context.supabase
@@ -158,15 +159,20 @@ export const createInvitationFn = createServerFn({ method: "POST" })
       .eq("id", context.userId)
       .maybeSingle();
 
-    void sendInviteEmail({
-      toEmail: data.email,
-      toName: data.full_name,
-      workspaceName: data.workspaceName,
-      inviterName: profile?.full_name ?? "Your workspace admin",
-      joinUrl,
-    }).catch(() => {});
+    try {
+      await sendInviteEmail({
+        toEmail: data.email,
+        toName: data.full_name,
+        workspaceName: data.workspaceName,
+        inviterName: profile?.full_name ?? "Your workspace admin",
+        joinUrl,
+      });
+      emailSent = true;
+    } catch (error) {
+      emailError = error instanceof Error ? error.message : "Invite email could not be sent.";
+    }
 
-    return result;
+    return { ...result, emailSent, emailError };
   });
 
 export const redeemInvitationFn = createServerFn({ method: "POST" })
