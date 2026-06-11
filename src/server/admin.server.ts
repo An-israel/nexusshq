@@ -175,12 +175,16 @@ export async function sendInviteEmail(opts: {
   joinUrl: string;
 }): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) return; // silently skip — link+passcode fallback still works
+  if (!apiKey) {
+    throw new Error("Invite email is not configured yet.");
+  }
   const from = process.env.RESEND_FROM_EMAIL
-    ? `Nexxos HQ <${process.env.RESEND_FROM_EMAIL}>`
-    : "Nexxos HQ <noreply@nexus.skryveai.com>";
+    ? process.env.RESEND_FROM_EMAIL.includes("<")
+      ? process.env.RESEND_FROM_EMAIL
+      : `Nexxos HQ <${process.env.RESEND_FROM_EMAIL}>`
+    : process.env.EMAIL_FROM ?? "Nexxos HQ <onboarding@resend.dev>";
 
-  await fetch("https://api.resend.com/emails", {
+  const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -221,6 +225,11 @@ export async function sendInviteEmail(opts: {
 </body></html>`,
     }),
   });
+
+  if (!response.ok) {
+    const errorBody = await response.text();
+    throw new Error(`Invite email failed: ${errorBody || response.statusText}`);
+  }
 }
 
 // ── Invitation system (link + passcode, email sent automatically) ─────────────
@@ -233,6 +242,12 @@ function generatePasscode(len = 6): string {
   return Array.from(arr)
     .map((b) => PASSCODE_CHARS[b % PASSCODE_CHARS.length])
     .join("");
+}
+
+function generateInviteToken(bytes = 24): string {
+  const arr = new Uint8Array(bytes);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export interface CreateInvitationInput {
@@ -252,11 +267,13 @@ export async function createInvitation(input: CreateInvitationInput): Promise<{
 }> {
   const adminClient = requireAdminClient();
   const passcode = generatePasscode();
+  const token = generateInviteToken();
 
-  const { data, error } = await adminClient
+  const { error } = await adminClient
     .from("workspace_invitations")
     .insert({
       workspace_id: input.workspaceId,
+      token,
       passcode,
       email: input.email.trim().toLowerCase(),
       full_name: input.full_name.trim(),
@@ -266,11 +283,11 @@ export async function createInvitation(input: CreateInvitationInput): Promise<{
       role: input.role,
       invited_by: input.invitedBy,
     })
-    .select("token, passcode")
+    .select("id")
     .single();
 
   if (error) throw new Error(error.message);
-  return { token: data.token, passcode: data.passcode };
+  return { token, passcode };
 }
 
 export interface RedeemInvitationInput {
