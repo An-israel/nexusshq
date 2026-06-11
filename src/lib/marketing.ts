@@ -12,3 +12,10 @@ export function openWhatsApp() {
 export function comingSoon(page?: string) {
   return page ? `/coming-soon?page=${encodeURIComponent(page)}` : "/coming-soon";
 }
+
+export const DEMO_EMAIL = "hello@nexxoshq.io";
+export const DEMO_EMAIL_SUBJECT = encodeURIComponent("Demo Request — Nexxos HQ");
+export const DEMO_EMAIL_BODY = encodeURIComponent(
+  "Hi Nexxos HQ team,\n\nI'd like to request a demo of Nexxos HQ for my organisation.\n\nCompany name:\nTeam size:\nPreferred date/time:\n\nThanks!",
+);
+export const DEMO_MAILTO_URL = `mailto:${DEMO_EMAIL}?subject=${DEMO_EMAIL_SUBJECT}&body=${DEMO_EMAIL_BODY}`;

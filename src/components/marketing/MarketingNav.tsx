@@ -19,7 +19,7 @@ import {
   Globe,
   Settings,
 } from "lucide-react";
-import { openWhatsApp, comingSoon } from "@/lib/marketing";
+import { comingSoon, DEMO_MAILTO_URL } from "@/lib/marketing";
 
 // ── Product mega-dropdown data ───────────────────────────────────────────────
 
@@ -120,11 +120,11 @@ const BY_INDUSTRY = [
 // ── Resources dropdown data ──────────────────────────────────────────────────
 
 const RESOURCES_LIST = [
-  { label: "Blog", href: comingSoon("blog"), disabled: false },
-  { label: "Help Centre", href: comingSoon("help-centre"), disabled: false },
-  { label: "Changelog", href: comingSoon("changelog"), disabled: false },
+  { label: "Blog", href: "/blog", disabled: false },
+  { label: "Help Centre", href: "/help-centre", disabled: false },
+  { label: "Changelog", href: "/changelog", disabled: false },
   { label: "API Docs", href: comingSoon("api-docs"), disabled: true, badge: "Coming soon" },
-  { label: "System Status", href: comingSoon("system-status"), disabled: false },
+  { label: "System Status", href: "/system-status", disabled: false },
 ];
 
 // ── Nav item with hover dropdown ─────────────────────────────────────────────
@@ -369,12 +369,12 @@ export function MarketingNav() {
             >
               Sign In
             </Link>
-            <button
-              onClick={openWhatsApp}
+            <a
+              href={DEMO_MAILTO_URL}
               className="rounded-lg border border-white/20 px-4 py-1.5 text-[13px] text-white hover:border-white/40 hover:bg-white/5 transition-colors"
             >
               Request a Demo
-            </button>
+            </a>
             <Link
               to="/signup"
               className="rounded-lg bg-blue-600 hover:bg-blue-500 px-4 py-1.5 text-[13px] font-medium text-white transition-colors"
@@ -474,15 +474,13 @@ export function MarketingNav() {
           </nav>
 
           <div className="border-t border-[#1E1E1E] px-6 py-6 space-y-3">
-            <button
-              onClick={() => {
-                setMobileOpen(false);
-                openWhatsApp();
-              }}
+            <a
+              href={DEMO_MAILTO_URL}
+              onClick={() => setMobileOpen(false)}
               className="block w-full text-center rounded-lg border border-white/20 py-2.5 text-[14px] text-white hover:border-white/40 hover:bg-white/5 transition-colors"
             >
               Request a Demo
-            </button>
+            </a>
             <Link
               to="/login"
               className="block w-full text-center rounded-lg border border-[#1E1E1E] py-2.5 text-[14px] text-gray-300 hover:text-white hover:border-white/20 transition-colors"

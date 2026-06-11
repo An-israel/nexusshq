@@ -17,13 +17,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { UserPlus, Copy, Check, Link2, Mail, KeyRound } from "lucide-react";
+import { UserPlus, Copy, Check, Link2, Mail, KeyRound, RefreshCw } from "lucide-react";
 import { DEPARTMENTS, deptLabel } from "@/lib/nexus";
 import { useWorkspace } from "@/lib/workspace-context";
 import { useServerFn } from "@tanstack/react-start";
-import { createInvitationFn } from "@/lib/admin.functions";
+import { createInvitationFn, resendInvitationFn } from "@/lib/admin.functions";
 
 interface Generated {
+  invitationId: string;
   token: string;
   passcode: string;
   inviteUrl: string;
@@ -76,9 +77,11 @@ export function InviteEmployeeDialog({
 }) {
   const { workspace } = useWorkspace();
   const createInvitation = useServerFn(createInvitationFn);
+  const resendInvitation = useServerFn(resendInvitationFn);
 
   const [open, setOpen] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  const [resending, setResending] = React.useState(false);
   const [generated, setGenerated] = React.useState<Generated | null>(null);
 
   const [form, setForm] = React.useState({
@@ -128,10 +131,9 @@ export function InviteEmployeeDialog({
         },
       });
 
-      const inviteUrl = result.token
-        ? `${window.location.origin}/join?token=${result.token}`
-        : "";
+      const inviteUrl = result.token ? `${window.location.origin}/join?token=${result.token}` : "";
       setGenerated({
+        invitationId: result.invitationId,
         token: result.token,
         passcode: result.passcode,
         inviteUrl,
@@ -146,6 +148,39 @@ export function InviteEmployeeDialog({
       toast.error(err instanceof Error ? err.message : "Failed to send invitation");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function resend() {
+    if (!generated) return;
+    setResending(true);
+    try {
+      const result = await resendInvitation({
+        data: {
+          invitationId: generated.invitationId,
+          workspaceId: workspace.id,
+          workspaceName: workspace.name,
+          siteUrl: window.location.origin,
+        },
+      });
+
+      setGenerated({
+        ...generated,
+        token: result.token,
+        passcode: result.passcode,
+        inviteUrl: result.token ? `${window.location.origin}/join?token=${result.token}` : "",
+        emailSent: result.emailSent,
+        emailError: result.emailError,
+      });
+      if (result.emailSent) {
+        toast.success(`Invitation email re-sent to ${result.email}`);
+      } else {
+        toast.error(result.emailError ?? "Email could not be delivered — share the link instead.");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to resend invitation");
+    } finally {
+      setResending(false);
     }
   }
 
@@ -294,16 +329,38 @@ export function InviteEmployeeDialog({
                     {generated.emailSent ? (
                       <>
                         An invitation email has been sent to <strong>{form.email}</strong>. They'll
-                        receive a link to create their account and join <strong>{workspace.name}</strong>.
+                        receive a link to create their account and join{" "}
+                        <strong>{workspace.name}</strong>.
                       </>
                     ) : (
                       <>
-                        The invitation was created, but the email was not delivered yet. Share the link
-                        or passcode below with <strong>{form.email}</strong> for now.
+                        The invitation was created, but the email was not delivered.{" "}
+                        {generated.emailError ? (
+                          <span className="block mt-1 font-mono text-xs opacity-80">
+                            {generated.emailError}
+                          </span>
+                        ) : null}
+                        <span className="block mt-1">
+                          Try resending below, or share the link or passcode with{" "}
+                          <strong>{form.email}</strong> directly.
+                        </span>
                       </>
                     )}
                   </p>
                 </div>
+
+                {!generated.emailSent && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={resend}
+                    disabled={resending}
+                    className="w-full"
+                  >
+                    <RefreshCw className={`mr-2 h-3.5 w-3.5 ${resending ? "animate-spin" : ""}`} />
+                    {resending ? "Resending…" : "Resend invitation email"}
+                  </Button>
+                )}
 
                 <p className="text-xs text-muted-foreground">
                   Didn't receive the email? Share the link or passcode below as a backup.
@@ -317,6 +374,12 @@ export function InviteEmployeeDialog({
                 <Button variant="outline" onClick={reset} className="mr-auto">
                   Invite another
                 </Button>
+                {generated.emailSent && (
+                  <Button variant="outline" onClick={resend} disabled={resending}>
+                    <RefreshCw className={`mr-2 h-3.5 w-3.5 ${resending ? "animate-spin" : ""}`} />
+                    {resending ? "Resending…" : "Resend email"}
+                  </Button>
+                )}
                 <Button onClick={handleClose}>Done</Button>
               </DialogFooter>
             </>

@@ -6,8 +6,11 @@ import {
   assertCallerIsManagerOrAdmin,
   createInvitation,
   inviteEmployee,
+  markInviteEmailResult,
   redeemInvitation,
   removeWorkspaceMember,
+  requestNewInvite,
+  resendInvitation,
   resolveFlag,
   sendInviteEmail,
   setEmployeeActive,
@@ -171,9 +174,67 @@ export const createInvitationFn = createServerFn({ method: "POST" })
     } catch (error) {
       emailError = error instanceof Error ? error.message : "Invite email could not be sent.";
     }
+    await markInviteEmailResult(result.invitationId, emailSent, emailError);
 
     return { ...result, emailSent, emailError };
   });
+
+export const resendInvitationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data) =>
+    z
+      .object({
+        invitationId: z.string().uuid(),
+        workspaceId: z.string().uuid(),
+        workspaceName: z.string().min(1),
+        siteUrl: z.string().url().optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ data, context }) => {
+    await assertCallerIsManagerOrAdmin(context.userId, context.supabase);
+
+    const fresh = await resendInvitation({
+      invitationId: data.invitationId,
+      workspaceId: data.workspaceId,
+    });
+
+    let emailSent = false;
+    let emailError: string | null = null;
+    const appUrl = data.siteUrl ?? process.env.APP_URL ?? "https://nexus.skryveai.com";
+    const joinUrl = `${appUrl}/join?token=${fresh.token}`;
+    const { data: profile } = await context.supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", context.userId)
+      .maybeSingle();
+
+    try {
+      await sendInviteEmail({
+        toEmail: fresh.email,
+        toName: fresh.full_name,
+        workspaceName: data.workspaceName,
+        inviterName: profile?.full_name ?? "Your workspace admin",
+        joinUrl,
+      });
+      emailSent = true;
+    } catch (error) {
+      emailError = error instanceof Error ? error.message : "Invite email could not be sent.";
+    }
+    await markInviteEmailResult(data.invitationId, emailSent, emailError);
+
+    return {
+      token: fresh.token,
+      passcode: fresh.passcode,
+      email: fresh.email,
+      emailSent,
+      emailError,
+    };
+  });
+
+export const requestNewInviteFn = createServerFn({ method: "POST" })
+  .inputValidator((data) => z.object({ tokenOrPasscode: z.string().min(1).max(200) }).parse(data))
+  .handler(async ({ data }) => requestNewInvite(data.tokenOrPasscode));
 
 export const redeemInvitationFn = createServerFn({ method: "POST" })
   .inputValidator((data) =>

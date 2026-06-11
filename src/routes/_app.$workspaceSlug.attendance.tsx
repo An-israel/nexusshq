@@ -86,8 +86,8 @@ function currentMonthStart(): string {
 }
 
 function AttendancePage() {
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [scope, setScope] = React.useState<"me" | "team">("me");
   const [employees, setEmployees] = React.useState<ProfileMini[]>([]);
   const [selectedUser, setSelectedUser] = React.useState<string>("");

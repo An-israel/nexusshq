@@ -82,7 +82,7 @@ export function NewDmModal({
       const { data: wmData } = await supabase
         .from("workspace_members")
         .select(
-          "user_id, is_active, profiles(id, full_name, email, avatar_url, department, job_title)",
+          "user_id, is_active, profiles!workspace_members_user_id_fkey(id, full_name, email, avatar_url, department, job_title)",
         )
         .eq("workspace_id", workspaceId)
         .eq("is_active", true);

@@ -159,8 +159,8 @@ function useIsMobile() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 function TasksPage() {
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const { workspaceSlug } = Route.useParams();
   const isMobile = useIsMobile();
 
