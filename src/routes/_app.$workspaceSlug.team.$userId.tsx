@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { requireAnyRole } from "@/lib/role-access";
-import { useAuth } from "@/lib/auth-context";
 import { ArrowLeft, UserX, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { PRIORITY_BADGE, STATUS_BADGE, deptLabel, initialsOf, timeAgo } from "@/lib/nexus";
@@ -35,8 +34,7 @@ export const Route = createFileRoute("/_app/$workspaceSlug/team/$userId")({
 
 function EmployeeDetailPage() {
   const { userId, workspaceSlug } = Route.useParams();
-  const { isAdmin } = useAuth();
-  const { workspace } = useWorkspace();
+  const { workspace, isWorkspaceAdmin: isAdmin } = useWorkspace();
   const setActive = useServerFn(setEmployeeActiveFn);
   const resolveFlag = useServerFn(resolveFlagFn);
   const reopenFlag = useServerFn(reopenFlagFn);

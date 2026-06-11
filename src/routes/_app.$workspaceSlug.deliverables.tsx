@@ -84,8 +84,8 @@ function fmtSize(b: number) {
 }
 
 function DeliverablesPage() {
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [scope, setScope] = React.useState<"mine" | "all">(isManager ? "all" : "mine");
   const [items, setItems] = React.useState<DeliverableRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});

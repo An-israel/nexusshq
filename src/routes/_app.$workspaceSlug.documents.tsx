@@ -82,8 +82,8 @@ function fmtBytes(b: number | null) {
 }
 
 function DocumentsPage() {
-  const { user, isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { user } = useAuth();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [docs, setDocs] = React.useState<DocumentRow[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [uploadOpen, setUploadOpen] = React.useState(false);

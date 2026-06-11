@@ -1,7 +1,7 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
+import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import {
   Select,
@@ -29,7 +29,7 @@ interface OrgProfile {
 type OrgProfileBase = Omit<OrgProfile, "role">;
 
 function OrgChartPage() {
-  const { isManager } = useAuth();
+  const { isWorkspaceManager: isManager } = useWorkspace();
   const [people, setPeople] = React.useState<OrgProfile[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [deptFilter, setDeptFilter] = React.useState<string>("all");

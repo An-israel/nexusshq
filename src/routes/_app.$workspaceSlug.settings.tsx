@@ -379,7 +379,8 @@ function WorkspaceSettings() {
 }
 
 function SettingsPage() {
-  const { profile, refresh, isAdmin } = useAuth();
+  const { profile, refresh } = useAuth();
+  const { isWorkspaceAdmin: isAdmin } = useWorkspace();
 
   return (
     <div className="space-y-6">

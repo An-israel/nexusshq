@@ -1,7 +1,6 @@
 import * as React from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
 import { useWorkspace } from "@/lib/workspace-context";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,8 +57,7 @@ const RISK_STYLE: Record<
 };
 
 function BurnoutPage() {
-  const { isManager } = useAuth();
-  const { workspace } = useWorkspace();
+  const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [results, setResults] = React.useState<EmployeeRisk[]>([]);
   const [loading, setLoading] = React.useState(false);
   const [lastRun, setLastRun] = React.useState<string | null>(null);
