@@ -14,6 +14,25 @@ USING (
 );
 
 -- 2. profiles: workspace-scoped admin/manager updates
+-- Define can_manage_private_profile before the policy that uses it; the
+-- original version of this migration referenced it without defining it,
+-- which fails on a fresh replay. 20260609070000 redefines it via
+-- CREATE OR REPLACE, so this stays in sync.
+CREATE OR REPLACE FUNCTION public.can_manage_private_profile(target_user_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.workspace_members wm_caller
+    JOIN public.workspace_members wm_target
+      ON wm_caller.workspace_id = wm_target.workspace_id
+    WHERE wm_caller.user_id = auth.uid()
+      AND wm_caller.is_active = true
+      AND wm_caller.role IN ('owner', 'admin', 'manager')
+      AND wm_target.user_id = target_user_id
+      AND wm_target.is_active = true
+  );
+$$;
+
 DROP POLICY IF EXISTS "admins update any profile" ON public.profiles;
 DROP POLICY IF EXISTS "managers update employee profiles" ON public.profiles;
 CREATE POLICY "ws admins update shared profiles"

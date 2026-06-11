@@ -105,9 +105,11 @@ DROP POLICY IF EXISTS "authenticated create subscription" ON public.subscription
 CREATE POLICY "authenticated create subscription" ON public.subscriptions FOR INSERT TO authenticated
 WITH CHECK (true);
 
--- Seed Skryve workspace
+-- Seed Skryve workspace. plan_seats is NOT NULL (defined in
+-- 20260507000000_multi_tenancy.sql), so it can't be seeded as NULL;
+-- 50 matches the Skryve seeds in later migrations.
 INSERT INTO public.workspaces (name, slug, plan, plan_seats, is_active)
-VALUES ('Skryve', 'skryve', 'business', NULL, true)
+VALUES ('Skryve', 'skryve', 'business', 50, true)
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO public.subscriptions (workspace_id, plan, status, current_period_start, current_period_end)
