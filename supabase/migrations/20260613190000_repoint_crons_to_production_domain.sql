@@ -114,20 +114,3 @@ SELECT cron.schedule(
   $$
 );
 
-SELECT cron.unschedule('nexus-email-queue-process')
-WHERE EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'nexus-email-queue-process');
-
-SELECT cron.schedule(
-  'nexus-email-queue-process',
-  '* * * * *',
-  $$
-  SELECT net.http_post(
-    url := 'https://nexus.skryveai.com/lovable/email/queue/process',
-    headers := jsonb_build_object(
-      'Content-Type', 'application/json',
-      'Authorization', 'Bearer ' || current_setting('app.service_role_key', true)
-    ),
-    body := '{}'::jsonb
-  );
-  $$
-);
