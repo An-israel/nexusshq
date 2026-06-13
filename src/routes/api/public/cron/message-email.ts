@@ -68,7 +68,7 @@ export const Route = createFileRoute("/api/public/cron/message-email")({
                 <div style="font-family:sans-serif;max-width:480px;margin:0 auto">
                   <h2 style="margin-bottom:8px">${escapeHtml(notif.title)}</h2>
                   <p style="color:#555;margin-bottom:24px">${escapeHtml(notif.message)}</p>
-                  <a href="https://project--1a191282-4857-4af0-8b72-38cc1bac2a29.lovable.app/messages"
+                  <a href="${process.env.APP_URL ?? "https://nexus.skryveai.com"}/messages"
                      style="background:#6366f1;color:#fff;padding:10px 20px;border-radius:8px;text-decoration:none">
                     Open Messages
                   </a>
