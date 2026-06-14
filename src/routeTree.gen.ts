@@ -43,6 +43,7 @@ import { Route as ApiV1TasksRouteImport } from './routes/api/v1/tasks'
 import { Route as ApiV1MembersRouteImport } from './routes/api/v1/members'
 import { Route as ApiV1AttendanceRouteImport } from './routes/api/v1/attendance'
 import { Route as ApiPushSubscribeRouteImport } from './routes/api/push/subscribe'
+import { Route as ApiPublicAuthEmailWebhookRouteImport } from './routes/api/public/auth-email-webhook'
 import { Route as ApiPaystackWebhookRouteImport } from './routes/api/paystack/webhook'
 import { Route as ApiPaystackInitializeRouteImport } from './routes/api/paystack/initialize'
 import { Route as ApiGdprExportRouteImport } from './routes/api/gdpr/export'
@@ -77,9 +78,6 @@ import { Route as AppWorkspaceSlugBurnoutRouteImport } from './routes/_app.$work
 import { Route as AppWorkspaceSlugBillingRouteImport } from './routes/_app.$workspaceSlug.billing'
 import { Route as AppWorkspaceSlugAttendanceRouteImport } from './routes/_app.$workspaceSlug.attendance'
 import { Route as AppWorkspaceSlugAnnouncementsRouteImport } from './routes/_app.$workspaceSlug.announcements'
-import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as ApiPublicCronWeeklySummaryEmailRouteImport } from './routes/api/public/cron/weekly-summary-email'
 import { Route as ApiPublicCronSubscriptionCheckRouteImport } from './routes/api/public/cron/subscription-check'
 import { Route as ApiPublicCronNotificationEmailRouteImport } from './routes/api/public/cron/notification-email'
@@ -265,6 +263,12 @@ const ApiPushSubscribeRoute = ApiPushSubscribeRouteImport.update({
   path: '/api/push/subscribe',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAuthEmailWebhookRoute =
+  ApiPublicAuthEmailWebhookRouteImport.update({
+    id: '/api/public/auth-email-webhook',
+    path: '/api/public/auth-email-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPaystackWebhookRoute = ApiPaystackWebhookRouteImport.update({
   id: '/api/paystack/webhook',
   path: '/api/paystack/webhook',
@@ -451,22 +455,6 @@ const AppWorkspaceSlugAnnouncementsRoute =
     path: '/announcements',
     getParentRoute: () => AppWorkspaceSlugRoute,
   } as any)
-const LovableEmailQueueProcessRoute =
-  LovableEmailQueueProcessRouteImport.update({
-    id: '/lovable/email/queue/process',
-    path: '/lovable/email/queue/process',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ApiPublicCronWeeklySummaryEmailRoute =
   ApiPublicCronWeeklySummaryEmailRouteImport.update({
     id: '/api/public/cron/weekly-summary-email',
@@ -620,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
+  '/api/public/auth-email-webhook': typeof ApiPublicAuthEmailWebhookRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/v1/attendance': typeof ApiV1AttendanceRoute
   '/api/v1/members': typeof ApiV1MembersRoute
@@ -639,9 +628,6 @@ export interface FileRoutesByFullPath {
   '/api/public/cron/notification-email': typeof ApiPublicCronNotificationEmailRoute
   '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/$workspaceSlug/messages/channel/$channelId': typeof AppWorkspaceSlugMessagesChannelChannelIdRoute
   '/$workspaceSlug/messages/dm/$conversationId': typeof AppWorkspaceSlugMessagesDmConversationIdRoute
 }
@@ -707,6 +693,7 @@ export interface FileRoutesByTo {
   '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
+  '/api/public/auth-email-webhook': typeof ApiPublicAuthEmailWebhookRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/v1/attendance': typeof ApiV1AttendanceRoute
   '/api/v1/members': typeof ApiV1MembersRoute
@@ -726,9 +713,6 @@ export interface FileRoutesByTo {
   '/api/public/cron/notification-email': typeof ApiPublicCronNotificationEmailRoute
   '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/$workspaceSlug/messages/channel/$channelId': typeof AppWorkspaceSlugMessagesChannelChannelIdRoute
   '/$workspaceSlug/messages/dm/$conversationId': typeof AppWorkspaceSlugMessagesDmConversationIdRoute
 }
@@ -796,6 +780,7 @@ export interface FileRoutesById {
   '/api/gdpr/export': typeof ApiGdprExportRoute
   '/api/paystack/initialize': typeof ApiPaystackInitializeRoute
   '/api/paystack/webhook': typeof ApiPaystackWebhookRoute
+  '/api/public/auth-email-webhook': typeof ApiPublicAuthEmailWebhookRoute
   '/api/push/subscribe': typeof ApiPushSubscribeRoute
   '/api/v1/attendance': typeof ApiV1AttendanceRoute
   '/api/v1/members': typeof ApiV1MembersRoute
@@ -815,9 +800,6 @@ export interface FileRoutesById {
   '/api/public/cron/notification-email': typeof ApiPublicCronNotificationEmailRoute
   '/api/public/cron/subscription-check': typeof ApiPublicCronSubscriptionCheckRoute
   '/api/public/cron/weekly-summary-email': typeof ApiPublicCronWeeklySummaryEmailRoute
-  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
-  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
-  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
   '/_app/$workspaceSlug/messages/channel/$channelId': typeof AppWorkspaceSlugMessagesChannelChannelIdRoute
   '/_app/$workspaceSlug/messages/dm/$conversationId': typeof AppWorkspaceSlugMessagesDmConversationIdRoute
 }
@@ -885,6 +867,7 @@ export interface FileRouteTypes {
     | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
+    | '/api/public/auth-email-webhook'
     | '/api/push/subscribe'
     | '/api/v1/attendance'
     | '/api/v1/members'
@@ -904,9 +887,6 @@ export interface FileRouteTypes {
     | '/api/public/cron/notification-email'
     | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/$workspaceSlug/messages/channel/$channelId'
     | '/$workspaceSlug/messages/dm/$conversationId'
   fileRoutesByTo: FileRoutesByTo
@@ -972,6 +952,7 @@ export interface FileRouteTypes {
     | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
+    | '/api/public/auth-email-webhook'
     | '/api/push/subscribe'
     | '/api/v1/attendance'
     | '/api/v1/members'
@@ -991,9 +972,6 @@ export interface FileRouteTypes {
     | '/api/public/cron/notification-email'
     | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/$workspaceSlug/messages/channel/$channelId'
     | '/$workspaceSlug/messages/dm/$conversationId'
   id:
@@ -1060,6 +1038,7 @@ export interface FileRouteTypes {
     | '/api/gdpr/export'
     | '/api/paystack/initialize'
     | '/api/paystack/webhook'
+    | '/api/public/auth-email-webhook'
     | '/api/push/subscribe'
     | '/api/v1/attendance'
     | '/api/v1/members'
@@ -1079,9 +1058,6 @@ export interface FileRouteTypes {
     | '/api/public/cron/notification-email'
     | '/api/public/cron/subscription-check'
     | '/api/public/cron/weekly-summary-email'
-    | '/lovable/email/auth/preview'
-    | '/lovable/email/auth/webhook'
-    | '/lovable/email/queue/process'
     | '/_app/$workspaceSlug/messages/channel/$channelId'
     | '/_app/$workspaceSlug/messages/dm/$conversationId'
   fileRoutesById: FileRoutesById
@@ -1118,6 +1094,7 @@ export interface RootRouteChildren {
   ApiGdprExportRoute: typeof ApiGdprExportRoute
   ApiPaystackInitializeRoute: typeof ApiPaystackInitializeRoute
   ApiPaystackWebhookRoute: typeof ApiPaystackWebhookRoute
+  ApiPublicAuthEmailWebhookRoute: typeof ApiPublicAuthEmailWebhookRoute
   ApiPushSubscribeRoute: typeof ApiPushSubscribeRoute
   ApiV1AttendanceRoute: typeof ApiV1AttendanceRoute
   ApiV1MembersRoute: typeof ApiV1MembersRoute
@@ -1131,9 +1108,6 @@ export interface RootRouteChildren {
   ApiPublicCronNotificationEmailRoute: typeof ApiPublicCronNotificationEmailRoute
   ApiPublicCronSubscriptionCheckRoute: typeof ApiPublicCronSubscriptionCheckRoute
   ApiPublicCronWeeklySummaryEmailRoute: typeof ApiPublicCronWeeklySummaryEmailRoute
-  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
-  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
-  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -1376,6 +1350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPushSubscribeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/auth-email-webhook': {
+      id: '/api/public/auth-email-webhook'
+      path: '/api/public/auth-email-webhook'
+      fullPath: '/api/public/auth-email-webhook'
+      preLoaderRoute: typeof ApiPublicAuthEmailWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/paystack/webhook': {
       id: '/api/paystack/webhook'
       path: '/api/paystack/webhook'
@@ -1613,27 +1594,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/$workspaceSlug/announcements'
       preLoaderRoute: typeof AppWorkspaceSlugAnnouncementsRouteImport
       parentRoute: typeof AppWorkspaceSlugRoute
-    }
-    '/lovable/email/queue/process': {
-      id: '/lovable/email/queue/process'
-      path: '/lovable/email/queue/process'
-      fullPath: '/lovable/email/queue/process'
-      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
     }
     '/api/public/cron/weekly-summary-email': {
       id: '/api/public/cron/weekly-summary-email'
@@ -1937,6 +1897,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiGdprExportRoute: ApiGdprExportRoute,
   ApiPaystackInitializeRoute: ApiPaystackInitializeRoute,
   ApiPaystackWebhookRoute: ApiPaystackWebhookRoute,
+  ApiPublicAuthEmailWebhookRoute: ApiPublicAuthEmailWebhookRoute,
   ApiPushSubscribeRoute: ApiPushSubscribeRoute,
   ApiV1AttendanceRoute: ApiV1AttendanceRoute,
   ApiV1MembersRoute: ApiV1MembersRoute,
@@ -1950,9 +1911,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicCronNotificationEmailRoute: ApiPublicCronNotificationEmailRoute,
   ApiPublicCronSubscriptionCheckRoute: ApiPublicCronSubscriptionCheckRoute,
   ApiPublicCronWeeklySummaryEmailRoute: ApiPublicCronWeeklySummaryEmailRoute,
-  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
-  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
-  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

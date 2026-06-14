@@ -139,13 +139,11 @@ export const Route = createRootRoute({
       },
       {
         property: "og:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/afa32301-7082-4dd2-8c0e-9cf686ba64f7/id-preview-e4c67354--1a191282-4857-4af0-8b72-38cc1bac2a29.lovable.app-1777587824959.png",
+        content: "https://nexus.skryveai.com/og-image.png",
       },
       {
         name: "twitter:image",
-        content:
-          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/afa32301-7082-4dd2-8c0e-9cf686ba64f7/id-preview-e4c67354--1a191282-4857-4af0-8b72-38cc1bac2a29.lovable.app-1777587824959.png",
+        content: "https://nexus.skryveai.com/og-image.png",
       },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:type", content: "website" },
