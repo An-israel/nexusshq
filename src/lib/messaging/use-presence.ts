@@ -36,7 +36,7 @@ export function usePresence(workspaceId: string | null): {
           status_text: text ?? null,
           last_seen_at: new Date().toISOString(),
         },
-        { onConflict: "user_id,workspace_id" },
+        { onConflict: "user_id" },
       );
       if (error) {
         console.error("updateMyPresence error:", error);
@@ -87,7 +87,7 @@ export function usePresence(workspaceId: string | null): {
             status: "active",
             last_seen_at: new Date().toISOString(),
           },
-          { onConflict: "user_id,workspace_id" },
+          { onConflict: "user_id" },
         );
       }
     };
@@ -135,7 +135,7 @@ export function usePresence(workspaceId: string | null): {
           status: "active",
           last_seen_at: new Date().toISOString(),
         },
-        { onConflict: "user_id,workspace_id" },
+        { onConflict: "user_id" },
       );
     }, HEARTBEAT_INTERVAL_MS);
 
@@ -154,7 +154,7 @@ export function usePresence(workspaceId: string | null): {
               status: "offline",
               last_seen_at: new Date().toISOString(),
             },
-            { onConflict: "user_id,workspace_id" },
+            { onConflict: "user_id" },
           )
           .then(() => {});
       }
