@@ -10,6 +10,7 @@ import {
   Pin,
   FileText,
   File,
+  MicOff,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,12 @@ interface MessageItemProps {
   onPin: (id: string, pinned: boolean) => void;
   onAvatarClick?: (profile: MsgProfile) => void;
 }
+
+// Placeholder body text used while a voice note message is being created.
+// If a message keeps this body but never ends up with a `voice_note` row
+// attached (e.g. the upload failed partway through), show a clear
+// "unavailable" state instead of the raw placeholder text.
+const VOICE_NOTE_PLACEHOLDER_BODY = "[Voice Note]";
 
 const HASH_COLORS = [
   "#5865F2",
@@ -435,6 +442,11 @@ export function MessageItem({
                   Cancel
                 </button>
               </div>
+            </div>
+          ) : message.body === VOICE_NOTE_PLACEHOLDER_BODY && !message.voice_note ? (
+            <div className="flex items-center gap-1.5 text-sm text-[#6B7280] italic">
+              <MicOff className="w-3.5 h-3.5" />
+              Voice note unavailable
             </div>
           ) : (
             <div className="text-sm text-[#E5E7EB] leading-relaxed break-words">

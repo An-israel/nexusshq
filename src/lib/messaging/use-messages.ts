@@ -579,6 +579,15 @@ export function useMessages(params: {
 
         const insertedMsg = msgData as unknown as { id: string } & typeof optimistic;
 
+        // If anything below fails, delete the message row we just created so
+        // we don't leave a permanent, unplayable "[Voice Note]" message behind.
+        const rollbackMessage = () =>
+          void supabase
+            .from("messages")
+            .delete()
+            .eq("id", insertedMsg.id)
+            .then(() => {});
+
         const ext = blob.type.includes("ogg") ? "ogg" : blob.type.includes("mp4") ? "mp4" : "webm";
         const containerId = channelId ?? conversationId ?? "misc";
         const storagePath = `${workspaceId}/${containerId}/${crypto.randomUUID()}.${ext}`;
@@ -586,7 +595,10 @@ export function useMessages(params: {
         const { error: uploadErr } = await supabase.storage
           .from("voice-notes")
           .upload(storagePath, blob, { contentType: blob.type });
-        if (uploadErr) throw uploadErr;
+        if (uploadErr) {
+          rollbackMessage();
+          throw uploadErr;
+        }
 
         const { data: urlData } = supabase.storage.from("voice-notes").getPublicUrl(storagePath);
         const publicUrl = urlData?.publicUrl ?? "";
@@ -607,7 +619,10 @@ export function useMessages(params: {
           })
           .select()
           .single();
-        if (vnRes.error) throw vnRes.error;
+        if (vnRes.error) {
+          rollbackMessage();
+          throw vnRes.error;
+        }
         const vnData = vnRes.data as RawVoiceNote;
 
         // Fire-and-forget transcription (bearer token attached for auth check)
