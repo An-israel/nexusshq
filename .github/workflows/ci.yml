@@ -28,6 +28,9 @@ jobs:
       - name: TypeScript
         run: npx tsc --noEmit
 
+      - name: TypeScript (Vercel api functions)
+        run: npx tsc --noEmit -p api/tsconfig.json
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
