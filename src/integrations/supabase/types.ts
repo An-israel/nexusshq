@@ -2883,6 +2883,10 @@ export type Database = {
           created_at: string
           department: Database["public"]["Enums"]["department_type"]
           email: string
+          email_attempts: number
+          email_error: string | null
+          email_last_attempt_at: string | null
+          email_status: string
           expires_at: string
           full_name: string
           id: string
@@ -2899,6 +2903,10 @@ export type Database = {
           created_at?: string
           department?: Database["public"]["Enums"]["department_type"]
           email: string
+          email_attempts?: number
+          email_error?: string | null
+          email_last_attempt_at?: string | null
+          email_status?: string
           expires_at?: string
           full_name: string
           id?: string
@@ -2915,6 +2923,10 @@ export type Database = {
           created_at?: string
           department?: Database["public"]["Enums"]["department_type"]
           email?: string
+          email_attempts?: number
+          email_error?: string | null
+          email_last_attempt_at?: string | null
+          email_status?: string
           expires_at?: string
           full_name?: string
           id?: string
