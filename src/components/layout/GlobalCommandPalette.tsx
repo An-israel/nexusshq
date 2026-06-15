@@ -22,6 +22,7 @@ import {
   Search,
   LogIn,
   LogOut,
+  MessageSquare,
 } from "lucide-react";
 import {
   CommandDialog,
@@ -55,6 +56,12 @@ const NAV_ENTRIES: NavEntry[] = [
     roles: ["admin", "manager", "employee"],
   },
   { label: "Tasks", icon: CheckSquare, slug: "tasks", roles: ["admin", "manager", "employee"] },
+  {
+    label: "Messages",
+    icon: MessageSquare,
+    slug: "messages",
+    roles: ["admin", "manager", "employee"],
+  },
   { label: "Attendance", icon: Clock, slug: "attendance", roles: ["admin", "manager", "employee"] },
   {
     label: "Standups",

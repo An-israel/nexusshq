@@ -26,6 +26,7 @@ import {
   Building2,
   Check,
   ChevronDown,
+  MessageSquare,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -67,6 +68,13 @@ const NAV_GROUPS: NavGroup[] = [
         label: "Overview",
         icon: LayoutDashboard,
         roles: ["admin", "manager", "employee"],
+      },
+      {
+        slug: "messages",
+        label: "Messages",
+        icon: MessageSquare,
+        roles: ["admin", "manager", "employee"],
+        flagKey: "messages",
       },
       {
         slug: "announcements",
