@@ -20,6 +20,7 @@ import {
   LogOut,
   Radio,
   Building2,
+  MessageSquare,
 } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { cn } from "@/lib/utils";
@@ -51,6 +52,12 @@ const ALL_NAV: NavItem[] = [
     roles: ["admin", "manager", "employee"],
   },
   { slug: "tasks", label: "Tasks", icon: CheckSquare, roles: ["admin", "manager", "employee"] },
+  {
+    slug: "messages",
+    label: "Messages",
+    icon: MessageSquare,
+    roles: ["admin", "manager", "employee"],
+  },
   { slug: "attendance", label: "Attendance", icon: Clock, roles: ["admin", "manager", "employee"] },
   {
     slug: "standups",
