@@ -451,6 +451,7 @@ function MemberCard({
           {m.profile.is_active && (
             <ManageRoleDialog
               userId={m.profile.id}
+              workspaceId={workspace.id}
               userName={m.profile.full_name ?? m.profile.email ?? undefined}
               currentRole={m.role}
               onChanged={onRoleChanged}

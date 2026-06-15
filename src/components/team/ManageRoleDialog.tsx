@@ -26,6 +26,7 @@ type AppRole = "admin" | "manager" | "employee";
 
 interface Props {
   userId: string;
+  workspaceId: string;
   userName?: string;
   currentRole: AppRole | null;
   onChanged?: (newRole: AppRole) => void;
@@ -41,6 +42,7 @@ const ROLE_DESCRIPTIONS: Record<AppRole, string> = {
 
 export function ManageRoleDialog({
   userId,
+  workspaceId,
   userName,
   currentRole,
   onChanged,
@@ -63,7 +65,7 @@ export function ManageRoleDialog({
     }
     setSaving(true);
     try {
-      await setRole({ data: { userId, role: selected } });
+      await setRole({ data: { userId, workspaceId, role: selected } });
       toast.success(`Role updated to ${selected}${userName ? ` for ${userName}` : ""}.`);
       onChanged?.(selected);
       setOpen(false);

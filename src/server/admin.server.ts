@@ -149,12 +149,26 @@ export async function removeWorkspaceMember(
   if (error) throw new Error(error.message);
 }
 
-export async function setEmployeeRole(userId: string, role: AppRole, callerClient: DbClient) {
+export async function setEmployeeRole(
+  userId: string,
+  workspaceId: string,
+  role: AppRole,
+  callerClient: DbClient,
+) {
   const { error: delError } = await callerClient.from("user_roles").delete().eq("user_id", userId);
   if (delError) throw new Error(delError.message);
 
   const { error } = await callerClient.from("user_roles").insert({ user_id: userId, role });
   if (error) throw new Error(error.message);
+
+  // Also update the workspace-scoped role, which is what RLS policies
+  // (is_workspace_admin/is_workspace_manager) actually check.
+  const { error: memberError } = await callerClient
+    .from("workspace_members")
+    .update({ role })
+    .eq("workspace_id", workspaceId)
+    .eq("user_id", userId);
+  if (memberError) throw new Error(memberError.message);
 }
 
 export async function resolveFlag(flagId: string, callerClient: DbClient) {

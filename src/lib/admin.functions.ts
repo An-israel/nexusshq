@@ -86,6 +86,7 @@ export const setEmployeeRoleFn = createServerFn({ method: "POST" })
     z
       .object({
         userId: z.string().uuid(),
+        workspaceId: z.string().uuid(),
         role: roleEnum,
       })
       .parse(data),
@@ -95,7 +96,7 @@ export const setEmployeeRoleFn = createServerFn({ method: "POST" })
     if (data.role === "admin") {
       await assertCallerIsAdmin(context.userId, context.supabase);
     }
-    await setEmployeeRole(data.userId, data.role, context.supabase);
+    await setEmployeeRole(data.userId, data.workspaceId, data.role, context.supabase);
     return { ok: true };
   });
 
