@@ -166,6 +166,8 @@ function TasksPage() {
 
   const [tasks, setTasks] = React.useState<TaskRow[]>([]);
   const [profiles, setProfiles] = React.useState<Record<string, ProfileMini>>({});
+  // task_id → ordered list of assignees
+  const [taskAssignees, setTaskAssignees] = React.useState<Record<string, ProfileMini[]>>({});
   const [loading, setLoading] = React.useState(true);
   const [filter, setFilter] = React.useState<FilterTab>("all");
   const [selectedTaskId, setSelectedTaskId] = React.useState<string | null>(null);
@@ -173,12 +175,29 @@ function TasksPage() {
   const load = React.useCallback(async () => {
     if (!user) return;
     setLoading(true);
+
     let q = supabase
       .from("tasks")
       .select("*")
       .eq("workspace_id", workspace.id)
       .order("due_date", { ascending: true });
-    if (!isManager) q = q.eq("assigned_to", user.id);
+
+    if (!isManager) {
+      // For regular members, find only tasks they're assigned to via task_assignees
+      const { data: myAssignments } = await supabase
+        .from("task_assignees")
+        .select("task_id")
+        .eq("user_id", user.id);
+      const myTaskIds = (myAssignments ?? []).map((r) => r.task_id as string);
+      if (myTaskIds.length === 0) {
+        setTasks([]);
+        setTaskAssignees({});
+        setLoading(false);
+        return;
+      }
+      q = q.in("id", myTaskIds);
+    }
+
     const { data, error } = await q;
     if (error) {
       toast.error(error.message);
@@ -188,18 +207,56 @@ function TasksPage() {
     const rows = (data ?? []) as TaskRow[];
     setTasks(rows);
 
-    const ids = Array.from(new Set(rows.map((t) => t.assigned_to)));
-    if (ids.length) {
+    if (rows.length === 0) {
+      setTaskAssignees({});
+      setLoading(false);
+      return;
+    }
+
+    // Load task_assignees for all visible tasks
+    const taskIds = rows.map((t) => t.id);
+    const { data: assigneeRows } = await supabase
+      .from("task_assignees")
+      .select("task_id, user_id")
+      .in("task_id", taskIds);
+
+    // Collect all unique user IDs across all assignees + assigned_by
+    const allUserIds = Array.from(
+      new Set([
+        ...rows.map((t) => t.assigned_to).filter(Boolean),
+        ...(assigneeRows ?? []).map((r) => r.user_id as string),
+      ]),
+    );
+
+    const profileMap: Record<string, ProfileMini> = {};
+    if (allUserIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
         .select("id, full_name, email, department")
-        .in("id", ids);
-      const map: Record<string, ProfileMini> = {};
+        .in("id", allUserIds);
       (profs ?? []).forEach((p) => {
-        map[p.id] = p as ProfileMini;
+        profileMap[p.id] = p as ProfileMini;
       });
-      setProfiles(map);
     }
+    setProfiles(profileMap);
+
+    // Build task_id → ProfileMini[] map preserving insertion order
+    const assigneesMap: Record<string, ProfileMini[]> = {};
+    (assigneeRows ?? []).forEach((r) => {
+      const tid = r.task_id as string;
+      const uid = r.user_id as string;
+      if (!assigneesMap[tid]) assigneesMap[tid] = [];
+      const profile = profileMap[uid];
+      if (profile) assigneesMap[tid].push(profile);
+    });
+    // Fall back to assigned_to for tasks not yet in task_assignees
+    rows.forEach((t) => {
+      if (!assigneesMap[t.id] && t.assigned_to && profileMap[t.assigned_to]) {
+        assigneesMap[t.id] = [profileMap[t.assigned_to]];
+      }
+    });
+    setTaskAssignees(assigneesMap);
+
     setLoading(false);
   }, [user, isManager, workspace.id]);
 
@@ -364,7 +421,7 @@ function TasksPage() {
                 <TaskCard
                   key={t.id}
                   task={t}
-                  assignee={profiles[t.assigned_to]}
+                  assignees={taskAssignees[t.id] ?? (profiles[t.assigned_to] ? [profiles[t.assigned_to]] : [])}
                   isManager={isManager}
                   isSelected={selectedTaskId === t.id}
                   isMobile={isMobile}
@@ -413,7 +470,7 @@ function TasksPage() {
         <div className="hidden md:block w-96 shrink-0 border-l border-border overflow-y-auto">
           <TaskDetailPanel
             task={selectedTask}
-            assignee={profiles[selectedTask.assigned_to]}
+            assignees={taskAssignees[selectedTask.id] ?? (profiles[selectedTask.assigned_to] ? [profiles[selectedTask.assigned_to]] : [])}
             isManager={isManager}
             user={user}
             workspaceId={workspace.id}
@@ -439,7 +496,7 @@ function TasksPage() {
             {selectedTask && (
               <TaskDetailPanel
                 task={selectedTask}
-                assignee={profiles[selectedTask.assigned_to]}
+                assignees={taskAssignees[selectedTask.id] ?? (profiles[selectedTask.assigned_to] ? [profiles[selectedTask.assigned_to]] : [])}
                 isManager={isManager}
                 user={user}
                 workspaceId={workspace.id}
@@ -479,7 +536,7 @@ function StatChip({
 
 function TaskCard({
   task,
-  assignee,
+  assignees,
   isManager,
   isSelected,
   isMobile,
@@ -491,7 +548,7 @@ function TaskCard({
   onDelete,
 }: {
   task: TaskRow;
-  assignee?: ProfileMini;
+  assignees: ProfileMini[];
   isManager: boolean;
   isSelected: boolean;
   isMobile?: boolean;
@@ -602,9 +659,25 @@ function TaskCard({
             <span className="text-muted-foreground capitalize">
               {task.task_type.replace("_", " ")}
             </span>
-            {isManager && assignee && (
-              <span className="text-muted-foreground truncate max-w-[120px]">
-                → {assignee.full_name ?? assignee.email}
+            {isManager && assignees.length > 0 && (
+              <span className="inline-flex items-center gap-1">
+                {assignees.slice(0, 3).map((a, i) => (
+                  <span
+                    key={a.id}
+                    title={a.full_name ?? a.email ?? ""}
+                    className="inline-flex h-5 w-5 rounded-full bg-primary/20 items-center justify-center text-[9px] font-bold text-primary ring-1 ring-background"
+                    style={{ marginLeft: i > 0 ? "-4px" : 0 }}
+                  >
+                    {(a.full_name ?? a.email ?? "?").charAt(0).toUpperCase()}
+                  </span>
+                ))}
+                {assignees.length > 3 && (
+                  <span className="text-muted-foreground text-[10px] ml-1">+{assignees.length - 3}</span>
+                )}
+                <span className="text-muted-foreground truncate max-w-[80px] ml-1">
+                  {assignees[0]?.full_name ?? assignees[0]?.email}
+                  {assignees.length > 1 ? ` +${assignees.length - 1}` : ""}
+                </span>
               </span>
             )}
           </div>
@@ -906,7 +979,7 @@ function FlagEmployeeDialog({
 
 function TaskDetailPanel({
   task,
-  assignee,
+  assignees,
   isManager,
   user,
   workspaceId,
@@ -914,7 +987,7 @@ function TaskDetailPanel({
   onRefresh,
 }: {
   task: TaskRow;
-  assignee?: ProfileMini;
+  assignees: ProfileMini[];
   isManager: boolean;
   user: { id: string } | null;
   workspaceId: string;
@@ -945,7 +1018,7 @@ function TaskDetailPanel({
       .then(({ data }) => setKpi(data as KpiRow | null));
   }, [task.kpi_id]);
 
-  const canEdit = isManager || (user?.id && task.assigned_to === user.id);
+  const canEdit = isManager || (user?.id && assignees.some((a) => a.id === user.id));
   const isOverdue = task.status !== "completed" && task.due_date < todayISO();
   const dueLabel = dueDateLabel(task.due_date, task.status);
 
@@ -1042,10 +1115,12 @@ function TaskDetailPanel({
             <div className="text-muted-foreground capitalize">
               Type: <span className="text-foreground">{task.task_type.replace("_", " ")}</span>
             </div>
-            {isManager && assignee && (
+            {isManager && assignees.length > 0 && (
               <div className="text-muted-foreground">
                 Assigned to:{" "}
-                <span className="text-foreground">{assignee.full_name ?? assignee.email}</span>
+                <span className="text-foreground">
+                  {assignees.map((a) => a.full_name ?? a.email).join(", ")}
+                </span>
               </div>
             )}
           </div>
