@@ -73,6 +73,7 @@ function TaskDetailPage() {
   const { user } = useAuth();
   const { workspace, isWorkspaceManager: isManager } = useWorkspace();
   const [task, setTask] = React.useState<TaskRow | null>(null);
+  const [taskAssignees, setTaskAssignees] = React.useState<ProfileMini[]>([]);
   const [updates, setUpdates] = React.useState<UpdateRow[]>([]);
   const [profileMap, setProfileMap] = React.useState<Record<string, ProfileMini>>({});
   const [loading, setLoading] = React.useState(true);
@@ -87,7 +88,7 @@ function TaskDetailPage() {
 
   const load = React.useCallback(async () => {
     setLoading(true);
-    const [{ data: t, error: te }, { data: u }] = await Promise.all([
+    const [{ data: t, error: te }, { data: u }, { data: assigneeRows }] = await Promise.all([
       supabase
         .from("tasks")
         .select("*")
@@ -99,6 +100,10 @@ function TaskDetailPage() {
         .select("*")
         .eq("task_id", taskId)
         .order("created_at", { ascending: false }),
+      supabase
+        .from("task_assignees")
+        .select("user_id")
+        .eq("task_id", taskId),
     ]);
     if (te || !t) {
       toast.error(te?.message ?? "Task not found");
@@ -112,11 +117,16 @@ function TaskDetailPage() {
     const list = (u ?? []) as UpdateRow[];
     setUpdates(list);
 
+    const assigneeUserIds = (assigneeRows ?? []).map((r) => r.user_id as string);
+
     const ids = Array.from(
       new Set(
-        [tr.assigned_to, tr.assigned_by, ...list.map((x) => x.updated_by)].filter(
-          (x): x is string => !!x,
-        ),
+        [
+          tr.assigned_to,
+          tr.assigned_by,
+          ...assigneeUserIds,
+          ...list.map((x) => x.updated_by),
+        ].filter((x): x is string => !!x),
       ),
     );
     if (ids.length) {
@@ -129,6 +139,14 @@ function TaskDetailPage() {
         map[p.id] = p as ProfileMini;
       });
       setProfileMap(map);
+      // Build ordered assignees list; fall back to assigned_to if no junction rows
+      const orderedAssignees =
+        assigneeUserIds.length > 0
+          ? assigneeUserIds.map((id) => map[id]).filter(Boolean) as ProfileMini[]
+          : tr.assigned_to && map[tr.assigned_to]
+            ? [map[tr.assigned_to]]
+            : [];
+      setTaskAssignees(orderedAssignees);
     }
     setLoading(false);
   }, [taskId, workspace.id]);
@@ -141,7 +159,7 @@ function TaskDetailPage() {
     return <p className="text-sm text-muted-foreground">Loading…</p>;
   }
 
-  const canEdit = task.assigned_to === user?.id || isManager;
+  const canEdit = isManager || taskAssignees.some((a) => a.id === user?.id);
   const overdue = task.status !== "completed" && task.due_date < todayISO();
   const statusKey = overdue ? "overdue" : task.status;
 
@@ -205,13 +223,17 @@ function TaskDetailPage() {
       toast.error(error.message);
       return;
     }
-    await supabase.from("notifications").insert({
-      user_id: task.assigned_to,
-      type: "warning",
-      title: "⚠️ Warning issued on task",
-      message: `${task.title}: ${warnMsg.trim()}`,
-      related_task_id: task.id,
-    });
+    await Promise.all(
+      taskAssignees.map((a) =>
+        supabase.from("notifications").insert({
+          user_id: a.id,
+          type: "warning",
+          title: "⚠️ Warning issued on task",
+          message: `${task.title}: ${warnMsg.trim()}`,
+          related_task_id: task.id,
+        }),
+      ),
+    );
     await supabase.from("flags").insert({
       flagged_user_id: task.assigned_to,
       flagged_by: user?.id ?? null,
@@ -256,7 +278,6 @@ function TaskDetailPage() {
     navigate({ to: "/$workspaceSlug/tasks", params: { workspaceSlug: workspace.slug } });
   }
 
-  const assignee = profileMap[task.assigned_to];
   const assigner = task.assigned_by ? profileMap[task.assigned_by] : null;
 
   return (
@@ -295,7 +316,12 @@ function TaskDetailPage() {
             <div className="flex items-center gap-4 text-xs text-muted-foreground mt-3 flex-wrap">
               <span>Due {task.due_date}</span>
               <span>Type: {task.task_type.replace("_", " ")}</span>
-              {assignee && <span>Assigned to: {assignee.full_name ?? assignee.email}</span>}
+              {taskAssignees.length > 0 && (
+                <span>
+                  Assigned to:{" "}
+                  {taskAssignees.map((a) => a.full_name ?? a.email).join(", ")}
+                </span>
+              )}
               {assigner && <span>By: {assigner.full_name ?? assigner.email}</span>}
             </div>
           </div>
