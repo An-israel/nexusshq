@@ -2458,18 +2458,21 @@ export type Database = {
           assigned_by: string | null
           task_id: string
           user_id: string
+          workspace_id: string | null
         }
         Insert: {
           assigned_at?: string
           assigned_by?: string | null
           task_id: string
           user_id: string
+          workspace_id?: string | null
         }
         Update: {
           assigned_at?: string
           assigned_by?: string | null
           task_id?: string
           user_id?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {

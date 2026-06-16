@@ -140,7 +140,9 @@ function AssignTaskPage() {
   const selectedMembers = members.filter((m) => form.assigned_to.includes(m.id));
 
   // Filter KPIs by department when all assignees share one department
-  const assigneeDepts = Array.from(new Set(selectedMembers.map((m) => m.department).filter(Boolean)));
+  const assigneeDepts = Array.from(
+    new Set(selectedMembers.map((m) => m.department).filter(Boolean)),
+  );
   const filteredKpis =
     assigneeDepts.length === 1
       ? kpis.filter((k) => k.department === assigneeDepts[0] || !k.department)
@@ -148,7 +150,8 @@ function AssignTaskPage() {
 
   const visibleMembers = memberSearch.trim()
     ? members.filter((m) =>
-        `${m.full_name ?? ""} ${m.email ?? ""} ${m.department ?? ""}`.toLowerCase()
+        `${m.full_name ?? ""} ${m.email ?? ""} ${m.department ?? ""}`
+          .toLowerCase()
           .includes(memberSearch.toLowerCase()),
       )
     : members;
@@ -235,6 +238,7 @@ function AssignTaskPage() {
         task_id: task.id,
         user_id: uid,
         assigned_by: user?.id ?? null,
+        workspace_id: workspace.id,
       })),
     );
     if (assigneesError) {
@@ -426,9 +430,7 @@ function AssignTaskPage() {
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium leading-none">
-                          {m.full_name ?? m.email}
-                        </p>
+                        <p className="text-sm font-medium leading-none">{m.full_name ?? m.email}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
                           <span className="capitalize">{m.role}</span>
                           {m.department ? ` · ${m.department}` : ""}
@@ -603,10 +605,22 @@ function AssignTaskPage() {
                 ).map(({ value, label }, idx, arr) => {
                   const isActive = form.priority === value;
                   const colorClasses: Record<Priority, { base: string; active: string }> = {
-                    low: { base: "text-muted-foreground hover:bg-muted", active: "bg-muted text-foreground border-border" },
-                    medium: { base: "text-blue-400 hover:bg-blue-500/10", active: "bg-blue-500/20 text-blue-400 border-blue-500/50" },
-                    high: { base: "text-amber-400 hover:bg-amber-500/10", active: "bg-amber-500/20 text-amber-400 border-amber-500/50" },
-                    urgent: { base: "text-red-400 hover:bg-red-500/10", active: "bg-red-500/20 text-red-400 border-red-500/50" },
+                    low: {
+                      base: "text-muted-foreground hover:bg-muted",
+                      active: "bg-muted text-foreground border-border",
+                    },
+                    medium: {
+                      base: "text-blue-400 hover:bg-blue-500/10",
+                      active: "bg-blue-500/20 text-blue-400 border-blue-500/50",
+                    },
+                    high: {
+                      base: "text-amber-400 hover:bg-amber-500/10",
+                      active: "bg-amber-500/20 text-amber-400 border-amber-500/50",
+                    },
+                    urgent: {
+                      base: "text-red-400 hover:bg-red-500/10",
+                      active: "bg-red-500/20 text-red-400 border-red-500/50",
+                    },
                   };
                   const { base, active } = colorClasses[value];
                   return (
@@ -618,7 +632,9 @@ function AssignTaskPage() {
                         "flex-1 px-3 py-2 text-sm font-medium transition-colors focus:outline-none",
                         idx !== arr.length - 1 ? "border-r border-border" : "",
                         isActive ? active : `bg-background ${base}`,
-                      ].filter(Boolean).join(" ")}
+                      ]
+                        .filter(Boolean)
+                        .join(" ")}
                     >
                       {label}
                     </button>
