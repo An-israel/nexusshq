@@ -421,7 +421,10 @@ function TasksPage() {
                 <TaskCard
                   key={t.id}
                   task={t}
-                  assignees={taskAssignees[t.id] ?? (profiles[t.assigned_to] ? [profiles[t.assigned_to]] : [])}
+                  assignees={
+                    taskAssignees[t.id] ??
+                    (profiles[t.assigned_to] ? [profiles[t.assigned_to]] : [])
+                  }
                   isManager={isManager}
                   isSelected={selectedTaskId === t.id}
                   isMobile={isMobile}
@@ -470,7 +473,10 @@ function TasksPage() {
         <div className="hidden md:block w-96 shrink-0 border-l border-border overflow-y-auto">
           <TaskDetailPanel
             task={selectedTask}
-            assignees={taskAssignees[selectedTask.id] ?? (profiles[selectedTask.assigned_to] ? [profiles[selectedTask.assigned_to]] : [])}
+            assignees={
+              taskAssignees[selectedTask.id] ??
+              (profiles[selectedTask.assigned_to] ? [profiles[selectedTask.assigned_to]] : [])
+            }
             isManager={isManager}
             user={user}
             workspaceId={workspace.id}
@@ -496,7 +502,10 @@ function TasksPage() {
             {selectedTask && (
               <TaskDetailPanel
                 task={selectedTask}
-                assignees={taskAssignees[selectedTask.id] ?? (profiles[selectedTask.assigned_to] ? [profiles[selectedTask.assigned_to]] : [])}
+                assignees={
+                  taskAssignees[selectedTask.id] ??
+                  (profiles[selectedTask.assigned_to] ? [profiles[selectedTask.assigned_to]] : [])
+                }
                 isManager={isManager}
                 user={user}
                 workspaceId={workspace.id}
@@ -672,7 +681,9 @@ function TaskCard({
                   </span>
                 ))}
                 {assignees.length > 3 && (
-                  <span className="text-muted-foreground text-[10px] ml-1">+{assignees.length - 3}</span>
+                  <span className="text-muted-foreground text-[10px] ml-1">
+                    +{assignees.length - 3}
+                  </span>
                 )}
                 <span className="text-muted-foreground truncate max-w-[80px] ml-1">
                   {assignees[0]?.full_name ?? assignees[0]?.email}

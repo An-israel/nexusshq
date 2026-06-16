@@ -100,10 +100,7 @@ function TaskDetailPage() {
         .select("*")
         .eq("task_id", taskId)
         .order("created_at", { ascending: false }),
-      supabase
-        .from("task_assignees")
-        .select("user_id")
-        .eq("task_id", taskId),
+      supabase.from("task_assignees").select("user_id").eq("task_id", taskId),
     ]);
     if (te || !t) {
       toast.error(te?.message ?? "Task not found");
@@ -142,7 +139,7 @@ function TaskDetailPage() {
       // Build ordered assignees list; fall back to assigned_to if no junction rows
       const orderedAssignees =
         assigneeUserIds.length > 0
-          ? assigneeUserIds.map((id) => map[id]).filter(Boolean) as ProfileMini[]
+          ? (assigneeUserIds.map((id) => map[id]).filter(Boolean) as ProfileMini[])
           : tr.assigned_to && map[tr.assigned_to]
             ? [map[tr.assigned_to]]
             : [];
@@ -318,8 +315,7 @@ function TaskDetailPage() {
               <span>Type: {task.task_type.replace("_", " ")}</span>
               {taskAssignees.length > 0 && (
                 <span>
-                  Assigned to:{" "}
-                  {taskAssignees.map((a) => a.full_name ?? a.email).join(", ")}
+                  Assigned to: {taskAssignees.map((a) => a.full_name ?? a.email).join(", ")}
                 </span>
               )}
               {assigner && <span>By: {assigner.full_name ?? assigner.email}</span>}
