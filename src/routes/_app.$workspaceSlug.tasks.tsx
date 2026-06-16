@@ -735,26 +735,33 @@ function AddWarningDialog({
       return;
     }
     setSaving(true);
-    const { error } = await supabase
-      .from("tasks")
-      .update({ has_warning: true, warning_message: input.trim() })
-      .eq("id", task.id);
-    if (error) {
-      toast.error(error.message);
+    try {
+      const { error } = await supabase
+        .from("tasks")
+        .update({ has_warning: true, warning_message: input.trim() })
+        .eq("id", task.id);
+      if (error) {
+        toast.error(error.message);
+        setSaving(false);
+        return;
+      }
+      if (task.assigned_to) {
+        await supabase.from("notifications").insert({
+          user_id: task.assigned_to,
+          type: "warning",
+          title: "⚠ Warning added to your task",
+          message: `${task.title}: ${input.trim()}`,
+          related_task_id: task.id,
+          workspace_id: workspaceId,
+        });
+      }
+      toast.success("Warning added");
+      onDone();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to save warning");
+    } finally {
       setSaving(false);
-      return;
     }
-    await supabase.from("notifications").insert({
-      user_id: task.assigned_to,
-      type: "warning",
-      title: "⚠ Warning added to your task",
-      message: `${task.title}: ${input.trim()}`,
-      related_task_id: task.id,
-      workspace_id: workspaceId,
-    });
-    toast.success("Warning added");
-    setSaving(false);
-    onDone();
   }
 
   return (
@@ -782,7 +789,7 @@ function AddWarningDialog({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
             Cancel
           </Button>
-          <Button onClick={save} disabled={saving}>
+          <Button onClick={() => void save()} disabled={saving}>
             {saving ? "Saving…" : "Add Warning"}
           </Button>
         </DialogFooter>
