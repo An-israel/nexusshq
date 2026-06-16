@@ -235,6 +235,7 @@ function AssignTaskPage() {
         task_id: task.id,
         user_id: uid,
         assigned_by: user?.id ?? null,
+        workspace_id: workspace.id,
       })),
     );
     if (assigneesError) {
