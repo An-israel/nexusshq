@@ -57,6 +57,24 @@ interface Profile {
 
 const SCREENSHOT_MAX = 10 * 1024 * 1024; // 10MB
 
+function SignedImage({ path, className }: { path: string; className?: string }) {
+  const [url, setUrl] = React.useState<string | null>(null);
+  React.useEffect(() => {
+    supabase.storage
+      .from("standup-screenshots")
+      .createSignedUrl(path, 3600)
+      .then(({ data }) => {
+        if (data?.signedUrl) setUrl(data.signedUrl);
+      });
+  }, [path]);
+  if (!url) return null;
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer">
+      <img src={url} alt="Screenshot" className={className} />
+    </a>
+  );
+}
+
 function StandupsPage() {
   const { user } = useAuth();
   const { workspace, isWorkspaceManager: isManager } = useWorkspace();
@@ -157,8 +175,7 @@ function StandupsPage() {
         setSubmitting(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from("standup-screenshots").getPublicUrl(path);
-      screenshotUrl = urlData.publicUrl;
+      screenshotUrl = path;
     }
 
     const isoToday = todayISO();
@@ -351,13 +368,10 @@ function SubmittedView({ standup, onEdit }: { standup: Standup; onEdit: () => vo
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
               Screenshot
             </p>
-            <a href={standup.screenshot_url} target="_blank" rel="noopener noreferrer">
-              <img
-                src={standup.screenshot_url}
-                alt="Yesterday's work"
-                className="rounded-lg border border-border max-h-48 object-cover hover:opacity-90 transition-opacity"
-              />
-            </a>
+            <SignedImage
+              path={standup.screenshot_url}
+              className="rounded-lg border border-border max-h-48 object-cover hover:opacity-90 transition-opacity"
+            />
           </div>
         )}
       </div>
@@ -616,13 +630,10 @@ function FolderBrowser({
                   </div>
                 )}
                 {s.screenshot_url && (
-                  <a href={s.screenshot_url} target="_blank" rel="noopener noreferrer">
-                    <img
-                      src={s.screenshot_url}
-                      alt="Screenshot"
-                      className="rounded border border-border max-h-40 object-cover hover:opacity-90 transition-opacity"
-                    />
-                  </a>
+                  <SignedImage
+                    path={s.screenshot_url}
+                    className="rounded border border-border max-h-40 object-cover hover:opacity-90 transition-opacity"
+                  />
                 )}
               </Card>
             ))}

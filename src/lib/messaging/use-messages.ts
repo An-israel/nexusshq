@@ -600,9 +600,6 @@ export function useMessages(params: {
           throw uploadErr;
         }
 
-        const { data: urlData } = supabase.storage.from("voice-notes").getPublicUrl(storagePath);
-        const publicUrl = urlData?.publicUrl ?? "";
-
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const vnRes = await (supabase as any)
           .from("voice_notes")
@@ -611,7 +608,6 @@ export function useMessages(params: {
             message_id: (insertedMsg as unknown as { id: string }).id,
             sender_id: user.id,
             storage_path: storagePath,
-            public_url: publicUrl,
             duration_seconds: Math.round(duration),
             waveform_data: waveformData,
             file_size_bytes: blob.size,
@@ -625,7 +621,7 @@ export function useMessages(params: {
         }
         const vnData = vnRes.data as RawVoiceNote;
 
-        // Fire-and-forget transcription (bearer token attached for auth check)
+        // Fire-and-forget transcription — server generates a signed URL from storage_path
         void supabase.auth.getSession().then(({ data: { session: _sess } }) => {
           void fetch("/api/transcribe-voice-note", {
             method: "POST",
@@ -633,7 +629,7 @@ export function useMessages(params: {
               "Content-Type": "application/json",
               ...(_sess?.access_token ? { Authorization: `Bearer ${_sess.access_token}` } : {}),
             },
-            body: JSON.stringify({ voiceNoteId: vnData.id, publicUrl }),
+            body: JSON.stringify({ voiceNoteId: vnData.id }),
           }).catch((e) => console.error("transcription request failed:", e));
         });
 

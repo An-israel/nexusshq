@@ -41,7 +41,18 @@ export function VoiceNotePlayer({ voiceNote: initialVoiceNote }: VoiceNotePlayer
   const [progress, setProgress] = React.useState(0);
   const [speedIdx, setSpeedIdx] = React.useState(1);
   const [showTranscription, setShowTranscription] = React.useState(false);
+  const [audioSrc, setAudioSrc] = React.useState<string>("");
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
+
+  React.useEffect(() => {
+    if (!vn.storage_path) return;
+    supabase.storage
+      .from("voice-notes")
+      .createSignedUrl(vn.storage_path, 3600)
+      .then(({ data }) => {
+        if (data?.signedUrl) setAudioSrc(data.signedUrl);
+      });
+  }, [vn.storage_path]);
 
   // Keep local vn in sync with prop (e.g. optimistic update from parent)
   React.useEffect(() => {
@@ -108,7 +119,7 @@ export function VoiceNotePlayer({ voiceNote: initialVoiceNote }: VoiceNotePlayer
     <div className="mt-1 flex flex-col gap-1.5 rounded-xl border border-[#2A2A2A] bg-[#151515] px-3 py-2.5 max-w-sm">
       <audio
         ref={audioRef}
-        src={vn.public_url}
+        src={audioSrc}
         onEnded={() => {
           setPlaying(false);
           setProgress(0);

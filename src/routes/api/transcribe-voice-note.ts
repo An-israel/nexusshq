@@ -24,19 +24,36 @@ export const Route = createFileRoute("/api/transcribe-voice-note")({
           );
         }
 
-        let body: { voiceNoteId: string; publicUrl: string };
+        let body: { voiceNoteId: string };
         try {
           body = await request.json();
         } catch {
           return Response.json({ error: "Invalid JSON body" }, { status: 400 });
         }
 
-        const { voiceNoteId, publicUrl } = body;
-        if (!voiceNoteId || !publicUrl) {
-          return Response.json(
-            { error: "voiceNoteId and publicUrl are required" },
-            { status: 400 },
-          );
+        const { voiceNoteId } = body;
+        if (!voiceNoteId) {
+          return Response.json({ error: "voiceNoteId is required" }, { status: 400 });
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: vnRow } = await (supabaseAdmin as any)
+          .from("voice_notes")
+          .select("storage_path")
+          .eq("id", voiceNoteId)
+          .single();
+
+        if (!vnRow?.storage_path) {
+          return Response.json({ error: "Voice note not found" }, { status: 404 });
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: signedData } = await (supabaseAdmin as any).storage
+          .from("voice-notes")
+          .createSignedUrl(vnRow.storage_path, 120);
+
+        if (!signedData?.signedUrl) {
+          return Response.json({ error: "Failed to generate signed URL" }, { status: 500 });
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -46,11 +63,11 @@ export const Route = createFileRoute("/api/transcribe-voice-note")({
           .eq("id", voiceNoteId);
 
         try {
-          const audioResp = await fetch(publicUrl);
+          const audioResp = await fetch(signedData.signedUrl);
           if (!audioResp.ok) throw new Error(`Failed to download audio: ${audioResp.status}`);
           const audioBuffer = await audioResp.arrayBuffer();
 
-          const ext = publicUrl.split(".").pop()?.split("?")[0] ?? "webm";
+          const ext = vnRow.storage_path.split(".").pop()?.split("?")[0] ?? "webm";
           const mimeMap: Record<string, string> = {
             webm: "audio/webm",
             ogg: "audio/ogg",
